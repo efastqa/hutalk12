@@ -1,0 +1,163 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default-deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Listing validation
+    function isValidListing(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 100 &&
+             data.price is number &&
+             data.phone is string && data.phone.size() > 0 && data.phone.size() <= 50 &&
+             data.location is string && data.location.size() > 0 && data.location.size() <= 100 &&
+             (!('district' in data) || (data.district is string && data.district.size() <= 100)) &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 20000));
+    }
+
+    // Master Gate helper: Get parent conversation document
+    function getConversation(conversationId) {
+      return get(/databases/$(database)/documents/conversations/$(conversationId)).data;
+    }
+
+    function isConversationParticipant(conversationId) {
+      return isSignedIn() && (
+        getConversation(conversationId).buyerId == request.auth.uid ||
+        getConversation(conversationId).sellerId == request.auth.uid
+      );
+    }
+
+    // Conversation schema validation blueprint
+    function isValidConversation(data) {
+      return data.listingId is string && data.listingId.size() > 0 && data.listingId.size() <= 128 &&
+             data.listingTitle is string && data.listingTitle.size() > 0 && data.listingTitle.size() <= 200 &&
+             data.buyerId is string && data.buyerId == request.auth.uid &&
+             data.sellerId is string && data.sellerId.size() > 0 && data.sellerId.size() <= 128 &&
+             data.buyerName is string && data.buyerName.size() <= 100 &&
+             data.sellerName is string && data.sellerName.size() <= 100 &&
+             data.createdAt is string && data.createdAt.size() <= 64 &&
+             data.updatedAt is string && data.updatedAt.size() <= 64 &&
+             (!('lastMessage' in data) || (data.lastMessage is string && data.lastMessage.size() <= 500)) &&
+             (!('listingPrice' in data) || (data.listingPrice is number)) &&
+             (!('listingImage' in data) || (data.listingImage is string && data.listingImage.size() <= 1000));
+    }
+
+    // Message schema validation blueprint
+    function isValidMessage(data, conversationId) {
+      return data.conversationId == conversationId &&
+             data.senderId == request.auth.uid &&
+             data.senderName is string && data.senderName.size() > 0 && data.senderName.size() <= 100 &&
+             data.text is string && data.text.size() > 0 && data.text.size() <= 2000 &&
+             data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    // Connection Health Check Collection
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+
+    // Marketplace Listings
+    match /listings/{listingId} {
+      allow get, list: if true;
+      allow create, update, delete: if isValidId(listingId);
+    }
+
+    // Marketplace Community Events
+    match /events/{eventId} {
+      allow get, list: if true;
+      allow create, update, delete: if isValidId(eventId);
+    }
+
+    // Promotional Hero Banners & Settings
+    match /hero_ads/{heroAdId} {
+      allow get, list: if true;
+      allow create, update, delete: if isValidId(heroAdId);
+    }
+
+    // Administrative Configuration & Moderation
+    match /admin_config/{configId} {
+      allow get, list: if true;
+      allow create, update, delete: if isValidId(configId);
+    }
+
+    // Marketplace Users & Verification
+    match /users/{userId} {
+      allow get, list: if true;
+      allow create: if isValidId(userId);
+      allow update: if isValidId(userId);
+      allow delete: if isValidId(userId);
+    }
+
+    // Customer Reviews & Seller Ratings
+    match /reviews/{reviewId} {
+      allow get, list: if true;
+      allow create, update, delete: if isValidId(reviewId);
+    }
+
+    // Customer Reports & Trust Safety Flags
+    match /reports/{reportId} {
+      allow get, list: if true;
+      allow create, update, delete: if isValidId(reportId);
+    }
+
+    // Conversations Collection
+    match /conversations/{conversationId} {
+      allow get: if isSignedIn() && isValidId(conversationId) &&
+        (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid);
+
+      allow list: if isSignedIn() &&
+        (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid);
+
+      allow create: if isSignedIn() && isValidId(conversationId) &&
+        incoming().buyerId == request.auth.uid &&
+        isValidConversation(incoming()) &&
+        incoming().keys().hasAll(['listingId', 'listingTitle', 'buyerId', 'sellerId', 'createdAt', 'updatedAt']);
+
+      allow update: if isSignedIn() && isValidId(conversationId) &&
+        (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid) &&
+        incoming().buyerId == resource.data.buyerId &&
+        incoming().sellerId == resource.data.sellerId &&
+        incoming().listingId == resource.data.listingId &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['lastMessage', 'updatedAt']);
+
+      allow delete: if false;
+
+      // Messages Subcollection
+      match /messages/{messageId} {
+        allow get: if isValidId(conversationId) && isValidId(messageId) &&
+          isConversationParticipant(conversationId);
+
+        allow list: if isValidId(conversationId) &&
+          isConversationParticipant(conversationId);
+
+        allow create: if isValidId(conversationId) && isValidId(messageId) &&
+          isConversationParticipant(conversationId) &&
+          incoming().senderId == request.auth.uid &&
+          isValidMessage(incoming(), conversationId) &&
+          incoming().keys().hasAll(['conversationId', 'senderId', 'senderName', 'text', 'createdAt']);
+
+        allow update, delete: if false;
+      }
+    }
+  }
+}
