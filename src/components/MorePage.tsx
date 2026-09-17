@@ -539,23 +539,41 @@ export const MorePage: React.FC<MorePageProps> = ({
 
           <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-100">
             <a
-              href="https://wa.me/94771234567"
+              href="https://wa.me/94775260765"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-5 py-4 flex items-center justify-between hover:bg-gray-50/80 transition-colors group"
+              className="px-5 py-4 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-xs">
                   <Phone className="w-5 h-5" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">
-                    24/7 WhatsApp Hotline
+                    24/7 WhatsApp Support
                   </p>
-                  <p className="text-xs text-gray-400">+94 77 123 4567</p>
+                  <p className="text-xs text-emerald-600 font-medium">+94 77 526 0765 • Click to chat</p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-gray-400" />
+              <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </a>
+
+            <a
+              href="tel:+94775260765"
+              className="px-5 py-4 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-xs">
+                  <Phone className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                    Direct Phone Hotline
+                  </p>
+                  <p className="text-xs text-gray-500 font-medium">+94 77 526 0765 • Tap to call</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </a>
 
             <div className="px-5 py-4 flex items-center justify-between text-xs text-gray-500">

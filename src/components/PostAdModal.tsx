@@ -105,6 +105,8 @@ const SERVICE_TRADES = [
   'Painting & Waterproofing',
   'Carpentry & Masonry',
   'IT, Laptop & Phone Repair',
+  'Home & Land Services (Plans, Surveying & Deeds)',
+  'Gemstones & Jewelry (Testing, Valuation & Lapidary)',
   'Other Professional Services',
 ];
 

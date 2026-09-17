@@ -1,0 +1,34 @@
+{
+  "settings": {
+    "mode": "default",
+    "rotationIntervalSeconds": 6
+  },
+  "ads": [
+    {
+      "subtitle": "Direct WhatsApp inquiries from thousands of verified buyers across all 25 districts with zero broker fees.",
+      "ctaText": "Post Free Ad Now",
+      "title": "Sell Your Vehicle or Property in 24 Hours",
+      "gradientTheme": "orange",
+      "badge": "🌟 Exclusive Promotion",
+      "createdAt": "2026-09-16T15:57:16.228Z",
+      "animationType": "pulse",
+      "id": "hero-ad-1",
+      "isActive": true,
+      "highlightText": "with HUTA Turbo Ad",
+      "ctaAction": "post_ad"
+    },
+    {
+      "createdAt": "2026-09-16T15:57:16.228Z",
+      "ctaText": "Explore Properties",
+      "gradientTheme": "blue",
+      "subtitle": "Explore 1,200+ verified listings with clear deeds, video walkthroughs, and direct developer contacts.",
+      "ctaAction": "Property",
+      "isActive": true,
+      "highlightText": "in Colombo, Galle & Kandy",
+      "id": "hero-ad-2",
+      "badge": "🏢 Featured Developer",
+      "animationType": "slide",
+      "title": "Discover Luxury Beachside Apartments & Land"
+    }
+  ]
+}

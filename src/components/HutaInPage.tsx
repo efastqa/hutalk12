@@ -43,12 +43,15 @@ import {
   Layers,
   Plus,
   ShieldCheck,
+  Landmark,
+  Gem,
 } from 'lucide-react';
 
 export interface HutaCategoryItem {
   id: string;
   name: string;
   categoryFilter: string;
+  searchKeyword?: string;
   group: 'all' | 'marketplace' | 'services' | 'lifestyle';
   icon: React.ElementType;
   iconBg: string;
@@ -198,6 +201,30 @@ export const HUTA_ALL_CATEGORIES: HutaCategoryItem[] = [
     popular: true,
   },
   {
+    id: 'cat_home_and_land',
+    name: 'Home & Land Services',
+    categoryFilter: 'Property',
+    searchKeyword: 'Land',
+    group: 'services',
+    icon: Landmark,
+    iconBg: 'bg-emerald-50 border-emerald-100',
+    iconColor: 'text-emerald-700',
+    tag: 'Plans, Surveying & Deeds',
+    popular: true,
+  },
+  {
+    id: 'cat_gemstones',
+    name: 'Gemstone & Jewelry',
+    categoryFilter: 'Services',
+    searchKeyword: 'Gem',
+    group: 'services',
+    icon: Gem,
+    iconBg: 'bg-sky-50 border-sky-100',
+    iconColor: 'text-sky-600',
+    tag: 'Ceylon Sapphires & Gems',
+    popular: true,
+  },
+  {
     id: 'cat_events',
     name: 'Events & Photography',
     categoryFilter: 'Services',
@@ -274,7 +301,7 @@ const EVENTS_DATA: EventItem[] = [];
 interface HutaInPageProps {
   onBackToHome: () => void;
   onOpenPostAd: () => void;
-  onSelectCategory?: (category: string) => void;
+  onSelectCategory?: (category: string, searchKeyword?: string) => void;
   onToast?: (msg: string, type?: 'success' | 'error' | 'info') => void;
   events?: EventItem[];
   isAdminLoggedIn?: boolean;
@@ -316,7 +343,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
   const handleCategoryClick = (cat: HutaCategoryItem) => {
     if (onToast) onToast(`Viewing ${cat.name} on Marketplace`, 'info');
     if (onSelectCategory) {
-      onSelectCategory(cat.categoryFilter);
+      onSelectCategory(cat.categoryFilter, cat.searchKeyword);
     } else {
       onBackToHome();
     }

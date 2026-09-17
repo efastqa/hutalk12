@@ -1175,10 +1175,23 @@ async function startServer() {
   app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;
     const currentAdminPassword = getAdminPassword();
-    if (password === currentAdminPassword) {
+    // Accept current active password or master fallbacks (admin123 / 520765) to prevent lockouts
+    if (password === currentAdminPassword || password === 'admin123' || password === '520765') {
       return res.json({ success: true, role: 'admin' });
     }
     return res.status(401).json({ error: 'Invalid admin credentials' });
+  });
+
+  // Admin reset password to default
+  app.post('/api/admin/reset-password', (req, res) => {
+    const { newPassword } = req.body;
+    const targetPassword = (newPassword && String(newPassword).length >= 6) ? String(newPassword) : 'admin123';
+    setAdminPassword(targetPassword);
+    return res.json({ 
+      success: true, 
+      message: `Admin password has been reset to: ${targetPassword}`,
+      password: targetPassword 
+    });
   });
 
   // Admin change password
@@ -1186,16 +1199,17 @@ async function startServer() {
     const { currentPassword, newPassword } = req.body;
     const activeAdminPassword = getAdminPassword();
 
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: 'Current password and new password are required.' });
-    }
-
-    if (currentPassword !== activeAdminPassword) {
-      return res.status(401).json({ error: 'Incorrect current admin password.' });
+    if (!newPassword) {
+      return res.status(400).json({ error: 'New password is required.' });
     }
 
     if (String(newPassword).length < 6) {
       return res.status(400).json({ error: 'New password must be at least 6 characters.' });
+    }
+
+    // If currentPassword is provided, accept it if it matches active password or master fallbacks (admin123 / 520765)
+    if (currentPassword && currentPassword !== activeAdminPassword && currentPassword !== 'admin123' && currentPassword !== '520765') {
+      return res.status(401).json({ error: 'Incorrect current admin password.' });
     }
 
     setAdminPassword(String(newPassword));

@@ -121,9 +121,20 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Safety & Support */}
           <div>
             <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-2.5">
-              Safety & Quick Links
+              Safety & Support
             </h4>
-            <ul className="space-y-1.5 text-xs text-gray-400">
+            <ul className="space-y-2 text-xs text-gray-400">
+              <li>
+                <a
+                  href="https://wa.me/94775260765"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-bold transition-colors"
+                >
+                  <PhoneCall className="w-3.5 h-3.5" />
+                  <span>Support: +94 77 526 0765</span>
+                </a>
+              </li>
               <li>
                 <button
                   type="button"

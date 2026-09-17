@@ -33,6 +33,7 @@ import {
   Image as ImageIcon,
   Megaphone,
   ShieldAlert,
+  EyeOff,
 } from 'lucide-react';
 import { formatLKR } from './ListingsSection';
 import { api } from '../services/api';
@@ -146,6 +147,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [currentPass, setCurrentPass] = useState('');
   const [newPass, setNewPass] = useState('');
   const [confirmNewPass, setConfirmNewPass] = useState('');
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [changeError, setChangeError] = useState('');
   const [changeSuccess, setChangeSuccess] = useState('');
@@ -1817,18 +1820,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <form onSubmit={handleChangePassword} className="mt-4 space-y-3.5">
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                  Current Admin Password
+                  Current Admin Password <span className="text-gray-400 font-normal lowercase">(optional if logged in)</span>
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
                   <input
-                    type="password"
-                    required
+                    type={showCurrentPass ? 'text' : 'password'}
                     value={currentPass}
                     onChange={(e) => setCurrentPass(e.target.value)}
-                    placeholder="Enter current password (default admin123)"
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
+                    placeholder="Leave blank to keep or enter current"
+                    className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPass(!showCurrentPass)}
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 cursor-pointer"
+                    title={showCurrentPass ? 'Hide password' : 'Show password'}
+                  >
+                    {showCurrentPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
@@ -1839,14 +1849,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="relative">
                   <KeyRound className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
                   <input
-                    type="password"
+                    type={showNewPass ? 'text' : 'password'}
                     required
                     minLength={6}
                     value={newPass}
                     onChange={(e) => setNewPass(e.target.value)}
                     placeholder="Min. 6 characters"
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
+                    className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPass(!showNewPass)}
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 cursor-pointer"
+                    title={showNewPass ? 'Hide password' : 'Show password'}
+                  >
+                    {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
@@ -1857,7 +1875,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="relative">
                   <KeyRound className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
                   <input
-                    type="password"
+                    type={showNewPass ? 'text' : 'password'}
                     required
                     minLength={6}
                     value={confirmNewPass}

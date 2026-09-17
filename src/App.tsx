@@ -803,8 +803,13 @@ export default function App() {
             }}
             onBackToHome={() => setCurrentTab('marketplace')}
             onOpenPostAd={handleOpenPostAd}
-            onSelectCategory={(cat) => {
+            onSelectCategory={(cat, query) => {
               setSelectedCategory(cat);
+              if (query) {
+                setSearchTerm(query);
+              } else {
+                setSearchTerm('');
+              }
               setCurrentTab('marketplace');
             }}
             onToast={showToast}

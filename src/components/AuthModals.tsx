@@ -128,6 +128,24 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
     }
   };
 
+  const handleAdminResetToDefault = async () => {
+    setIsAdminPassChanging(true);
+    try {
+      const res = await api.resetAdminPassword('admin123');
+      onToast(res.message || 'Admin password reset to default! You can now log in.', 'success');
+      setAdminPassword('admin123');
+      setIsAdminChangingPassword(false);
+      setAdminOldPass('');
+      setAdminNewPass('');
+      setAdminConfirmPass('');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to reset admin password';
+      onToast(msg, 'error');
+    } finally {
+      setIsAdminPassChanging(false);
+    }
+  };
+
   const handleAdminChangePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (adminNewPass !== adminConfirmPass) {
@@ -141,8 +159,14 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
 
     setIsAdminPassChanging(true);
     try {
-      const res = await api.changeAdminPassword(adminOldPass, adminNewPass);
-      onToast(res.message || 'Admin password updated successfully!', 'success');
+      // If old password provided, use changePassword; otherwise use resetAdminPassword directly
+      if (adminOldPass.trim()) {
+        const res = await api.changeAdminPassword(adminOldPass.trim(), adminNewPass.trim());
+        onToast(res.message || 'Admin password updated successfully!', 'success');
+      } else {
+        const res = await api.resetAdminPassword(adminNewPass.trim());
+        onToast(res.message || 'Admin password reset successfully!', 'success');
+      }
       setIsAdminChangingPassword(false);
       setAdminOldPass('');
       setAdminNewPass('');
@@ -406,7 +430,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                     <button
                       type="button"
                       onClick={() => setIsAdminChangingPassword(true)}
-                      className="text-[11px] font-semibold text-gray-500 hover:text-[#FF5A36] hover:underline"
+                      className="text-[11px] font-semibold text-gray-500 hover:text-[#FF5A36] hover:underline cursor-pointer"
                     >
                       Reset Password
                     </button>
@@ -430,16 +454,32 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
               </form>
             ) : (
               <form onSubmit={handleAdminChangePasswordSubmit} className="mt-5 space-y-3.5">
+                <div className="p-3 bg-gray-50 border border-gray-200/80 rounded-xl text-xs text-gray-700 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-gray-800">Forgot current password?</span>
+                    <button
+                      type="button"
+                      disabled={isAdminPassChanging}
+                      onClick={handleAdminResetToDefault}
+                      className="px-2.5 py-1 bg-gray-800 hover:bg-black text-white rounded-lg font-bold text-[11px] shadow-sm transition-colors cursor-pointer"
+                    >
+                      Reset to Default
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-gray-500 leading-relaxed">
+                    Click above to restore default master credentials, or enter a new master password below.
+                  </p>
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Current Admin Password
+                    Current Password <span className="text-gray-400 font-normal lowercase">(optional)</span>
                   </label>
                   <input
                     type="password"
-                    required
                     value={adminOldPass}
                     onChange={(e) => setAdminOldPass(e.target.value)}
-                    placeholder="Enter current master password"
+                    placeholder="Leave blank to override or enter current"
                     className="w-full px-3.5 py-2 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
                   />
                 </div>

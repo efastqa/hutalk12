@@ -24,7 +24,9 @@ import {
   Sofa,
   Briefcase,
   PackageCheck,
-  ChevronRight
+  ChevronRight,
+  Landmark,
+  Gem,
 } from 'lucide-react';
 import { Listing } from '../types';
 
@@ -156,6 +158,24 @@ const SERVICES_LIST: ServiceItem[] = [
     icon: Plane,
     gradient: 'from-sky-50 to-cyan-50 border-sky-200/60',
     iconColor: 'text-sky-700',
+  },
+  {
+    id: 'home_land',
+    name: 'Home & Land Services',
+    categoryFilter: 'Property',
+    icon: Landmark,
+    gradient: 'from-emerald-50 to-teal-50 border-emerald-200/60',
+    iconColor: 'text-emerald-700',
+    badge: 'Popular',
+  },
+  {
+    id: 'gemstones',
+    name: 'Gemstones & Jewelry',
+    categoryFilter: 'Services',
+    icon: Gem,
+    gradient: 'from-blue-50 to-sky-50 border-blue-200/60',
+    iconColor: 'text-blue-600',
+    badge: 'Popular',
   },
 ];
 
