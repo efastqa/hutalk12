@@ -20,7 +20,7 @@ import {
   startOrGetConversation,
   sendChatMessage
 } from '../services/chat';
-import { auth, signInWithGoogle } from '../firebase';
+import { auth, signInWithGoogle, signInGuest } from '../firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { formatLKR } from './ListingsSection';
 
@@ -51,6 +51,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isGuestSigningIn, setIsGuestSigningIn] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -163,6 +164,18 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     }
   };
 
+  const handleGuestSignIn = async () => {
+    setIsGuestSigningIn(true);
+    setAuthError(null);
+    try {
+      await signInGuest();
+    } catch (err: any) {
+      setAuthError(err?.message || 'Guest sign-in failed. Please try again.');
+    } finally {
+      setIsGuestSigningIn(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -246,7 +259,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   type="button"
-                  disabled={isSigningIn}
+                  disabled={isSigningIn || isGuestSigningIn}
                   onClick={handleGoogleSignIn}
                   className="mt-6 flex items-center justify-center gap-3 w-full max-w-xs px-5 py-3 rounded-xl bg-[#111217] text-white font-bold text-sm shadow-md hover:bg-black transition-all cursor-pointer disabled:opacity-50"
                 >
@@ -269,6 +282,24 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                     />
                   </svg>
                   <span>{isSigningIn ? 'Connecting...' : 'Sign in with Google'}</span>
+                </motion.button>
+
+                <div className="flex items-center gap-2 my-2.5 w-full max-w-xs">
+                  <div className="h-px bg-gray-200 flex-1" />
+                  <span className="text-[11px] uppercase font-bold text-gray-400">or</span>
+                  <div className="h-px bg-gray-200 flex-1" />
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  type="button"
+                  disabled={isSigningIn || isGuestSigningIn}
+                  onClick={handleGuestSignIn}
+                  className="flex items-center justify-center gap-2 w-full max-w-xs px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-800 font-bold text-xs shadow-xs hover:bg-gray-50 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-[#FF5A36]" />
+                  <span>{isGuestSigningIn ? 'Starting guest chat...' : 'Continue as Guest (Instant Chat)'}</span>
                 </motion.button>
               </div>
             ) : !activeConvId ? (
