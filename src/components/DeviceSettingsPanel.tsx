@@ -249,7 +249,7 @@ export const DeviceSettingsPanel: React.FC<DeviceSettingsPanelProps> = ({
               </div>
               <div>
                 <p className="text-xs sm:text-sm font-black text-gray-900">
-                  Add HUTA.lk to Mobile & Tablet Home Screen
+                  Add HUTA to Mobile & Tablet Home Screen
                 </p>
                 <p className="text-[11px] text-gray-600 mt-0.5">
                   Install as a standalone web app for instant 1-tap browsing and full offline access

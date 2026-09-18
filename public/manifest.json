@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "HUTA Marketplace",
-  "short_name": "HUTA.lk",
+  "name": "HUTA",
+  "short_name": "HUTA",
   "description": "Sri Lanka's premier buy & sell classifieds marketplace for vehicles, electronics, property, and community events.",
   "start_url": "/",
   "scope": "/",

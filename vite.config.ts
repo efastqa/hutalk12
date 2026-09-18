@@ -36,8 +36,8 @@ export default defineConfig(() => {
         includeAssets: ['icon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
         manifest: {
           id: '/',
-          name: 'HUTA Marketplace',
-          short_name: 'HUTA.lk',
+          name: 'HUTA',
+          short_name: 'HUTA',
           description: "Sri Lanka's premier buy & sell classifieds marketplace for vehicles, electronics, property, and community events.",
           theme_color: '#FF5A36',
           background_color: '#111217',
