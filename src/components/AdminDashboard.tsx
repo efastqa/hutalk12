@@ -34,12 +34,16 @@ import {
   Megaphone,
   ShieldAlert,
   EyeOff,
+  MessageSquare,
+  Globe,
 } from 'lucide-react';
 import { formatLKR } from './ListingsSection';
 import { api } from '../services/api';
 import { AdminHeroAdsManager } from './AdminHeroAdsManager';
 import { AdminReachAnalytics } from './AdminReachAnalytics';
 import { AdminReportsManager } from './AdminReportsManager';
+import { AdminSmsGateway } from './AdminSmsGateway';
+import { AdminCustomDomain } from './AdminCustomDomain';
 
 const compressBannerImage = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -139,7 +143,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onToggleHeroAd,
   onDeleteHeroAd,
 }) => {
-  const [filterTab, setFilterTab] = useState<'all' | 'pending' | 'featured' | 'services' | 'spotlight' | 'hero_ads' | 'reach_analytics' | 'reports'>('all');
+  const [filterTab, setFilterTab] = useState<'all' | 'pending' | 'featured' | 'services' | 'spotlight' | 'hero_ads' | 'reach_analytics' | 'reports' | 'sms_gateway' | 'custom_domain'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('all');
   const [showMonetizationGuide, setShowMonetizationGuide] = useState(true);
@@ -1359,6 +1363,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <ShieldAlert className="w-3.5 h-3.5" />
               <span>Listing Reports & Safety</span>
             </button>
+            <button
+              id="admin-filter-sms-gateway-tab"
+              type="button"
+              onClick={() => setFilterTab('sms_gateway')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                filterTab === 'sms_gateway'
+                  ? 'bg-[#FF5A36] text-white shadow-sm'
+                  : 'bg-orange-50 text-[#FF5A36] hover:bg-orange-100 border border-orange-200/60'
+              }`}
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>SMS Gateway & OTP</span>
+            </button>
+            <button
+              id="admin-filter-custom-domain-tab"
+              type="button"
+              onClick={() => setFilterTab('custom_domain')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                filterTab === 'custom_domain'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/60'
+              }`}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>Custom Domain (huta.lk)</span>
+            </button>
           </div>
 
           {filterTab === 'spotlight' && (
@@ -1373,7 +1403,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </button>
           )}
 
-          {filterTab !== 'hero_ads' && (
+          {filterTab !== 'hero_ads' && filterTab !== 'sms_gateway' && filterTab !== 'custom_domain' && (
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
                 <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
@@ -1413,7 +1443,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
 
         {/* Content Section */}
-        {filterTab === 'reports' ? (
+        {filterTab === 'sms_gateway' ? (
+          <div className="p-4 sm:p-6">
+            <AdminSmsGateway onToast={onToast} />
+          </div>
+        ) : filterTab === 'custom_domain' ? (
+          <div className="p-4 sm:p-6">
+            <AdminCustomDomain onToast={onToast} />
+          </div>
+        ) : filterTab === 'reports' ? (
           <div className="p-4 sm:p-6">
             <AdminReportsManager
               listings={listings}

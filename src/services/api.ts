@@ -9,7 +9,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Listing, User, EventItem, HeroAd, HeroAdSettings, ListingReview, ListingReport } from '../types';
+import { Listing, User, EventItem, HeroAd, HeroAdSettings, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus } from '../types';
 
 const API_BASE = '/api';
 
@@ -1654,5 +1654,49 @@ For quick inquiries, call or send a message via WhatsApp!`;
     }
 
     return { success: true };
+  },
+
+  // -------------------------------------------------------------
+  // Automated SMS Gateway
+  // -------------------------------------------------------------
+
+  async getSmsGatewayStatus(): Promise<SmsGatewayStatus> {
+    const res = await fetch(`${API_BASE}/admin/sms-gateway/status`);
+    if (!res.ok) {
+      throw new Error('Failed to retrieve SMS gateway status.');
+    }
+    return res.json();
+  },
+
+  async testSmsGateway(phone: string, message?: string): Promise<{
+    success: boolean;
+    provider: string;
+    details: string;
+    logId: string;
+    phone: string;
+  }> {
+    const res = await fetch(`${API_BASE}/admin/sms-gateway/test`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, message }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'SMS dispatch failed' }));
+      throw new Error(err.error || 'SMS dispatch failed');
+    }
+    return res.json();
+  },
+
+  // -------------------------------------------------------------
+  // Custom Domain & Live DNS Check
+  // -------------------------------------------------------------
+
+  async checkCustomDomain(domain?: string): Promise<CustomDomainStatus> {
+    const query = domain ? `?domain=${encodeURIComponent(domain)}` : '';
+    const res = await fetch(`${API_BASE}/admin/check-domain${query}`);
+    if (!res.ok) {
+      throw new Error('Failed to query custom domain DNS records.');
+    }
+    return res.json();
   },
 };

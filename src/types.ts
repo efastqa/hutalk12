@@ -162,4 +162,73 @@ export interface HeroAdSettings {
   rotationIntervalSeconds: number;
 }
 
+export interface SmsDeliveryLog {
+  id: string;
+  recipient: string;
+  internationalPhone: string;
+  message: string;
+  provider: 'notify.lk' | 'custom_gateway' | 'twilio' | 'simulation_mode';
+  status: 'sent' | 'failed' | 'simulated';
+  details: string;
+  timestamp: string;
+}
+
+export interface SmsGatewayStatus {
+  activeProvider: 'notify.lk' | 'custom_gateway' | 'twilio' | 'simulation_mode';
+  providers: {
+    notifyLk: {
+      configured: boolean;
+      senderId: string;
+      userIdSet: boolean;
+    };
+    customGateway: {
+      configured: boolean;
+      hostname: string | null;
+      hasApiKey: boolean;
+    };
+    twilio: {
+      configured: boolean;
+      from: string | null;
+    };
+  };
+  stats: {
+    total: number;
+    sent: number;
+    simulated: number;
+    failed: number;
+  };
+  recentLogs: SmsDeliveryLog[];
+}
+
+export interface CustomDomainStatus {
+  domain: string;
+  status: 'connected' | 'pointing_other' | 'not_configured';
+  isConfigured: boolean;
+  isApexConfigured: boolean;
+  isWwwConfigured: boolean;
+  liveDns: {
+    apexA: string[];
+    apexError?: string | null;
+    wwwA: string[];
+    wwwCname: string[];
+    wwwError?: string | null;
+    txtRecords: string[];
+  };
+  requiredRecords: {
+    apexA: {
+      type: string;
+      host: string;
+      targetIps: string[];
+    };
+    wwwCname: {
+      type: string;
+      host: string;
+      target: string;
+    };
+  };
+  currentAppUrl: string;
+  sslStatus: string;
+  lastChecked: string;
+}
+
 

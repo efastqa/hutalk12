@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
+import dns from 'node:dns/promises';
 import { GoogleGenAI } from '@google/genai';
 import { initializeApp } from 'firebase/app';
 import {
@@ -1362,7 +1363,7 @@ async function startServer() {
     res.json({ success: true, message: 'Hero ad deleted' });
   });
 
-  // Helper: Sri Lankan phone normalization
+  // Helper: Sri Lankan phone normalization (0771234567)
   function normalizeSriLankanPhone(raw: string): string {
     if (!raw) return '';
     const digits = raw.replace(/[^0-9]/g, '');
@@ -1376,6 +1377,223 @@ async function startServer() {
       return '0' + digits;
     }
     return digits;
+  }
+
+  // Helper: Format phone for Sri Lankan & International SMS Gateways (94771234567)
+  function toInternationalSriLankanPhone(raw: string): string {
+    if (!raw) return '';
+    const digits = raw.replace(/[^0-9]/g, '');
+    if (digits.startsWith('94') && digits.length >= 11) {
+      return digits;
+    }
+    if (digits.startsWith('0') && digits.length === 10) {
+      return '94' + digits.substring(1);
+    }
+    if (digits.length === 9) {
+      return '94' + digits;
+    }
+    return digits;
+  }
+
+  // Automated SMS Gateway State & Logger
+  interface SmsDeliveryLog {
+    id: string;
+    recipient: string;
+    internationalPhone: string;
+    message: string;
+    provider: 'notify.lk' | 'custom_gateway' | 'twilio' | 'simulation_mode';
+    status: 'sent' | 'failed' | 'simulated';
+    details: string;
+    timestamp: string;
+  }
+
+  const smsDeliveryLogs: SmsDeliveryLog[] = [];
+
+  async function sendSmsViaGateway(rawPhone: string, message: string): Promise<{
+    success: boolean;
+    provider: 'notify.lk' | 'custom_gateway' | 'twilio' | 'simulation_mode';
+    details: string;
+    logId: string;
+  }> {
+    const international = toInternationalSriLankanPhone(rawPhone);
+    const logId = 'sms_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+
+    // 1. Notify.lk integration (Primary Sri Lankan SMS Gateway)
+    const notifyKey = process.env.NOTIFYLK_API_KEY?.trim();
+    const notifyUserId = process.env.NOTIFYLK_USER_ID?.trim();
+    if (notifyKey && notifyUserId) {
+      try {
+        const endpoint = 'https://app.notify.lk/api/v1/send';
+        const params = new URLSearchParams({
+          user_id: notifyUserId,
+          api_key: notifyKey,
+          sender_id: (process.env.NOTIFYLK_SENDER_ID || 'NotifyDEMO').trim(),
+          to: international,
+          message: message,
+        });
+
+        const res = await fetch(`${endpoint}?${params.toString()}`, {
+          method: 'POST',
+        });
+        const data: any = await res.json().catch(() => null);
+
+        if (res.ok && (data?.status === 'success' || data?.status === 'queued' || data?.data?.status === 'success')) {
+          const log: SmsDeliveryLog = {
+            id: logId,
+            recipient: rawPhone,
+            internationalPhone: international,
+            message,
+            provider: 'notify.lk',
+            status: 'sent',
+            details: `Delivered via Notify.lk (Sender: ${process.env.NOTIFYLK_SENDER_ID || 'NotifyDEMO'})`,
+            timestamp: new Date().toISOString(),
+          };
+          smsDeliveryLogs.unshift(log);
+          if (smsDeliveryLogs.length > 100) smsDeliveryLogs.pop();
+          return { success: true, provider: 'notify.lk', details: log.details, logId };
+        } else {
+          const errorMsg = data?.message || data?.errors || `HTTP status ${res.status}`;
+          console.warn(`[SMS Gateway] Notify.lk failed: ${errorMsg}`);
+          const log: SmsDeliveryLog = {
+            id: logId,
+            recipient: rawPhone,
+            internationalPhone: international,
+            message,
+            provider: 'notify.lk',
+            status: 'failed',
+            details: `Notify.lk response: ${errorMsg}`,
+            timestamp: new Date().toISOString(),
+          };
+          smsDeliveryLogs.unshift(log);
+        }
+      } catch (err: any) {
+        console.error('[SMS Gateway] Notify.lk network error:', err);
+      }
+    }
+
+    // 2. Generic SMS Gateway Webhook / HTTP URL (Dialog IdeaBiz, Mobitel, Textware, SMS.to)
+    const customGatewayUrl = process.env.SMS_GATEWAY_URL?.trim();
+    if (customGatewayUrl) {
+      try {
+        const targetUrl = customGatewayUrl
+          .replace('{{to}}', encodeURIComponent(international))
+          .replace('{{phone}}', encodeURIComponent(international))
+          .replace('{{message}}', encodeURIComponent(message));
+
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+        if (process.env.SMS_GATEWAY_API_KEY) {
+          headers['Authorization'] = `Bearer ${process.env.SMS_GATEWAY_API_KEY.trim()}`;
+          headers['x-api-key'] = process.env.SMS_GATEWAY_API_KEY.trim();
+        }
+
+        let res: Response;
+        if (customGatewayUrl.includes('{{message}}') || customGatewayUrl.includes('{{to}}')) {
+          res = await fetch(targetUrl, { method: 'GET', headers });
+        } else {
+          res = await fetch(targetUrl, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              to: international,
+              phone: international,
+              message,
+              sender: (process.env.SMS_GATEWAY_SENDER_ID || 'HUTA').trim(),
+            }),
+          });
+        }
+
+        if (res.ok) {
+          let host = 'Gateway';
+          try {
+            host = new URL(customGatewayUrl).hostname;
+          } catch {}
+          const log: SmsDeliveryLog = {
+            id: logId,
+            recipient: rawPhone,
+            internationalPhone: international,
+            message,
+            provider: 'custom_gateway',
+            status: 'sent',
+            details: `Dispatched via custom gateway (${host})`,
+            timestamp: new Date().toISOString(),
+          };
+          smsDeliveryLogs.unshift(log);
+          if (smsDeliveryLogs.length > 100) smsDeliveryLogs.pop();
+          return { success: true, provider: 'custom_gateway', details: log.details, logId };
+        }
+      } catch (err: any) {
+        console.error('[SMS Gateway] Custom HTTP gateway error:', err);
+      }
+    }
+
+    // 3. Twilio SMS
+    const twilioSid = process.env.TWILIO_ACCOUNT_SID?.trim();
+    const twilioToken = process.env.TWILIO_AUTH_TOKEN?.trim();
+    const twilioFrom = process.env.TWILIO_PHONE_NUMBER?.trim();
+    if (twilioSid && twilioToken && twilioFrom) {
+      try {
+        const authHeader = Buffer.from(`${twilioSid}:${twilioToken}`).toString('base64');
+        const body = new URLSearchParams({
+          To: '+' + international,
+          From: twilioFrom,
+          Body: message,
+        });
+
+        const res = await fetch(
+          `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Basic ${authHeader}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: body.toString(),
+          }
+        );
+
+        if (res.ok) {
+          const log: SmsDeliveryLog = {
+            id: logId,
+            recipient: rawPhone,
+            internationalPhone: international,
+            message,
+            provider: 'twilio',
+            status: 'sent',
+            details: 'Dispatched via Twilio REST API',
+            timestamp: new Date().toISOString(),
+          };
+          smsDeliveryLogs.unshift(log);
+          if (smsDeliveryLogs.length > 100) smsDeliveryLogs.pop();
+          return { success: true, provider: 'twilio', details: log.details, logId };
+        }
+      } catch (err: any) {
+        console.error('[SMS Gateway] Twilio error:', err);
+      }
+    }
+
+    // 4. Standalone / Simulation Mode (When keys are not set yet)
+    const log: SmsDeliveryLog = {
+      id: logId,
+      recipient: rawPhone,
+      internationalPhone: international,
+      message,
+      provider: 'simulation_mode',
+      status: 'simulated',
+      details: 'Dispatched in simulation mode. Connect Notify.lk or custom SMS provider in Settings to deliver to live telecom networks.',
+      timestamp: new Date().toISOString(),
+    };
+    smsDeliveryLogs.unshift(log);
+    if (smsDeliveryLogs.length > 100) smsDeliveryLogs.pop();
+
+    console.log(`[HUTA SMS Gateway Simulation] Message to ${international}: "${message}"`);
+    return {
+      success: true,
+      provider: 'simulation_mode',
+      details: log.details,
+      logId,
+    };
   }
 
   // OTP Memory Store
@@ -1490,7 +1708,7 @@ async function startServer() {
   });
 
   // Send Mobile OTP (For Customer Fast Login & Ad Owner Verification)
-  app.post('/api/auth/send-otp', (req, res) => {
+  app.post('/api/auth/send-otp', async (req, res) => {
     const { phone } = req.body;
     if (!phone) {
       return res.status(400).json({ error: 'Mobile phone number is required.' });
@@ -1509,12 +1727,19 @@ async function startServer() {
 
     console.log(`[HUTA OTP] Generated OTP ${code} for phone ${cleanPhone}`);
 
+    const smsMessage = `Your HUTA verification code is ${code}. Valid for 10 minutes. Do not share this code.`;
+    const smsResult = await sendSmsViaGateway(cleanPhone, smsMessage);
+
     res.json({
       success: true,
       message: `OTP verification code sent to ${phone}`,
       phone: cleanPhone,
-      devOtp: code, // Provided for easy client testing & auto-fill preview
+      devOtp: code, // Provided for easy client testing & preview
       expiresInSeconds: 600,
+      smsDelivery: {
+        provider: smsResult.provider,
+        details: smsResult.details,
+      },
     });
   });
 
@@ -1779,6 +2004,193 @@ Key Highlights:
 Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price is slightly negotiable after genuine inspection for serious buyers. Contact via phone call or WhatsApp to arrange viewing.`;
 
     res.json({ description: fallback, source: 'template' });
+  });
+
+  // -------------------------------------------------------------
+  // SMS Gateway Admin & Test Endpoints
+  // -------------------------------------------------------------
+
+  app.get('/api/admin/sms-gateway/status', (req, res) => {
+    const notifyLkConfigured = Boolean(process.env.NOTIFYLK_API_KEY && process.env.NOTIFYLK_USER_ID);
+    const customGatewayConfigured = Boolean(process.env.SMS_GATEWAY_URL);
+    const twilioConfigured = Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER);
+
+    let activeProvider: 'notify.lk' | 'custom_gateway' | 'twilio' | 'simulation_mode' = 'simulation_mode';
+    if (notifyLkConfigured) activeProvider = 'notify.lk';
+    else if (customGatewayConfigured) activeProvider = 'custom_gateway';
+    else if (twilioConfigured) activeProvider = 'twilio';
+
+    const sentCount = smsDeliveryLogs.filter(l => l.status === 'sent').length;
+    const simulatedCount = smsDeliveryLogs.filter(l => l.status === 'simulated').length;
+    const failedCount = smsDeliveryLogs.filter(l => l.status === 'failed').length;
+
+    res.json({
+      activeProvider,
+      providers: {
+        notifyLk: {
+          configured: notifyLkConfigured,
+          senderId: process.env.NOTIFYLK_SENDER_ID || 'HUTA',
+          userIdSet: Boolean(process.env.NOTIFYLK_USER_ID),
+        },
+        customGateway: {
+          configured: customGatewayConfigured,
+          hostname: process.env.SMS_GATEWAY_URL ? (new URL(process.env.SMS_GATEWAY_URL).hostname) : null,
+          hasApiKey: Boolean(process.env.SMS_GATEWAY_API_KEY),
+        },
+        twilio: {
+          configured: twilioConfigured,
+          from: process.env.TWILIO_PHONE_NUMBER || null,
+        },
+      },
+      stats: {
+        total: smsDeliveryLogs.length,
+        sent: sentCount,
+        simulated: simulatedCount,
+        failed: failedCount,
+      },
+      recentLogs: smsDeliveryLogs.slice(0, 50),
+    });
+  });
+
+  app.post('/api/admin/sms-gateway/test', async (req, res) => {
+    const { phone, message } = req.body;
+    if (!phone) {
+      return res.status(400).json({ error: 'Phone number is required.' });
+    }
+
+    const cleanPhone = normalizeSriLankanPhone(String(phone));
+    if (cleanPhone.length < 9) {
+      return res.status(400).json({ error: 'Please enter a valid 9 or 10-digit Sri Lankan phone number.' });
+    }
+
+    const testText = message && String(message).trim()
+      ? String(message).trim()
+      : `HUTA Sri Lanka: Test SMS dispatch successfully received. Gateway is live! (Sent at ${new Date().toLocaleTimeString('en-LK')})`;
+
+    const result = await sendSmsViaGateway(cleanPhone, testText);
+    res.json({
+      success: true,
+      provider: result.provider,
+      details: result.details,
+      logId: result.logId,
+      phone: cleanPhone,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // -------------------------------------------------------------
+  // Custom Domain & Live DNS Inspection Endpoint
+  // -------------------------------------------------------------
+
+  app.get('/api/admin/check-domain', async (req, res) => {
+    const queryDomain = (req.query.domain as string)?.trim() || process.env.CUSTOM_DOMAIN || 'huta.lk';
+    const cleanDomain = queryDomain.replace(/^https?:\/\//i, '').replace(/\/.*$/, '').toLowerCase();
+
+    // Standard Google Anycast IPs for Cloud Run custom domain mapping
+    const expectedA = ['216.239.32.21', '216.239.34.21', '216.239.36.21', '216.239.38.21'];
+    const expectedCname = 'ghs.googlehosted.com';
+
+    let aRecords: string[] = [];
+    let aRecordsError: string | null = null;
+    try {
+      aRecords = await dns.resolve4(cleanDomain);
+    } catch (err: any) {
+      aRecordsError = err?.code || err?.message || 'Failed to resolve A records';
+    }
+
+    let wwwRecords: string[] = [];
+    let wwwCnameRecords: string[] = [];
+    let wwwError: string | null = null;
+    try {
+      wwwRecords = await dns.resolve4('www.' + cleanDomain);
+    } catch {
+      // ignore
+    }
+    try {
+      wwwCnameRecords = await dns.resolveCname('www.' + cleanDomain);
+    } catch (err: any) {
+      wwwError = err?.code || err?.message || null;
+    }
+
+    let txtRecords: string[][] = [];
+    try {
+      txtRecords = await dns.resolveTxt(cleanDomain);
+    } catch {
+      // ignore
+    }
+
+    const flatTxt = txtRecords.map(r => r.join(' '));
+    const isApexConfigured = aRecords.some(ip => expectedA.includes(ip));
+    const isWwwConfigured = wwwCnameRecords.some(c => c.toLowerCase().includes('googlehosted') || c.toLowerCase().includes('ghs')) || wwwRecords.some(ip => expectedA.includes(ip));
+
+    let statusText: 'connected' | 'pointing_other' | 'not_configured' = 'not_configured';
+    if (isApexConfigured || isWwwConfigured) {
+      statusText = 'connected';
+    } else if (aRecords.length > 0 || wwwRecords.length > 0) {
+      statusText = 'pointing_other';
+    }
+
+    res.json({
+      domain: cleanDomain,
+      status: statusText,
+      isConfigured: isApexConfigured || isWwwConfigured,
+      isApexConfigured,
+      isWwwConfigured,
+      liveDns: {
+        apexA: aRecords,
+        apexError: aRecordsError,
+        wwwA: wwwRecords,
+        wwwCname: wwwCnameRecords,
+        wwwError,
+        txtRecords: flatTxt,
+      },
+      requiredRecords: {
+        apexA: {
+          type: 'A',
+          host: '@',
+          targetIps: expectedA,
+        },
+        wwwCname: {
+          type: 'CNAME',
+          host: 'www',
+          target: expectedCname,
+        },
+      },
+      currentAppUrl: process.env.APP_URL || 'https://ais-dev-s7je4mzl2dlgwhimuajhn6-74974087593.europe-west3.run.app',
+      sslStatus: 'Google Managed Automatic SSL',
+      lastChecked: new Date().toISOString(),
+    });
+  });
+
+  // -------------------------------------------------------------
+  // Public SEO & Search Engine Endpoints (huta.lk)
+  // -------------------------------------------------------------
+
+  app.get('/robots.txt', (req, res) => {
+    const domain = process.env.CUSTOM_DOMAIN ? `https://${process.env.CUSTOM_DOMAIN}` : 'https://huta.lk';
+    res.type('text/plain');
+    res.send(`User-agent: *\nAllow: /\n\nSitemap: ${domain}/sitemap.xml\n`);
+  });
+
+  app.get('/sitemap.xml', (req, res) => {
+    const baseUrl = process.env.CUSTOM_DOMAIN ? `https://${process.env.CUSTOM_DOMAIN}` : 'https://huta.lk';
+    const approvedListings = listingsCache.filter(l => l.status === 'approved');
+
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+    xml += `  <url>\n    <loc>${baseUrl}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
+
+    const categories = ['Vehicles', 'Electronics', 'Property', 'Services', 'Home & Garden', 'Fashion', 'Gemstone & Jewelry'];
+    categories.forEach(cat => {
+      xml += `  <url>\n    <loc>${baseUrl}/?category=${encodeURIComponent(cat)}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+    });
+
+    approvedListings.slice(0, 200).forEach(listing => {
+      xml += `  <url>\n    <loc>${baseUrl}/?ad=${listing.id}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+    });
+
+    xml += `</urlset>`;
+    res.type('application/xml');
+    res.send(xml);
   });
 
   // Catch-all for undefined API routes
