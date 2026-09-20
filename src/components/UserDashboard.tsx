@@ -542,7 +542,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
       <div className="bg-[#111217] text-white rounded-3xl p-6 sm:p-8 border border-[#2D2F39] flex flex-wrap items-center justify-between gap-4 shadow-xl">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#FF5A36] to-[#FF7A50] text-white font-extrabold text-2xl flex items-center justify-center shadow-lg shadow-[#FF5A36]/30">
-            {currentUser.fullname ? currentUser.fullname[0].toUpperCase() : currentUser.username[0].toUpperCase()}
+            {((currentUser.fullname || currentUser.username || (currentUser as any).name || 'User').trim().charAt(0) || 'U').toUpperCase()}
           </div>
           <div>
             <div className="flex items-center gap-2">

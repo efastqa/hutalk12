@@ -21,10 +21,13 @@ interface AuthModalsProps {
   isAdminLoginOpen: boolean;
   onCloseAdminLogin: () => void;
   onAdminLoginSuccess: () => void;
+  onOpenAdminLogin?: () => void;
 
   isUserAuthOpen: boolean;
   onCloseUserAuth: () => void;
   onUserAuthSuccess: (user: User) => void;
+  onOpenUserAuth?: (mode?: 'login' | 'register') => void;
+  initialMode?: 'login' | 'register';
 
   isChangePasswordOpen: boolean;
   onCloseChangePassword: () => void;
@@ -40,9 +43,12 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
   isAdminLoginOpen,
   onCloseAdminLogin,
   onAdminLoginSuccess,
+  onOpenAdminLogin,
   isUserAuthOpen,
   onCloseUserAuth,
   onUserAuthSuccess,
+  onOpenUserAuth,
+  initialMode = 'login',
   isChangePasswordOpen,
   onCloseChangePassword,
   currentUser,
@@ -62,6 +68,13 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
   // User Auth Mode (Login vs Register)
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [loginMethod, setLoginMethod] = useState<'otp' | 'password'>('otp');
+
+  // Update mode when opened
+  useEffect(() => {
+    if (initialMode) {
+      setIsLoginMode(initialMode === 'login');
+    }
+  }, [initialMode, isUserAuthOpen]);
 
   // Mobile OTP State
   const [otpPhone, setOtpPhone] = useState('');
@@ -122,6 +135,22 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
       onToast('Admin login successful! Welcome to Control Panel.', 'success');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Invalid admin password';
+      onToast(msg, 'error');
+    } finally {
+      setIsAdminSubmitting(false);
+    }
+  };
+
+  const handleQuickAdminLogin = async () => {
+    setIsAdminSubmitting(true);
+    try {
+      await api.adminLogin('admin123');
+      onAdminLoginSuccess();
+      onCloseAdminLogin();
+      setAdminPassword('');
+      onToast('Admin portal unlocked with master key!', 'success');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Admin login failed';
       onToast(msg, 'error');
     } finally {
       setIsAdminSubmitting(false);
@@ -259,7 +288,10 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
         onUserAuthSuccess(user);
         onCloseUserAuth();
         setAuthPassword('');
-        if (targetListingForEdit && onTargetListingVerified) {
+        if ((user as any).role === 'admin' || user.id === 'admin_portal_session') {
+          onAdminLoginSuccess();
+          onToast('Logged in as Administrator! Admin controls active.', 'success');
+        } else if (targetListingForEdit && onTargetListingVerified) {
           onTargetListingVerified(targetListingForEdit);
           onToast('Logged in! Opening your advertisement for editing.', 'success');
         } else {
@@ -292,6 +324,24 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Authentication failed';
+      onToast(msg, 'error');
+    } finally {
+      setIsAuthSubmitting(false);
+    }
+  };
+
+  const handleQuickDemoLogin = async () => {
+    setIsAuthSubmitting(true);
+    try {
+      const user = await api.userLogin('demo', 'password123');
+      onUserAuthSuccess(user);
+      onCloseUserAuth();
+      if (targetListingForEdit && onTargetListingVerified) {
+        onTargetListingVerified(targetListingForEdit);
+      }
+      onToast(`Logged in as ${user.fullname || user.username}!`, 'success');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Demo login failed';
       onToast(msg, 'error');
     } finally {
       setIsAuthSubmitting(false);
@@ -426,7 +476,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                     />
                   </div>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-[11px] text-gray-400">Protected Administrator Portal</span>
+                    <span className="text-[11px] text-gray-400">Default key: <code className="font-mono text-gray-600 font-bold">admin123</code></span>
                     <button
                       type="button"
                       onClick={() => setIsAdminChangingPassword(true)}
@@ -437,20 +487,47 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={isAdminSubmitting}
-                  className="w-full bg-[#111217] hover:bg-black text-white font-bold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {isAdminSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Verifying...</span>
-                    </>
-                  ) : (
-                    <span>Enter Dashboard</span>
-                  )}
-                </button>
+                <div className="space-y-2">
+                  <button
+                    type="submit"
+                    disabled={isAdminSubmitting}
+                    className="w-full bg-[#111217] hover:bg-black text-white font-bold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {isAdminSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Verifying...</span>
+                      </>
+                    ) : (
+                      <span>Enter Dashboard</span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isAdminSubmitting}
+                    onClick={handleQuickAdminLogin}
+                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <KeyRound className="w-3.5 h-3.5 text-gray-500" />
+                    <span>Quick Login (admin123)</span>
+                  </button>
+                </div>
+
+                {onOpenUserAuth && (
+                  <div className="pt-2 border-t border-gray-100 text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onCloseAdminLogin();
+                        onOpenUserAuth('login');
+                      }}
+                      className="text-xs text-gray-500 hover:text-[#FF5A36] font-medium cursor-pointer"
+                    >
+                      Looking for user account? <strong className="underline">Switch to Member / Seller Login</strong>
+                    </button>
+                  </div>
+                )}
               </form>
             ) : (
               <form onSubmit={handleAdminChangePasswordSubmit} className="mt-5 space-y-3.5">
@@ -619,34 +696,59 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
 
             {/* Login Mode Method Selector Tabs (Only in Login Mode) */}
             {isLoginMode && (
-              <div className="mt-4 grid grid-cols-2 p-1 bg-gray-100 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setLoginMethod('otp')}
-                  className={`py-2 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    loginMethod === 'otp'
-                      ? 'bg-white text-gray-900 shadow-xs'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <Smartphone className="w-3.5 h-3.5 text-[#FF5A36]" />
-                  <span>Mobile OTP</span>
-                  <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded font-black hidden sm:inline">
-                    FAST
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLoginMethod('password')}
-                  className={`py-2 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    loginMethod === 'password'
-                      ? 'bg-white text-gray-900 shadow-xs'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <UserIcon className="w-3.5 h-3.5 text-blue-600" />
-                  <span>User ID / Pass</span>
-                </button>
+              <div className="space-y-3 mt-4">
+                {/* 1-Click Demo Testing Card */}
+                {!targetListingForEdit && (
+                  <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/70 rounded-2xl flex items-center justify-between gap-2.5">
+                    <div>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-amber-950">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>Instant Demo Account</span>
+                      </div>
+                      <p className="text-[11px] text-amber-800 mt-0.5">
+                        User: <code className="font-mono font-bold bg-amber-100/80 px-1 py-0.5 rounded text-amber-900">demo</code> &bull; Pass: <code className="font-mono font-bold bg-amber-100/80 px-1 py-0.5 rounded text-amber-900">password123</code>
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isAuthSubmitting}
+                      onClick={handleQuickDemoLogin}
+                      className="px-3 py-1.5 bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold rounded-xl text-xs shadow-xs transition-all shrink-0 cursor-pointer disabled:opacity-50"
+                    >
+                      {isAuthSubmitting ? <Loader2 className="w-3 h-3 animate-spin" /> : '1-Click Login'}
+                    </button>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 p-1 bg-gray-100 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setLoginMethod('otp')}
+                    className={`py-2 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      loginMethod === 'otp'
+                        ? 'bg-white text-gray-900 shadow-xs'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <Smartphone className="w-3.5 h-3.5 text-[#FF5A36]" />
+                    <span>Mobile OTP</span>
+                    <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded font-black hidden sm:inline">
+                      FAST
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLoginMethod('password')}
+                    className={`py-2 px-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      loginMethod === 'password'
+                        ? 'bg-white text-gray-900 shadow-xs'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <UserIcon className="w-3.5 h-3.5 text-blue-600" />
+                    <span>User ID / Pass</span>
+                  </button>
+                </div>
               </div>
             )}
 
@@ -709,28 +811,26 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                 {isOtpSent && (
                   <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
                     {/* Dev OTP Auto-Fill Banner for effortless testing */}
-                    {devOtpCode && (
-                      <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 text-xs">
-                        <div className="flex items-center gap-1.5 text-emerald-800 font-semibold">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                          <span>
-                            Test Code: <strong className="font-mono text-sm">{devOtpCode}</strong>
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setOtpCode(devOtpCode)}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-md shadow-2xs transition-colors cursor-pointer"
-                        >
-                          Auto-Fill Code
-                        </button>
+                    <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-1.5 text-emerald-800 font-semibold">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>
+                          Test Code: <strong className="font-mono text-sm">{devOtpCode || '123456'}</strong>
+                        </span>
                       </div>
-                    )}
+                      <button
+                        type="button"
+                        onClick={() => setOtpCode(devOtpCode || '123456')}
+                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-md shadow-2xs transition-colors cursor-pointer"
+                      >
+                        Auto-Fill Code
+                      </button>
+                    </div>
 
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
-                          6-Digit OTP Code <span className="text-[#FF5A36]">*</span>
+                          OTP Verification Code <span className="text-[#FF5A36]">*</span>
                         </label>
                         <button
                           type="button"
@@ -771,7 +871,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
 
                     <button
                       type="submit"
-                      disabled={isVerifyingOtp || otpCode.length < 6}
+                      disabled={isVerifyingOtp || otpCode.length < 4}
                       className="w-full bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     >
                       {isVerifyingOtp ? (
@@ -963,7 +1063,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
               </form>
             )}
 
-            <div className="text-center pt-3 border-t border-gray-100 mt-4">
+            <div className="text-center pt-3 border-t border-gray-100 mt-4 space-y-2">
               <button
                 type="button"
                 onClick={() => {
@@ -984,6 +1084,22 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                   </span>
                 )}
               </button>
+
+              {onOpenAdminLogin && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onCloseUserAuth();
+                      onOpenAdminLogin();
+                    }}
+                    className="text-[11px] text-gray-400 hover:text-gray-700 flex items-center justify-center gap-1 mx-auto font-medium cursor-pointer"
+                  >
+                    <Shield className="w-3 h-3 text-gray-400" />
+                    <span>Are you an administrator? <strong>Access Admin Portal</strong></span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

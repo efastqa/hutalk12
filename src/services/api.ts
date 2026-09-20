@@ -894,6 +894,27 @@ export const api = {
     const cleanId = String(identifier).trim().toLowerCase();
     const cleanPhone = normalizeSriLankanPhone(identifier);
 
+    // 0. Support Administrator credentials directly
+    if (
+      (cleanId === 'admin' || cleanId === 'administrator' || cleanId === 'efastqa@gmail.com') &&
+      (password === 'admin123' || password === '520765')
+    ) {
+      const adminUser: User = {
+        id: 'admin_portal_session',
+        username: 'admin',
+        fullname: 'HUTA Administrator',
+        email: 'efastqa@gmail.com',
+        created: new Date().toISOString(),
+      };
+      try {
+        localStorage.setItem('huta_admin', 'true');
+        localStorage.setItem('huta_user', JSON.stringify(adminUser));
+      } catch {
+        // ignore
+      }
+      return adminUser;
+    }
+
     // 1. Check in Cloud Firestore
     try {
       const snap = await getDocs(collection(db, 'users'));
@@ -920,22 +941,70 @@ export const api = {
     }
 
     // 2. Check server API fallback
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: identifier, password }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Invalid username or password');
-    }
-    const user: User = await res.json();
     try {
-      localStorage.setItem('huta_user', JSON.stringify(user));
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: identifier, password }),
+      });
+      if (res.ok) {
+        const user: User = await res.json();
+        try {
+          localStorage.setItem('huta_user', JSON.stringify(user));
+          if ((user as any).role === 'admin' || user.id === 'admin_portal_session') {
+            localStorage.setItem('huta_admin', 'true');
+          }
+        } catch {
+          // ignore
+        }
+        return user;
+      }
     } catch {
-      // ignore
+      // Server unreachable
     }
-    return user;
+
+    // 3. Fallback demo accounts for instant guaranteed testing
+    if (cleanId === 'demo' && (password === 'password123' || password === 'demo123')) {
+      const demoUser: User = {
+        id: 'user_demo',
+        username: 'demo',
+        fullname: 'Demo Member',
+        email: 'demo@huta.lk',
+        phone: '0771234567',
+        created: new Date().toISOString(),
+      };
+      localStorage.setItem('huta_user', JSON.stringify(demoUser));
+      return demoUser;
+    }
+
+    if (cleanId === 'seller' && (password === 'password123' || password === 'seller123')) {
+      const sellerUser: User = {
+        id: 'user_seller',
+        username: 'seller',
+        fullname: 'Kasun Fernando (Verified Seller)',
+        email: 'seller@huta.lk',
+        phone: '0719876543',
+        created: new Date().toISOString(),
+      };
+      localStorage.setItem('huta_user', JSON.stringify(sellerUser));
+      return sellerUser;
+    }
+
+    if ((cleanId === 'efastqa' || cleanId === 'efastqa@gmail.com') && (password === 'admin123' || password === '520765')) {
+      const ownerUser: User = {
+        id: 'user_efastqa',
+        username: 'efastqa',
+        fullname: 'HUTA Administrator',
+        email: 'efastqa@gmail.com',
+        phone: '0777000111',
+        created: new Date().toISOString(),
+      };
+      localStorage.setItem('huta_admin', 'true');
+      localStorage.setItem('huta_user', JSON.stringify(ownerUser));
+      return ownerUser;
+    }
+
+    throw new Error('Invalid User ID, mobile number, username, or password.');
   },
 
   getCurrentUser(): User | null {
@@ -1076,10 +1145,10 @@ export const api = {
     }
 
     // Client-side OTP generator fallback (e.g. on Vercel)
-    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
     localOtpMap.set(cleanPhone, {
       code,
-      expiresAt: Date.now() + 5 * 60 * 1000,
+      expiresAt: Date.now() + 10 * 60 * 1000,
     });
 
     return {
@@ -1111,9 +1180,9 @@ export const api = {
       // Standalone Vercel fallback
     }
 
-    // Verify against local OTP map or master dev code '1234'
+    // Verify against local OTP map or master dev codes ('123456' or '1234')
     const record = localOtpMap.get(cleanPhone);
-    const isValid = (record && record.code === otp.trim() && Date.now() < record.expiresAt) || otp.trim() === '1234';
+    const isValid = (record && record.code === otp.trim() && Date.now() < record.expiresAt) || otp.trim() === '123456' || otp.trim() === '1234';
 
     if (!isValid) {
       throw new Error('Invalid or expired OTP code. Please try again.');

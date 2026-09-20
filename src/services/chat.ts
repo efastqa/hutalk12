@@ -144,7 +144,7 @@ export async function startOrGetConversation(
       listingPrice: Number(listing.price) || 0,
       listingImage: String(listing.image || '').slice(0, 1000),
       buyerId: buyerUser.id,
-      buyerName: buyerUser.name.slice(0, 100),
+      buyerName: String(buyerUser.name || 'Buyer').slice(0, 100),
       sellerId: listing.userId || 'seller_system',
       sellerName: `Seller (${listing.phone || 'HUTA'})`,
       lastMessage: 'Conversation initiated',
@@ -178,7 +178,7 @@ export async function sendChatMessage(
     await addDoc(collection(db, 'conversations', conversationId, 'messages'), {
       conversationId,
       senderId: sender.id,
-      senderName: sender.name.slice(0, 100),
+      senderName: String(sender.name || 'User').slice(0, 100),
       text: trimmed.slice(0, 2000),
       createdAt: now,
     });

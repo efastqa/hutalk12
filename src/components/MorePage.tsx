@@ -96,7 +96,7 @@ export const MorePage: React.FC<MorePageProps> = ({
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#22242E] hover:bg-[#2A2D3A] active:scale-95 text-white font-medium text-sm border border-[#333644] transition-all shadow-sm cursor-pointer group"
                 >
                   <div className="w-5 h-5 rounded-full bg-[#FF5A36]/20 text-[#FF5A36] flex items-center justify-center font-bold text-xs">
-                    {(currentUser.fullname || currentUser.username).charAt(0).toUpperCase()}
+                    {((currentUser.fullname || currentUser.username || (currentUser as any).name || 'User').trim().charAt(0) || 'U').toUpperCase()}
                   </div>
                   <span className="font-semibold text-white max-w-[130px] truncate">
                     {currentUser.fullname || currentUser.username}
@@ -201,7 +201,7 @@ export const MorePage: React.FC<MorePageProps> = ({
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3.5">
                 <div className="w-14 h-14 rounded-2xl bg-[#FF5A36]/15 text-[#FF5A36] flex items-center justify-center font-black text-xl shadow-inner">
-                  {(currentUser.fullname || currentUser.username).charAt(0).toUpperCase()}
+                  {((currentUser.fullname || currentUser.username || (currentUser as any).name || 'User').trim().charAt(0) || 'U').toUpperCase()}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">

@@ -4,7 +4,7 @@ import {
   Plus,
   MapPin,
   Sparkles,
-  User,
+  User as UserIcon,
   LayoutGrid,
   Car,
   Home,
@@ -13,7 +13,7 @@ import {
   ShoppingBag,
   Smartphone,
 } from 'lucide-react';
-import { ViewTab } from '../types';
+import { ViewTab, User } from '../types';
 
 interface NavbarProps {
   currentTab: ViewTab;
@@ -22,7 +22,7 @@ interface NavbarProps {
   onOpenPostAd?: () => void;
   onOpenUserAuth?: () => void;
   onOpenAppStore?: () => void;
-  currentUser?: { name: string; email: string } | null;
+  currentUser?: User | { name?: string; fullname?: string; username?: string; email?: string } | null;
   selectedLocation?: string;
   onLocationChange?: (location: string) => void;
   activeCategory?: string;
@@ -121,23 +121,33 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="text-[#2D2F39]">|</span>
 
             {currentUser ? (
-              <button
-                type="button"
-                onClick={() => onSelectTab('user_dashboard')}
-                className="flex items-center gap-1.5 text-gray-200 hover:text-white transition-colors cursor-pointer"
-              >
-                <div className="w-5 h-5 rounded-full bg-[#FF5A36]/20 text-[#FF5A36] flex items-center justify-center text-[10px] font-bold">
-                  {currentUser.name.charAt(0).toUpperCase()}
-                </div>
-                <span className="max-w-[100px] truncate">{currentUser.name}</span>
-              </button>
+              (() => {
+                const displayName =
+                  currentUser.fullname ||
+                  (currentUser as any).name ||
+                  currentUser.username ||
+                  'User';
+                const initial = (displayName.trim().charAt(0) || 'U').toUpperCase();
+                return (
+                  <button
+                    type="button"
+                    onClick={() => onSelectTab('user_dashboard')}
+                    className="flex items-center gap-1.5 text-gray-200 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <div className="w-5 h-5 rounded-full bg-[#FF5A36]/20 text-[#FF5A36] flex items-center justify-center text-[10px] font-bold">
+                      {initial}
+                    </div>
+                    <span className="max-w-[100px] truncate">{displayName}</span>
+                  </button>
+                );
+              })()
             ) : (
               <button
                 type="button"
                 onClick={onOpenUserAuth}
                 className="flex items-center gap-1 text-gray-300 hover:text-white transition-colors cursor-pointer"
               >
-                <User className="w-3.5 h-3.5 text-[#FF5A36]" />
+                <UserIcon className="w-3.5 h-3.5 text-[#FF5A36]" />
                 <span>Log In / Sign Up</span>
               </button>
             )}

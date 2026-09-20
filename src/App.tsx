@@ -84,6 +84,7 @@ export default function App() {
   const [targetListingForEdit, setTargetListingForEdit] = useState<Listing | null>(null);
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState<boolean>(false);
   const [isUserAuthOpen, setIsUserAuthOpen] = useState<boolean>(false);
+  const [userAuthInitialMode, setUserAuthInitialMode] = useState<'login' | 'register'>('login');
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState<boolean>(false);
   const [isAppStoreOpen, setIsAppStoreOpen] = useState<boolean>(false);
 
@@ -1027,12 +1028,18 @@ export default function App() {
         isAdminLoginOpen={isAdminLoginOpen}
         onCloseAdminLogin={() => setIsAdminLoginOpen(false)}
         onAdminLoginSuccess={handleAdminLoginSuccess}
+        onOpenAdminLogin={() => setIsAdminLoginOpen(true)}
         isUserAuthOpen={isUserAuthOpen}
         onCloseUserAuth={() => {
           setIsUserAuthOpen(false);
           setTargetListingForEdit(null);
         }}
         onUserAuthSuccess={handleUserAuthSuccess}
+        onOpenUserAuth={(mode) => {
+          if (mode) setUserAuthInitialMode(mode);
+          setIsUserAuthOpen(true);
+        }}
+        initialMode={userAuthInitialMode}
         isChangePasswordOpen={isChangePasswordOpen}
         onCloseChangePassword={() => setIsChangePasswordOpen(false)}
         currentUser={currentUser}

@@ -1,0 +1,57 @@
+[
+  {
+    "id": "user_demo",
+    "username": "demo",
+    "fullname": "Demo Member",
+    "email": "demo@huta.lk",
+    "phone": "0771234567",
+    "password": "password123",
+    "securityQuestion": "pet",
+    "securityAnswer": "puppy",
+    "created": "2026-09-20T00:00:00.000Z"
+  },
+  {
+    "id": "user_seller",
+    "username": "seller",
+    "fullname": "Kasun Fernando (Verified Seller)",
+    "email": "seller@huta.lk",
+    "phone": "0719876543",
+    "password": "password123",
+    "securityQuestion": "city",
+    "securityAnswer": "colombo",
+    "created": "2026-09-20T00:00:00.000Z"
+  },
+  {
+    "id": "user_efastqa",
+    "username": "efastqa",
+    "fullname": "HUTA Administrator",
+    "email": "efastqa@gmail.com",
+    "phone": "0777000111",
+    "password": "admin123",
+    "securityQuestion": "pet",
+    "securityAnswer": "huta",
+    "created": "2026-09-20T00:00:00.000Z"
+  },
+  {
+    "password": "Rimaz1993",
+    "email": "mamrimazrimaz@gmail.com",
+    "id": "user_1789580740506",
+    "created": "2026-09-16T17:45:40.506Z",
+    "fullname": "M.A.M Rimaz",
+    "securityAnswer": "kurunegala",
+    "username": "rimaz1993",
+    "securityQuestion": "city",
+    "phone": "0774038723"
+  },
+  {
+    "password": "Nashan520765",
+    "securityAnswer": "colombo",
+    "email": "efastqa@gmail.com",
+    "securityQuestion": "city",
+    "id": "user_1789890651187",
+    "fullname": "Nashan",
+    "phone": "0775260765",
+    "username": "mymnashan",
+    "created": "2026-09-20T07:50:51.187Z"
+  }
+]

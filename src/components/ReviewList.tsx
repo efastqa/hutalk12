@@ -95,7 +95,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
                   <div className="w-6 h-6 rounded-full bg-orange-100 text-[#FF5A36] font-bold flex items-center justify-center text-[11px]">
-                    {rev.authorName.charAt(0).toUpperCase()}
+                    {((rev.authorName || 'U').trim().charAt(0) || 'U').toUpperCase()}
                   </div>
                   <span className="font-bold text-gray-900">{rev.authorName}</span>
                   {rev.verifiedBuyer && (
