@@ -1234,21 +1234,26 @@ async function startServer() {
   app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;
     const currentAdminPassword = getAdminPassword();
-    // Accept current active password or master fallbacks (admin123 / 520765) to prevent lockouts
-    if (password === currentAdminPassword || password === 'admin123' || password === '520765') {
+    if (password && password === currentAdminPassword) {
       return res.json({ success: true, role: 'admin' });
     }
     return res.status(401).json({ error: 'Invalid admin credentials' });
   });
 
-  // Admin reset password to default
+  // Admin reset password (strictly protected by current admin password)
   app.post('/api/admin/reset-password', (req, res) => {
-    const { newPassword } = req.body;
+    const { currentPassword, newPassword } = req.body;
+    const activeAdminPassword = getAdminPassword();
+
+    if (!currentPassword || currentPassword !== activeAdminPassword) {
+      return res.status(401).json({ error: 'Current admin password is required to reset password.' });
+    }
+
     const targetPassword = (newPassword && String(newPassword).length >= 6) ? String(newPassword) : 'admin123';
     setAdminPassword(targetPassword);
     return res.json({ 
       success: true, 
-      message: `Admin password has been reset to: ${targetPassword}`,
+      message: 'Admin password updated successfully',
       password: targetPassword 
     });
   });
@@ -1258,17 +1263,20 @@ async function startServer() {
     const { currentPassword, newPassword } = req.body;
     const activeAdminPassword = getAdminPassword();
 
+    if (!currentPassword) {
+      return res.status(400).json({ error: 'Current admin password is required.' });
+    }
+
+    if (currentPassword !== activeAdminPassword) {
+      return res.status(401).json({ error: 'Incorrect current admin password.' });
+    }
+
     if (!newPassword) {
       return res.status(400).json({ error: 'New password is required.' });
     }
 
     if (String(newPassword).length < 6) {
       return res.status(400).json({ error: 'New password must be at least 6 characters.' });
-    }
-
-    // If currentPassword is provided, accept it if it matches active password or master fallbacks (admin123 / 520765)
-    if (currentPassword && currentPassword !== activeAdminPassword && currentPassword !== 'admin123' && currentPassword !== '520765') {
-      return res.status(401).json({ error: 'Incorrect current admin password.' });
     }
 
     setAdminPassword(String(newPassword));
@@ -1744,7 +1752,7 @@ async function startServer() {
 
     // Also support administrator credentials seamlessly through customer login form
     const adminPass = getAdminPassword();
-    if ((cleanLower === 'admin' || cleanLower === 'administrator' || cleanLower === 'efastqa@gmail.com') && (password === adminPass || password === 'admin123' || password === '520765')) {
+    if ((cleanLower === 'admin' || cleanLower === 'administrator' || cleanLower === 'efastqa@gmail.com') && (password === adminPass)) {
       return res.json({
         id: 'admin_portal_session',
         username: 'admin',

@@ -261,6 +261,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setChangeError('');
     setChangeSuccess('');
 
+    if (!currentPass.trim()) {
+      setChangeError('Please enter your current admin password.');
+      return;
+    }
     if (newPass !== confirmNewPass) {
       setChangeError('New password and confirmation do not match.');
       return;
@@ -1858,15 +1862,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <form onSubmit={handleChangePassword} className="mt-4 space-y-3.5">
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                  Current Admin Password <span className="text-gray-400 font-normal lowercase">(optional if logged in)</span>
+                  Current Admin Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
                   <input
                     type={showCurrentPass ? 'text' : 'password'}
+                    required
                     value={currentPass}
                     onChange={(e) => setCurrentPass(e.target.value)}
-                    placeholder="Leave blank to keep or enter current"
+                    placeholder="Enter current admin password"
                     className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
                   />
                   <button

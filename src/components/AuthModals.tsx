@@ -3,6 +3,7 @@ import { User, Listing } from '../types';
 import {
   X,
   Shield,
+  ShieldCheck,
   Lock,
   User as UserIcon,
   KeyRound,
@@ -14,6 +15,8 @@ import {
   RefreshCw,
   Sparkles,
   Edit,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -64,6 +67,10 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
   const [adminNewPass, setAdminNewPass] = useState('');
   const [adminConfirmPass, setAdminConfirmPass] = useState('');
   const [isAdminPassChanging, setIsAdminPassChanging] = useState(false);
+  const [showAdminPass, setShowAdminPass] = useState(false);
+  const [showAdminOldPass, setShowAdminOldPass] = useState(false);
+  const [showAdminNewPass, setShowAdminNewPass] = useState(false);
+  const [showAdminConfirmPass, setShowAdminConfirmPass] = useState(false);
 
   // User Auth Mode (Login vs Register)
   const [isLoginMode, setIsLoginMode] = useState(true);
@@ -141,42 +148,12 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
     }
   };
 
-  const handleQuickAdminLogin = async () => {
-    setIsAdminSubmitting(true);
-    try {
-      await api.adminLogin('admin123');
-      onAdminLoginSuccess();
-      onCloseAdminLogin();
-      setAdminPassword('');
-      onToast('Admin portal unlocked with master key!', 'success');
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Admin login failed';
-      onToast(msg, 'error');
-    } finally {
-      setIsAdminSubmitting(false);
-    }
-  };
-
-  const handleAdminResetToDefault = async () => {
-    setIsAdminPassChanging(true);
-    try {
-      const res = await api.resetAdminPassword('admin123');
-      onToast(res.message || 'Admin password reset to default! You can now log in.', 'success');
-      setAdminPassword('admin123');
-      setIsAdminChangingPassword(false);
-      setAdminOldPass('');
-      setAdminNewPass('');
-      setAdminConfirmPass('');
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to reset admin password';
-      onToast(msg, 'error');
-    } finally {
-      setIsAdminPassChanging(false);
-    }
-  };
-
   const handleAdminChangePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!adminOldPass.trim()) {
+      onToast('Please enter your current admin password.', 'error');
+      return;
+    }
     if (adminNewPass !== adminConfirmPass) {
       onToast('New password and confirmation do not match.', 'error');
       return;
@@ -188,14 +165,8 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
 
     setIsAdminPassChanging(true);
     try {
-      // If old password provided, use changePassword; otherwise use resetAdminPassword directly
-      if (adminOldPass.trim()) {
-        const res = await api.changeAdminPassword(adminOldPass.trim(), adminNewPass.trim());
-        onToast(res.message || 'Admin password updated successfully!', 'success');
-      } else {
-        const res = await api.resetAdminPassword(adminNewPass.trim());
-        onToast(res.message || 'Admin password reset successfully!', 'success');
-      }
+      const res = await api.changeAdminPassword(adminOldPass.trim(), adminNewPass.trim());
+      onToast(res.message || 'Admin password updated successfully!', 'success');
       setIsAdminChangingPassword(false);
       setAdminOldPass('');
       setAdminNewPass('');
@@ -461,37 +432,49 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
             {!isAdminChangingPassword ? (
               <form onSubmit={handleAdminSubmit} className="mt-5 space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Admin Master Password
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Admin Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAdminChangingPassword(true);
+                        setAdminOldPass('');
+                        setAdminNewPass('');
+                        setAdminConfirmPass('');
+                      }}
+                      className="text-[11px] font-semibold text-gray-500 hover:text-[#FF5A36] hover:underline cursor-pointer"
+                    >
+                      Change Password
+                    </button>
+                  </div>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
                     <input
-                      type="password"
+                      type={showAdminPass ? 'text' : 'password'}
                       required
                       value={adminPassword}
                       onChange={(e) => setAdminPassword(e.target.value)}
                       placeholder="Enter admin password..."
-                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
+                      className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
                     />
-                  </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-[11px] text-gray-400">Default key: <code className="font-mono text-gray-600 font-bold">admin123</code></span>
                     <button
                       type="button"
-                      onClick={() => setIsAdminChangingPassword(true)}
-                      className="text-[11px] font-semibold text-gray-500 hover:text-[#FF5A36] hover:underline cursor-pointer"
+                      onClick={() => setShowAdminPass(!showAdminPass)}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
+                      title={showAdminPass ? 'Hide password' : 'Show password'}
                     >
-                      Reset Password
+                      {showAdminPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="pt-1">
                   <button
                     type="submit"
                     disabled={isAdminSubmitting}
-                    className="w-full bg-[#111217] hover:bg-black text-white font-bold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full bg-[#111217] hover:bg-black text-white font-bold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                   >
                     {isAdminSubmitting ? (
                       <>
@@ -499,23 +482,16 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                         <span>Verifying...</span>
                       </>
                     ) : (
-                      <span>Enter Dashboard</span>
+                      <>
+                        <Shield className="w-4 h-4" />
+                        <span>Enter Dashboard</span>
+                      </>
                     )}
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={isAdminSubmitting}
-                    onClick={handleQuickAdminLogin}
-                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <KeyRound className="w-3.5 h-3.5 text-gray-500" />
-                    <span>Quick Login (admin123)</span>
                   </button>
                 </div>
 
                 {onOpenUserAuth && (
-                  <div className="pt-2 border-t border-gray-100 text-center">
+                  <div className="pt-3 border-t border-gray-100 text-center">
                     <button
                       type="button"
                       onClick={() => {
@@ -531,78 +507,105 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
               </form>
             ) : (
               <form onSubmit={handleAdminChangePasswordSubmit} className="mt-5 space-y-3.5">
-                <div className="p-3 bg-gray-50 border border-gray-200/80 rounded-xl text-xs text-gray-700 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-gray-800">Forgot current password?</span>
-                    <button
-                      type="button"
-                      disabled={isAdminPassChanging}
-                      onClick={handleAdminResetToDefault}
-                      className="px-2.5 py-1 bg-gray-800 hover:bg-black text-white rounded-lg font-bold text-[11px] shadow-sm transition-colors cursor-pointer"
-                    >
-                      Reset to Default
-                    </button>
+                <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-xs text-amber-900 space-y-1">
+                  <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                    <ShieldCheck className="w-4 h-4 text-amber-600" />
+                    <span>Protected Password Update</span>
                   </div>
-                  <p className="text-[11px] text-gray-500 leading-relaxed">
-                    Click above to restore default master credentials, or enter a new master password below.
+                  <p className="text-[11px] text-amber-800/90 leading-relaxed">
+                    Enter your current admin password to verify ownership before setting a new secure password.
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Current Password <span className="text-gray-400 font-normal lowercase">(optional)</span>
+                    Current Password <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="password"
-                    value={adminOldPass}
-                    onChange={(e) => setAdminOldPass(e.target.value)}
-                    placeholder="Leave blank to override or enter current"
-                    className="w-full px-3.5 py-2 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
-                  />
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                    <input
+                      type={showAdminOldPass ? 'text' : 'password'}
+                      required
+                      value={adminOldPass}
+                      onChange={(e) => setAdminOldPass(e.target.value)}
+                      placeholder="Enter current admin password"
+                      className="w-full pl-9 pr-10 py-2 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAdminOldPass(!showAdminOldPass)}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
+                      title={showAdminOldPass ? 'Hide password' : 'Show password'}
+                    >
+                      {showAdminOldPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    New Admin Password
+                    New Admin Password <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    value={adminNewPass}
-                    onChange={(e) => setAdminNewPass(e.target.value)}
-                    placeholder="New password (min 6 characters)"
-                    className="w-full px-3.5 py-2 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
-                  />
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                    <input
+                      type={showAdminNewPass ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={adminNewPass}
+                      onChange={(e) => setAdminNewPass(e.target.value)}
+                      placeholder="New password (min 6 characters)"
+                      className="w-full pl-9 pr-10 py-2 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAdminNewPass(!showAdminNewPass)}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
+                      title={showAdminNewPass ? 'Hide password' : 'Show password'}
+                    >
+                      {showAdminNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Confirm New Password
+                    Confirm New Password <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    value={adminConfirmPass}
-                    onChange={(e) => setAdminConfirmPass(e.target.value)}
-                    placeholder="Re-enter new password"
-                    className="w-full px-3.5 py-2 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
-                  />
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                    <input
+                      type={showAdminConfirmPass ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={adminConfirmPass}
+                      onChange={(e) => setAdminConfirmPass(e.target.value)}
+                      placeholder="Re-enter new password"
+                      className="w-full pl-9 pr-10 py-2 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAdminConfirmPass(!showAdminConfirmPass)}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
+                      title={showAdminConfirmPass ? 'Hide password' : 'Show password'}
+                    >
+                      {showAdminConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="pt-1 flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setIsAdminChangingPassword(false)}
-                    className="w-1/3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-xs transition-colors"
+                    className="w-1/3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-xs transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isAdminPassChanging}
-                    className="w-2/3 bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold py-2.5 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-md cursor-pointer"
+                    className="w-2/3 bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold py-2.5 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-50"
                   >
                     {isAdminPassChanging ? (
                       <>
