@@ -658,11 +658,11 @@ export const api = {
         const data = snap.data();
         return {
           autoApprove: data.autoApprove !== undefined ? Boolean(data.autoApprove) : false,
-          password: data.password || 'admin123',
+          password: data.password || '520765',
         };
       } else {
         // Initialize default in Firestore
-        const defaultCfg = { autoApprove: false, password: 'admin123', updatedAt: new Date().toISOString() };
+        const defaultCfg = { autoApprove: false, password: '520765', updatedAt: new Date().toISOString() };
         await setDoc(docRef, defaultCfg);
         return defaultCfg;
       }
@@ -675,12 +675,12 @@ export const api = {
         // ignore
       }
     }
-    return { autoApprove: false, password: 'admin123' };
+    return { autoApprove: false, password: '520765' };
   },
 
   async adminLogin(password: string): Promise<{ success: boolean; role: string }> {
     const config = await this.getAdminConfig();
-    const expectedPassword = config.password || 'admin123';
+    const expectedPassword = config.password || '520765';
 
     if (password && password === expectedPassword) {
       try {
@@ -713,7 +713,7 @@ export const api = {
     if (!currentPassword) {
       throw new Error('Current admin password is required.');
     }
-    return this.changeAdminPassword(currentPassword, newPassword || 'admin123');
+    return this.changeAdminPassword(currentPassword, newPassword || '520765');
   },
 
   isAdmin(): boolean {
@@ -742,7 +742,7 @@ export const api = {
     }
 
     const config = await this.getAdminConfig();
-    const activeAdminPassword = config.password || 'admin123';
+    const activeAdminPassword = config.password || '520765';
 
     if (currentPassword !== activeAdminPassword) {
       throw new Error('Incorrect current admin password.');
@@ -875,7 +875,7 @@ export const api = {
 
     // 0. Support Administrator credentials directly
     const adminConfig = await this.getAdminConfig();
-    const activeAdminPass = adminConfig.password || 'admin123';
+    const activeAdminPass = adminConfig.password || '520765';
     if (
       (cleanId === 'admin' || cleanId === 'administrator' || cleanId === 'efastqa@gmail.com') &&
       password === activeAdminPass

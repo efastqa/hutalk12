@@ -137,7 +137,7 @@ interface AdminConfig {
 
 function getAdminConfig(): { password: string; autoApprove: boolean } {
   const result = {
-    password: process.env.ADMIN_PASSWORD || 'admin123',
+    password: process.env.ADMIN_PASSWORD || '520765',
     autoApprove: false, // Default: manual admin review required for all ads and services
   };
   if (fs.existsSync(ADMIN_CONFIG_FILE)) {
@@ -370,7 +370,7 @@ const DEFAULT_USERS: User[] = [
     fullname: 'HUTA Administrator',
     email: 'efastqa@gmail.com',
     phone: '0777000111',
-    password: 'admin123',
+    password: '520765',
     securityQuestion: 'pet',
     securityAnswer: 'huta',
     created: '2026-09-20T00:00:00.000Z',
@@ -1249,7 +1249,7 @@ async function startServer() {
       return res.status(401).json({ error: 'Current admin password is required to reset password.' });
     }
 
-    const targetPassword = (newPassword && String(newPassword).length >= 6) ? String(newPassword) : 'admin123';
+    const targetPassword = (newPassword && String(newPassword).length >= 6) ? String(newPassword) : '520765';
     setAdminPassword(targetPassword);
     return res.json({ 
       success: true, 
