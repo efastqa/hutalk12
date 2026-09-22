@@ -265,6 +265,25 @@ export const api = {
     if (data.serviceArea) rawListing.serviceArea = data.serviceArea;
     if (data.isEmergency247 !== undefined) rawListing.isEmergency247 = Boolean(data.isEmergency247);
 
+    if (data.videoUrl) {
+      let finalVideoUrl = String(data.videoUrl).trim();
+      if (finalVideoUrl.startsWith('data:video')) {
+        try {
+          const uploaded = await this.uploadVideo(finalVideoUrl, `ad-video-${id}.mp4`);
+          if (uploaded?.url) {
+            finalVideoUrl = uploaded.url;
+          }
+        } catch {
+          if (finalVideoUrl.length > 500000) {
+            finalVideoUrl = '';
+          }
+        }
+      }
+      if (finalVideoUrl) {
+        rawListing.videoUrl = finalVideoUrl;
+      }
+    }
+
     const newListing = sanitizeForFirestore(rawListing) as Listing;
 
     // 1. Write to shared Cloud Firestore (reflects on Vercel + Cloud Run immediately)

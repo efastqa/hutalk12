@@ -287,8 +287,14 @@ export default function App() {
   const filteredListings = useMemo(() => {
     let result = [...listings];
 
-    // Public website marketplace view strictly shows only approved ads and services that passed admin review
-    result = result.filter((item) => item.status === 'approved');
+    // Public website marketplace view shows approved ads, and allows creators to immediately see their posted ads
+    const guestIds = api.getGuestListingIds();
+    result = result.filter(
+      (item) =>
+        item.status === 'approved' ||
+        (currentUser && item.userId === currentUser.id) ||
+        guestIds.includes(item.id)
+    );
 
     // Category Filter
     if (selectedCategory !== 'All') {

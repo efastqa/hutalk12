@@ -384,9 +384,13 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
             }
           }
           onToast('Animation video uploaded and attached successfully!', 'success');
-        } catch {
-          setVideoUrl(rawData);
-          onToast('Animation video clip loaded locally!', 'info');
+        } catch (uploadErr) {
+          // If server upload failed, do not retain oversized base64 that would break Firestore
+          const thumb = await captureVideoThumbnail(rawData).catch(() => null);
+          if (thumb && images.length === 0) {
+            setImages([thumb]);
+          }
+          onToast('Video upload failed. Please try a smaller video clip (under 30MB) or select an instant motion loop.', 'error');
         } finally {
           setIsUploadingVideo(false);
         }
@@ -477,6 +481,11 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       return;
     }
 
+    if (isUploadingVideo) {
+      onToast('Please wait for the animation video upload to finish before publishing.', 'info');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const fallbackImage = category === 'Services'
@@ -486,6 +495,22 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       const finalImages = images.length > 0 ? images : [primaryImage];
 
       const parsedPrice = isService && pricingType === 'quote' ? 0 : (parseFloat(cleanPriceStr) || 0);
+
+      let finalVideoUrl = videoUrl.trim() || undefined;
+      // If user uploaded or has data URI, ensure it is processed cleanly
+      if (finalVideoUrl && finalVideoUrl.startsWith('data:video')) {
+        try {
+          const res = await api.uploadVideo(finalVideoUrl, 'ad-animation.mp4');
+          if (res?.url) {
+            finalVideoUrl = res.url;
+            setVideoUrl(res.url);
+          }
+        } catch {
+          if (finalVideoUrl.length > 500000) {
+            finalVideoUrl = undefined;
+          }
+        }
+      }
 
       const payload: Partial<Listing> = {
         title: title.trim(),
@@ -497,7 +522,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
         description: description.trim(),
         image: primaryImage,
         images: finalImages,
-        videoUrl: videoUrl.trim() || undefined,
+        videoUrl: finalVideoUrl,
         userId: editingListing ? editingListing.userId : (currentUser ? currentUser.id : 'guest'),
         pricingType: isService ? pricingType : 'fixed',
         ...(isService && serviceTrade ? { serviceTrade } : {}),
@@ -1256,12 +1281,12 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
 
           {/* Admin Quality Review Notice */}
           {!editingListing && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-start gap-3 text-xs text-amber-950">
-              <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex items-start gap-3 text-xs text-emerald-950">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold text-amber-900">Admin Quality Review: </span>
-                <span className="text-amber-800">
-                  To protect buyers across Sri Lanka and maintain trusted, spam-free listings, all advertisements are reviewed and approved by our admin team before appearing live on the marketplace.
+                <span className="font-bold text-emerald-900">Instant Live Publishing: </span>
+                <span className="text-emerald-800">
+                  Your advertisement will publish live immediately on HUTA Marketplace for buyers across Sri Lanka{videoUrl ? ' with your attached animation video loop' : ''}!
                 </span>
               </div>
             </div>
@@ -1271,19 +1296,26 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
           <div className="pt-2">
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl hover:shadow-[#FF5A36]/25 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              disabled={isSubmitting || isUploadingVideo}
+              className="w-full bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:shadow-[#FF5A36]/25 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Saving Advertisement...</span>
+                  <span>Publishing Advertisement Live...</span>
+                </>
+              ) : isUploadingVideo ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Uploading Animation Video... Please wait</span>
                 </>
               ) : (
                 <span>
                   {editingListing
                     ? 'Save & Update Advertisement'
-                    : 'Submit Advertisement for Approval'}
+                    : videoUrl
+                    ? 'Publish Advertisement with Animation Video'
+                    : 'Publish Advertisement Live'}
                 </span>
               )}
             </button>

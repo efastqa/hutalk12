@@ -38,6 +38,7 @@ interface Listing {
   serviceArea?: string;
   isVerifiedPro?: boolean;
   isEmergency247?: boolean;
+  videoUrl?: string;
   sellerName?: string;
   availabilityStatus?: 'available' | 'reserved' | 'sold';
   sellerRating?: number;
@@ -154,7 +155,7 @@ function getAdminConfig(): {
 } {
   const result = {
     password: process.env.ADMIN_PASSWORD || '520765',
-    autoApprove: false, // Default: manual admin review required for all ads and services
+    autoApprove: true, // Default: auto-approve listings live immediately
     twoFactorEnabled: false,
     twoFactorPhone: '0777000111',
     twoFactorMethod: 'sms' as 'sms' | 'authenticator',
@@ -867,6 +868,7 @@ async function startServer() {
       serviceArea,
       isVerifiedPro,
       isEmergency247,
+      videoUrl,
     } = req.body;
 
     const finalTitle = String(title || '').trim();
@@ -916,6 +918,7 @@ async function startServer() {
       ...(serviceArea ? { serviceArea: String(serviceArea).trim() } : {}),
       isVerifiedPro: Boolean(isVerifiedPro),
       isEmergency247: Boolean(isEmergency247),
+      ...(videoUrl ? { videoUrl: String(videoUrl).trim() } : {}),
     };
 
     if (existingIndex >= 0) {
@@ -949,6 +952,7 @@ async function startServer() {
       serviceArea,
       isVerifiedPro,
       isEmergency247,
+      videoUrl,
     } = req.body;
 
     if (index === -1) {
@@ -977,6 +981,7 @@ async function startServer() {
         serviceArea: serviceArea !== undefined ? String(serviceArea).trim() : undefined,
         isVerifiedPro: Boolean(isVerifiedPro),
         isEmergency247: Boolean(isEmergency247),
+        ...(videoUrl !== undefined ? { videoUrl: videoUrl ? String(videoUrl).trim() : undefined } : {}),
       };
       listingsCache.unshift(upserted);
       saveStoredListings(listingsCache);
@@ -1013,6 +1018,7 @@ async function startServer() {
       serviceArea: serviceArea !== undefined ? String(serviceArea).trim() : current.serviceArea,
       isVerifiedPro: isVerifiedPro !== undefined ? Boolean(isVerifiedPro) : current.isVerifiedPro,
       isEmergency247: isEmergency247 !== undefined ? Boolean(isEmergency247) : current.isEmergency247,
+      videoUrl: videoUrl !== undefined ? (videoUrl ? String(videoUrl).trim() : undefined) : current.videoUrl,
       availabilityStatus: req.body.availabilityStatus !== undefined ? req.body.availabilityStatus : current.availabilityStatus,
       sellerName: req.body.sellerName !== undefined ? String(req.body.sellerName).trim() : current.sellerName,
       sellerRating: req.body.sellerRating !== undefined ? Number(req.body.sellerRating) : current.sellerRating,
