@@ -222,6 +222,8 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
             (() => {
               const ad = currentSlide.data!;
               const styles = getGradientStyles(ad.gradientTheme);
+              const isVideoAd = ad.mediaType === 'video' || Boolean(ad.bgVideo);
+              const videoSource = isVideoAd ? (ad.bgVideo?.trim() || '/videos/motion-loop-3.mp4') : null;
 
               return (
                 <motion.div
@@ -230,27 +232,35 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -12, scale: 0.98 }}
                   transition={{ duration: 0.4, ease: 'easeOut' }}
-                  className="w-full relative rounded-3xl p-5 sm:p-7 border border-[#2D303E] bg-gradient-to-b from-[#181A22] via-[#14161D] to-[#101117] text-center overflow-hidden shadow-2xl"
+                  className="w-full relative rounded-3xl p-5 sm:p-7 border border-[#2D303E] bg-[#10121a] text-center overflow-hidden shadow-2xl"
                 >
-                  {/* Optional Background Animation Video or Image */}
-                  {(ad.mediaType === 'video' || ad.bgVideo) && ad.bgVideo ? (
+                  {/* High-Visibility Animated Video or Image Background */}
+                  {isVideoAd && videoSource ? (
                     <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-3xl">
                       <video
-                        key={ad.bgVideo}
-                        src={ad.bgVideo}
+                        ref={(el) => {
+                          if (el) {
+                            el.defaultMuted = true;
+                            el.muted = true;
+                            el.play().catch(() => {});
+                          }
+                        }}
+                        key={videoSource}
+                        src={videoSource}
                         autoPlay
                         loop
                         muted
                         playsInline
-                        className="w-full h-full object-cover opacity-35 filter brightness-95 contrast-125"
+                        preload="auto"
+                        className="w-full h-full object-cover opacity-85 sm:opacity-90 filter brightness-105 contrast-110"
                       />
-                      {/* Protective dark gradients to guarantee text legibility */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#101117] via-[#101117]/65 to-[#101117]/85" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-[#101117]/80 via-transparent to-[#101117]/80" />
+                      {/* Transparent balanced scrim: keeps video vibrant while ensuring text is 100% legible */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0e1017]/90 via-[#0e1017]/35 to-[#0e1017]/60" />
+                      <div className="absolute inset-0 bg-radial from-transparent via-[#0e1017]/20 to-[#0e1017]/50" />
                     </div>
                   ) : ad.bgImage ? (
                     <div
-                      className="absolute inset-0 bg-cover bg-center opacity-20 pointer-events-none mix-blend-luminosity filter blur-[1px] rounded-3xl"
+                      className="absolute inset-0 bg-cover bg-center opacity-40 pointer-events-none filter brightness-95 rounded-3xl"
                       style={{ backgroundImage: `url(${ad.bgImage})` }}
                     />
                   ) : null}
@@ -270,32 +280,32 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
                             : {}
                         }
                         transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${styles.badge} shadow-xs`}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${styles.badge} shadow-md backdrop-blur-xs`}
                       >
                         <Megaphone className="w-3.5 h-3.5" />
                         <span>{ad.badge || 'Sponsored Ad'}</span>
                       </motion.div>
 
-                      {(ad.mediaType === 'video' || ad.bgVideo) && (
-                        <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-950/70 text-purple-300 border border-purple-500/30 backdrop-blur-xs">
-                          <Film className="w-3 h-3 text-purple-400" />
+                      {isVideoAd && (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-purple-900/90 text-purple-200 border border-purple-400/50 backdrop-blur-md shadow-lg">
+                          <Film className="w-3.5 h-3.5 text-purple-300 animate-pulse" />
                           <span>Animated Video Ad</span>
                         </div>
                       )}
                     </div>
 
                     {/* Headline */}
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight leading-snug">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight leading-snug text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]">
                       {ad.title}{' '}
                       {ad.highlightText && (
-                        <span className={styles.highlight}>
+                        <span className={`${styles.highlight} drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]`}>
                           {ad.highlightText}
                         </span>
                       )}
                     </h1>
 
                     {/* Subtitle */}
-                    <p className="text-gray-300 text-xs sm:text-sm font-medium max-w-lg mx-auto leading-relaxed">
+                    <p className="text-gray-100 text-xs sm:text-sm font-semibold max-w-lg mx-auto leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
                       {ad.subtitle}
                     </p>
 
@@ -305,7 +315,7 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
                         <button
                           type="button"
                           onClick={() => handleCtaClick(ad.ctaAction)}
-                          className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm transition-all transform hover:-translate-y-0.5 active:scale-95 shadow-lg cursor-pointer ${styles.button}`}
+                          className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm transition-all transform hover:-translate-y-0.5 active:scale-95 shadow-xl cursor-pointer ${styles.button}`}
                         >
                           <span>{ad.ctaText}</span>
                           <ArrowRight className="w-4 h-4" />

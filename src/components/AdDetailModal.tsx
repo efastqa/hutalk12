@@ -29,6 +29,7 @@ import {
   CheckCircle,
   Film,
   Video,
+  Play,
 } from 'lucide-react';
 import { formatLKR } from './ListingsSection';
 import { downloadImage } from '../utils/downloadHelper';
@@ -116,7 +117,8 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
 
   useEffect(() => {
     setActiveIdx(0);
-    setIsVideoActive(false);
+    // If ad only has video or primary media is video, activate video mode
+    setIsVideoActive(Boolean(listing?.videoUrl && (!listing.images || listing.images.length === 0)));
     setIsZoomOpen(false);
     setIsFacebookFlyerOpen(false);
     setIsReportModalOpen(false);
@@ -228,6 +230,19 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                       'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80';
                   }}
                 />
+              )}
+
+              {!isVideoActive && listing.videoUrl && (
+                <button
+                  type="button"
+                  onClick={() => setIsVideoActive(true)}
+                  className="absolute inset-0 m-auto w-max h-max px-4 py-2.5 rounded-2xl bg-purple-950/85 hover:bg-purple-900 text-white font-extrabold text-xs shadow-2xl border border-purple-400/60 backdrop-blur-md flex items-center gap-2.5 transition-transform hover:scale-105 cursor-pointer z-10"
+                >
+                  <div className="w-7 h-7 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-md">
+                    <Play className="w-3.5 h-3.5 fill-current translate-x-0.5" />
+                  </div>
+                  <span>Play Animation Video</span>
+                </button>
               )}
 
               {/* Category & Location Tag (when image mode) */}

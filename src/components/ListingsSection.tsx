@@ -17,7 +17,9 @@ import {
   Sparkles,
   RotateCcw,
   Images,
-  ArrowLeftRight
+  ArrowLeftRight,
+  Film,
+  Play,
 } from 'lucide-react';
 
 interface ListingsSectionProps {
@@ -264,6 +266,12 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       Reserved
                     </span>
                   )}
+                  {item.videoUrl && (
+                    <span className="inline-flex items-center gap-1 bg-purple-700/90 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full shadow-md backdrop-blur-xs">
+                      <Film className="w-3 h-3 text-purple-200" />
+                      <span>Video Ad</span>
+                    </span>
+                  )}
                   {item.isFeatured && (
                     <span className="inline-flex items-center gap-1 bg-[#FF5A36] text-white text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full shadow-md animate-pulse">
                       <Star className="w-3 h-3 fill-current" />
@@ -330,19 +338,37 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                   </motion.button>
                 </div>
 
-                {/* Card Image */}
-                <div className="w-full h-44 sm:h-48 overflow-hidden bg-gray-100 relative">
-                  <img
-                    src={item.image || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80'}
-                    alt={item.title}
-                    loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80';
-                    }}
-                  />
-                  {item.images && item.images.length > 1 && (
+                {/* Card Media (Video or Image) */}
+                <div className="w-full h-44 sm:h-48 overflow-hidden bg-gray-950 relative">
+                  {item.videoUrl ? (
+                    <div className="w-full h-full relative">
+                      <video
+                        src={item.videoUrl}
+                        muted
+                        playsInline
+                        loop
+                        autoPlay
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                      <div className="absolute bottom-2.5 left-2.5 bg-purple-950/85 backdrop-blur-xs text-purple-200 border border-purple-400/40 text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-md pointer-events-none">
+                        <Play className="w-2.5 h-2.5 fill-current text-purple-300" />
+                        <span>Animation Video</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={item.image || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80'}
+                      alt={item.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80';
+                      }}
+                    />
+                  )}
+                  {item.images && item.images.length > 1 && !item.videoUrl && (
                     <div className="absolute bottom-2.5 right-2.5 bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs pointer-events-none">
                       <Images className="w-3 h-3" />
                       <span>{item.images.length}</span>

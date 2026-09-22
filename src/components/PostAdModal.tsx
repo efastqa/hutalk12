@@ -21,10 +21,49 @@ import {
   Clock,
   Film,
   Video,
+  Play,
+  Camera,
 } from 'lucide-react';
 import { api } from '../services/api';
 
 const MAX_IMAGES = 8;
+
+const VIDEO_QUICK_PRESETS = [
+  { label: '🎬 Dynamic Showcase', url: '/videos/motion-loop-3.mp4' },
+  { label: '🌸 Nature Walkthrough', url: '/videos/motion-loop-2.mp4' },
+  { label: '🌊 Aerial Drone Tour', url: 'https://vjs.zencdn.net/v/oceans.mp4' },
+];
+
+const captureVideoThumbnail = (videoSrc: string): Promise<string> => {
+  return new Promise((resolve) => {
+    try {
+      const vid = document.createElement('video');
+      vid.crossOrigin = 'anonymous';
+      vid.src = videoSrc;
+      vid.muted = true;
+      vid.currentTime = 0.5;
+      vid.onloadeddata = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.min(640, vid.videoWidth || 640);
+          canvas.height = Math.min(480, vid.videoHeight || 480);
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', 0.8));
+            return;
+          }
+        } catch {
+          // ignore
+        }
+        resolve('');
+      };
+      vid.onerror = () => resolve('');
+    } catch {
+      resolve('');
+    }
+  });
+};
 
 const compressImage = (file: File): Promise<string> => {
   return new Promise((resolve) => {
@@ -323,18 +362,34 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 25 * 1024 * 1024) {
-      onToast('Video file exceeds 25MB limit. Please choose a smaller clip or paste a link.', 'error');
+    if (file.size > 30 * 1024 * 1024) {
+      onToast('Video file exceeds 30MB limit. Please choose a smaller clip or paste a link.', 'error');
       return;
     }
 
     setIsUploadingVideo(true);
     try {
       const reader = new FileReader();
-      reader.onload = (ev) => {
-        setVideoUrl((ev.target?.result as string) || '');
-        onToast('Animation video clip added!', 'success');
-        setIsUploadingVideo(false);
+      reader.onload = async (ev) => {
+        const rawData = (ev.target?.result as string) || '';
+        try {
+          const res = await api.uploadVideo(rawData, file.name);
+          setVideoUrl(res.url);
+
+          // If no photos yet, capture a video thumbnail as primary image
+          if (images.length === 0) {
+            const thumb = await captureVideoThumbnail(res.url);
+            if (thumb) {
+              setImages([thumb]);
+            }
+          }
+          onToast('Animation video uploaded and attached successfully!', 'success');
+        } catch {
+          setVideoUrl(rawData);
+          onToast('Animation video clip loaded locally!', 'info');
+        } finally {
+          setIsUploadingVideo(false);
+        }
       };
       reader.onerror = () => {
         onToast('Failed to load video file', 'error');
@@ -346,6 +401,21 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       setIsUploadingVideo(false);
     } finally {
       e.target.value = '';
+    }
+  };
+
+  const handleCaptureVideoThumbnail = async () => {
+    if (!videoUrl) return;
+    try {
+      const thumb = await captureVideoThumbnail(videoUrl);
+      if (thumb) {
+        setImages((prev) => [thumb, ...prev.filter((i) => i !== thumb)].slice(0, MAX_IMAGES));
+        onToast('Captured snapshot from video as cover photo!', 'success');
+      } else {
+        onToast('Could not extract frame from video. Try another moment or upload photo.', 'error');
+      }
+    } catch {
+      onToast('Failed to capture frame', 'error');
     }
   };
 
@@ -985,6 +1055,27 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                   </div>
                 ))}
 
+                {/* Attached Video Tile in Gallery */}
+                {videoUrl && (
+                  <div className="relative rounded-xl overflow-hidden border-2 border-purple-500 bg-gray-900 aspect-4/3 flex flex-col items-center justify-center p-2 text-center shadow-md">
+                    <video
+                      src={videoUrl}
+                      muted
+                      playsInline
+                      loop
+                      autoPlay
+                      className="absolute inset-0 w-full h-full object-cover opacity-60"
+                    />
+                    <div className="relative z-10 flex flex-col items-center gap-1 text-white">
+                      <div className="w-8 h-8 rounded-full bg-purple-600/90 border border-purple-300 flex items-center justify-center shadow-md">
+                        <Film className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-[10px] font-black uppercase text-purple-200 tracking-wider">Animation Video</span>
+                      <span className="text-[9px] text-gray-200 bg-black/60 px-1.5 py-0.5 rounded">Attached to Ad</span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Add More Slot if below MAX_IMAGES */}
                 {images.length < MAX_IMAGES && (
                   <label className="cursor-pointer border-2 border-dashed border-gray-300 hover:border-[#FF5A36] rounded-xl flex flex-col items-center justify-center gap-1 aspect-4/3 text-gray-400 hover:text-[#FF5A36] transition-colors bg-white hover:bg-orange-50/30">
@@ -1052,26 +1143,77 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
               />
             </div>
 
+            {/* Quick Motion Presets */}
+            <div className="pt-0.5">
+              <span className="text-[11px] font-semibold text-purple-900 block mb-1">
+                Or select an animated showcase motion loop:
+              </span>
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {VIDEO_QUICK_PRESETS.map((preset) => (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={async () => {
+                      setVideoUrl(preset.url);
+                      if (images.length === 0) {
+                        const thumb = await captureVideoThumbnail(preset.url);
+                        if (thumb) setImages([thumb]);
+                      }
+                      onToast(`Applied ${preset.label}`, 'success');
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all shrink-0 cursor-pointer ${
+                      videoUrl === preset.url
+                        ? 'bg-purple-600 text-white shadow-xs'
+                        : 'bg-white border border-purple-200 text-purple-800 hover:bg-purple-100/60'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {videoUrl && (
-              <div className="relative rounded-xl overflow-hidden border border-purple-200 bg-black aspect-video max-h-40 flex items-center justify-center">
-                <video
-                  src={videoUrl}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => setVideoUrl('')}
-                  className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-red-600/90 hover:bg-red-700 text-white text-[10px] font-bold cursor-pointer transition-colors shadow-sm"
-                >
-                  Remove Video
-                </button>
-                <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
-                  <Film className="w-3 h-3 text-purple-400" />
-                  <span>Preview Attached</span>
+              <div className="space-y-2 pt-1">
+                <div className="relative rounded-2xl overflow-hidden border-2 border-purple-400 bg-black aspect-video max-h-56 sm:max-h-64 flex items-center justify-center shadow-lg">
+                  <video
+                    key={videoUrl}
+                    src={videoUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    controls
+                    className="w-full h-full object-contain bg-black"
+                  />
+                  <div className="absolute top-2.5 left-3 bg-purple-950/85 backdrop-blur-xs text-purple-200 border border-purple-400/40 text-[11px] font-black px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-md pointer-events-none">
+                    <Film className="w-3.5 h-3.5 text-purple-300" />
+                    <span>Animation Video Attached & Visible</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setVideoUrl('')}
+                    className="absolute top-2.5 right-3 px-2.5 py-1 rounded-lg bg-red-600/90 hover:bg-red-700 text-white text-xs font-bold cursor-pointer transition-colors shadow-md z-10"
+                  >
+                    Remove Video
+                  </button>
+                </div>
+
+                {/* Actions row under video */}
+                <div className="flex flex-wrap items-center justify-between gap-2 bg-purple-100/70 p-2 rounded-xl text-xs">
+                  <span className="text-purple-900 font-semibold text-[11px] flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-purple-600" />
+                    <span>This video will loop visibly on your listing card in the marketplace feed.</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCaptureVideoThumbnail}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold cursor-pointer transition-colors shadow-xs ml-auto"
+                    title="Capture this video's current frame as the cover image"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Set Video Frame as Cover Photo</span>
+                  </button>
                 </div>
               </div>
             )}

@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { HeroAd, HeroAdSettings, HeroAnimationType } from '../types';
 import { HeroAdBanner } from './HeroAdBanner';
+import { apiService } from '../services/api';
 
 interface AdminHeroAdsManagerProps {
   heroAds?: HeroAd[];
@@ -81,11 +82,10 @@ const BG_PRESETS = [
 ];
 
 const VIDEO_PRESETS = [
-  { label: '🌃 City Traffic Loop', url: 'https://assets.mixkit.co/videos/preview/mixkit-traffic-in-a-city-at-night-42646-large.mp4' },
-  { label: '⚡ Cyber Circuit Animation', url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-microchip-computer-technology-animation-43641-large.mp4' },
-  { label: '✨ Cosmic Deep Space', url: 'https://assets.mixkit.co/videos/preview/mixkit-stars-in-space-background-1610-large.mp4' },
-  { label: '🌅 Sunset Horizon Aerial', url: 'https://assets.mixkit.co/videos/preview/mixkit-set-of-plateaus-seen-from-the-sky-in-a-sunset-26070-large.mp4' },
-  { label: '🏎️ Night Highway Lights', url: 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-cars-on-a-highway-at-night-42647-large.mp4' },
+  { label: '🎬 Dynamic Motion Loop', url: '/videos/motion-loop-3.mp4' },
+  { label: '🌸 Nature Motion Walkthrough', url: '/videos/motion-loop-2.mp4' },
+  { label: '🌊 Ocean Waves Aerial', url: 'https://vjs.zencdn.net/v/oceans.mp4' },
+  { label: '⚡ Cyber Tech Animation', url: '/videos/motion-loop-3.mp4' },
 ];
 
 export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
@@ -217,9 +217,9 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check size limit: 25MB
-    if (file.size > 25 * 1024 * 1024) {
-      if (onToast) onToast('Video file size exceeds 25MB limit. Please choose a shorter clip or use a direct URL.', 'error');
+    // Check size limit: 30MB
+    if (file.size > 30 * 1024 * 1024) {
+      if (onToast) onToast('Video file size exceeds 30MB limit. Please choose a shorter clip or use a direct URL.', 'error');
       return;
     }
 
@@ -231,12 +231,22 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
         if (onToast) onToast('Failed to read video file', 'error');
         setIsUploadingVideo(false);
       };
-      reader.onload = (ev) => {
-        const result = ev.target?.result as string;
-        setFormBgVideo(result);
-        setFormMediaType('video');
-        if (onToast) onToast('Animation video loaded successfully!', 'success');
-        setIsUploadingVideo(false);
+      reader.onload = async (ev) => {
+        const rawData = ev.target?.result as string;
+        try {
+          const res = await apiService.uploadVideo(rawData, file.name);
+          setFormBgVideo(res.url);
+          setCustomMediaUrl(res.url);
+          setFormMediaType('video');
+          if (onToast) onToast('Animation video uploaded and ready to display!', 'success');
+        } catch {
+          setFormBgVideo(rawData);
+          setCustomMediaUrl('');
+          setFormMediaType('video');
+          if (onToast) onToast('Animation video loaded locally', 'info');
+        } finally {
+          setIsUploadingVideo(false);
+        }
       };
       reader.readAsDataURL(file);
     } catch {
@@ -255,6 +265,10 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
     setIsSaving(true);
     setFormError('');
 
+    const finalBgVideo = formMediaType === 'video'
+      ? (formBgVideo.trim() || customMediaUrl.trim() || '/videos/motion-loop-3.mp4')
+      : undefined;
+
     const payload: Partial<HeroAd> = {
       badge: formBadge.trim(),
       title: formTitle.trim(),
@@ -263,7 +277,7 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
       ctaText: formCtaText.trim() || undefined,
       ctaAction: formCtaAction.trim() || undefined,
       bgImage: formMediaType === 'image' ? (formBgImage.trim() || undefined) : undefined,
-      bgVideo: formMediaType === 'video' ? (formBgVideo.trim() || undefined) : undefined,
+      bgVideo: finalBgVideo,
       mediaType: formMediaType,
       gradientTheme: formTheme,
       animationType: formAnimation,

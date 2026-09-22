@@ -1743,7 +1743,7 @@ For quick inquiries, call or send a message via WhatsApp!`;
           subtitle: 'Explore 1,200+ verified listings with clear deeds, video walkthroughs, and direct developer contacts.',
           ctaText: 'Explore Properties',
           ctaAction: 'Property',
-          bgVideo: 'https://assets.mixkit.co/videos/preview/mixkit-traffic-in-a-city-at-night-42646-large.mp4',
+          bgVideo: '/videos/motion-loop-3.mp4',
           mediaType: 'video' as const,
           gradientTheme: 'blue' as const,
           animationType: 'slide' as const,
@@ -1985,4 +1985,24 @@ For quick inquiries, call or send a message via WhatsApp!`;
     }
     return res.json();
   },
+
+  // -------------------------------------------------------------
+  // Video Upload Endpoint
+  // -------------------------------------------------------------
+
+  async uploadVideo(data: string, filename?: string): Promise<{ success: boolean; url: string; size?: number }> {
+    const res = await fetch(`${API_BASE}/upload-video`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data, filename }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Upload video failed' }));
+      throw new Error(err.error || 'Failed to upload video');
+    }
+    return res.json();
+  },
 };
+
+export const apiService = api;
+

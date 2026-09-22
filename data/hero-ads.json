@@ -6,44 +6,44 @@
   "ads": [
     {
       "animationType": "slide",
-      "subtitle": "Direct WhatsApp inquiries from thousands of buyers across all 25 districts with zero broker fees.",
-      "badge": "Sponsored Promotion",
-      "id": "hero-ad-1789640542565",
-      "ctaText": "Post Free Ad Now",
-      "gradientTheme": "emerald",
       "isActive": true,
+      "id": "hero-ad-1789640542565",
       "title": "All services in one Place",
-      "ctaAction": "post_ad",
       "createdAt": "2026-09-17T10:22:22.565Z",
-      "highlightText": "with HUTA IN"
+      "ctaText": "Post Free Ad Now",
+      "badge": "Sponsored Promotion",
+      "subtitle": "Direct WhatsApp inquiries from thousands of buyers across all 25 districts with zero broker fees.",
+      "gradientTheme": "emerald",
+      "highlightText": "with HUTA IN",
+      "ctaAction": "post_ad"
     },
     {
-      "isActive": true,
-      "ctaText": "Post Free Ad Now",
+      "gradientTheme": "orange",
+      "subtitle": "Direct WhatsApp inquiries from thousands of verified buyers across all 25 districts with zero broker fees.",
+      "highlightText": "with HUTA Turbo Ad",
       "title": "Sell Your Vehicle or Property in 24 Hours",
       "animationType": "pulse",
-      "highlightText": "with HUTA Turbo Ad",
-      "badge": "🌟 Exclusive Promotion",
-      "gradientTheme": "orange",
       "id": "hero-ad-1",
-      "subtitle": "Direct WhatsApp inquiries from thousands of verified buyers across all 25 districts with zero broker fees.",
-      "ctaAction": "post_ad",
-      "createdAt": "2026-09-16T15:57:16.228Z"
-    },
-    {
-      "gradientTheme": "blue",
-      "subtitle": "Explore 1,200+ verified listings with clear deeds, video walkthroughs, and direct developer contacts.",
-      "highlightText": "in Colombo, Galle & Kandy",
-      "badge": "🏢 Featured Developer",
-      "title": "Discover Luxury Beachside Apartments & Land",
-      "animationType": "slide",
-      "ctaText": "Explore Properties",
-      "ctaAction": "Property",
-      "bgVideo": "https://assets.mixkit.co/videos/preview/mixkit-traffic-in-a-city-at-night-42646-large.mp4",
-      "mediaType": "video",
       "createdAt": "2026-09-16T15:57:16.228Z",
       "isActive": true,
-      "id": "hero-ad-2"
+      "ctaText": "Post Free Ad Now",
+      "badge": "🌟 Exclusive Promotion",
+      "ctaAction": "post_ad"
+    },
+    {
+      "isActive": true,
+      "ctaAction": "Property",
+      "title": "Discover Luxury Beachside Apartments & Land",
+      "highlightText": "in Colombo, Galle & Kandy",
+      "gradientTheme": "blue",
+      "createdAt": "2026-09-16T15:57:16.228Z",
+      "badge": "🏢 Featured Developer",
+      "animationType": "slide",
+      "id": "hero-ad-2",
+      "ctaText": "Explore Properties",
+      "subtitle": "Explore 1,200+ verified listings with clear deeds, video walkthroughs, and direct developer contacts.",
+      "bgVideo": "/videos/motion-loop-3.mp4",
+      "mediaType": "video"
     }
   ]
 }

@@ -573,7 +573,7 @@ const DEFAULT_HERO_ADS: HeroAd[] = [
     subtitle: 'Explore 1,200+ verified listings with clear deeds, video walkthroughs, and direct developer contacts.',
     ctaText: 'Explore Properties',
     ctaAction: 'Property',
-    bgVideo: 'https://assets.mixkit.co/videos/preview/mixkit-traffic-in-a-city-at-night-42646-large.mp4',
+    bgVideo: '/videos/motion-loop-3.mp4',
     mediaType: 'video',
     gradientTheme: 'blue',
     animationType: 'slide',
@@ -677,6 +677,30 @@ async function startServer() {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+  // Static media directories (serving /videos, /uploads with byte-range streaming support)
+  const publicDir = path.join(process.cwd(), 'public');
+  const uploadsDir = path.join(publicDir, 'uploads');
+  const videosDir = path.join(publicDir, 'videos');
+  if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+  if (!fs.existsSync(videosDir)) fs.mkdirSync(videosDir, { recursive: true });
+
+  const staticOptions = {
+    acceptRanges: true,
+    dotfiles: 'ignore',
+    setHeaders: (res: express.Response, filePath: string) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      if (filePath.endsWith('.mp4')) {
+        res.setHeader('Content-Type', 'video/mp4');
+      } else if (filePath.endsWith('.webm')) {
+        res.setHeader('Content-Type', 'video/webm');
+      }
+    }
+  };
+
+  app.use('/videos', express.static(videosDir, staticOptions));
+  app.use('/uploads', express.static(uploadsDir, staticOptions));
+  app.use(express.static(publicDir, staticOptions));
+
   // -------------------------------------------------------------
   // API Routes
   // -------------------------------------------------------------
@@ -684,6 +708,49 @@ async function startServer() {
   // Health check
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', time: new Date().toISOString() });
+  });
+
+  // POST /api/upload-video - Save uploaded animation video or clip to local disk
+  app.post('/api/upload-video', (req, res) => {
+    try {
+      const { data, filename } = req.body;
+      if (!data || typeof data !== 'string') {
+        return res.status(400).json({ error: 'No video data received' });
+      }
+
+      let buffer: Buffer;
+      let ext = 'mp4';
+
+      const match = data.match(/^data:([a-zA-Z0-9\/\+\-]+);base64,(.+)$/);
+      if (match) {
+        const mime = match[1];
+        if (mime.includes('webm')) ext = 'webm';
+        else if (mime.includes('ogg')) ext = 'ogg';
+        else if (mime.includes('gif')) ext = 'gif';
+        buffer = Buffer.from(match[2], 'base64');
+      } else {
+        buffer = Buffer.from(data, 'base64');
+      }
+
+      if (buffer.length > 35 * 1024 * 1024) {
+        return res.status(400).json({ error: 'Video exceeds 35MB size limit' });
+      }
+
+      const targetDir = path.join(publicDir, 'uploads', 'videos');
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+      }
+
+      const cleanFileName = `anim-video-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const fullPath = path.join(targetDir, cleanFileName);
+      fs.writeFileSync(fullPath, buffer);
+
+      const publicUrl = `/uploads/videos/${cleanFileName}`;
+      res.json({ success: true, url: publicUrl, size: buffer.length });
+    } catch (err: unknown) {
+      console.error('[UploadVideo] Failed to save video file:', err);
+      res.status(500).json({ error: 'Failed to process and store video' });
+    }
   });
 
   // GET /api/listings
