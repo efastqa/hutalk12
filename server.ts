@@ -622,9 +622,10 @@ let reportsCache = getStoredReports();
 // Lazy initialize Gemini client
 let genAIClient: GoogleGenAI | null = null;
 function getGenAI(): GoogleGenAI | null {
-  if (!genAIClient && process.env.GEMINI_API_KEY) {
+  const key = process.env.GEMINI_API_KEY?.trim();
+  if (!genAIClient && key && key !== 'Secret value' && key !== 'MY_GEMINI_API_KEY') {
     genAIClient = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
+      apiKey: key,
       httpOptions: {
         headers: {
           'User-Agent': 'aistudio-build',
@@ -633,6 +634,42 @@ function getGenAI(): GoogleGenAI | null {
     });
   }
   return genAIClient;
+}
+
+function isValidHttpUrl(raw?: string | null): boolean {
+  if (!raw || typeof raw !== 'string') return false;
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed === 'Secret value' || trimmed === 'MY_APP_URL') return false;
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function getSafeHostname(raw?: string | null): string | null {
+  if (!raw || typeof raw !== 'string') return null;
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed === 'Secret value' || trimmed.includes(' ')) return null;
+  try {
+    const withProto = trimmed.startsWith('http://') || trimmed.startsWith('https://')
+      ? trimmed
+      : `https://${trimmed}`;
+    const url = new URL(withProto);
+    return url.hostname || null;
+  } catch {
+    return null;
+  }
+}
+
+function getSafeCustomDomain(rawDomain?: string | null): string {
+  if (!rawDomain || typeof rawDomain !== 'string') return 'huta.lk';
+  const trimmed = rawDomain.trim();
+  if (!trimmed || trimmed === 'Secret value' || trimmed.includes(' ')) return 'huta.lk';
+  const clean = trimmed.replace(/^https?:\/\//i, '').replace(/\/.*$/, '').toLowerCase();
+  if (!clean || clean.length < 3 || clean === 'secret value') return 'huta.lk';
+  return clean;
 }
 
 async function startServer() {
@@ -1606,13 +1643,13 @@ async function startServer() {
     // 1. Notify.lk integration (Primary Sri Lankan SMS Gateway)
     const notifyKey = process.env.NOTIFYLK_API_KEY?.trim();
     const notifyUserId = process.env.NOTIFYLK_USER_ID?.trim();
-    if (notifyKey && notifyUserId) {
+    if (notifyKey && notifyKey !== 'Secret value' && notifyUserId && notifyUserId !== 'Secret value') {
       try {
         const endpoint = 'https://app.notify.lk/api/v1/send';
         const params = new URLSearchParams({
           user_id: notifyUserId,
           api_key: notifyKey,
-          sender_id: (process.env.NOTIFYLK_SENDER_ID || 'NotifyDEMO').trim(),
+          sender_id: (process.env.NOTIFYLK_SENDER_ID && process.env.NOTIFYLK_SENDER_ID !== 'Secret value') ? process.env.NOTIFYLK_SENDER_ID.trim() : 'NotifyDEMO',
           to: international,
           message: message,
         });
@@ -1630,7 +1667,7 @@ async function startServer() {
             message,
             provider: 'notify.lk',
             status: 'sent',
-            details: `Delivered via Notify.lk (Sender: ${process.env.NOTIFYLK_SENDER_ID || 'NotifyDEMO'})`,
+            details: `Delivered via Notify.lk (Sender: ${(process.env.NOTIFYLK_SENDER_ID && process.env.NOTIFYLK_SENDER_ID !== 'Secret value') ? process.env.NOTIFYLK_SENDER_ID : 'NotifyDEMO'})`,
             timestamp: new Date().toISOString(),
           };
           smsDeliveryLogs.unshift(log);
@@ -1658,9 +1695,9 @@ async function startServer() {
 
     // 2. Generic SMS Gateway Webhook / HTTP URL (Dialog IdeaBiz, Mobitel, Textware, SMS.to)
     const customGatewayUrl = process.env.SMS_GATEWAY_URL?.trim();
-    if (customGatewayUrl) {
+    if (isValidHttpUrl(customGatewayUrl)) {
       try {
-        const targetUrl = customGatewayUrl
+        const targetUrl = customGatewayUrl!
           .replace('{{to}}', encodeURIComponent(international))
           .replace('{{phone}}', encodeURIComponent(international))
           .replace('{{message}}', encodeURIComponent(message));
@@ -1668,13 +1705,13 @@ async function startServer() {
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
         };
-        if (process.env.SMS_GATEWAY_API_KEY) {
+        if (process.env.SMS_GATEWAY_API_KEY && process.env.SMS_GATEWAY_API_KEY !== 'Secret value') {
           headers['Authorization'] = `Bearer ${process.env.SMS_GATEWAY_API_KEY.trim()}`;
           headers['x-api-key'] = process.env.SMS_GATEWAY_API_KEY.trim();
         }
 
         let res: Response;
-        if (customGatewayUrl.includes('{{message}}') || customGatewayUrl.includes('{{to}}')) {
+        if (customGatewayUrl!.includes('{{message}}') || customGatewayUrl!.includes('{{to}}')) {
           res = await fetch(targetUrl, { method: 'GET', headers });
         } else {
           res = await fetch(targetUrl, {
@@ -1684,16 +1721,13 @@ async function startServer() {
               to: international,
               phone: international,
               message,
-              sender: (process.env.SMS_GATEWAY_SENDER_ID || 'HUTA').trim(),
+              sender: (process.env.SMS_GATEWAY_SENDER_ID && process.env.SMS_GATEWAY_SENDER_ID !== 'Secret value') ? process.env.SMS_GATEWAY_SENDER_ID.trim() : 'HUTA',
             }),
           });
         }
 
         if (res.ok) {
-          let host = 'Gateway';
-          try {
-            host = new URL(customGatewayUrl).hostname;
-          } catch {}
+          const host = getSafeHostname(customGatewayUrl) || 'Gateway';
           const log: SmsDeliveryLog = {
             id: logId,
             recipient: rawPhone,
@@ -1717,7 +1751,11 @@ async function startServer() {
     const twilioSid = process.env.TWILIO_ACCOUNT_SID?.trim();
     const twilioToken = process.env.TWILIO_AUTH_TOKEN?.trim();
     const twilioFrom = process.env.TWILIO_PHONE_NUMBER?.trim();
-    if (twilioSid && twilioToken && twilioFrom) {
+    if (
+      twilioSid && twilioSid !== 'Secret value' &&
+      twilioToken && twilioToken !== 'Secret value' &&
+      twilioFrom && twilioFrom !== 'Secret value'
+    ) {
       try {
         const authHeader = Buffer.from(`${twilioSid}:${twilioToken}`).toString('base64');
         const body = new URLSearchParams({
@@ -2340,9 +2378,21 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
   // -------------------------------------------------------------
 
   app.get('/api/admin/sms-gateway/status', (req, res) => {
-    const notifyLkConfigured = Boolean(process.env.NOTIFYLK_API_KEY && process.env.NOTIFYLK_USER_ID);
-    const customGatewayConfigured = Boolean(process.env.SMS_GATEWAY_URL);
-    const twilioConfigured = Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER);
+    const notifyLkConfigured = Boolean(
+      process.env.NOTIFYLK_API_KEY &&
+      process.env.NOTIFYLK_API_KEY !== 'Secret value' &&
+      process.env.NOTIFYLK_USER_ID &&
+      process.env.NOTIFYLK_USER_ID !== 'Secret value'
+    );
+    const customGatewayConfigured = isValidHttpUrl(process.env.SMS_GATEWAY_URL);
+    const twilioConfigured = Boolean(
+      process.env.TWILIO_ACCOUNT_SID &&
+      process.env.TWILIO_ACCOUNT_SID !== 'Secret value' &&
+      process.env.TWILIO_AUTH_TOKEN &&
+      process.env.TWILIO_AUTH_TOKEN !== 'Secret value' &&
+      process.env.TWILIO_PHONE_NUMBER &&
+      process.env.TWILIO_PHONE_NUMBER !== 'Secret value'
+    );
 
     let activeProvider: 'notify.lk' | 'custom_gateway' | 'twilio' | 'simulation_mode' = 'simulation_mode';
     if (notifyLkConfigured) activeProvider = 'notify.lk';
@@ -2358,17 +2408,17 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
       providers: {
         notifyLk: {
           configured: notifyLkConfigured,
-          senderId: process.env.NOTIFYLK_SENDER_ID || 'HUTA',
-          userIdSet: Boolean(process.env.NOTIFYLK_USER_ID),
+          senderId: (process.env.NOTIFYLK_SENDER_ID && process.env.NOTIFYLK_SENDER_ID !== 'Secret value') ? process.env.NOTIFYLK_SENDER_ID : 'HUTA',
+          userIdSet: Boolean(process.env.NOTIFYLK_USER_ID && process.env.NOTIFYLK_USER_ID !== 'Secret value'),
         },
         customGateway: {
           configured: customGatewayConfigured,
-          hostname: process.env.SMS_GATEWAY_URL ? (new URL(process.env.SMS_GATEWAY_URL).hostname) : null,
-          hasApiKey: Boolean(process.env.SMS_GATEWAY_API_KEY),
+          hostname: getSafeHostname(process.env.SMS_GATEWAY_URL),
+          hasApiKey: Boolean(process.env.SMS_GATEWAY_API_KEY && process.env.SMS_GATEWAY_API_KEY !== 'Secret value'),
         },
         twilio: {
           configured: twilioConfigured,
-          from: process.env.TWILIO_PHONE_NUMBER || null,
+          from: (process.env.TWILIO_PHONE_NUMBER && process.env.TWILIO_PHONE_NUMBER !== 'Secret value') ? process.env.TWILIO_PHONE_NUMBER : null,
         },
       },
       stats: {
@@ -2412,8 +2462,8 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
   // -------------------------------------------------------------
 
   app.get('/api/admin/check-domain', async (req, res) => {
-    const queryDomain = (req.query.domain as string)?.trim() || process.env.CUSTOM_DOMAIN || 'huta.lk';
-    const cleanDomain = queryDomain.replace(/^https?:\/\//i, '').replace(/\/.*$/, '').toLowerCase();
+    const rawQuery = (req.query.domain as string)?.trim();
+    const cleanDomain = getSafeCustomDomain(rawQuery || process.env.CUSTOM_DOMAIN);
 
     // Standard Google Anycast IPs for Cloud Run custom domain mapping
     const expectedA = ['216.239.32.21', '216.239.34.21', '216.239.36.21', '216.239.38.21'];
@@ -2459,6 +2509,10 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
       statusText = 'pointing_other';
     }
 
+    const safeAppUrl = (process.env.APP_URL && process.env.APP_URL !== 'Secret value' && process.env.APP_URL !== 'MY_APP_URL')
+      ? process.env.APP_URL
+      : 'https://ais-dev-s7je4mzl2dlgwhimuajhn6-74974087593.europe-west3.run.app';
+
     res.json({
       domain: cleanDomain,
       status: statusText,
@@ -2485,7 +2539,7 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
           target: expectedCname,
         },
       },
-      currentAppUrl: process.env.APP_URL || 'https://ais-dev-s7je4mzl2dlgwhimuajhn6-74974087593.europe-west3.run.app',
+      currentAppUrl: safeAppUrl,
       sslStatus: 'Google Managed Automatic SSL',
       lastChecked: new Date().toISOString(),
     });
@@ -2496,13 +2550,15 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
   // -------------------------------------------------------------
 
   app.get('/robots.txt', (req, res) => {
-    const domain = process.env.CUSTOM_DOMAIN ? `https://${process.env.CUSTOM_DOMAIN}` : 'https://huta.lk';
+    const cleanDomain = getSafeCustomDomain(process.env.CUSTOM_DOMAIN);
+    const domain = `https://${cleanDomain}`;
     res.type('text/plain');
     res.send(`User-agent: *\nAllow: /\n\nSitemap: ${domain}/sitemap.xml\n`);
   });
 
   app.get('/sitemap.xml', (req, res) => {
-    const baseUrl = process.env.CUSTOM_DOMAIN ? `https://${process.env.CUSTOM_DOMAIN}` : 'https://huta.lk';
+    const cleanDomain = getSafeCustomDomain(process.env.CUSTOM_DOMAIN);
+    const baseUrl = `https://${cleanDomain}`;
     const approvedListings = listingsCache.filter(l => l.status === 'approved');
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
