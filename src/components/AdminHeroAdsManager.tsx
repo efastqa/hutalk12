@@ -16,6 +16,11 @@ import {
   X,
   Layers,
   Image as ImageIcon,
+  Video,
+  Film,
+  Play,
+  Link as LinkIcon,
+  Loader2,
 } from 'lucide-react';
 import { HeroAd, HeroAdSettings, HeroAnimationType } from '../types';
 import { HeroAdBanner } from './HeroAdBanner';
@@ -68,11 +73,19 @@ const compressHeroImage = (file: File): Promise<string> => {
 };
 
 const BG_PRESETS = [
-  { label: 'None (Pure Dark Gradient)', url: '' },
+  { label: 'None (Pure Gradient)', url: '' },
   { label: '🚗 Luxury Vehicles', url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1200&auto=format&fit=crop&q=80' },
   { label: '🏢 Modern Penthouse', url: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&auto=format&fit=crop&q=80' },
   { label: '📱 Electronics & Tech', url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&auto=format&fit=crop&q=80' },
   { label: '🌴 Tropical Land & Villa', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80' },
+];
+
+const VIDEO_PRESETS = [
+  { label: '🌃 City Traffic Loop', url: 'https://assets.mixkit.co/videos/preview/mixkit-traffic-in-a-city-at-night-42646-large.mp4' },
+  { label: '⚡ Cyber Circuit Animation', url: 'https://assets.mixkit.co/videos/preview/mixkit-circuit-board-microchip-computer-technology-animation-43641-large.mp4' },
+  { label: '✨ Cosmic Deep Space', url: 'https://assets.mixkit.co/videos/preview/mixkit-stars-in-space-background-1610-large.mp4' },
+  { label: '🌅 Sunset Horizon Aerial', url: 'https://assets.mixkit.co/videos/preview/mixkit-set-of-plateaus-seen-from-the-sky-in-a-sunset-26070-large.mp4' },
+  { label: '🏎️ Night Highway Lights', url: 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-cars-on-a-highway-at-night-42647-large.mp4' },
 ];
 
 export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
@@ -105,6 +118,8 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
   const [formCtaText, setFormCtaText] = useState<string>('Explore Now');
   const [formCtaAction, setFormCtaAction] = useState<string>('post_ad');
   const [formBgImage, setFormBgImage] = useState<string>('');
+  const [formBgVideo, setFormBgVideo] = useState<string>('');
+  const [formMediaType, setFormMediaType] = useState<'image' | 'video'>('image');
   const [formTheme, setFormTheme] = useState<'orange' | 'blue' | 'emerald' | 'purple' | 'amber'>('orange');
   const [formAnimation, setFormAnimation] = useState<HeroAnimationType>('pulse');
   const [formIsActive, setFormIsActive] = useState<boolean>(true);
@@ -112,6 +127,8 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [formError, setFormError] = useState<string>('');
   const [isUploadingBg, setIsUploadingBg] = useState<boolean>(false);
+  const [isUploadingVideo, setIsUploadingVideo] = useState<boolean>(false);
+  const [customMediaUrl, setCustomMediaUrl] = useState<string>('');
 
   const activeAdsCount = heroAds.filter((a) => a.isActive).length;
 
@@ -151,6 +168,9 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
     setFormCtaText('Post Free Ad Now');
     setFormCtaAction('post_ad');
     setFormBgImage('');
+    setFormBgVideo('');
+    setFormMediaType('video');
+    setCustomMediaUrl('');
     setFormTheme('orange');
     setFormAnimation('pulse');
     setFormIsActive(true);
@@ -167,6 +187,9 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
     setFormCtaText(ad.ctaText || '');
     setFormCtaAction(ad.ctaAction || '');
     setFormBgImage(ad.bgImage || '');
+    setFormBgVideo(ad.bgVideo || '');
+    setFormMediaType(ad.mediaType || (ad.bgVideo ? 'video' : 'image'));
+    setCustomMediaUrl(ad.bgVideo || ad.bgImage || '');
     setFormTheme(ad.gradientTheme || 'orange');
     setFormAnimation(ad.animationType || 'slide');
     setFormIsActive(ad.isActive);
@@ -181,11 +204,44 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
     try {
       const compressed = await compressHeroImage(file);
       setFormBgImage(compressed);
+      setFormMediaType('image');
       if (onToast) onToast('Background image loaded!', 'success');
     } catch {
       if (onToast) onToast('Failed to process image file', 'error');
     } finally {
       setIsUploadingBg(false);
+    }
+  };
+
+  const handleVideoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check size limit: 25MB
+    if (file.size > 25 * 1024 * 1024) {
+      if (onToast) onToast('Video file size exceeds 25MB limit. Please choose a shorter clip or use a direct URL.', 'error');
+      return;
+    }
+
+    setIsUploadingVideo(true);
+    setFormError('');
+    try {
+      const reader = new FileReader();
+      reader.onerror = () => {
+        if (onToast) onToast('Failed to read video file', 'error');
+        setIsUploadingVideo(false);
+      };
+      reader.onload = (ev) => {
+        const result = ev.target?.result as string;
+        setFormBgVideo(result);
+        setFormMediaType('video');
+        if (onToast) onToast('Animation video loaded successfully!', 'success');
+        setIsUploadingVideo(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      if (onToast) onToast('Failed to process video file', 'error');
+      setIsUploadingVideo(false);
     }
   };
 
@@ -206,7 +262,9 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
       subtitle: formSubtitle.trim(),
       ctaText: formCtaText.trim() || undefined,
       ctaAction: formCtaAction.trim() || undefined,
-      bgImage: formBgImage.trim() || undefined,
+      bgImage: formMediaType === 'image' ? (formBgImage.trim() || undefined) : undefined,
+      bgVideo: formMediaType === 'video' ? (formBgVideo.trim() || undefined) : undefined,
+      mediaType: formMediaType,
       gradientTheme: formTheme,
       animationType: formAnimation,
       isActive: formIsActive,
@@ -444,8 +502,25 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
                       </div>
                     </td>
                     <td className="py-3.5 px-4 max-w-xs">
-                      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[10px] font-bold mb-1">
-                        {ad.badge}
+                      <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[10px] font-bold">
+                          {ad.badge}
+                        </div>
+                        {ad.mediaType === 'video' || ad.bgVideo ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-[10px] font-bold">
+                            <Film className="w-2.5 h-2.5 text-purple-600" />
+                            <span>Animation Video</span>
+                          </span>
+                        ) : ad.bgImage ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold">
+                            <ImageIcon className="w-2.5 h-2.5 text-blue-600" />
+                            <span>Image</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-200 text-[10px] font-bold">
+                            <span>Gradient</span>
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-gray-500 truncate">{ad.subtitle}</p>
                     </td>
@@ -683,39 +758,289 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
                 </div>
               </div>
 
-              {/* Optional Background Image */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-gray-700">
-                    Background Graphic / Artwork (Optional)
-                  </label>
-                  <label className="cursor-pointer text-[11px] font-bold text-[#FF5A36] hover:underline flex items-center gap-1">
-                    <UploadCloud className="w-3 h-3" />
-                    <span>Upload Image</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                  {BG_PRESETS.map((preset) => (
+              {/* Background Media: Animation Video / Image Graphic / Pure Gradient */}
+              <div className="bg-gray-50/90 rounded-2xl p-4 border border-gray-200/80 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                      <span>Ad Background Media</span>
+                      <span className="text-[10px] font-normal text-gray-500">(Animation Video or Image)</span>
+                    </label>
+                    <p className="text-[11px] text-gray-500">
+                      Choose an animation video loop, high-res graphic artwork, or a clean gradient.
+                    </p>
+                  </div>
+
+                  {/* Mode Selector Tabs */}
+                  <div className="flex items-center gap-1 p-1 bg-gray-200/70 rounded-xl shrink-0">
                     <button
-                      key={preset.label}
                       type="button"
-                      onClick={() => setFormBgImage(preset.url)}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all shrink-0 cursor-pointer ${
-                        formBgImage === preset.url
-                          ? 'bg-[#FF5A36] text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      onClick={() => setFormMediaType('video')}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        formMediaType === 'video'
+                          ? 'bg-purple-600 text-white shadow-xs'
+                          : 'text-gray-600 hover:text-gray-900'
                       }`}
                     >
-                      {preset.label}
+                      <Film className="w-3.5 h-3.5" />
+                      <span>Animation Video</span>
                     </button>
-                  ))}
+                    <button
+                      type="button"
+                      onClick={() => setFormMediaType('image')}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        formMediaType === 'image'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      <span>Graphic Image</span>
+                    </button>
+                  </div>
                 </div>
+
+                {/* ANIMATION VIDEO MODE */}
+                {formMediaType === 'video' && (
+                  <div className="space-y-3 pt-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-[11px] font-bold text-purple-900 flex items-center gap-1">
+                        <Video className="w-3.5 h-3.5 text-purple-600" />
+                        <span>Upload Video or Choose Preset Motion Loop</span>
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold transition-colors cursor-pointer shadow-xs">
+                          {isUploadingVideo ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>Uploading Video...</span>
+                            </>
+                          ) : (
+                            <>
+                              <UploadCloud className="w-3.5 h-3.5" />
+                              <span>Upload Animation Video</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="video/mp4,video/webm,video/ogg,image/gif"
+                            onChange={handleVideoFileUpload}
+                            disabled={isUploadingVideo}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Direct Video URL Input */}
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                          <LinkIcon className="w-3.5 h-3.5" />
+                        </div>
+                        <input
+                          type="url"
+                          placeholder="Paste direct video URL (e.g. https://.../loop.mp4 or .webm)"
+                          value={customMediaUrl}
+                          onChange={(e) => setCustomMediaUrl(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-gray-200 bg-white focus:border-purple-600 outline-none"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (customMediaUrl.trim()) {
+                            setFormBgVideo(customMediaUrl.trim());
+                            if (onToast) onToast('Video URL applied!', 'success');
+                          }
+                        }}
+                        className="px-3 py-2 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl cursor-pointer shrink-0"
+                      >
+                        Apply URL
+                      </button>
+                    </div>
+
+                    {/* Video Motion Presets */}
+                    <div>
+                      <p className="text-[11px] font-semibold text-gray-500 mb-1.5">
+                        Or select a high-speed animated motion preset:
+                      </p>
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                        {VIDEO_PRESETS.map((preset) => (
+                          <button
+                            key={preset.label}
+                            type="button"
+                            onClick={() => {
+                              setFormBgVideo(preset.url);
+                              setCustomMediaUrl(preset.url);
+                            }}
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all shrink-0 cursor-pointer ${
+                              formBgVideo === preset.url
+                                ? 'bg-purple-600 text-white shadow-xs'
+                                : 'bg-white border border-gray-200 text-gray-700 hover:bg-purple-50 hover:border-purple-200'
+                            }`}
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Live Video Preview Box */}
+                    {formBgVideo ? (
+                      <div className="relative rounded-2xl overflow-hidden border border-purple-200 bg-black/90 aspect-video max-h-44 flex items-center justify-center">
+                        <video
+                          key={formBgVideo}
+                          src={formBgVideo}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 pointer-events-none" />
+                        <div className="absolute top-2.5 left-3 flex items-center gap-1.5 text-white text-[11px] font-bold bg-black/60 backdrop-blur-xs px-2.5 py-1 rounded-full border border-white/10">
+                          <Film className="w-3 h-3 text-purple-400" />
+                          <span>Animation Video Preview</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormBgVideo('');
+                            setCustomMediaUrl('');
+                          }}
+                          className="absolute top-2.5 right-3 px-2 py-1 rounded-lg bg-red-600/90 hover:bg-red-700 text-white text-[11px] font-bold cursor-pointer transition-colors"
+                        >
+                          Remove Video
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-xl border border-dashed border-gray-300 text-center text-xs text-gray-500 bg-white">
+                        <Film className="w-6 h-6 mx-auto mb-1 text-gray-400" />
+                        <span>No video loaded yet. Upload an MP4/WebM video, paste a URL, or pick a preset above.</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* GRAPHIC IMAGE MODE */}
+                {formMediaType === 'image' && (
+                  <div className="space-y-3 pt-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-[11px] font-bold text-blue-900 flex items-center gap-1">
+                        <ImageIcon className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Upload Artwork Image or Choose Category Preset</span>
+                      </span>
+
+                      <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition-colors cursor-pointer shadow-xs">
+                        {isUploadingBg ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Compressing Image...</span>
+                          </>
+                        ) : (
+                          <>
+                            <UploadCloud className="w-3.5 h-3.5" />
+                            <span>Upload Image</span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                          disabled={isUploadingBg}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Direct Image URL Input */}
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                          <LinkIcon className="w-3.5 h-3.5" />
+                        </div>
+                        <input
+                          type="url"
+                          placeholder="Paste direct image URL (e.g. https://.../banner.jpg)"
+                          value={customMediaUrl}
+                          onChange={(e) => setCustomMediaUrl(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-gray-200 bg-white focus:border-blue-600 outline-none"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (customMediaUrl.trim()) {
+                            setFormBgImage(customMediaUrl.trim());
+                            if (onToast) onToast('Image URL applied!', 'success');
+                          }
+                        }}
+                        className="px-3 py-2 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl cursor-pointer shrink-0"
+                      >
+                        Apply URL
+                      </button>
+                    </div>
+
+                    {/* Photo Presets */}
+                    <div>
+                      <p className="text-[11px] font-semibold text-gray-500 mb-1.5">
+                        Or select a graphic artwork preset:
+                      </p>
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                        {BG_PRESETS.map((preset) => (
+                          <button
+                            key={preset.label}
+                            type="button"
+                            onClick={() => {
+                              setFormBgImage(preset.url);
+                              setCustomMediaUrl(preset.url);
+                            }}
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all shrink-0 cursor-pointer ${
+                              formBgImage === preset.url
+                                ? 'bg-blue-600 text-white shadow-xs'
+                                : 'bg-white border border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-200'
+                            }`}
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Live Image Preview */}
+                    {formBgImage ? (
+                      <div className="relative rounded-2xl overflow-hidden border border-blue-200 aspect-video max-h-44 flex items-center justify-center bg-gray-900">
+                        <img
+                          src={formBgImage}
+                          alt="Ad background preview"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+                        <div className="absolute top-2.5 left-3 flex items-center gap-1.5 text-white text-[11px] font-bold bg-black/60 backdrop-blur-xs px-2.5 py-1 rounded-full border border-white/10">
+                          <ImageIcon className="w-3 h-3 text-blue-400" />
+                          <span>Graphic Artwork Preview</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormBgImage('');
+                            setCustomMediaUrl('');
+                          }}
+                          className="absolute top-2.5 right-3 px-2 py-1 rounded-lg bg-red-600/90 hover:bg-red-700 text-white text-[11px] font-bold cursor-pointer transition-colors"
+                        >
+                          Remove Image
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-xl border border-dashed border-gray-300 text-center text-xs text-gray-500 bg-white">
+                        <ImageIcon className="w-6 h-6 mx-auto mb-1 text-gray-400" />
+                        <span>No image selected. Upload an artwork, paste an image link, or select a preset.</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Active Toggle */}

@@ -36,6 +36,9 @@ import {
   EyeOff,
   MessageSquare,
   Globe,
+  Smartphone,
+  RefreshCw,
+  Shield,
 } from 'lucide-react';
 import { formatLKR } from './ListingsSection';
 import { api } from '../services/api';
@@ -163,11 +166,65 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [isClearingAll, setIsClearingAll] = useState(false);
 
+  // Admin 2FA Security State
+  const [admin2FAEnabled, setAdmin2FAEnabled] = useState(false);
+  const [admin2FAPhone, setAdmin2FAPhone] = useState('0777000111');
+  const [is2FAModalOpen, setIs2FAModalOpen] = useState(false);
+  const [isSaving2FA, setIsSaving2FA] = useState(false);
+  const [isSendingTestAdmin2FA, setIsSendingTestAdmin2FA] = useState(false);
+  const [testAdmin2FACode, setTestAdmin2FACode] = useState('');
+  const [admin2FAMethod, setAdmin2FAMethod] = useState<'sms' | 'authenticator'>('sms');
+
   useEffect(() => {
     api.getAdminConfig().then((cfg) => {
       setAutoApprove(Boolean(cfg.autoApprove));
+      setAdmin2FAEnabled(Boolean(cfg.twoFactorEnabled));
+      if (cfg.twoFactorPhone) setAdmin2FAPhone(cfg.twoFactorPhone);
+      if (cfg.twoFactorMethod) setAdmin2FAMethod(cfg.twoFactorMethod);
     }).catch(() => {});
   }, []);
+
+  const handleSaveAdmin2FA = async (enabled: boolean, phone: string, method: 'sms' | 'authenticator') => {
+    setIsSaving2FA(true);
+    try {
+      await api.updateAdminConfig({
+        twoFactorEnabled: enabled,
+        twoFactorPhone: phone.trim(),
+        twoFactorMethod: method,
+      });
+      setAdmin2FAEnabled(enabled);
+      setAdmin2FAPhone(phone.trim());
+      setAdmin2FAMethod(method);
+      if (onToast) {
+        onToast(
+          enabled
+            ? `Admin Two-Factor Authentication is now ACTIVE (SMS OTP sent to ${phone.trim()}).`
+            : 'Admin Two-Factor Authentication has been disabled.',
+          'success'
+        );
+      }
+      setIs2FAModalOpen(false);
+    } catch (err: any) {
+      if (onToast) onToast(err.message || 'Failed to update 2FA configuration', 'error');
+    } finally {
+      setIsSaving2FA(false);
+    }
+  };
+
+  const handleSendTestAdmin2FA = async () => {
+    setIsSendingTestAdmin2FA(true);
+    try {
+      const res = await api.resendTwoFactorCode('admin_session', 'admin');
+      if (res.devOtp) {
+        setTestAdmin2FACode(res.devOtp);
+      }
+      if (onToast) onToast(res.message || 'Test SMS verification code dispatched.', 'success');
+    } catch (err: any) {
+      if (onToast) onToast(err.message || 'Failed to send test OTP', 'error');
+    } finally {
+      setIsSendingTestAdmin2FA(false);
+    }
+  };
 
   const handleToggleAutoApprove = async () => {
     const next = !autoApprove;
@@ -1005,6 +1062,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>Clean Ads (Live Launch)</span>
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={() => {
+              setTestAdmin2FACode('');
+              setIs2FAModalOpen(true);
+            }}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors border cursor-pointer ${
+              admin2FAEnabled
+                ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-500/40'
+                : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border-indigo-500/30'
+            }`}
+            title="Configure Two-Factor Authentication for Administrator"
+          >
+            <ShieldCheck className={`w-4 h-4 ${admin2FAEnabled ? 'text-emerald-400' : 'text-indigo-400'}`} />
+            <span>2FA Security: {admin2FAEnabled ? 'ON' : 'OFF'}</span>
+          </button>
 
           <button
             type="button"
@@ -1953,6 +2027,187 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Admin 2FA Security Modal */}
+      {is2FAModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
+          onClick={() => setIs2FAModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl relative border border-gray-100 animate-in zoom-in-95"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3.5 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                  admin2FAEnabled ? 'bg-emerald-500/15 text-emerald-600' : 'bg-indigo-500/15 text-indigo-600'
+                }`}>
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-lg text-gray-900 leading-none">
+                    Admin 2FA Security
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Two-Factor Authentication for Administrator Portal
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIs2FAModalOpen(false)}
+                className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              {/* Status banner */}
+              <div className={`p-3.5 rounded-2xl border flex items-center justify-between ${
+                admin2FAEnabled
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                  : 'bg-amber-50 border-amber-200 text-amber-900'
+              }`}>
+                <div className="flex items-center gap-2.5">
+                  {admin2FAEnabled ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  ) : (
+                    <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
+                  )}
+                  <div>
+                    <div className="text-xs font-bold">
+                      {admin2FAEnabled ? '2FA Protection is ACTIVE' : '2FA Protection is OFF'}
+                    </div>
+                    <div className="text-[11px] text-gray-600">
+                      {admin2FAEnabled
+                        ? 'Master password + SMS OTP required to log in'
+                        : 'Only master password is required to log in'}
+                    </div>
+                  </div>
+                </div>
+
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={admin2FAEnabled}
+                    onChange={(e) => setAdmin2FAEnabled(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-12 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                </label>
+              </div>
+
+              {/* Admin Phone Field */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Admin Verification Mobile Number (SMS) <span className="text-red-500">*</span>
+                </label>
+                <div className="flex rounded-xl shadow-xs border border-gray-300 overflow-hidden focus-within:border-[#FF5A36] focus-within:ring-2 focus-within:ring-[#FF5A36]/20 transition-all">
+                  <span className="inline-flex items-center px-3.5 bg-gray-50 border-r border-gray-300 text-gray-600 text-xs font-bold select-none">
+                    🇱🇰 +94
+                  </span>
+                  <input
+                    type="tel"
+                    value={admin2FAPhone}
+                    onChange={(e) => setAdmin2FAPhone(e.target.value)}
+                    placeholder="e.g. 077 700 0111"
+                    className="flex-1 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none"
+                  />
+                </div>
+                <p className="text-[11px] text-gray-500 mt-1">
+                  Login OTP codes and critical security notifications will be sent to this phone.
+                </p>
+              </div>
+
+              {/* Test SMS dispatch */}
+              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-bold text-gray-800">Test SMS Verification</div>
+                  <div className="text-[11px] text-gray-500">Send an instant test code to this number</div>
+                </div>
+                <button
+                  type="button"
+                  disabled={isSendingTestAdmin2FA}
+                  onClick={handleSendTestAdmin2FA}
+                  className="px-3 py-1.5 bg-white hover:bg-gray-100 text-gray-800 border border-gray-300 rounded-lg text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {isSendingTestAdmin2FA ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FF5A36]" />
+                      <span>Sending...</span>
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 text-gray-600" />
+                      <span>Send Test Code</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {testAdmin2FACode && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span className="text-xs font-bold text-emerald-800">Test OTP Code:</span>
+                    <span className="font-mono text-sm font-black text-emerald-900 bg-white px-2 py-0.5 rounded border border-emerald-300 tracking-widest">
+                      {testAdmin2FACode}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-emerald-700 font-medium">Ready</span>
+                </div>
+              )}
+
+              {/* Security info bullet points */}
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1.5">
+                <div className="font-bold text-slate-900 flex items-center gap-1">
+                  <Lock className="w-3.5 h-3.5 text-slate-700" />
+                  <span>Why Enable 2FA for Admin:</span>
+                </div>
+                <div className="flex items-start gap-1.5 text-[11px]">
+                  <span className="text-slate-400 font-black">•</span>
+                  <span>Prevents anyone from changing or guessing your master password.</span>
+                </div>
+                <div className="flex items-start gap-1.5 text-[11px]">
+                  <span className="text-slate-400 font-black">•</span>
+                  <span>Blocks credential stuffing and unauthorized ad deletions or modifications.</span>
+                </div>
+              </div>
+
+              {/* Modal footer buttons */}
+              <div className="pt-2 flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIs2FAModalOpen(false)}
+                  className="w-1/3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isSaving2FA}
+                  onClick={() => handleSaveAdmin2FA(admin2FAEnabled, admin2FAPhone, admin2FAMethod)}
+                  className="w-2/3 py-2.5 bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-50"
+                >
+                  {isSaving2FA ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Saving 2FA...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Save 2FA Settings</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

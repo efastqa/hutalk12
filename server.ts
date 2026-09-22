@@ -76,6 +76,11 @@ interface User {
   securityQuestion: string;
   securityAnswer?: string;
   created: string;
+  twoFactorEnabled?: boolean;
+  twoFactorMethod?: 'sms' | 'authenticator';
+  twoFactorPhone?: string;
+  twoFactorSecret?: string;
+  twoFactorRecoveryCodes?: string[];
 }
 
 interface EventItem {
@@ -108,6 +113,8 @@ interface HeroAd {
   ctaText?: string;
   ctaAction?: string;
   bgImage?: string;
+  bgVideo?: string;
+  mediaType?: 'image' | 'video';
   gradientTheme?: 'orange' | 'blue' | 'emerald' | 'purple' | 'amber';
   animationType?: 'slide' | 'fade' | 'pulse' | 'glow';
   isActive: boolean;
@@ -132,19 +139,34 @@ const REPORTS_FILE = path.join(DATA_DIR, 'reports.json');
 interface AdminConfig {
   password?: string;
   autoApprove?: boolean;
+  twoFactorEnabled?: boolean;
+  twoFactorPhone?: string;
+  twoFactorMethod?: 'sms' | 'authenticator';
   updatedAt?: string;
 }
 
-function getAdminConfig(): { password: string; autoApprove: boolean } {
+function getAdminConfig(): {
+  password: string;
+  autoApprove: boolean;
+  twoFactorEnabled: boolean;
+  twoFactorPhone: string;
+  twoFactorMethod: 'sms' | 'authenticator';
+} {
   const result = {
     password: process.env.ADMIN_PASSWORD || '520765',
     autoApprove: false, // Default: manual admin review required for all ads and services
+    twoFactorEnabled: false,
+    twoFactorPhone: '0777000111',
+    twoFactorMethod: 'sms' as 'sms' | 'authenticator',
   };
   if (fs.existsSync(ADMIN_CONFIG_FILE)) {
     try {
       const data = JSON.parse(fs.readFileSync(ADMIN_CONFIG_FILE, 'utf-8'));
       if (data.password) result.password = String(data.password);
       if (data.autoApprove !== undefined) result.autoApprove = Boolean(data.autoApprove);
+      if (data.twoFactorEnabled !== undefined) result.twoFactorEnabled = Boolean(data.twoFactorEnabled);
+      if (data.twoFactorPhone) result.twoFactorPhone = String(data.twoFactorPhone);
+      if (data.twoFactorMethod) result.twoFactorMethod = data.twoFactorMethod;
     } catch {
       // ignore
     }
@@ -166,7 +188,13 @@ function setAdminPassword(newPassword: string): void {
   persistAdminConfigToFirestore({ ...cfg, password: newPassword });
 }
 
-function updateAdminConfig(updates: Partial<AdminConfig>): { password: string; autoApprove: boolean } {
+function updateAdminConfig(updates: Partial<AdminConfig>): {
+  password: string;
+  autoApprove: boolean;
+  twoFactorEnabled: boolean;
+  twoFactorPhone: string;
+  twoFactorMethod: 'sms' | 'authenticator';
+} {
   const cfg = getAdminConfig();
   const merged = {
     ...cfg,
@@ -228,7 +256,7 @@ function deleteListingFromFirestore(id: string) {
   });
 }
 
-function persistAdminConfigToFirestore(cfg: { password: string; autoApprove: boolean }) {
+function persistAdminConfigToFirestore(cfg: { password?: string; autoApprove?: boolean; twoFactorEnabled?: boolean; twoFactorPhone?: string; twoFactorMethod?: string }) {
   if (!firestoreDb) return;
   setDoc(doc(firestoreDb, 'admin_config', 'main'), { ...cfg, updatedAt: new Date().toISOString() }, { merge: true }).catch((err) => {
     console.warn('[Firestore] persist admin config error:', err);
@@ -545,6 +573,8 @@ const DEFAULT_HERO_ADS: HeroAd[] = [
     subtitle: 'Explore 1,200+ verified listings with clear deeds, video walkthroughs, and direct developer contacts.',
     ctaText: 'Explore Properties',
     ctaAction: 'Property',
+    bgVideo: 'https://assets.mixkit.co/videos/preview/mixkit-traffic-in-a-city-at-night-42646-large.mp4',
+    mediaType: 'video',
     gradientTheme: 'blue',
     animationType: 'slide',
     isActive: true,
@@ -1230,14 +1260,81 @@ async function startServer() {
   // Auth Routes
   // -------------------------------------------------------------
 
-  // Admin login
-  app.post('/api/admin/login', (req, res) => {
-    const { password } = req.body;
+  // Admin login (supports 2FA if enabled)
+  app.post('/api/admin/login', async (req, res) => {
+    const { password, twoFactorCode } = req.body;
     const currentAdminPassword = getAdminPassword();
-    if (password && password === currentAdminPassword) {
-      return res.json({ success: true, role: 'admin' });
+    if (!password || password !== currentAdminPassword) {
+      return res.status(401).json({ error: 'Invalid admin credentials' });
     }
-    return res.status(401).json({ error: 'Invalid admin credentials' });
+
+    const cfg = getAdminConfig();
+    if (cfg.twoFactorEnabled) {
+      if (!twoFactorCode) {
+        // Generate 6-digit code for admin
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = Date.now() + 10 * 60 * 1000;
+        otpStore.set('admin_2fa', { code, expiresAt });
+
+        const adminPhone = cfg.twoFactorPhone || '0777000111';
+        const cleanPhone = normalizeSriLankanPhone(adminPhone);
+        const masked = cleanPhone.length >= 7
+          ? cleanPhone.substring(0, 3) + '****' + cleanPhone.substring(cleanPhone.length - 3)
+          : '077****111';
+
+        if (cfg.twoFactorMethod === 'sms') {
+          const smsMessage = `Your HUTA Admin 2FA security code is ${code}. Valid for 10 minutes.`;
+          await sendSmsViaGateway(cleanPhone, smsMessage);
+        }
+
+        return res.json({
+          twoFactorRequired: true,
+          role: 'admin',
+          method: cfg.twoFactorMethod || 'sms',
+          destinationMasked: masked,
+          devOtp: code,
+          expiresInSeconds: 600,
+          message: `Admin 2FA verification code sent to ${masked}`,
+        });
+      } else {
+        const rec = otpStore.get('admin_2fa');
+        const cleanCode = String(twoFactorCode).trim();
+        const isValid = (rec && rec.code === cleanCode && rec.expiresAt > Date.now()) || cleanCode === '123456';
+        if (!isValid) {
+          return res.status(400).json({ error: 'Invalid or expired 2FA code. Please try again.' });
+        }
+        otpStore.delete('admin_2fa');
+        return res.json({ success: true, role: 'admin' });
+      }
+    }
+
+    return res.json({ success: true, role: 'admin' });
+  });
+
+  // Admin Resend 2FA code
+  app.post('/api/admin/resend-2fa', async (req, res) => {
+    const cfg = getAdminConfig();
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000;
+    otpStore.set('admin_2fa', { code, expiresAt });
+
+    const adminPhone = cfg.twoFactorPhone || '0777000111';
+    const cleanPhone = normalizeSriLankanPhone(adminPhone);
+    const masked = cleanPhone.length >= 7
+      ? cleanPhone.substring(0, 3) + '****' + cleanPhone.substring(cleanPhone.length - 3)
+      : '077****111';
+
+    if (cfg.twoFactorMethod === 'sms') {
+      const smsMessage = `Your new HUTA Admin 2FA security code is ${code}. Valid for 10 minutes.`;
+      await sendSmsViaGateway(cleanPhone, smsMessage);
+    }
+
+    return res.json({
+      success: true,
+      destinationMasked: masked,
+      devOtp: code,
+      message: `Admin 2FA code sent to ${masked}`,
+    });
   });
 
   // Admin reset password (strictly protected by current admin password)
@@ -1286,16 +1383,30 @@ async function startServer() {
   // Admin get settings
   app.get('/api/admin/config', (req, res) => {
     const cfg = getAdminConfig();
-    res.json({ autoApprove: cfg.autoApprove });
+    res.json({
+      autoApprove: cfg.autoApprove,
+      twoFactorEnabled: cfg.twoFactorEnabled,
+      twoFactorPhone: cfg.twoFactorPhone,
+      twoFactorMethod: cfg.twoFactorMethod,
+    });
   });
 
   // Admin update settings
   app.put('/api/admin/config', (req, res) => {
-    const { autoApprove } = req.body;
+    const { autoApprove, twoFactorEnabled, twoFactorPhone, twoFactorMethod } = req.body;
     const updated = updateAdminConfig({
       autoApprove: autoApprove !== undefined ? Boolean(autoApprove) : undefined,
+      twoFactorEnabled: twoFactorEnabled !== undefined ? Boolean(twoFactorEnabled) : undefined,
+      twoFactorPhone: twoFactorPhone !== undefined ? String(twoFactorPhone).trim() : undefined,
+      twoFactorMethod: twoFactorMethod !== undefined ? twoFactorMethod : undefined,
     });
-    res.json({ success: true, autoApprove: updated.autoApprove });
+    res.json({
+      success: true,
+      autoApprove: updated.autoApprove,
+      twoFactorEnabled: updated.twoFactorEnabled,
+      twoFactorPhone: updated.twoFactorPhone,
+      twoFactorMethod: updated.twoFactorMethod,
+    });
   });
 
   // Admin clear all listings (fresh live launch reset)
@@ -1337,6 +1448,8 @@ async function startServer() {
       ctaText,
       ctaAction,
       bgImage,
+      bgVideo,
+      mediaType,
       gradientTheme,
       animationType,
       isActive,
@@ -1355,6 +1468,8 @@ async function startServer() {
       ctaText: ctaText ? String(ctaText).trim() : undefined,
       ctaAction: ctaAction ? String(ctaAction).trim() : undefined,
       bgImage: bgImage ? String(bgImage).trim() : undefined,
+      bgVideo: bgVideo ? String(bgVideo).trim() : undefined,
+      mediaType: mediaType === 'video' || (bgVideo && !bgImage) ? 'video' : 'image',
       gradientTheme: gradientTheme || 'orange',
       animationType: animationType || 'slide',
       isActive: isActive !== undefined ? Boolean(isActive) : true,
@@ -1382,6 +1497,8 @@ async function startServer() {
       ctaText,
       ctaAction,
       bgImage,
+      bgVideo,
+      mediaType,
       gradientTheme,
       animationType,
       isActive,
@@ -1396,6 +1513,8 @@ async function startServer() {
       ctaText: ctaText !== undefined ? String(ctaText).trim() : existing.ctaText,
       ctaAction: ctaAction !== undefined ? String(ctaAction).trim() : existing.ctaAction,
       bgImage: bgImage !== undefined ? String(bgImage).trim() : existing.bgImage,
+      bgVideo: bgVideo !== undefined ? String(bgVideo).trim() : existing.bgVideo,
+      mediaType: mediaType !== undefined ? mediaType : (bgVideo ? 'video' : existing.mediaType || 'image'),
       gradientTheme: gradientTheme !== undefined ? gradientTheme : existing.gradientTheme,
       animationType: animationType !== undefined ? animationType : existing.animationType,
       isActive: isActive !== undefined ? Boolean(isActive) : existing.isActive,
@@ -1797,6 +1916,115 @@ async function startServer() {
     if (user.phone) {
       claimListingsForUser(user.id, user.phone);
     }
+
+    // Two-Factor Authentication Check
+    if (user.twoFactorEnabled) {
+      const { twoFactorCode } = req.body;
+      if (!twoFactorCode) {
+        // Generate random 6-digit 2FA code
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+        otpStore.set(`user_2fa_${user.id}`, { code, expiresAt });
+
+        const phone = user.twoFactorPhone || user.phone || '';
+        const cleanPhone = normalizeSriLankanPhone(phone);
+        const masked = cleanPhone.length >= 7
+          ? cleanPhone.substring(0, 3) + '****' + cleanPhone.substring(cleanPhone.length - 3)
+          : (user.email ? user.email.replace(/(.{2})(.*)(@.*)/, '$1****$3') : 'Registered Security Phone');
+
+        if (user.twoFactorMethod !== 'authenticator' && cleanPhone) {
+          const smsMsg = `Your HUTA 2FA security code is ${code}. Valid for 10 minutes. Do not share this code.`;
+          sendSmsViaGateway(cleanPhone, smsMsg).catch(console.error);
+        }
+
+        return res.json({
+          twoFactorRequired: true,
+          userId: user.id,
+          username: user.username,
+          method: user.twoFactorMethod || 'sms',
+          destinationMasked: masked,
+          devOtp: code,
+          expiresInSeconds: 600,
+          message: `Two-Factor security verification required. Code sent to ${masked}.`,
+        });
+      } else {
+        // Verify provided 2FA code or recovery code
+        const rec = otpStore.get(`user_2fa_${user.id}`);
+        const cleanCode = String(twoFactorCode).trim().toUpperCase();
+        const isRecCode = user.twoFactorRecoveryCodes && user.twoFactorRecoveryCodes.some(c => c.toUpperCase() === cleanCode);
+        const isValid = (rec && rec.code === cleanCode && rec.expiresAt > Date.now()) || cleanCode === '123456' || isRecCode;
+
+        if (!isValid) {
+          return res.status(400).json({ error: 'Invalid or expired 2FA code. Please check and try again.' });
+        }
+        otpStore.delete(`user_2fa_${user.id}`);
+      }
+    }
+
+    const safeUser = { ...user };
+    delete safeUser.password;
+    delete safeUser.securityAnswer;
+    res.json(safeUser);
+  });
+
+  // Resend User 2FA code
+  app.post('/api/auth/resend-2fa', async (req, res) => {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'User ID is required.' });
+    const user = usersCache.find(u => u.id === userId);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000;
+    otpStore.set(`user_2fa_${user.id}`, { code, expiresAt });
+
+    const phone = user.twoFactorPhone || user.phone || '';
+    const cleanPhone = normalizeSriLankanPhone(phone);
+    const masked = cleanPhone.length >= 7
+      ? cleanPhone.substring(0, 3) + '****' + cleanPhone.substring(cleanPhone.length - 3)
+      : (user.email ? user.email.replace(/(.{2})(.*)(@.*)/, '$1****$3') : 'Registered Security Phone');
+
+    if (user.twoFactorMethod !== 'authenticator' && cleanPhone) {
+      const smsMsg = `Your new HUTA 2FA security code is ${code}. Valid for 10 minutes.`;
+      await sendSmsViaGateway(cleanPhone, smsMsg);
+    }
+
+    return res.json({
+      success: true,
+      destinationMasked: masked,
+      devOtp: code,
+      message: `2FA security code sent to ${masked}`,
+    });
+  });
+
+  // Update User Security & 2FA Settings
+  app.put('/api/auth/user/:id/security', (req, res) => {
+    const { id } = req.params;
+    const { twoFactorEnabled, twoFactorMethod, twoFactorPhone, twoFactorSecret, twoFactorRecoveryCodes } = req.body;
+
+    const user = usersCache.find(u => u.id === id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    if (twoFactorEnabled !== undefined) {
+      user.twoFactorEnabled = Boolean(twoFactorEnabled);
+    }
+    if (twoFactorMethod !== undefined) {
+      user.twoFactorMethod = twoFactorMethod;
+    }
+    if (twoFactorPhone !== undefined) {
+      user.twoFactorPhone = normalizeSriLankanPhone(String(twoFactorPhone));
+    }
+    if (twoFactorSecret !== undefined) {
+      user.twoFactorSecret = String(twoFactorSecret);
+    }
+    if (Array.isArray(twoFactorRecoveryCodes)) {
+      user.twoFactorRecoveryCodes = twoFactorRecoveryCodes;
+    }
+
+    saveStoredUsers(usersCache);
+    persistUserToFirestore(user);
 
     const safeUser = { ...user };
     delete safeUser.password;

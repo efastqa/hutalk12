@@ -12,10 +12,26 @@ import {
   Server,
   ArrowRight,
   Sparkles,
-  Info
+  Info,
+  History,
+  XCircle,
+  Trash2,
 } from 'lucide-react';
 import { api } from '../services/api';
 import { CustomDomainStatus } from '../types';
+
+export interface DomainInspectionRecord {
+  id: string;
+  timestamp: string;
+  domain: string;
+  status: 'succeeded' | 'failed' | 'pending';
+  message: string;
+  details?: {
+    apexIp?: string[];
+    wwwCname?: string[];
+    isConfigured: boolean;
+  };
+}
 
 interface AdminCustomDomainProps {
   onToast?: (message: string, type: 'success' | 'error' | 'info') => void;
@@ -26,12 +42,62 @@ export const AdminCustomDomain: React.FC<AdminCustomDomainProps> = ({ onToast })
   const [domainStatus, setDomainStatus] = useState<CustomDomainStatus | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [isAutoPolling, setIsAutoPolling] = useState(false);
+  const [countdown, setCountdown] = useState(60);
+  const [inspectionLogs, setInspectionLogs] = useState<DomainInspectionRecord[]>([]);
 
   const checkDomain = async (targetDomain = domainInput) => {
+    const trimmedDomain = targetDomain.trim();
+    const newLogId = 'log_' + Date.now();
+    const now = new Date();
+    const timeFormatted =
+      now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) +
+      ', ' +
+      now.toLocaleDateString();
+
     setIsChecking(true);
+    // Add pending log entry immediately
+    setInspectionLogs((prev) => [
+      {
+        id: newLogId,
+        timestamp: timeFormatted,
+        domain: trimmedDomain,
+        status: 'pending',
+        message: 'Querying public DNS authoritative servers (Google 8.8.8.8)...',
+      },
+      ...prev,
+    ].slice(0, 30));
+
     try {
-      const res = await api.checkCustomDomain(targetDomain.trim());
+      const res = await api.checkCustomDomain(trimmedDomain);
       setDomainStatus(res);
+
+      const isSuccess = Boolean(res.isConfigured);
+      const isPending =
+        !isSuccess &&
+        (res.status === 'pointing_other' || (Boolean(res.liveDns?.apexA) && res.liveDns.apexA.length > 0));
+
+      setInspectionLogs((prev) =>
+        prev.map((log) =>
+          log.id === newLogId
+            ? {
+                ...log,
+                status: isSuccess ? 'succeeded' : isPending ? 'pending' : 'failed',
+                message: isSuccess
+                  ? 'DNS verification succeeded! Domain is connected to Google Cloud Run.'
+                  : isPending
+                  ? `DNS records detected (${res.liveDns.apexA.join(', ') || 'records present'}), pending propagation to Google.`
+                  : 'DNS verification failed: No required A/CNAME records detected on public DNS yet.',
+                details: {
+                  apexIp: res.liveDns.apexA,
+                  wwwCname: res.liveDns.wwwCname,
+                  isConfigured: res.isConfigured,
+                },
+              }
+            : log
+        )
+      );
+
       if (onToast) {
         if (res.isConfigured) {
           onToast(`DNS for ${res.domain} verified: Connected to Google Cloud!`, 'success');
@@ -40,6 +106,17 @@ export const AdminCustomDomain: React.FC<AdminCustomDomainProps> = ({ onToast })
         }
       }
     } catch (err: any) {
+      setInspectionLogs((prev) =>
+        prev.map((log) =>
+          log.id === newLogId
+            ? {
+                ...log,
+                status: 'failed',
+                message: err?.message || 'DNS verification failed: Network timed out or query error.',
+              }
+            : log
+        )
+      );
       if (onToast) onToast('Failed to query domain DNS records', 'error');
     } finally {
       setIsChecking(false);
@@ -50,6 +127,26 @@ export const AdminCustomDomain: React.FC<AdminCustomDomainProps> = ({ onToast })
     checkDomain('huta.lk');
   }, []);
 
+  // Automated 60-second polling mechanism with countdown
+  useEffect(() => {
+    if (!isAutoPolling) {
+      setCountdown(60);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          checkDomain(domainInput);
+          return 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isAutoPolling, domainInput]);
+
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     setCopiedText(label);
@@ -58,7 +155,7 @@ export const AdminCustomDomain: React.FC<AdminCustomDomainProps> = ({ onToast })
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div id="AdminCustomDomain.tsx" className="space-y-6 animate-in fade-in duration-200">
       {/* Top Banner */}
       <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -95,7 +192,40 @@ export const AdminCustomDomain: React.FC<AdminCustomDomainProps> = ({ onToast })
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Automated Monitoring 60s Polling Toggle */}
+          <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-xl shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setIsAutoPolling((prev) => !prev)}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                isAutoPolling ? 'bg-[#FF5A36]' : 'bg-gray-300'
+              }`}
+              title="Toggle automatic DNS polling every 60 seconds"
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                  isAutoPolling ? 'translate-x-4' : 'translate-x-0'
+                }`}
+              />
+            </button>
+            <div className="text-left">
+              <div className="text-[11px] font-bold text-gray-800 leading-tight">
+                Auto-Monitor (60s)
+              </div>
+              <div className="text-[10px] text-gray-500">
+                {isAutoPolling ? (
+                  <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Polling in {countdown}s
+                  </span>
+                ) : (
+                  'Disabled'
+                )}
+              </div>
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={() => checkDomain()}
@@ -249,6 +379,141 @@ export const AdminCustomDomain: React.FC<AdminCustomDomainProps> = ({ onToast })
             Backend: {domainStatus?.currentAppUrl}
           </div>
         </div>
+      </div>
+
+      {/* Inspection Log Section */}
+      <div id="domain-inspection-log" className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-orange-50 text-[#FF5A36] flex items-center justify-center font-bold">
+              <History className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-black uppercase tracking-wider text-gray-900">
+                  Inspection Log
+                </h4>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-sans">
+                  {inspectionLogs.length} {inspectionLogs.length === 1 ? 'check' : 'checks'}
+                </span>
+                {isAutoPolling && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 font-sans">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Auto-logging every 60s
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Timestamped history of manual and automated domain verification checks, showing resolved DNS status.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => checkDomain()}
+              disabled={isChecking}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isChecking ? 'animate-spin' : ''}`} />
+              <span>{isChecking ? 'Checking...' : 'Run Inspection Now'}</span>
+            </button>
+            {inspectionLogs.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setInspectionLogs([])}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                title="Clear inspection history"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Clear</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Logs List / Table */}
+        {inspectionLogs.length === 0 ? (
+          <div className="py-8 text-center text-xs text-gray-400 bg-gray-50/60 rounded-xl border border-dashed border-gray-200">
+            <Clock className="w-6 h-6 mx-auto mb-1.5 text-gray-300" />
+            <p className="font-medium text-gray-500">No domain inspections recorded yet.</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              Click &quot;Run Inspection Now&quot; or toggle Auto-Monitor above to begin logging verification checks.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-gray-200 text-gray-400 font-bold uppercase text-[10px]">
+                  <th className="pb-2.5 font-bold">Timestamp</th>
+                  <th className="pb-2.5 font-bold">Domain</th>
+                  <th className="pb-2.5 font-bold">Result</th>
+                  <th className="pb-2.5 font-bold">DNS Findings</th>
+                  <th className="pb-2.5 font-bold">Status Message</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 font-sans">
+                {inspectionLogs.map((log) => {
+                  let badge = null;
+                  if (log.status === 'succeeded') {
+                    badge = (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        Succeeded
+                      </span>
+                    );
+                  } else if (log.status === 'failed') {
+                    badge = (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800 border border-red-200">
+                        <XCircle className="w-3 h-3 text-red-600" />
+                        Failed
+                      </span>
+                    );
+                  } else {
+                    badge = (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                        <Clock className="w-3 h-3 text-amber-600 animate-spin" />
+                        Pending
+                      </span>
+                    );
+                  }
+
+                  return (
+                    <tr key={log.id} className="hover:bg-gray-50/80 transition-colors">
+                      <td className="py-2.5 text-gray-500 whitespace-nowrap font-mono text-[11px]">
+                        {log.timestamp}
+                      </td>
+                      <td className="py-2.5 font-bold text-gray-900 font-mono">
+                        {log.domain}
+                      </td>
+                      <td className="py-2.5 whitespace-nowrap">
+                        {badge}
+                      </td>
+                      <td className="py-2.5 font-mono text-[11px] text-gray-700 max-w-xs truncate">
+                        {log.details?.apexIp && log.details.apexIp.length > 0 ? (
+                          <span title={log.details.apexIp.join(', ')}>
+                            A: {log.details.apexIp.join(', ')}
+                          </span>
+                        ) : log.details?.wwwCname && log.details.wwwCname.length > 0 ? (
+                          <span title={log.details.wwwCname.join(', ')}>
+                            CNAME: {log.details.wwwCname.join(', ')}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 italic">None resolved</span>
+                        )}
+                      </td>
+                      <td className="py-2.5 text-gray-600 text-xs">
+                        {log.message}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Required DNS Records Table (Ready to Copy) */}

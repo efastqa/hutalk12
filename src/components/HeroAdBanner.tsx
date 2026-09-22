@@ -11,6 +11,7 @@ import {
   Megaphone,
   Sliders,
   CheckCircle2,
+  Film,
 } from 'lucide-react';
 import { HeroAd, HeroAdSettings } from '../types';
 import { DualToneHeading } from './DualToneHeading';
@@ -231,20 +232,35 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
                   transition={{ duration: 0.4, ease: 'easeOut' }}
                   className="w-full relative rounded-3xl p-5 sm:p-7 border border-[#2D303E] bg-gradient-to-b from-[#181A22] via-[#14161D] to-[#101117] text-center overflow-hidden shadow-2xl"
                 >
-                  {/* Optional Background Image */}
-                  {ad.bgImage && (
+                  {/* Optional Background Animation Video or Image */}
+                  {(ad.mediaType === 'video' || ad.bgVideo) && ad.bgVideo ? (
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-3xl">
+                      <video
+                        key={ad.bgVideo}
+                        src={ad.bgVideo}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover opacity-35 filter brightness-95 contrast-125"
+                      />
+                      {/* Protective dark gradients to guarantee text legibility */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#101117] via-[#101117]/65 to-[#101117]/85" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#101117]/80 via-transparent to-[#101117]/80" />
+                    </div>
+                  ) : ad.bgImage ? (
                     <div
-                      className="absolute inset-0 bg-cover bg-center opacity-15 pointer-events-none mix-blend-luminosity filter blur-[1px]"
+                      className="absolute inset-0 bg-cover bg-center opacity-20 pointer-events-none mix-blend-luminosity filter blur-[1px] rounded-3xl"
                       style={{ backgroundImage: `url(${ad.bgImage})` }}
                     />
-                  )}
+                  ) : null}
 
                   {/* Ambient Glow */}
                   <div className={`absolute -top-12 left-1/2 -translate-x-1/2 w-72 h-32 bg-gradient-to-b ${styles.accent} rounded-full blur-2xl pointer-events-none`} />
 
                   <div className="relative z-10 space-y-3 max-w-2xl mx-auto">
-                    {/* Badge */}
-                    <div className="flex items-center justify-center">
+                    {/* Badge & Video Indicator */}
+                    <div className="flex items-center justify-center gap-2 flex-wrap">
                       <motion.div
                         animate={
                           ad.animationType === 'pulse'
@@ -259,6 +275,13 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
                         <Megaphone className="w-3.5 h-3.5" />
                         <span>{ad.badge || 'Sponsored Ad'}</span>
                       </motion.div>
+
+                      {(ad.mediaType === 'video' || ad.bgVideo) && (
+                        <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-950/70 text-purple-300 border border-purple-500/30 backdrop-blur-xs">
+                          <Film className="w-3 h-3 text-purple-400" />
+                          <span>Animated Video Ad</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Headline */}

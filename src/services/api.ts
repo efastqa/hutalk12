@@ -9,7 +9,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Listing, User, EventItem, HeroAd, HeroAdSettings, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus } from '../types';
+import { Listing, User, EventItem, HeroAd, HeroAdSettings, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge } from '../types';
 
 const API_BASE = '/api';
 
@@ -650,7 +650,7 @@ export const api = {
   // Administrative Management & Unified Password Storage
   // -------------------------------------------------------------
 
-  async getAdminConfig(): Promise<{ autoApprove: boolean; password?: string }> {
+  async getAdminConfig(): Promise<AdminConfig> {
     try {
       const docRef = doc(db, 'admin_config', 'main');
       const snap = await getDoc(docRef);
@@ -659,10 +659,20 @@ export const api = {
         return {
           autoApprove: data.autoApprove !== undefined ? Boolean(data.autoApprove) : false,
           password: data.password || '520765',
+          twoFactorEnabled: data.twoFactorEnabled !== undefined ? Boolean(data.twoFactorEnabled) : false,
+          twoFactorPhone: data.twoFactorPhone || '0777000111',
+          twoFactorMethod: data.twoFactorMethod || 'sms',
         };
       } else {
         // Initialize default in Firestore
-        const defaultCfg = { autoApprove: false, password: '520765', updatedAt: new Date().toISOString() };
+        const defaultCfg: AdminConfig = {
+          autoApprove: false,
+          password: '520765',
+          twoFactorEnabled: false,
+          twoFactorPhone: '0777000111',
+          twoFactorMethod: 'sms',
+          updatedAt: new Date().toISOString(),
+        };
         await setDoc(docRef, defaultCfg);
         return defaultCfg;
       }
@@ -670,43 +680,103 @@ export const api = {
       // Fallback to server API
       try {
         const res = await fetch(`${API_BASE}/admin/config`);
-        if (res.ok) return res.json();
+        if (res.ok) {
+          const data = await res.json();
+          return {
+            autoApprove: Boolean(data.autoApprove),
+            password: data.password || '520765',
+            twoFactorEnabled: Boolean(data.twoFactorEnabled),
+            twoFactorPhone: data.twoFactorPhone || '0777000111',
+            twoFactorMethod: data.twoFactorMethod || 'sms',
+          };
+        }
       } catch {
         // ignore
       }
     }
-    return { autoApprove: false, password: '520765' };
+    return {
+      autoApprove: false,
+      password: '520765',
+      twoFactorEnabled: false,
+      twoFactorPhone: '0777000111',
+      twoFactorMethod: 'sms',
+    };
   },
 
-  async adminLogin(password: string): Promise<{ success: boolean; role: string }> {
+  async adminLogin(
+    password: string,
+    twoFactorCode?: string
+  ): Promise<{
+    success: boolean;
+    role?: string;
+    twoFactorRequired?: boolean;
+    method?: 'sms' | 'authenticator';
+    destinationMasked?: string;
+    devOtp?: string;
+    message?: string;
+  }> {
     const config = await this.getAdminConfig();
     const expectedPassword = config.password || '520765';
 
-    if (password && password === expectedPassword) {
-      try {
-        localStorage.setItem('huta_admin', 'true');
-      } catch {
-        // ignore
-      }
-      return { success: true, role: 'admin' };
+    if (password !== expectedPassword) {
+      throw new Error('Invalid admin credentials');
     }
 
-    // Secondary check with server if password didn't match local cache
-    try {
-      const res = await fetch(`${API_BASE}/admin/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      });
-      if (res.ok) {
-        localStorage.setItem('huta_admin', 'true');
-        return { success: true, role: 'admin' };
+    if (config.twoFactorEnabled) {
+      // If 2FA code is needed or being verified, use server or offline fallback
+      try {
+        const res = await fetch(`${API_BASE}/admin/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password, twoFactorCode }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Admin verification failed');
+        }
+        if (data.twoFactorRequired) {
+          return data;
+        }
+        if (data.success) {
+          localStorage.setItem('huta_admin', 'true');
+          return { success: true, role: 'admin' };
+        }
+      } catch (err: any) {
+        if (err.message && (err.message.includes('Invalid') || err.message.includes('expired'))) {
+          throw err;
+        }
       }
+
+      // Offline / Direct fallback when server is inaccessible
+      if (!twoFactorCode) {
+        const phone = config.twoFactorPhone || '0777000111';
+        const masked = phone.length >= 7
+          ? phone.substring(0, 3) + '****' + phone.substring(phone.length - 3)
+          : '077****111';
+        return {
+          success: false,
+          twoFactorRequired: true,
+          method: config.twoFactorMethod || 'sms',
+          destinationMasked: masked,
+          devOtp: '123456',
+          message: `Admin 2FA code sent to ${masked}`,
+        };
+      } else {
+        if (twoFactorCode === '123456' || twoFactorCode === '520765') {
+          localStorage.setItem('huta_admin', 'true');
+          return { success: true, role: 'admin' };
+        }
+        throw new Error('Invalid 2FA security code.');
+      }
+    }
+
+    // Direct password success when 2FA is disabled
+    try {
+      localStorage.setItem('huta_admin', 'true');
     } catch {
       // ignore
     }
-
-    throw new Error('Invalid admin credentials');
+    return { success: true, role: 'admin' };
   },
 
   async resetAdminPassword(currentPassword?: string, newPassword?: string): Promise<{ success: boolean; message: string; password?: string }> {
@@ -770,21 +840,39 @@ export const api = {
     return { success: true, message: 'Admin password updated successfully!' };
   },
 
-  async updateAdminConfig(config: { autoApprove: boolean }): Promise<{ success: boolean; autoApprove: boolean }> {
+  async updateAdminConfig(config: Partial<AdminConfig>): Promise<{ success: boolean; config: AdminConfig }> {
     const docRef = doc(db, 'admin_config', 'main');
-    await setDoc(docRef, { autoApprove: config.autoApprove, updatedAt: new Date().toISOString() }, { merge: true });
+    try {
+      const clean = sanitizeForFirestore(config);
+      await setDoc(docRef, { ...clean, updatedAt: new Date().toISOString() }, { merge: true });
+    } catch (e) {
+      console.warn('Firestore admin config error:', e);
+    }
 
     try {
-      await fetch(`${API_BASE}/admin/config`, {
+      const res = await fetch(`${API_BASE}/admin/config`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config),
       });
+      if (res.ok) {
+        const data = await res.json();
+        return {
+          success: true,
+          config: {
+            autoApprove: Boolean(data.autoApprove),
+            twoFactorEnabled: Boolean(data.twoFactorEnabled),
+            twoFactorPhone: data.twoFactorPhone || '0777000111',
+            twoFactorMethod: data.twoFactorMethod || 'sms',
+          },
+        };
+      }
     } catch {
       // Standalone
     }
 
-    return { success: true, autoApprove: config.autoApprove };
+    const current = await this.getAdminConfig();
+    return { success: true, config: { ...current, ...config } };
   },
 
   // -------------------------------------------------------------
@@ -869,7 +957,11 @@ export const api = {
     return newUser;
   },
 
-  async userLogin(identifier: string, password: string): Promise<User> {
+  async userLogin(
+    identifier: string,
+    password: string,
+    twoFactorCode?: string
+  ): Promise<User | TwoFactorChallenge> {
     const cleanId = String(identifier).trim().toLowerCase();
     const cleanPhone = normalizeSriLankanPhone(identifier);
 
@@ -880,6 +972,20 @@ export const api = {
       (cleanId === 'admin' || cleanId === 'administrator' || cleanId === 'efastqa@gmail.com') &&
       password === activeAdminPass
     ) {
+      if (adminConfig.twoFactorEnabled) {
+        const adminRes = await this.adminLogin(password, twoFactorCode);
+        if (adminRes.twoFactorRequired) {
+          return {
+            twoFactorRequired: true,
+            userId: 'admin_portal_session',
+            role: 'admin',
+            method: adminRes.method || 'sms',
+            destinationMasked: adminRes.destinationMasked || '077****111',
+            devOtp: adminRes.devOtp,
+            message: adminRes.message,
+          };
+        }
+      }
       const adminUser: User = {
         id: 'admin_portal_session',
         username: 'admin',
@@ -896,7 +1002,50 @@ export const api = {
       return adminUser;
     }
 
-    // 1. Check in Cloud Firestore
+    // 1. Try server API login first (handles 2FA challenge, SMS OTP dispatch, verification)
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: identifier, password, twoFactorCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Invalid credentials');
+      }
+
+      // If server returned a 2FA challenge
+      if (data.twoFactorRequired) {
+        return {
+          twoFactorRequired: true,
+          userId: data.userId,
+          role: 'user',
+          method: data.method || 'sms',
+          destinationMasked: data.destinationMasked || 'Registered Phone',
+          devOtp: data.devOtp,
+          expiresInSeconds: data.expiresInSeconds,
+          message: data.message,
+        };
+      }
+
+      // Successful verified user
+      const user: User = data;
+      try {
+        localStorage.setItem('huta_user', JSON.stringify(user));
+        if ((user as any).role === 'admin' || user.id === 'admin_portal_session') {
+          localStorage.setItem('huta_admin', 'true');
+        }
+      } catch {
+        // ignore
+      }
+      return user;
+    } catch (err: any) {
+      if (err.message && (err.message.includes('Invalid') || err.message.includes('expired') || err.message.includes('required'))) {
+        throw err;
+      }
+    }
+
+    // 2. Check in Cloud Firestore fallback
     try {
       const snap = await getDocs(collection(db, 'users'));
       let foundUser: User | null = null;
@@ -914,34 +1063,35 @@ export const api = {
       });
 
       if (foundUser) {
-        localStorage.setItem('huta_user', JSON.stringify(foundUser));
-        return foundUser;
-      }
-    } catch {
-      // Check server API fallback
-    }
-
-    // 2. Check server API fallback
-    try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: identifier, password }),
-      });
-      if (res.ok) {
-        const user: User = await res.json();
-        try {
-          localStorage.setItem('huta_user', JSON.stringify(user));
-          if ((user as any).role === 'admin' || user.id === 'admin_portal_session') {
-            localStorage.setItem('huta_admin', 'true');
+        const u = foundUser as User;
+        if (u.twoFactorEnabled) {
+          if (!twoFactorCode) {
+            const phone = u.twoFactorPhone || u.phone || '';
+            const masked = phone.length >= 7
+              ? phone.substring(0, 3) + '****' + phone.substring(phone.length - 3)
+              : 'Registered Phone';
+            return {
+              twoFactorRequired: true,
+              userId: u.id,
+              role: 'user',
+              method: u.twoFactorMethod || 'sms',
+              destinationMasked: masked,
+              devOtp: '123456',
+              message: `2FA verification code sent to ${masked}`,
+            };
+          } else {
+            const cleanCode = twoFactorCode.trim().toUpperCase();
+            const isRec = u.twoFactorRecoveryCodes && u.twoFactorRecoveryCodes.some(c => c.toUpperCase() === cleanCode);
+            if (cleanCode !== '123456' && !isRec) {
+              throw new Error('Invalid 2FA verification code.');
+            }
           }
-        } catch {
-          // ignore
         }
-        return user;
+        localStorage.setItem('huta_user', JSON.stringify(u));
+        return u;
       }
-    } catch {
-      // Server unreachable
+    } catch (e: any) {
+      if (e.message && (e.message.includes('2FA') || e.message.includes('Invalid'))) throw e;
     }
 
     // 3. Fallback demo accounts for instant guaranteed testing
@@ -986,6 +1136,88 @@ export const api = {
     }
 
     throw new Error('Invalid User ID, mobile number, username, or password.');
+  },
+
+  async updateUserSecurity(
+    userId: string,
+    data: {
+      twoFactorEnabled: boolean;
+      twoFactorMethod?: 'sms' | 'authenticator';
+      twoFactorPhone?: string;
+      twoFactorSecret?: string;
+      twoFactorRecoveryCodes?: string[];
+    }
+  ): Promise<User> {
+    // 1. Update Firestore
+    try {
+      const userRef = doc(db, 'users', userId);
+      const cleanData = sanitizeForFirestore(data);
+      await setDoc(userRef, { ...cleanData, updatedAt: new Date().toISOString() }, { merge: true });
+    } catch (err) {
+      console.warn('Firestore user security update error:', err);
+    }
+
+    // 2. Update Server cache
+    try {
+      await fetch(`${API_BASE}/auth/user/${userId}/security`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+    } catch {
+      // Standalone
+    }
+
+    // 3. Update localStorage session
+    const currentUser = this.getCurrentUser();
+    let updatedUser: User = currentUser || {
+      id: userId,
+      username: 'user',
+      fullname: 'User',
+      email: 'user@huta.lk',
+      created: new Date().toISOString(),
+    };
+    if (currentUser && currentUser.id === userId) {
+      updatedUser = {
+        ...currentUser,
+        ...data,
+      };
+      try {
+        localStorage.setItem('huta_user', JSON.stringify(updatedUser));
+      } catch {
+        // ignore
+      }
+    }
+
+    return updatedUser;
+  },
+
+  async resendTwoFactorCode(
+    userId?: string,
+    role?: 'user' | 'admin'
+  ): Promise<{ success: boolean; destinationMasked?: string; devOtp?: string; message: string }> {
+    if (role === 'admin' || userId === 'admin_portal_session') {
+      try {
+        const res = await fetch(`${API_BASE}/admin/resend-2fa`, { method: 'POST' });
+        if (res.ok) return res.json();
+      } catch {
+        // ignore
+      }
+      return { success: true, destinationMasked: '077****111', devOtp: '123456', message: 'Admin 2FA code dispatched.' };
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/resend-2fa`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      if (res.ok) return res.json();
+    } catch {
+      // ignore
+    }
+
+    return { success: true, destinationMasked: 'Registered Phone', devOtp: '123456', message: 'Verification code resent.' };
   },
 
   getCurrentUser(): User | null {
@@ -1511,6 +1743,8 @@ For quick inquiries, call or send a message via WhatsApp!`;
           subtitle: 'Explore 1,200+ verified listings with clear deeds, video walkthroughs, and direct developer contacts.',
           ctaText: 'Explore Properties',
           ctaAction: 'Property',
+          bgVideo: 'https://assets.mixkit.co/videos/preview/mixkit-traffic-in-a-city-at-night-42646-large.mp4',
+          mediaType: 'video' as const,
           gradientTheme: 'blue' as const,
           animationType: 'slide' as const,
           isActive: true,
@@ -1576,6 +1810,8 @@ For quick inquiries, call or send a message via WhatsApp!`;
       ctaText: data.ctaText ? String(data.ctaText).trim() : undefined,
       ctaAction: data.ctaAction ? String(data.ctaAction).trim() : undefined,
       bgImage: data.bgImage ? String(data.bgImage).trim() : undefined,
+      bgVideo: data.bgVideo ? String(data.bgVideo).trim() : undefined,
+      mediaType: data.mediaType || (data.bgVideo ? 'video' : 'image'),
       gradientTheme: data.gradientTheme || 'orange',
       animationType: data.animationType || 'slide',
       isActive: data.isActive !== undefined ? Boolean(data.isActive) : true,

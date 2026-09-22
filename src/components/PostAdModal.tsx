@@ -18,7 +18,9 @@ import {
   Images,
   CheckCircle2,
   Check,
-  Clock
+  Clock,
+  Film,
+  Video,
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -169,6 +171,10 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
   const [urlInput, setUrlInput] = useState('');
   const [isUploadingImages, setIsUploadingImages] = useState(false);
 
+  // Optional Video Walkthrough State
+  const [videoUrl, setVideoUrl] = useState('');
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+
   // Specialized Service Fields
   const [serviceTrade, setServiceTrade] = useState('AC Repair & Servicing');
   const [pricingType, setPricingType] = useState<'fixed' | 'starting_at' | 'hourly' | 'quote'>('starting_at');
@@ -204,6 +210,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       }
       setImages(initialImgs);
       setUrlInput('');
+      setVideoUrl(editingListing.videoUrl || '');
 
       setServiceTrade(editingListing.serviceTrade || 'AC Repair & Servicing');
       setPricingType(editingListing.pricingType || (editingListing.category === 'Services' ? 'starting_at' : 'fixed'));
@@ -219,6 +226,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       setDescription('');
       setImages([]);
       setUrlInput('');
+      setVideoUrl('');
       setServiceTrade('AC Repair & Servicing');
       setPricingType('starting_at');
       setServiceArea('Colombo & Greater Suburbs');
@@ -311,6 +319,36 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
     });
   };
 
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 25 * 1024 * 1024) {
+      onToast('Video file exceeds 25MB limit. Please choose a smaller clip or paste a link.', 'error');
+      return;
+    }
+
+    setIsUploadingVideo(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setVideoUrl((ev.target?.result as string) || '');
+        onToast('Animation video clip added!', 'success');
+        setIsUploadingVideo(false);
+      };
+      reader.onerror = () => {
+        onToast('Failed to load video file', 'error');
+        setIsUploadingVideo(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      onToast('Failed to upload video', 'error');
+      setIsUploadingVideo(false);
+    } finally {
+      e.target.value = '';
+    }
+  };
+
   const handleGenerateAIDescription = async () => {
     if (!title.trim()) {
       onToast('Please type an ad title first so AI knows what to write!', 'error');
@@ -389,6 +427,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
         description: description.trim(),
         image: primaryImage,
         images: finalImages,
+        videoUrl: videoUrl.trim() || undefined,
         userId: editingListing ? editingListing.userId : (currentUser ? currentUser.id : 'guest'),
         pricingType: isService ? pricingType : 'fixed',
         ...(isService && serviceTrade ? { serviceTrade } : {}),
@@ -973,6 +1012,69 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
             <p className="text-[10px] text-gray-400 mt-1">
               Buyers look at multiple angles. You can add up to {MAX_IMAGES} photos, change the cover photo, or reorder anytime.
             </p>
+          </div>
+
+          {/* Optional Animation Video / Video Walkthrough */}
+          <div className="bg-purple-50/60 rounded-2xl p-3.5 border border-purple-100 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-1.5 text-xs font-bold text-purple-950 uppercase tracking-wider">
+                <Film className="w-3.5 h-3.5 text-purple-600" />
+                <span>Animation Video / Video Walkthrough (Optional)</span>
+              </label>
+              <span className="text-[11px] text-purple-700 font-medium">
+                MP4 clip or direct video link
+              </span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <label className="cursor-pointer flex items-center justify-center gap-2 border border-purple-200 hover:border-purple-500 rounded-xl py-2 px-3 text-xs font-bold text-purple-900 transition-colors bg-white shadow-2xs hover:bg-purple-50 shrink-0">
+                {isUploadingVideo ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-600" />
+                ) : (
+                  <UploadCloud className="w-3.5 h-3.5 text-purple-600" />
+                )}
+                <span>{isUploadingVideo ? 'Uploading Video...' : 'Upload Video Clip'}</span>
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm,video/ogg,image/gif"
+                  onChange={handleVideoUpload}
+                  disabled={isUploadingVideo}
+                  className="hidden"
+                />
+              </label>
+
+              <input
+                type="url"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="Or paste direct video URL (https://.../video.mp4)"
+                className="flex-1 px-3 py-2 rounded-xl border border-purple-200 bg-white text-xs focus:border-purple-600 outline-none text-gray-800"
+              />
+            </div>
+
+            {videoUrl && (
+              <div className="relative rounded-xl overflow-hidden border border-purple-200 bg-black aspect-video max-h-40 flex items-center justify-center">
+                <video
+                  src={videoUrl}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => setVideoUrl('')}
+                  className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-red-600/90 hover:bg-red-700 text-white text-[10px] font-bold cursor-pointer transition-colors shadow-sm"
+                >
+                  Remove Video
+                </button>
+                <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+                  <Film className="w-3 h-3 text-purple-400" />
+                  <span>Preview Attached</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Description with AI Assistant */}

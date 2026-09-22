@@ -18,6 +18,7 @@
         "isFeatured": { "type": "boolean" },
         "views": { "type": "number" },
         "verifiedPro": { "type": "boolean" },
+        "videoUrl": { "type": "string" },
         "userId": { "type": "string", "maxLength": 128 },
         "createdAt": { "type": "string", "maxLength": 64 },
         "updatedAt": { "type": "string", "maxLength": 64 }
@@ -80,6 +81,9 @@
         "subtitle": { "type": "string", "maxLength": 500 },
         "ctaText": { "type": "string", "maxLength": 100 },
         "ctaAction": { "type": "string", "maxLength": 100 },
+        "bgImage": { "type": "string" },
+        "bgVideo": { "type": "string" },
+        "mediaType": { "type": "string", "enum": ["image", "video"] },
         "gradientTheme": { "type": "string", "maxLength": 50 },
         "animationType": { "type": "string", "maxLength": 50 },
         "isActive": { "type": "boolean" },

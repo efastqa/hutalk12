@@ -27,6 +27,8 @@ import {
   TrendingUp,
   Flag,
   CheckCircle,
+  Film,
+  Video,
 } from 'lucide-react';
 import { formatLKR } from './ListingsSection';
 import { downloadImage } from '../utils/downloadHelper';
@@ -100,6 +102,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
   const canManage = isOwner || isAdminLoggedIn;
 
   const [activeIdx, setActiveIdx] = useState(0);
+  const [isVideoActive, setIsVideoActive] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [isFacebookFlyerOpen, setIsFacebookFlyerOpen] = useState(false);
   const [isDownloadingPhoto, setIsDownloadingPhoto] = useState(false);
@@ -113,6 +116,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
 
   useEffect(() => {
     setActiveIdx(0);
+    setIsVideoActive(false);
     setIsZoomOpen(false);
     setIsFacebookFlyerOpen(false);
     setIsReportModalOpen(false);
@@ -197,29 +201,49 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2">
           {/* Image Pane & Gallery Carousel */}
           <div className="bg-gray-900 flex flex-col justify-between relative overflow-hidden select-none">
-            {/* Main Active Photo */}
+            {/* Main Active Photo or Video */}
             <div className="relative h-64 md:h-80 sm:h-72 w-full bg-black/40 flex items-center justify-center overflow-hidden">
-              <img
-                src={currentPhoto}
-                alt={`${listing.title} - Photo ${activeIdx + 1}`}
-                className="w-full h-full object-cover transition-all duration-300 cursor-pointer"
-                onClick={() => setIsZoomOpen(true)}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src =
-                    'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80';
-                }}
-              />
+              {isVideoActive && listing.videoUrl ? (
+                <div className="relative w-full h-full bg-black flex items-center justify-center">
+                  <video
+                    src={listing.videoUrl}
+                    controls
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-contain"
+                  />
+                  <div className="absolute top-3 left-3 bg-purple-900/80 backdrop-blur-xs text-white text-[11px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 border border-purple-500/30">
+                    <Film className="w-3.5 h-3.5 text-purple-300" />
+                    <span>Video Walkthrough</span>
+                  </div>
+                </div>
+              ) : (
+                <img
+                  src={currentPhoto}
+                  alt={`${listing.title} - Photo ${activeIdx + 1}`}
+                  className="w-full h-full object-cover transition-all duration-300 cursor-pointer"
+                  onClick={() => setIsZoomOpen(true)}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80';
+                  }}
+                />
+              )}
 
-              {/* Category & Location Tag */}
-              <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-xs text-white text-[11px] px-2.5 py-1 rounded-lg">
-                {listing.category} in {listing.location}
-              </div>
+              {/* Category & Location Tag (when image mode) */}
+              {!isVideoActive && (
+                <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-xs text-white text-[11px] px-2.5 py-1 rounded-lg">
+                  {listing.category} in {listing.location}
+                </div>
+              )}
 
               {/* Photo Counter Badge */}
-              <div className="absolute top-3 right-14 bg-black/60 backdrop-blur-xs text-white text-[11px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1.5">
-                <Camera className="w-3.5 h-3.5" />
-                <span>{activeIdx + 1} / {gallery.length}</span>
-              </div>
+              {!isVideoActive && (
+                <div className="absolute top-3 right-14 bg-black/60 backdrop-blur-xs text-white text-[11px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1.5">
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>{activeIdx + 1} / {gallery.length}</span>
+                </div>
+              )}
 
               {/* Facebook Flyer / Promo Trigger */}
               <button
@@ -232,29 +256,48 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                 <span>Facebook Flyer</span>
               </button>
 
+              {/* Watch Video Walkthrough Button if available */}
+              {listing.videoUrl && (
+                <button
+                  type="button"
+                  onClick={() => setIsVideoActive(!isVideoActive)}
+                  className={`absolute bottom-3 left-36 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg backdrop-blur-xs flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 ${
+                    isVideoActive ? 'bg-purple-700 ring-2 ring-purple-400' : 'bg-purple-600/90 hover:bg-purple-700'
+                  }`}
+                  title="Toggle Video Walkthrough"
+                >
+                  <Film className="w-3.5 h-3.5" />
+                  <span>{isVideoActive ? 'Photos' : 'Watch Video'}</span>
+                </button>
+              )}
+
               {/* Direct Image Download Button */}
-              <button
-                type="button"
-                onClick={handleDownloadActivePhoto}
-                disabled={isDownloadingPhoto}
-                className="absolute bottom-3 right-12 w-8 h-8 rounded-lg bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all hover:scale-105"
-                title="Download this image to your device"
-              >
-                <Download className="w-4 h-4" />
-              </button>
+              {!isVideoActive && (
+                <button
+                  type="button"
+                  onClick={handleDownloadActivePhoto}
+                  disabled={isDownloadingPhoto}
+                  className="absolute bottom-3 right-12 w-8 h-8 rounded-lg bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all hover:scale-105"
+                  title="Download this image to your device"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+              )}
 
               {/* Zoom Button */}
-              <button
-                type="button"
-                onClick={() => setIsZoomOpen(true)}
-                className="absolute bottom-3 right-3 w-8 h-8 rounded-lg bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all hover:scale-105"
-                title="View Fullscreen"
-              >
-                <Maximize2 className="w-4 h-4" />
-              </button>
+              {!isVideoActive && (
+                <button
+                  type="button"
+                  onClick={() => setIsZoomOpen(true)}
+                  className="absolute bottom-3 right-3 w-8 h-8 rounded-lg bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-all hover:scale-105"
+                  title="View Fullscreen"
+                >
+                  <Maximize2 className="w-4 h-4" />
+                </button>
+              )}
 
               {/* Navigation Arrows for Multi-Photos */}
-              {gallery.length > 1 && (
+              {!isVideoActive && gallery.length > 1 && (
                 <>
                   <button
                     type="button"
@@ -282,16 +325,36 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
               )}
             </div>
 
-            {/* Thumbnail Strip (if multiple images) */}
-            {gallery.length > 1 && (
+            {/* Thumbnail Strip (if multiple images or has video) */}
+            {(gallery.length > 1 || listing.videoUrl) && (
               <div className="p-2.5 bg-gray-950 flex items-center gap-2 overflow-x-auto border-t border-white/10 scrollbar-thin">
+                {/* Video thumbnail if present */}
+                {listing.videoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setIsVideoActive(true)}
+                    className={`relative shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 bg-gradient-to-br from-purple-900 to-indigo-950 flex flex-col items-center justify-center text-white transition-all cursor-pointer ${
+                      isVideoActive
+                        ? 'border-purple-400 scale-105 opacity-100 ring-2 ring-purple-500/50'
+                        : 'border-purple-500/30 opacity-70 hover:opacity-100'
+                    }`}
+                    title="Watch Video Walkthrough"
+                  >
+                    <Film className="w-4 h-4 text-purple-300" />
+                    <span className="text-[8px] font-extrabold text-purple-200 uppercase mt-0.5 tracking-wider">Video</span>
+                  </button>
+                )}
+
                 {gallery.map((img, idx) => (
                   <button
                     key={idx}
                     type="button"
-                    onClick={() => setActiveIdx(idx)}
+                    onClick={() => {
+                      setIsVideoActive(false);
+                      setActiveIdx(idx);
+                    }}
                     className={`relative shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-                      idx === activeIdx
+                      !isVideoActive && idx === activeIdx
                         ? 'border-[#FF5A36] scale-105 opacity-100'
                         : 'border-transparent opacity-60 hover:opacity-100'
                     }`}

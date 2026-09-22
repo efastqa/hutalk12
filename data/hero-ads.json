@@ -1,34 +1,49 @@
 {
   "settings": {
-    "mode": "default",
+    "mode": "rotate",
     "rotationIntervalSeconds": 6
   },
   "ads": [
     {
-      "subtitle": "Direct WhatsApp inquiries from thousands of verified buyers across all 25 districts with zero broker fees.",
+      "animationType": "slide",
+      "subtitle": "Direct WhatsApp inquiries from thousands of buyers across all 25 districts with zero broker fees.",
+      "badge": "Sponsored Promotion",
+      "id": "hero-ad-1789640542565",
       "ctaText": "Post Free Ad Now",
-      "title": "Sell Your Vehicle or Property in 24 Hours",
-      "gradientTheme": "orange",
-      "badge": "🌟 Exclusive Promotion",
-      "createdAt": "2026-09-16T15:57:16.228Z",
-      "animationType": "pulse",
-      "id": "hero-ad-1",
+      "gradientTheme": "emerald",
       "isActive": true,
-      "highlightText": "with HUTA Turbo Ad",
-      "ctaAction": "post_ad"
+      "title": "All services in one Place",
+      "ctaAction": "post_ad",
+      "createdAt": "2026-09-17T10:22:22.565Z",
+      "highlightText": "with HUTA IN"
     },
     {
-      "createdAt": "2026-09-16T15:57:16.228Z",
-      "ctaText": "Explore Properties",
+      "isActive": true,
+      "ctaText": "Post Free Ad Now",
+      "title": "Sell Your Vehicle or Property in 24 Hours",
+      "animationType": "pulse",
+      "highlightText": "with HUTA Turbo Ad",
+      "badge": "🌟 Exclusive Promotion",
+      "gradientTheme": "orange",
+      "id": "hero-ad-1",
+      "subtitle": "Direct WhatsApp inquiries from thousands of verified buyers across all 25 districts with zero broker fees.",
+      "ctaAction": "post_ad",
+      "createdAt": "2026-09-16T15:57:16.228Z"
+    },
+    {
       "gradientTheme": "blue",
       "subtitle": "Explore 1,200+ verified listings with clear deeds, video walkthroughs, and direct developer contacts.",
-      "ctaAction": "Property",
-      "isActive": true,
       "highlightText": "in Colombo, Galle & Kandy",
-      "id": "hero-ad-2",
       "badge": "🏢 Featured Developer",
+      "title": "Discover Luxury Beachside Apartments & Land",
       "animationType": "slide",
-      "title": "Discover Luxury Beachside Apartments & Land"
+      "ctaText": "Explore Properties",
+      "ctaAction": "Property",
+      "bgVideo": "https://assets.mixkit.co/videos/preview/mixkit-traffic-in-a-city-at-night-42646-large.mp4",
+      "mediaType": "video",
+      "createdAt": "2026-09-16T15:57:16.228Z",
+      "isActive": true,
+      "id": "hero-ad-2"
     }
   ]
 }

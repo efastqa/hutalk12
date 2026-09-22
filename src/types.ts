@@ -23,6 +23,7 @@ export interface Listing {
   serviceArea?: string;
   isVerifiedPro?: boolean;
   isEmergency247?: boolean;
+  videoUrl?: string; // Optional animation video or video walkthrough (MP4/WebM/YouTube link)
   itemCondition?: string;
   brand?: string;
   model?: string;
@@ -64,6 +65,31 @@ export interface User {
   securityQuestion?: string;
   securityAnswer?: string;
   created: string;
+  twoFactorEnabled?: boolean;
+  twoFactorMethod?: 'sms' | 'authenticator';
+  twoFactorPhone?: string;
+  twoFactorSecret?: string;
+  twoFactorRecoveryCodes?: string[];
+}
+
+export interface AdminConfig {
+  password?: string;
+  autoApprove: boolean;
+  twoFactorEnabled?: boolean;
+  twoFactorPhone?: string;
+  twoFactorMethod?: 'sms' | 'authenticator';
+  updatedAt?: string;
+}
+
+export interface TwoFactorChallenge {
+  twoFactorRequired: true;
+  userId?: string;
+  role?: 'user' | 'admin';
+  method: 'sms' | 'authenticator';
+  destinationMasked: string;
+  devOtp?: string;
+  expiresInSeconds?: number;
+  message?: string;
 }
 
 export interface CategoryInfo {
@@ -151,6 +177,8 @@ export interface HeroAd {
   ctaText?: string; // e.g. "Explore Vehicles" or "Post Ad Now"
   ctaAction?: string; // e.g. "Vehicles" (category) | "post_ad" | "https://..."
   bgImage?: string; // optional background graphic
+  bgVideo?: string; // optional background animated video (mp4, webm, or animated loop)
+  mediaType?: 'image' | 'video'; // media type for hero ad background
   gradientTheme?: 'orange' | 'blue' | 'emerald' | 'purple' | 'amber';
   animationType?: HeroAnimationType;
   isActive: boolean;

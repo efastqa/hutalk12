@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Listing, User, ViewTab } from '../types';
 import {
   User as UserIcon,
@@ -13,6 +13,7 @@ import {
   Inbox,
   Eye,
   ShieldCheck,
+  Shield,
   Sparkles,
   LogIn,
   UserPlus,
@@ -29,6 +30,12 @@ import {
   Smartphone,
   Download,
   Facebook,
+  Copy,
+  Check,
+  Lock,
+  RefreshCw,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import { formatLKR } from './ListingsSection';
 import { FacebookFlyerModal } from './FacebookFlyerModal';
@@ -77,8 +84,122 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   onSelectTab,
   onToast,
 }) => {
-  const [activeTab, setActiveTab] = useState<'myads' | 'favorites' | 'sellertips'>('myads');
+  const [activeTab, setActiveTab] = useState<'myads' | 'favorites' | 'sellertips' | 'security'>('myads');
   const [promoListing, setPromoListing] = useState<Listing | null>(null);
+
+  // User 2FA & Security Settings State
+  const [userTwoFactorEnabled, setUserTwoFactorEnabled] = useState<boolean>(
+    Boolean(currentUser?.twoFactorEnabled)
+  );
+  const [twoFactorPhone, setTwoFactorPhone] = useState<string>(
+    currentUser?.twoFactorPhone || currentUser?.phone || ''
+  );
+  const [twoFactorMethod, setTwoFactorMethod] = useState<'sms' | 'authenticator'>(
+    currentUser?.twoFactorMethod || 'sms'
+  );
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>(
+    currentUser?.twoFactorRecoveryCodes || []
+  );
+  const [isSavingSecurity, setIsSavingSecurity] = useState(false);
+  const [isSendingTestOtp, setIsSendingTestOtp] = useState(false);
+  const [testOtpCode, setTestOtpCode] = useState('');
+  const [hasCopiedCodes, setHasCopiedCodes] = useState(false);
+
+  useEffect(() => {
+    if (currentUser) {
+      setUserTwoFactorEnabled(Boolean(currentUser.twoFactorEnabled));
+      setTwoFactorPhone(currentUser.twoFactorPhone || currentUser.phone || '');
+      setTwoFactorMethod(currentUser.twoFactorMethod || 'sms');
+      setRecoveryCodes(currentUser.twoFactorRecoveryCodes || []);
+    }
+  }, [currentUser]);
+
+  const generateRecoveryCodes = () => {
+    const codes: string[] = [];
+    for (let i = 0; i < 8; i++) {
+      const seg1 = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const seg2 = Math.random().toString(36).substring(2, 6).toUpperCase();
+      codes.push(`${seg1}-${seg2}`);
+    }
+    return codes;
+  };
+
+  const handleSaveSecuritySettings = async () => {
+    if (!currentUser) return;
+    if (userTwoFactorEnabled && !twoFactorPhone.trim()) {
+      onToast?.('Please enter your mobile phone number for 2FA SMS verification.', 'error');
+      return;
+    }
+    setIsSavingSecurity(true);
+    try {
+      let currentCodes = recoveryCodes;
+      if (userTwoFactorEnabled && (!currentCodes || currentCodes.length === 0)) {
+        currentCodes = generateRecoveryCodes();
+        setRecoveryCodes(currentCodes);
+      }
+
+      await api.updateUserSecurity(currentUser.id, {
+        twoFactorEnabled: userTwoFactorEnabled,
+        twoFactorPhone: twoFactorPhone.trim(),
+        twoFactorMethod,
+        twoFactorRecoveryCodes: currentCodes,
+      });
+
+      // Update current user in local reference
+      currentUser.twoFactorEnabled = userTwoFactorEnabled;
+      currentUser.twoFactorPhone = twoFactorPhone.trim();
+      currentUser.twoFactorMethod = twoFactorMethod;
+      currentUser.twoFactorRecoveryCodes = currentCodes;
+
+      onToast?.(
+        userTwoFactorEnabled
+          ? `Two-Factor Authentication is now ENABLED! SMS verification will be sent to ${twoFactorPhone.trim()}.`
+          : 'Two-Factor Authentication has been disabled.',
+        'success'
+      );
+    } catch (err: any) {
+      onToast?.(err.message || 'Failed to update security settings', 'error');
+    } finally {
+      setIsSavingSecurity(false);
+    }
+  };
+
+  const handleSendTestOtp = async () => {
+    if (!currentUser) return;
+    setIsSendingTestOtp(true);
+    try {
+      const res = await api.resendTwoFactorCode(currentUser.id, 'user');
+      if (res.devOtp) {
+        setTestOtpCode(res.devOtp);
+      }
+      onToast?.(res.message || 'Test OTP code sent to your mobile phone.', 'success');
+    } catch (err: any) {
+      onToast?.(err.message || 'Failed to send test OTP', 'error');
+    } finally {
+      setIsSendingTestOtp(false);
+    }
+  };
+
+  const handleCopyRecoveryCodes = () => {
+    if (recoveryCodes.length === 0) return;
+    navigator.clipboard.writeText(recoveryCodes.join('\n'));
+    setHasCopiedCodes(true);
+    setTimeout(() => setHasCopiedCodes(false), 2500);
+    onToast?.('Backup recovery codes copied to clipboard!', 'success');
+  };
+
+  const handleDownloadRecoveryCodes = () => {
+    if (recoveryCodes.length === 0) return;
+    const text = `HUTA Marketplace - 2FA Backup Recovery Codes\nUser: ${currentUser?.username}\nGenerated: ${new Date().toLocaleString()}\n\nEach code can only be used ONCE:\n` + recoveryCodes.join('\n');
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `huta-2fa-recovery-codes-${currentUser?.username || 'user'}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    onToast?.('Recovery codes downloaded as text file.', 'success');
+  };
 
   // Helper to normalize phone numbers
   const normalizePhone = (raw?: string): string => {
@@ -696,10 +817,27 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           >
             Seller Toolkit & Growth
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('security')}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'security'
+                ? 'bg-[#FF5A36] text-white shadow-md'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span>2FA & Security</span>
+            {userTwoFactorEnabled && (
+              <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-extrabold uppercase ml-1">
+                Active
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Tab 1 & 2: Ads Listings */}
-        {activeTab !== 'sellertips' && (
+        {(activeTab === 'myads' || activeTab === 'favorites') && (
           <>
             {displayAds.length === 0 ? (
               <div className="text-center py-16 px-4">
@@ -910,6 +1048,262 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 className="px-5 py-2.5 bg-[#FF5A36] hover:bg-[#E04826] text-white rounded-xl text-xs font-bold shadow-md transition-colors cursor-pointer shrink-0"
               >
                 Contact Support Team
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 4: 2FA & Security Settings */}
+        {activeTab === 'security' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Security Status Card */}
+            <div className={`p-6 rounded-2xl border ${
+              userTwoFactorEnabled
+                ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
+                : 'bg-amber-50/70 border-amber-200 text-amber-900'
+            }`}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3.5">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+                    userTwoFactorEnabled
+                      ? 'bg-emerald-600 text-white shadow-md'
+                      : 'bg-amber-500 text-white shadow-md'
+                  }`}>
+                    {userTwoFactorEnabled ? (
+                      <ShieldCheck className="w-6 h-6" />
+                    ) : (
+                      <ShieldAlert className="w-6 h-6" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-gray-900 leading-tight">
+                      {userTwoFactorEnabled
+                        ? 'Two-Factor Authentication (2FA) is Active'
+                        : 'Two-Factor Authentication (2FA) is Recommended'}
+                    </h3>
+                    <p className="text-xs text-gray-600 mt-1 max-w-xl leading-relaxed">
+                      {userTwoFactorEnabled
+                        ? 'Your HUTA account is protected with two-step verification. An SMS one-time passcode is required in addition to your password.'
+                        : 'Prevent unauthorized access and protect your account from password compromise by enabling SMS two-factor verification.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="shrink-0">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userTwoFactorEnabled}
+                      onChange={(e) => {
+                        const enabled = e.target.checked;
+                        setUserTwoFactorEnabled(enabled);
+                        if (enabled && recoveryCodes.length === 0) {
+                          setRecoveryCodes(generateRecoveryCodes());
+                        }
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-14 h-7 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-600"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* 2FA Configuration Form */}
+            <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm space-y-6">
+              <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+                <Smartphone className="w-5 h-5 text-[#FF5A36]" />
+                <h4 className="font-extrabold text-gray-900 text-base">SMS Two-Factor Setup</h4>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                    Registered Mobile Number for SMS OTP <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex rounded-xl shadow-xs border border-gray-300 overflow-hidden focus-within:border-[#FF5A36] focus-within:ring-2 focus-within:ring-[#FF5A36]/20 transition-all">
+                    <span className="inline-flex items-center px-3.5 bg-gray-50 border-r border-gray-300 text-gray-600 text-xs font-bold select-none">
+                      🇱🇰 +94
+                    </span>
+                    <input
+                      type="tel"
+                      value={twoFactorPhone}
+                      onChange={(e) => setTwoFactorPhone(e.target.value)}
+                      placeholder="e.g. 077 123 4567"
+                      className="flex-1 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none"
+                    />
+                  </div>
+                  <p className="text-[11px] text-gray-500 mt-1.5">
+                    Security codes will be delivered to this Sri Lankan mobile number.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                    Verification Delivery Method
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTwoFactorMethod('sms')}
+                      className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                        twoFactorMethod === 'sms'
+                          ? 'border-[#FF5A36] bg-orange-50 text-[#FF5A36]'
+                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Smartphone className="w-4 h-4" />
+                      <span>SMS OTP</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTwoFactorMethod('authenticator')}
+                      className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                        twoFactorMethod === 'authenticator'
+                          ? 'border-[#FF5A36] bg-orange-50 text-[#FF5A36]'
+                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Shield className="w-4 h-4" />
+                      <span>App Authenticator</span>
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-gray-500 mt-1.5">
+                    SMS OTP is recommended for all Sri Lankan mobile operators (Dialog, Mobitel, Airtel, Hutch).
+                  </p>
+                </div>
+              </div>
+
+              {/* Test OTP Trigger */}
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs font-bold text-gray-900">Test SMS Verification Delivery</div>
+                  <div className="text-[11px] text-gray-500">Verify that your device receives one-time codes right away.</div>
+                </div>
+                <button
+                  type="button"
+                  disabled={isSendingTestOtp}
+                  onClick={handleSendTestOtp}
+                  className="px-3.5 py-2 bg-white hover:bg-gray-100 text-gray-800 border border-gray-300 rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50"
+                >
+                  {isSendingTestOtp ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FF5A36]" />
+                      <span>Sending Test OTP...</span>
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 text-gray-600" />
+                      <span>Send Test 2FA Code</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {testOtpCode && (
+                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span className="text-xs font-bold text-emerald-800">
+                      Test verification code dispatched:
+                    </span>
+                    <span className="font-mono text-base font-extrabold text-emerald-900 bg-white px-2.5 py-0.5 rounded-lg border border-emerald-300 tracking-widest">
+                      {testOtpCode}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-emerald-700 font-medium">Auto-verified</span>
+                </div>
+              )}
+
+              {/* Emergency Backup Recovery Codes */}
+              {userTwoFactorEnabled && (
+                <div className="p-5 bg-gray-50/80 rounded-2xl border border-gray-200 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h5 className="font-extrabold text-xs text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5 text-[#FF5A36]" />
+                        <span>Emergency Backup Recovery Codes</span>
+                      </h5>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Store these in a safe password manager or note. Each code can be used once if you cannot receive SMS.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCopyRecoveryCodes}
+                        className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
+                      >
+                        {hasCopiedCodes ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{hasCopiedCodes ? 'Copied' : 'Copy All'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDownloadRecoveryCodes}
+                        className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Download (.txt)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    {recoveryCodes.map((code, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-white border border-gray-200 py-2 px-3 rounded-xl text-center font-mono text-xs font-extrabold text-gray-800 tracking-wider select-all shadow-xs"
+                      >
+                        {code}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Save Settings Button */}
+              <div className="pt-2 flex items-center justify-end">
+                <button
+                  type="button"
+                  disabled={isSavingSecurity}
+                  onClick={handleSaveSecuritySettings}
+                  className="px-6 py-3 bg-[#FF5A36] hover:bg-[#E04826] text-white font-extrabold text-sm rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isSavingSecurity ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Saving Security Settings...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Save & Apply Security Settings</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Password Management Card */}
+            <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-orange-100 text-[#FF5A36] flex items-center justify-center shrink-0">
+                  <KeyRound className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-gray-900 text-sm">Account Password</h4>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Regularly updating your password with a strong mix of characters keeps your advertisements secure.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => onChangePassword?.()}
+                className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-gray-600" />
+                <span>Change Password</span>
               </button>
             </div>
           </div>
