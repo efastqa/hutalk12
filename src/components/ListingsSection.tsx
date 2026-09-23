@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Listing } from '../types';
 import { DualToneHeading } from './DualToneHeading';
+import { InteractiveMapDiscovery } from './InteractiveMapDiscovery';
 import {
   Star,
   Zap,
@@ -20,6 +21,9 @@ import {
   ArrowLeftRight,
   Film,
   Play,
+  LayoutGrid,
+  Compass,
+  Navigation,
 } from 'lucide-react';
 
 interface ListingsSectionProps {
@@ -37,6 +41,9 @@ interface ListingsSectionProps {
   onSelectCategory?: (category: string) => void;
   compareIds?: string[];
   onToggleCompare?: (listing: Listing) => void;
+  viewMode?: 'grid' | 'map';
+  onViewModeChange?: (mode: 'grid' | 'map') => void;
+  selectedDistrict?: string;
 }
 
 export function formatLKR(amount: number): string {
@@ -81,7 +88,18 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
   onSelectCategory,
   compareIds = [],
   onToggleCompare,
+  viewMode,
+  onViewModeChange,
+  selectedDistrict,
 }) => {
+  const [localViewMode, setLocalViewMode] = useState<'grid' | 'map'>(viewMode || 'grid');
+  const currentViewMode = viewMode !== undefined ? viewMode : localViewMode;
+
+  const handleSwitchView = (mode: 'grid' | 'map') => {
+    setLocalViewMode(mode);
+    if (onViewModeChange) onViewModeChange(mode);
+  };
+
   const isNewAd = (dateStr: string) => {
     try {
       const created = new Date(dateStr).getTime();
@@ -146,7 +164,38 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* View Mode Toggle: Grid vs Map */}
+          <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 text-xs font-bold shadow-2xs">
+            <button
+              type="button"
+              onClick={() => handleSwitchView('grid')}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
+                currentViewMode === 'grid'
+                  ? 'bg-white text-gray-900 shadow-xs'
+                  : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Grid View</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchView('map')}
+              className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer relative ${
+                currentViewMode === 'map'
+                  ? 'bg-[#FF5A36] text-white shadow-xs'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Compass className="w-3.5 h-3.5 text-current" />
+              <span>Map & Near Me</span>
+              <span className="text-[9px] bg-emerald-500 text-white font-black px-1.5 py-0.2 rounded-full uppercase tracking-wider">
+                Live
+              </span>
+            </button>
+          </div>
+
           <span className="text-xs sm:text-sm text-gray-500 font-medium">
             Showing <strong className="text-gray-900">{listings.length}</strong> ad(s)
           </span>
@@ -167,8 +216,15 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
         </div>
       </motion.div>
 
-      {/* Loading Skeleton */}
-      {isLoading ? (
+      {/* Conditional: Interactive Map View vs Standard Grid */}
+      {currentViewMode === 'map' ? (
+        <InteractiveMapDiscovery
+          listings={listings}
+          onSelectListing={onSelectListing}
+          initialCategory={currentCategory}
+          initialDistrict={selectedDistrict}
+        />
+      ) : isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <div key={i} className="bg-white rounded-2xl border border-gray-200 overflow-hidden animate-pulse">

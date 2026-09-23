@@ -24,13 +24,14 @@ import { CompareFloatingBar } from './components/CompareFloatingBar';
 import { AppStoreModal } from './components/AppStoreModal';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { testConnection } from './firebase';
-import { MapPin, Sparkles, PlusCircle, Calendar, ArrowRight, Star } from 'lucide-react';
+import { MapPin, Sparkles, PlusCircle, Calendar, ArrowRight, Star, Compass } from 'lucide-react';
 
 export default function App() {
   // Navigation & View State
   const [currentTab, setCurrentTab] = useState<ViewTab>('marketplace');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
+  const [listingsViewMode, setListingsViewMode] = useState<'grid' | 'map'>('grid');
 
   // Data State
   const [listings, setListings] = useState<Listing[]>([]);
@@ -746,10 +747,29 @@ export default function App() {
                     </button>
                   );
                 })}
+
+                {/* Direct Map View Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setListingsViewMode('map');
+                    const el = document.getElementById('marketplace-listings');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className={`px-3 py-1.5 rounded-xl whitespace-nowrap font-bold transition-all cursor-pointer flex items-center gap-1.5 ml-auto shrink-0 shadow-2xs ${
+                    listingsViewMode === 'map'
+                      ? 'bg-[#FF5A36] text-white'
+                      : 'bg-orange-50 text-[#FF5A36] hover:bg-orange-100 border border-orange-200'
+                  }`}
+                  title="Explore all listings on interactive map"
+                >
+                  <Compass className="w-3.5 h-3.5" />
+                  <span>Map & Near Me</span>
+                </button>
               </div>
             </div>
 
-            {/* Classified Advertisements Grid */}
+            {/* Classified Advertisements Grid & Interactive Map */}
             <ListingsSection
               listings={filteredListings}
               sortBy={sortBy}
@@ -765,6 +785,9 @@ export default function App() {
               onSelectCategory={setSelectedCategory}
               compareIds={compareIds}
               onToggleCompare={handleToggleCompare}
+              viewMode={listingsViewMode}
+              onViewModeChange={setListingsViewMode}
+              selectedDistrict={selectedLocation}
             />
 
             {/* HUTA IN Community & Events Hub Teaser Banner */}

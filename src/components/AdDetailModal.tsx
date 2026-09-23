@@ -37,6 +37,7 @@ import { FacebookFlyerModal } from './FacebookFlyerModal';
 import { ReviewForm } from './ReviewForm';
 import { ReviewList } from './ReviewList';
 import { ReportModal } from './ReportModal';
+import { AdLocationMapCard } from './AdLocationMapCard';
 import { api } from '../services/api';
 
 interface AdDetailModalProps {
@@ -563,6 +564,11 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                 <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
                   {listing.description}
                 </p>
+              </div>
+
+              {/* Smart Location & Interactive Distance Map */}
+              <div className="my-4">
+                <AdLocationMapCard listing={listing} />
               </div>
 
               {/* Customer Engagement & Trust: Reviews & Ratings */}

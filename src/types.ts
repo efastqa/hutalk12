@@ -4,6 +4,8 @@ export interface Listing {
   category: string;
   location: string;
   district?: string;
+  lat?: number;
+  lng?: number;
   price: number;
   phone: string;
   image: string;
