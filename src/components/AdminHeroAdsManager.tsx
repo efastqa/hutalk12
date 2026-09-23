@@ -82,9 +82,9 @@ const BG_PRESETS = [
 ];
 
 const VIDEO_PRESETS = [
-  { label: '🎬 Dynamic Motion Loop', url: '/videos/motion-loop-3.mp4' },
-  { label: '🌸 Nature Motion Walkthrough', url: '/videos/motion-loop-2.mp4' },
-  { label: '🌊 Ocean Waves Aerial', url: 'https://vjs.zencdn.net/v/oceans.mp4' },
+  { label: '🎬 Dynamic Showcase', url: '/videos/motion-loop-3.mp4' },
+  { label: '🌸 Nature Walkthrough', url: '/videos/motion-loop-2.mp4' },
+  { label: '🌊 Aerial Drone Tour', url: 'https://vjs.zencdn.net/v/oceans.mp4' },
   { label: '⚡ Cyber Tech Animation', url: '/videos/motion-loop-3.mp4' },
 ];
 
