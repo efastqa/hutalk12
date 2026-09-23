@@ -24,6 +24,8 @@ export interface Listing {
   isVerifiedPro?: boolean;
   isEmergency247?: boolean;
   videoUrl?: string; // Optional animation video or video walkthrough (MP4/WebM/YouTube link)
+  verificationNotes?: string; // Admin verification notes or customer delta records
+  verificationStatus?: 'unverified' | 'verified_with_customer' | 'deltas_found';
   itemCondition?: string;
   brand?: string;
   model?: string;

@@ -514,22 +514,47 @@ export default function App() {
   };
 
   // Admin Actions
-  const handleApproveListing = async (adId: string) => {
+  const handleApproveListing = async (adId: string, verificationNotes?: string) => {
     try {
-      const updated = await api.approveListing(adId);
+      const updated = await api.approveListing(adId, verificationNotes);
       setListings((prev) =>
         prev.map((item) => (item.id === adId ? updated : item))
       );
-      showToast('Advertisement approved and is now live!', 'success');
+      showToast('Advertisement approved and is now live on marketplace!', 'success');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to approve advertisement';
       showToast(msg, 'error');
     }
   };
 
-  const handleRejectListing = async (adId: string) => {
+  const handleVerifyCustomer = async (
+    adId: string,
+    data: {
+      verificationNotes: string;
+      verificationStatus?: 'unverified' | 'verified_with_customer' | 'deltas_found';
+      status?: 'approved' | 'pending' | 'rejected';
+    }
+  ) => {
     try {
-      const updated = await api.rejectListing(adId);
+      const updated = await api.verifyListingWithCustomer(adId, data);
+      setListings((prev) =>
+        prev.map((item) => (item.id === adId ? updated : item))
+      );
+      showToast(
+        data.status === 'approved'
+          ? 'Advertisement verified with customer & published live!'
+          : 'Customer verification notes & deltas recorded.',
+        'success'
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to update customer verification';
+      showToast(msg, 'error');
+    }
+  };
+
+  const handleRejectListing = async (adId: string, verificationNotes?: string) => {
+    try {
+      const updated = await api.rejectListing(adId, verificationNotes);
       setListings((prev) =>
         prev.map((item) => (item.id === adId ? updated : item))
       );
@@ -901,6 +926,7 @@ export default function App() {
             onDeleteHeroAd={handleDeleteHeroAd}
             onApprove={handleApproveListing}
             onReject={handleRejectListing}
+            onVerifyCustomer={handleVerifyCustomer}
             onToggleFeature={handleToggleFeatureListing}
             onToggleVerifyPro={handleToggleVerifyPro}
             onDelete={handleDeleteListing}

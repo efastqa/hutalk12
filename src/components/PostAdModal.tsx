@@ -1279,14 +1279,14 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
             />
           </div>
 
-          {/* Admin Quality Review Notice */}
+          {/* Admin Quality & Safety Review Notice */}
           {!editingListing && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex items-start gap-3 text-xs text-emerald-950">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-start gap-3 text-xs text-amber-950">
+              <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold text-emerald-900">Instant Live Publishing: </span>
-                <span className="text-emerald-800">
-                  Your advertisement will publish live immediately on HUTA Marketplace for buyers across Sri Lanka{videoUrl ? ' with your attached animation video loop' : ''}!
+                <span className="font-bold text-amber-900">Safety & Admin Approval Required: </span>
+                <span className="text-amber-800">
+                  For website safety and customer protection, all new advertisements are verified by our admin team before going live. If any details or deltas need verification, our team will verify with you on your contact phone.
                 </span>
               </div>
             </div>
@@ -1302,7 +1302,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Publishing Advertisement Live...</span>
+                  <span>Submitting for Admin Approval...</span>
                 </>
               ) : isUploadingVideo ? (
                 <>
@@ -1314,8 +1314,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                   {editingListing
                     ? 'Save & Update Advertisement'
                     : videoUrl
-                    ? 'Publish Advertisement with Animation Video'
-                    : 'Publish Advertisement Live'}
+                    ? 'Submit Ad with Animation for Admin Approval'
+                    : 'Submit Advertisement for Admin Approval'}
                 </span>
               )}
             </button>

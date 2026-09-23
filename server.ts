@@ -39,6 +39,8 @@ interface Listing {
   isVerifiedPro?: boolean;
   isEmergency247?: boolean;
   videoUrl?: string;
+  verificationNotes?: string;
+  verificationStatus?: 'unverified' | 'verified_with_customer' | 'deltas_found';
   sellerName?: string;
   availabilityStatus?: 'available' | 'reserved' | 'sold';
   sellerRating?: number;
@@ -155,7 +157,7 @@ function getAdminConfig(): {
 } {
   const result = {
     password: process.env.ADMIN_PASSWORD || '520765',
-    autoApprove: true, // Default: auto-approve listings live immediately
+    autoApprove: false, // Default: manual admin review required for all ads and services for website safety
     twoFactorEnabled: false,
     twoFactorPhone: '0777000111',
     twoFactorMethod: 'sms' as 'sms' | 'authenticator',
@@ -1019,6 +1021,8 @@ async function startServer() {
       isVerifiedPro: isVerifiedPro !== undefined ? Boolean(isVerifiedPro) : current.isVerifiedPro,
       isEmergency247: isEmergency247 !== undefined ? Boolean(isEmergency247) : current.isEmergency247,
       videoUrl: videoUrl !== undefined ? (videoUrl ? String(videoUrl).trim() : undefined) : current.videoUrl,
+      verificationNotes: req.body.verificationNotes !== undefined ? String(req.body.verificationNotes).trim() : current.verificationNotes,
+      verificationStatus: req.body.verificationStatus !== undefined ? req.body.verificationStatus : current.verificationStatus,
       availabilityStatus: req.body.availabilityStatus !== undefined ? req.body.availabilityStatus : current.availabilityStatus,
       sellerName: req.body.sellerName !== undefined ? String(req.body.sellerName).trim() : current.sellerName,
       sellerRating: req.body.sellerRating !== undefined ? Number(req.body.sellerRating) : current.sellerRating,
@@ -1050,7 +1054,33 @@ async function startServer() {
     if (index === -1) {
       return res.status(404).json({ error: 'Listing not found' });
     }
+    const { verificationNotes } = req.body || {};
     listingsCache[index].status = 'approved';
+    if (verificationNotes !== undefined) {
+      listingsCache[index].verificationNotes = String(verificationNotes).trim();
+    }
+    listingsCache[index].verificationStatus = 'verified_with_customer';
+    saveStoredListings(listingsCache);
+    persistListingToFirestore(listingsCache[index]);
+    res.json(listingsCache[index]);
+  });
+
+  // PUT /api/listings/:id/verify-customer - Customer Delta & Safety Verification
+  app.put('/api/listings/:id/verify-customer', (req, res) => {
+    const index = listingsCache.findIndex(l => l.id === req.params.id);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+    const { verificationNotes, verificationStatus, status } = req.body || {};
+    if (verificationNotes !== undefined) {
+      listingsCache[index].verificationNotes = String(verificationNotes).trim();
+    }
+    if (verificationStatus) {
+      listingsCache[index].verificationStatus = verificationStatus;
+    }
+    if (status && ['approved', 'pending', 'rejected'].includes(status)) {
+      listingsCache[index].status = status;
+    }
     saveStoredListings(listingsCache);
     persistListingToFirestore(listingsCache[index]);
     res.json(listingsCache[index]);
@@ -1062,7 +1092,12 @@ async function startServer() {
     if (index === -1) {
       return res.status(404).json({ error: 'Listing not found' });
     }
+    const { verificationNotes } = req.body || {};
     listingsCache[index].status = 'rejected';
+    if (verificationNotes !== undefined) {
+      listingsCache[index].verificationNotes = String(verificationNotes).trim();
+    }
+    listingsCache[index].verificationStatus = 'deltas_found';
     saveStoredListings(listingsCache);
     persistListingToFirestore(listingsCache[index]);
     res.json(listingsCache[index]);

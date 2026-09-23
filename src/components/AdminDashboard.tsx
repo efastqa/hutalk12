@@ -39,6 +39,11 @@ import {
   Smartphone,
   RefreshCw,
   Shield,
+  PhoneCall,
+  Send,
+  FileText,
+  CheckSquare,
+  ExternalLink,
 } from 'lucide-react';
 import { formatLKR } from './ListingsSection';
 import { api } from '../services/api';
@@ -98,8 +103,16 @@ interface AdminDashboardProps {
   events?: EventItem[];
   heroAds?: HeroAd[];
   heroSettings?: HeroAdSettings;
-  onApprove: (id: string) => Promise<void>;
-  onReject: (id: string) => Promise<void>;
+  onApprove: (id: string, verificationNotes?: string) => Promise<void>;
+  onReject: (id: string, verificationNotes?: string) => Promise<void>;
+  onVerifyCustomer?: (
+    id: string,
+    data: {
+      verificationNotes: string;
+      verificationStatus?: 'unverified' | 'verified_with_customer' | 'deltas_found';
+      status?: 'approved' | 'pending' | 'rejected';
+    }
+  ) => Promise<void>;
   onToggleFeature: (id: string) => Promise<void>;
   onToggleVerifyPro?: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
@@ -127,6 +140,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   heroSettings = { mode: 'default', rotationIntervalSeconds: 6 },
   onApprove,
   onReject,
+  onVerifyCustomer,
   onToggleFeature,
   onToggleVerifyPro,
   onDelete,
@@ -244,6 +258,75 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       if (onToast) onToast('Failed to update approval setting', 'error');
     } finally {
       setIsUpdatingAutoApprove(false);
+    }
+  };
+
+  // Customer Delta & Safety Verification State
+  const [verifyingListing, setVerifyingListing] = useState<Listing | null>(null);
+  const [verificationNotes, setVerificationNotes] = useState('');
+  const [deltaTags, setDeltaTags] = useState<string[]>([]);
+  const [isProcessingVerification, setIsProcessingVerification] = useState(false);
+
+  const openCustomerVerification = (item: Listing) => {
+    setVerifyingListing(item);
+    setVerificationNotes(item.verificationNotes || '');
+    setDeltaTags([]);
+  };
+
+  const handleApproveWithVerification = async () => {
+    if (!verifyingListing) return;
+    setIsProcessingVerification(true);
+    try {
+      const compiledNote = [
+        deltaTags.length > 0 ? `[Verified: ${deltaTags.join(', ')}]` : '',
+        verificationNotes.trim(),
+      ]
+        .filter(Boolean)
+        .join(' ');
+
+      if (onVerifyCustomer) {
+        await onVerifyCustomer(verifyingListing.id, {
+          verificationNotes: compiledNote,
+          verificationStatus: 'verified_with_customer',
+          status: 'approved',
+        });
+      } else {
+        await onApprove(verifyingListing.id, compiledNote);
+      }
+      setVerifyingListing(null);
+    } catch {
+      if (onToast) onToast('Failed to approve advertisement with verification', 'error');
+    } finally {
+      setIsProcessingVerification(false);
+    }
+  };
+
+  const handleSaveVerificationDeltas = async (markAsDeltaFound: boolean = true) => {
+    if (!verifyingListing) return;
+    setIsProcessingVerification(true);
+    try {
+      const compiledNote = [
+        deltaTags.length > 0 ? `[Deltas/Issues: ${deltaTags.join(', ')}]` : '',
+        verificationNotes.trim(),
+      ]
+        .filter(Boolean)
+        .join(' ');
+
+      if (onVerifyCustomer) {
+        await onVerifyCustomer(verifyingListing.id, {
+          verificationNotes: compiledNote,
+          verificationStatus: markAsDeltaFound ? 'deltas_found' : 'verified_with_customer',
+          status: 'pending',
+        });
+      }
+      if (onToast) {
+        onToast('Customer verification notes & deltas saved. Ad remains pending.', 'info');
+      }
+      setVerifyingListing(null);
+    } catch {
+      if (onToast) onToast('Failed to save verification notes', 'error');
+    } finally {
+      setIsProcessingVerification(false);
     }
   };
 
@@ -1034,21 +1117,43 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Auto-Approve Toggle */}
-          <button
-            type="button"
-            onClick={handleToggleAutoApprove}
-            disabled={isUpdatingAutoApprove}
-            title="Toggle whether customer advertisements go live immediately without admin moderation"
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors border cursor-pointer ${
-              autoApprove
-                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
-                : 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
-            }`}
-          >
-            <span className={`w-2 h-2 rounded-full ${autoApprove ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400 animate-pulse'}`} />
-            <span>{autoApprove ? 'Auto-Approve Ads: ON' : 'Admin Approval Required: ON'}</span>
-          </button>
+          {/* Two Posting Options: Admin Approval (Safety) vs Auto-Approve */}
+          <div className="flex items-center p-1 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xs">
+            <button
+              type="button"
+              onClick={() => {
+                if (autoApprove) handleToggleAutoApprove();
+              }}
+              disabled={isUpdatingAutoApprove}
+              title="Option 1: Admin Approval Required (Safety Mode) - Ads held in pending to verify deltas with customer"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                !autoApprove
+                  ? 'bg-amber-500 text-white shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>1. Admin Approval (Safety Mode)</span>
+              {!autoApprove && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!autoApprove) handleToggleAutoApprove();
+              }}
+              disabled={isUpdatingAutoApprove}
+              title="Option 2: Auto-Approve Ads (Instant Live Mode) - Ads publish directly without review"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                autoApprove
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>2. Auto-Approve (Direct)</span>
+              {autoApprove && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
+            </button>
+          </div>
 
           {/* Fresh Launch Clear Ads */}
           {onClearAllListings && (
@@ -1738,6 +1843,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             {item.title}
                           </p>
                           <p className="text-xs text-gray-500 font-mono">Tel: {item.phone}</p>
+                          {item.verificationNotes && (
+                            <div
+                              className="mt-1 flex items-center gap-1 text-[10px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/80 font-medium max-w-[200px] truncate"
+                              title={item.verificationNotes}
+                            >
+                              <PhoneCall className="w-2.5 h-2.5 text-amber-600 shrink-0" />
+                              <span className="truncate">{item.verificationNotes}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -1807,21 +1921,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                         {item.status === 'pending' ? (
                           <>
+                            {/* Option 1: Approve & Post Live */}
                             <button
                               type="button"
                               onClick={() => onApprove(item.id)}
-                              className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg transition-colors shadow-xs"
+                              title="Option 1: Approve advertisement and post live on website"
+                              className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-1.5 px-2.5 rounded-lg transition-colors shadow-xs cursor-pointer"
                             >
                               <Check className="w-3.5 h-3.5" />
                               <span>Approve</span>
                             </button>
+
+                            {/* Option 2: Verify with Customer (for deltas/wrong details) */}
+                            <button
+                              type="button"
+                              onClick={() => openCustomerVerification(item)}
+                              title="Option 2: Verify deltas, wrong details, or price with customer"
+                              className="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-1.5 px-2.5 rounded-lg transition-colors shadow-xs cursor-pointer"
+                            >
+                              <PhoneCall className="w-3.5 h-3.5" />
+                              <span>Verify</span>
+                            </button>
+
                             <button
                               type="button"
                               onClick={() => onReject(item.id)}
-                              className="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold py-1.5 px-2.5 rounded-lg transition-colors"
+                              title="Reject listing"
+                              className="inline-flex items-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold py-1.5 px-2 rounded-lg transition-colors cursor-pointer"
                             >
                               <X className="w-3.5 h-3.5" />
-                              <span>Reject</span>
                             </button>
                           </>
                         ) : (
@@ -2257,6 +2385,209 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 ) : (
                   <span>Yes, Clear All Ads</span>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Customer Verification & Delta Inspection Modal */}
+      {verifyingListing && (
+        <div
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          onClick={() => !isProcessingVerification && setVerifyingListing(null)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-gray-100 p-6 sm:p-7 space-y-5 animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-500/20 shrink-0">
+                  <ShieldCheck className="w-6 h-6 text-amber-600" />
+                </div>
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wider mb-0.5">
+                    <span>Website Safety & Customer Verification</span>
+                  </div>
+                  <h3 className="text-lg font-black text-gray-950 leading-tight">
+                    Verify Deltas with Customer
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    If customer posted wrong details or deltas, verify directly before posting live.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setVerifyingListing(null)}
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Ad Snapshot Card */}
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-200">
+              <img
+                src={verifyingListing.image || 'https://via.placeholder.com/80'}
+                alt={verifyingListing.title}
+                className="w-16 h-16 rounded-xl object-cover border border-gray-200 shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-gray-900 text-sm truncate">
+                  {verifyingListing.title}
+                </h4>
+                <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-600">
+                  <span className="font-extrabold text-[#FF5A36]">
+                    {formatLKR(verifyingListing.price)}
+                  </span>
+                  <span>•</span>
+                  <span>{verifyingListing.location}</span>
+                  <span>•</span>
+                  <span className="font-mono text-gray-800 font-bold">{verifyingListing.phone}</span>
+                </div>
+                <div className="text-[10px] text-gray-400 mt-0.5">
+                  Ad Ref ID: #{verifyingListing.id} • Posted on {verifyingListing.date}
+                </div>
+              </div>
+            </div>
+
+            {/* Fast Customer Contact Buttons */}
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                1. Direct Customer Contact
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* WhatsApp button with pre-filled message */}
+                <a
+                  href={`https://wa.me/${(() => {
+                    let clean = verifyingListing.phone.replace(/[^0-9]/g, '');
+                    if (clean.startsWith('0')) clean = '94' + clean.slice(1);
+                    if (!clean.startsWith('94')) clean = '94' + clean;
+                    return clean;
+                  })()}?text=${encodeURIComponent(
+                    `Hello from HUTA Marketplace Admin Team! We are reviewing your advertisement "${verifyingListing.title}" (Ref #${verifyingListing.id}). Before we approve and publish it live, we would like to quickly verify a few details with you:\n• Asking Price: Rs ${verifyingListing.price.toLocaleString()}\n• Location: ${verifyingListing.location}\n• Description & condition\nCould you please confirm these details? Thank you!`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Verify via WhatsApp Chat</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-75" />
+                </a>
+
+                {/* Direct Phone Call */}
+                <a
+                  href={`tel:${verifyingListing.phone}`}
+                  className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
+                >
+                  <PhoneCall className="w-4 h-4" />
+                  <span>Call Customer Phone</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Common Delta & Verification Checklist */}
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                2. Quick Delta & Verification Checklist
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  'Asking Price verified',
+                  'Customer Phone verified genuine',
+                  'Item condition & mileage accurate',
+                  'Photos & Animation genuine',
+                  'Location & District confirmed',
+                  'Delta: Price updated with customer',
+                  'Delta: Incorrect category corrected',
+                ].map((tag) => {
+                  const active = deltaTags.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        if (active) {
+                          setDeltaTags((prev) => prev.filter((t) => t !== tag));
+                        } else {
+                          setDeltaTags((prev) => [...prev, tag]);
+                        }
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+                        active
+                          ? 'bg-amber-100 text-amber-900 border-amber-300 font-bold'
+                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                      }`}
+                    >
+                      {active ? '✓ ' : '+ '}
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Delta / Verification Notes Textarea */}
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                3. Verification Notes & Deltas Found
+              </label>
+              <textarea
+                value={verificationNotes}
+                onChange={(e) => setVerificationNotes(e.target.value)}
+                placeholder="e.g., Customer confirmed asking price is Rs 45,000 negotiable. Confirmed ready for inspection in Colombo 03..."
+                rows={3}
+                className="w-full text-xs p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
+              />
+            </div>
+
+            {/* The Two Main Action Options */}
+            <div className="pt-2 border-t border-gray-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
+              {onEditListing && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = verifyingListing;
+                    setVerifyingListing(null);
+                    onEditListing(target);
+                  }}
+                  className="px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  title="Directly edit advertisement title, price, or description to fix deltas"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-gray-600" />
+                  <span>Edit Details</span>
+                </button>
+              )}
+
+              {/* Option 2: Save Verification Notes & Keep Pending */}
+              <button
+                type="button"
+                disabled={isProcessingVerification}
+                onClick={() => handleSaveVerificationDeltas(true)}
+                className="px-3.5 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                title="Option 2: Save notes and wait for customer to fix deltas or provide clarification"
+              >
+                <span>Save Notes & Keep Pending</span>
+              </button>
+
+              {/* Option 1: Approve & Post Live */}
+              <button
+                type="button"
+                disabled={isProcessingVerification}
+                onClick={handleApproveWithVerification}
+                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                title="Option 1: Details verified with customer. Approve and post live now."
+              >
+                {isProcessingVerification ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4" />
+                )}
+                <span>Approve & Post Live</span>
               </button>
             </div>
           </div>

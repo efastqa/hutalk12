@@ -674,11 +674,17 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                 <div className="bg-amber-50 border border-amber-300 rounded-2xl p-3.5 text-xs text-amber-950 space-y-2 shadow-xs">
                   <div className="flex items-center gap-2 font-bold text-amber-900">
                     <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>Pending Administrator Approval</span>
+                    <span>Pending Administrator Safety & Delta Verification</span>
                   </div>
                   <p className="text-amber-800 leading-relaxed text-[11px]">
-                    This advertisement is awaiting administrator review and confirmation. It will become live on the public marketplace once approved.
+                    To maintain marketplace safety and verify accurate details across Sri Lanka, all new advertisements are checked by our admin team before going live. If any details or deltas require verification, our team will verify directly with the seller.
                   </p>
+                  {listing.verificationNotes && (
+                    <div className="bg-white/80 p-2.5 rounded-xl border border-amber-200 text-amber-900 text-[11px] font-medium">
+                      <strong className="font-bold">Admin Verification Record: </strong>
+                      <span>{listing.verificationNotes}</span>
+                    </div>
+                  )}
                   {isAdminLoggedIn && onApproveListing && (
                     <button
                       type="button"
@@ -686,7 +692,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                       className="w-full mt-2 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-xs transition-colors cursor-pointer text-xs"
                     >
                       <Check className="w-4 h-4" />
-                      <span>Confirm & Approve Listing (Go Live Now)</span>
+                      <span>Confirm & Approve Advertisement (Publish Live)</span>
                     </button>
                   )}
                 </div>

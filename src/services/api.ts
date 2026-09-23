@@ -387,12 +387,67 @@ export const api = {
     }
   },
 
-  async approveListing(id: string): Promise<Listing> {
-    return this.updateListing(id, { status: 'approved' });
+  async approveListing(id: string, verificationNotes?: string): Promise<Listing> {
+    try {
+      const res = await fetch(`/api/listings/${id}/approve`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ verificationNotes }),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // fallback
+    }
+    return this.updateListing(id, {
+      status: 'approved',
+      verificationStatus: 'verified_with_customer',
+      ...(verificationNotes ? { verificationNotes } : {}),
+    });
   },
 
-  async rejectListing(id: string): Promise<Listing> {
-    return this.updateListing(id, { status: 'rejected' });
+  async verifyListingWithCustomer(
+    id: string,
+    data: {
+      verificationNotes: string;
+      verificationStatus?: 'unverified' | 'verified_with_customer' | 'deltas_found';
+      status?: 'approved' | 'pending' | 'rejected';
+    }
+  ): Promise<Listing> {
+    try {
+      const res = await fetch(`/api/listings/${id}/verify-customer`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // fallback
+    }
+    return this.updateListing(id, data);
+  },
+
+  async rejectListing(id: string, verificationNotes?: string): Promise<Listing> {
+    try {
+      const res = await fetch(`/api/listings/${id}/reject`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ verificationNotes }),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // fallback
+    }
+    return this.updateListing(id, {
+      status: 'rejected',
+      verificationStatus: 'deltas_found',
+      ...(verificationNotes ? { verificationNotes } : {}),
+    });
   },
 
   async toggleFeatureListing(id: string): Promise<Listing> {
