@@ -284,6 +284,39 @@ export const api = {
       }
     }
 
+    // Process and upload any base64 images to static server storage
+    if (Array.isArray(rawListing.images) && rawListing.images.length > 0) {
+      const processedImages: string[] = [];
+      for (let i = 0; i < rawListing.images.length; i++) {
+        let img = rawListing.images[i];
+        if (img && typeof img === 'string' && img.startsWith('data:image')) {
+          try {
+            const uploaded = await this.uploadImage(img, `ad-img-${id}-${i}.jpg`);
+            if (uploaded?.url) {
+              img = uploaded.url;
+            }
+          } catch {
+            // Keep compressed data URL if offline/fallback
+          }
+        }
+        if (img) processedImages.push(img);
+      }
+      if (processedImages.length > 0) {
+        rawListing.images = processedImages;
+        rawListing.image = processedImages[0];
+      }
+    } else if (rawListing.image && typeof rawListing.image === 'string' && rawListing.image.startsWith('data:image')) {
+      try {
+        const uploaded = await this.uploadImage(rawListing.image, `ad-img-${id}-cover.jpg`);
+        if (uploaded?.url) {
+          rawListing.image = uploaded.url;
+          rawListing.images = [uploaded.url];
+        }
+      } catch {
+        // Keep compressed data URL if offline/fallback
+      }
+    }
+
     const newListing = sanitizeForFirestore(rawListing) as Listing;
 
     // 1. Write to shared Cloud Firestore (reflects on Vercel + Cloud Run immediately)
@@ -2073,6 +2106,19 @@ For quick inquiries, call or send a message via WhatsApp!`;
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: 'Upload video failed' }));
       throw new Error(err.error || 'Failed to upload video');
+    }
+    return res.json();
+  },
+
+  async uploadImage(data: string, filename?: string): Promise<{ success: boolean; url: string; size?: number }> {
+    const res = await fetch(`${API_BASE}/upload-image`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data, filename }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Upload image failed' }));
+      throw new Error(err.error || 'Failed to upload image');
     }
     return res.json();
   },

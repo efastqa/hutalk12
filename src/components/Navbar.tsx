@@ -12,6 +12,7 @@ import {
   Wrench,
   ShoppingBag,
   Smartphone,
+  LayoutDashboard,
 } from 'lucide-react';
 import { ViewTab, User } from '../types';
 
@@ -26,6 +27,7 @@ interface NavbarProps {
   selectedLocation?: string;
   onLocationChange?: (location: string) => void;
   activeCategory?: string;
+  myAdsCount?: number;
 }
 
 const DISTRICTS_POPULAR = [
@@ -50,6 +52,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   selectedLocation = 'All Sri Lanka',
   onLocationChange,
   activeCategory = 'All',
+  myAdsCount = 0,
 }) => {
   const handleVerticalClick = (catName: string) => {
     if (onSelectCategory) {
@@ -100,6 +103,22 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Sparkles className="w-3 h-3 text-[#FF5A36]" />
               <span className="hidden xs:inline">Community:</span>
               <span className="text-[#FF5A36] font-bold">HUTA IN</span>
+            </button>
+
+            <span className="text-[#2D2F39]">|</span>
+            <button
+              type="button"
+              onClick={() => onSelectTab('user_dashboard')}
+              className="inline-flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors cursor-pointer"
+              title="View your posted ads & track approval status"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5 text-[#FF5A36]" />
+              <span>My Ads</span>
+              {typeof myAdsCount === 'number' && myAdsCount > 0 && (
+                <span className="bg-[#FF5A36] text-white text-[10px] font-black px-1.5 py-0.2 rounded-full leading-none">
+                  {myAdsCount}
+                </span>
+              )}
             </button>
 
             {onOpenAppStore && (
@@ -302,13 +321,33 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
         </nav>
 
-        {/* Right: Post an Ad button (Iconic Qatar Living feature) */}
+        {/* Right: Actions */}
         <div className="flex items-center gap-2">
+          {/* Quick My Ads Button */}
+          <button
+            type="button"
+            onClick={() => onSelectTab('user_dashboard')}
+            className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              currentTab === 'user_dashboard'
+                ? 'bg-[#FF5A36] text-white shadow-xs'
+                : 'bg-white/5 hover:bg-white/10 text-gray-200 hover:text-white border border-white/10'
+            }`}
+            title="View your posted ads & track approval status"
+          >
+            <LayoutDashboard className="w-3.5 h-3.5 text-[#FF5A36]" />
+            <span>My Ads</span>
+            {typeof myAdsCount === 'number' && myAdsCount > 0 && (
+              <span className="bg-[#FF5A36] text-white text-[10px] font-black px-1.5 py-0.2 rounded-full leading-none">
+                {myAdsCount}
+              </span>
+            )}
+          </button>
+
           {onOpenAppStore && (
             <button
               type="button"
               onClick={onOpenAppStore}
-              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-200 hover:text-white border border-white/10 text-xs font-bold transition-all cursor-pointer"
+              className="hidden xl:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-200 hover:text-white border border-white/10 text-xs font-bold transition-all cursor-pointer"
               title="Google Play and App Store"
             >
               <Smartphone className="w-3.5 h-3.5 text-[#FF5A36]" />

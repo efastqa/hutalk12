@@ -652,6 +652,26 @@ export default function App() {
     }
   };
 
+  // Compute number of ads belonging to current user or posted from this device
+  const normalizeDigits = (raw?: string): string => {
+    if (!raw) return '';
+    const digits = raw.replace(/[^0-9]/g, '');
+    if (digits.startsWith('94') && digits.length >= 11) return '0' + digits.substring(2);
+    if (digits.length === 9) return '0' + digits;
+    return digits;
+  };
+  const activeUserPhone = currentUser?.phone ? normalizeDigits(currentUser.phone) : '';
+  const guestAdIds = api.getGuestListingIds();
+  const myAdsCount = listings.filter((l) => {
+    if (guestAdIds.includes(l.id)) return true;
+    if (currentUser) {
+      if (l.userId === currentUser.id) return true;
+      const adPhone = normalizeDigits(l.phone);
+      if (activeUserPhone && adPhone === activeUserPhone) return true;
+    }
+    return false;
+  }).length;
+
   return (
     <div className="min-h-screen flex flex-col bg-[#F4F5F7] text-[#181920] pb-16 lg:pb-0">
       {/* Toast Notification Layer */}
@@ -676,6 +696,7 @@ export default function App() {
         onLocationChange={setSelectedLocation}
         activeCategory={selectedCategory}
         onOpenAppStore={() => setIsAppStoreOpen(true)}
+        myAdsCount={myAdsCount}
       />
 
       {/* Main Views Container */}
@@ -1077,6 +1098,9 @@ export default function App() {
           setIsPostAdOpen(false);
           setEditingListing(null);
         }}
+        onOpenMyAds={() => setCurrentTab('user_dashboard')}
+        initialCategory={selectedCategory !== 'All' ? selectedCategory : undefined}
+        initialDistrict={selectedLocation !== 'All Sri Lanka' ? selectedLocation : undefined}
       />
 
       <AuthModals

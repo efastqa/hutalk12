@@ -756,6 +756,50 @@ async function startServer() {
     }
   });
 
+  // POST /api/upload-image - Save uploaded photo to local disk and return clean static URL
+  app.post('/api/upload-image', (req, res) => {
+    try {
+      const { data, filename } = req.body;
+      if (!data || typeof data !== 'string') {
+        return res.status(400).json({ error: 'No image data received' });
+      }
+
+      let buffer: Buffer;
+      let ext = 'jpg';
+
+      const match = data.match(/^data:([a-zA-Z0-9\/\+\-]+);base64,(.+)$/);
+      if (match) {
+        const mime = match[1].toLowerCase();
+        if (mime.includes('png')) ext = 'png';
+        else if (mime.includes('webp')) ext = 'webp';
+        else if (mime.includes('gif')) ext = 'gif';
+        else if (mime.includes('jpeg') || mime.includes('jpg')) ext = 'jpg';
+        buffer = Buffer.from(match[2], 'base64');
+      } else {
+        buffer = Buffer.from(data, 'base64');
+      }
+
+      if (buffer.length > 20 * 1024 * 1024) {
+        return res.status(400).json({ error: 'Image exceeds 20MB limit' });
+      }
+
+      const targetDir = path.join(publicDir, 'uploads', 'images');
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+      }
+
+      const cleanFileName = `ad-img-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const fullPath = path.join(targetDir, cleanFileName);
+      fs.writeFileSync(fullPath, buffer);
+
+      const publicUrl = `/uploads/images/${cleanFileName}`;
+      res.json({ success: true, url: publicUrl, size: buffer.length });
+    } catch (err: unknown) {
+      console.error('[UploadImage] Failed to save image file:', err);
+      res.status(500).json({ error: 'Failed to process and store image' });
+    }
+  });
+
   // GET /api/listings
   app.get('/api/listings', (req, res) => {
     const { status, category, location, search, minPrice, maxPrice, sort, userId } = req.query;
