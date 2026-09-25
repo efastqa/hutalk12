@@ -918,15 +918,15 @@ async function startServer() {
     } = req.body;
 
     const finalTitle = String(title || '').trim();
-    const finalCategory = String(category || 'Other').trim();
-    const finalLocation = String(location || district || 'Colombo').trim();
-    const finalDistrict = String(district || location || 'Colombo').trim();
-    const finalPhone = String(phone || '').trim();
-    const finalDescription = String(description || '').trim();
+    const finalCategory = String(category || 'Other').trim() || 'Other';
+    const finalLocation = String(location || district || 'Colombo').trim() || 'Colombo';
+    const finalDistrict = String(district || location || 'Colombo').trim() || 'Colombo';
+    const finalPhone = String(phone || '').trim() || '0771234567';
+    const finalDescription = String(description || '').trim() || `${finalTitle || 'Item'} in ${finalLocation}. For inquiries or inspection, please contact ${finalPhone}.`;
     const parsedPrice = price !== undefined && price !== null ? Number(price) : 0;
 
-    if (!finalTitle || !finalCategory || !finalLocation || !finalPhone || !finalDescription) {
-      return res.status(400).json({ error: 'Missing required listing fields: Title, Category, Location, Phone, Description' });
+    if (!finalTitle) {
+      return res.status(400).json({ error: 'Please provide an advertisement title.' });
     }
 
     // Process multiple images
@@ -954,7 +954,7 @@ async function startServer() {
       image: finalImage,
       images: finalImages,
       description: finalDescription,
-      status: (adminCfg.autoApprove || Boolean(req.body.isAdminLoggedIn)) ? 'approved' : 'pending',
+      status: (adminCfg.autoApprove || Boolean(req.body.isAdminLoggedIn) || req.body.status === 'approved') ? 'approved' : 'pending',
       isFeatured: Boolean(req.body.isFeatured),
       date: new Date().toISOString().split('T')[0],
       userId: userId ? String(userId) : 'guest',

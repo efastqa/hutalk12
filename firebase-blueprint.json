@@ -9,7 +9,7 @@
         "title": { "type": "string", "maxLength": 200 },
         "category": { "type": "string", "maxLength": 100 },
         "price": { "type": "number" },
-        "pricingType": { "type": "string", "enum": ["fixed", "negotiable", "daily", "monthly"] },
+        "pricingType": { "type": "string", "enum": ["fixed", "negotiable", "daily", "monthly", "starting_at", "hourly", "quote"] },
         "phone": { "type": "string", "maxLength": 50 },
         "location": { "type": "string", "maxLength": 100 },
         "district": { "type": "string", "maxLength": 100 },

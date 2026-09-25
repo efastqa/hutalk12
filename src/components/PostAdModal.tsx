@@ -45,45 +45,49 @@ const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
 
 const compressImage = (file: File): Promise<string> => {
   return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onerror = () => resolve('');
-    reader.onload = (e) => {
-      const result = (e.target?.result as string) || '';
-      if (!result) return resolve('');
-      const img = new Image();
-      img.onerror = () => {
-        // Safe fallback thumbnail
-        resolve(result.length < 300000 ? result : '');
-      };
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          const maxDim = 800;
-          let { width, height } = img;
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            } else {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
+    try {
+      const reader = new FileReader();
+      reader.onerror = () => resolve('');
+      reader.onload = (e) => {
+        const result = (e.target?.result as string) || '';
+        if (!result) return resolve('');
+        const img = new Image();
+        img.onerror = () => {
+          // Safe fallback thumbnail
+          resolve(result.length < 400000 ? result : '');
+        };
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            const maxDim = 800;
+            let { width, height } = img;
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              } else {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
             }
+            canvas.width = Math.max(1, width);
+            canvas.height = Math.max(1, height);
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              return resolve(result.length < 400000 ? result : '');
+            }
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.68));
+          } catch {
+            resolve(result.length < 400000 ? result : '');
           }
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            return resolve(result.length < 300000 ? result : '');
-          }
-          ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.72));
-        } catch {
-          resolve(result.length < 300000 ? result : '');
-        }
+        };
+        img.src = result;
       };
-      img.src = result;
-    };
-    reader.readAsDataURL(file);
+      reader.readAsDataURL(file);
+    } catch {
+      resolve('');
+    }
   });
 };
 
@@ -260,7 +264,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       setPrice('');
       setIsNegotiable(false);
       setIsFreeOrContact(false);
-      setPhone(currentUser?.phone || '');
+      setPhone(currentUser?.phone || (isAdminLoggedIn ? '077 752 0765' : ''));
       setDescription('');
       setImages([]);
       setUrlInput('');
@@ -489,9 +493,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
 
     // 4. Description Validation
     if (!description.trim()) {
-      newErrors.description = 'Please write a brief description of what you are offering.';
-    } else if (description.trim().length < 8) {
-      newErrors.description = 'Description is too short. Please write at least 8 characters.';
+      newErrors.description = 'Please write a brief description of what you are offering (or click AI Enhance).';
+    } else if (description.trim().length < 3) {
+      newErrors.description = 'Description is too short. Please write at least 3 characters.';
     }
 
     setErrors(newErrors);
@@ -522,7 +526,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
 
       setSubmittingStep('Uploading images & saving listing...');
 
-      const payload: Partial<Listing> = {
+      const payload: Partial<Listing> & { isAdminLoggedIn?: boolean } = {
         title: title.trim(),
         category,
         location,
@@ -538,6 +542,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
         ...(isService && serviceTrade ? { serviceTrade } : {}),
         ...(isService && serviceArea ? { serviceArea } : {}),
         ...(isService ? { isEmergency247: Boolean(isEmergency247) } : {}),
+        ...(isAdminLoggedIn ? { isAdminLoggedIn: true } : {}),
         ...(editingListing ? {
           status: editingListing.status,
           isFeatured: editingListing.isFeatured,
@@ -966,6 +971,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                       value={isService && pricingType === 'quote' ? 'Free Estimate' : isFreeOrContact ? 'Free / Contact' : price}
                       onChange={(e) => {
                         const raw = e.target.value;
+                        if (isFreeOrContact) {
+                          setIsFreeOrContact(false);
+                        }
                         setPrice(raw);
                         if (errors.price) setErrors((prev) => ({ ...prev, price: '' }));
                       }}

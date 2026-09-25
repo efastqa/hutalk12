@@ -223,36 +223,41 @@ export const api = {
     return this.getListingById(id);
   },
 
-  async createListing(data: Partial<Listing>): Promise<Listing> {
-    const adminConfig = await this.getAdminConfig().catch(() => ({ autoApprove: false }));
+  async createListing(data: Partial<Listing> & { isAdminLoggedIn?: boolean }): Promise<Listing> {
+    const adminConfig = await api.getAdminConfig().catch(() => ({ autoApprove: false }));
     const autoApprove = adminConfig.autoApprove !== undefined ? Boolean(adminConfig.autoApprove) : false;
-    const isAdmin = this.isAdminLoggedIn();
-    const initialStatus = (isAdmin || autoApprove) ? 'approved' : 'pending';
+    const isAdmin = Boolean((data as any)?.isAdminLoggedIn) ||
+      (typeof api.isAdmin === 'function' ? api.isAdmin() : false) ||
+      (typeof api.isAdminLoggedIn === 'function' ? api.isAdminLoggedIn() : false);
+    const initialStatus = (data.status === 'approved' || isAdmin || autoApprove) ? 'approved' : 'pending';
 
     const id = data.id || `ad-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const now = new Date().toISOString();
 
-    const loc = String(data.location || data.district || 'Colombo').trim();
-    const dist = String(data.district || data.location || 'Colombo').trim();
+    const loc = String(data.location || data.district || 'Colombo').trim() || 'Colombo';
+    const dist = String(data.district || data.location || 'Colombo').trim() || 'Colombo';
+    const phoneVal = String(data.phone || '').trim() || '0771234567';
+    const titleVal = String(data.title || '').trim();
+    const descVal = String(data.description || '').trim() || `${titleVal || 'Item'} in ${loc}. For inquiries or inspection, please contact ${phoneVal}.`;
 
     const rawListing: Record<string, any> = {
       id,
-      title: String(data.title || '').trim(),
-      category: String(data.category || 'Other').trim(),
+      title: titleVal,
+      category: String(data.category || 'Other').trim() || 'Other',
       price: Number(data.price) || 0,
       pricingType: data.pricingType || (data.category === 'Services' ? 'starting_at' : 'fixed'),
-      phone: String(data.phone || '').trim(),
+      phone: phoneVal,
       location: loc,
       district: dist,
-      description: String(data.description || '').trim(),
+      description: descVal,
       image: data.image || (data.images && data.images[0]) || 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80',
       images: data.images && data.images.length > 0 ? data.images : [data.image || 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80'],
-      status: initialStatus,
+      status: data.status || initialStatus,
       isFeatured: Boolean(data.isFeatured),
       views: Number(data.views) || 0,
       isVerifiedPro: Boolean(data.isVerifiedPro),
-      userId: data.userId || this.getCurrentUser()?.id || 'guest',
-      sellerName: data.sellerName || this.getCurrentUser()?.fullname || 'Direct Seller',
+      userId: data.userId || api.getCurrentUser()?.id || 'guest',
+      sellerName: data.sellerName || api.getCurrentUser()?.fullname || 'Direct Seller',
       createdAt: data.createdAt || now,
       updatedAt: now,
       date: now.split('T')[0],
@@ -269,7 +274,7 @@ export const api = {
       let finalVideoUrl = String(data.videoUrl).trim();
       if (finalVideoUrl.startsWith('data:video')) {
         try {
-          const uploaded = await this.uploadVideo(finalVideoUrl, `ad-video-${id}.mp4`);
+          const uploaded = await api.uploadVideo(finalVideoUrl, `ad-video-${id}.mp4`);
           if (uploaded?.url) {
             finalVideoUrl = uploaded.url;
           }
@@ -291,7 +296,7 @@ export const api = {
         let img = rawListing.images[i];
         if (img && typeof img === 'string' && img.startsWith('data:image')) {
           try {
-            const uploaded = await this.uploadImage(img, `ad-img-${id}-${i}.jpg`);
+            const uploaded = await api.uploadImage(img, `ad-img-${id}-${i}.jpg`);
             if (uploaded?.url) {
               img = uploaded.url;
             }
@@ -307,7 +312,7 @@ export const api = {
       }
     } else if (rawListing.image && typeof rawListing.image === 'string' && rawListing.image.startsWith('data:image')) {
       try {
-        const uploaded = await this.uploadImage(rawListing.image, `ad-img-${id}-cover.jpg`);
+        const uploaded = await api.uploadImage(rawListing.image, `ad-img-${id}-cover.jpg`);
         if (uploaded?.url) {
           rawListing.image = uploaded.url;
           rawListing.images = [uploaded.url];
@@ -338,8 +343,8 @@ export const api = {
       });
       if (res.ok) {
         const saved = await res.json();
-        if (!this.getCurrentUser()) {
-          this.addGuestListingId(saved.id || newListing.id);
+        if (!api.getCurrentUser()) {
+          api.addGuestListingId(saved.id || newListing.id);
         }
         return saved;
       } else {
@@ -351,8 +356,8 @@ export const api = {
     }
 
     // If user is guest or creating an ad, remember on this device so they can easily edit
-    if (!this.getCurrentUser()) {
-      this.addGuestListingId(newListing.id);
+    if (!api.getCurrentUser()) {
+      api.addGuestListingId(newListing.id);
     }
 
     return newListing;
@@ -899,6 +904,10 @@ export const api = {
     } catch {
       return false;
     }
+  },
+
+  isAdminLoggedIn(): boolean {
+    return this.isAdmin();
   },
 
   adminLogout(): void {
