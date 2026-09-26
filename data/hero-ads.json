@@ -5,57 +5,57 @@
   },
   "ads": [
     {
-      "createdAt": "2026-09-23T08:27:02.301Z",
-      "badge": "Sponsored Promotion",
-      "bgVideo": "/uploads/videos/anim-video-1790151970607-mz6krp.mp4",
-      "isActive": true,
-      "title": "Sell Your Vehicle or Property in 24 Hours",
-      "subtitle": "huta.lk",
       "ctaText": "Post Free Ad Now",
-      "ctaAction": "post_ad",
-      "id": "hero-ad-1790152022301",
+      "animationType": "pulse",
       "gradientTheme": "purple",
-      "animationType": "pulse",
-      "mediaType": "video"
-    },
-    {
-      "gradientTheme": "emerald",
-      "ctaAction": "post_ad",
-      "highlightText": "with HUTA IN",
-      "id": "hero-ad-1789640542565",
-      "animationType": "slide",
-      "subtitle": "Direct WhatsApp inquiries from thousands of buyers across all 25 districts with zero broker fees.",
-      "createdAt": "2026-09-17T10:22:22.565Z",
+      "mediaType": "video",
       "badge": "Sponsored Promotion",
-      "title": "All services in one Place",
-      "isActive": true,
-      "ctaText": "Post Free Ad Now"
-    },
-    {
-      "gradientTheme": "orange",
-      "badge": "🌟 Exclusive Promotion",
-      "id": "hero-ad-1",
-      "highlightText": "with HUTA Turbo Ad",
-      "createdAt": "2026-09-16T15:57:16.228Z",
+      "id": "hero-ad-1790152022301",
+      "createdAt": "2026-09-23T08:27:02.301Z",
+      "bgVideo": "/uploads/videos/anim-video-1790151970607-mz6krp.mp4",
+      "ctaAction": "post_ad",
       "title": "Sell Your Vehicle or Property in 24 Hours",
-      "animationType": "pulse",
-      "ctaText": "Post Free Ad Now",
-      "subtitle": "Direct WhatsApp inquiries from thousands of verified buyers across all 25 districts with zero broker fees.",
       "isActive": true,
-      "ctaAction": "post_ad"
+      "subtitle": "huta.lk"
     },
     {
+      "badge": "Sponsored Promotion",
+      "ctaAction": "post_ad",
+      "gradientTheme": "emerald",
+      "animationType": "slide",
+      "createdAt": "2026-09-17T10:22:22.565Z",
+      "highlightText": "with HUTA IN",
+      "ctaText": "Post Free Ad Now",
+      "subtitle": "Direct WhatsApp inquiries from thousands of buyers across all 25 districts with zero broker fees.",
+      "title": "All services in one Place",
+      "id": "hero-ad-1789640542565",
+      "isActive": true
+    },
+    {
+      "isActive": true,
+      "badge": "🌟 Exclusive Promotion",
+      "subtitle": "Direct WhatsApp inquiries from thousands of verified buyers across all 25 districts with zero broker fees.",
+      "highlightText": "with HUTA Turbo Ad",
+      "gradientTheme": "orange",
+      "animationType": "pulse",
+      "createdAt": "2026-09-16T15:57:16.228Z",
+      "ctaText": "Post Free Ad Now",
+      "ctaAction": "post_ad",
+      "id": "hero-ad-1",
+      "title": "Sell Your Vehicle or Property in 24 Hours"
+    },
+    {
+      "id": "hero-ad-2",
       "title": "Discover Luxury Beachside Apartments & Land",
       "gradientTheme": "blue",
-      "isActive": true,
+      "animationType": "slide",
+      "highlightText": "in Colombo, Galle & Kandy",
       "ctaText": "Explore Properties",
       "ctaAction": "Property",
-      "id": "hero-ad-2",
-      "highlightText": "in Colombo, Galle & Kandy",
-      "subtitle": "Explore 1,200+ verified listings with clear deeds, video walkthroughs, and direct developer contacts.",
-      "animationType": "slide",
       "badge": "🏢 Featured Developer",
-      "createdAt": "2026-09-16T15:57:16.228Z"
+      "createdAt": "2026-09-16T15:57:16.228Z",
+      "subtitle": "Explore 1,200+ verified listings with clear deeds, video walkthroughs, and direct developer contacts.",
+      "isActive": true
     }
   ]
 }

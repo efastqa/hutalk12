@@ -702,6 +702,9 @@ async function startServer() {
 
   app.use('/videos', express.static(videosDir, staticOptions));
   app.use('/uploads', express.static(uploadsDir, staticOptions));
+  app.use('/uploads', (req, res) => {
+    res.status(404).setHeader('Content-Type', 'image/svg+xml').send('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"/>');
+  });
   app.use(express.static(publicDir, staticOptions));
 
   // -------------------------------------------------------------

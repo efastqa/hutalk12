@@ -434,6 +434,12 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                       src={img}
                       alt={`Thumbnail ${idx + 1}`}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (!target.src.includes('unsplash.com')) {
+                          target.src = 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=200&q=80';
+                        }
+                      }}
                     />
                   </button>
                 ))}
@@ -442,7 +448,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
           </div>
 
           {/* Details Pane */}
-          <div className="p-6 flex flex-col justify-between max-h-[85vh] overflow-y-auto">
+          <div className="p-6 flex flex-col max-h-[85vh] overflow-y-auto space-y-4">
             <div>
               {/* Header with Title & Favorite */}
               <div className="flex items-start justify-between gap-2">
@@ -555,30 +561,6 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                 )}
               </div>
 
-              {/* Facebook & Social Media Promo Card */}
-              <div className="mb-3.5 bg-gradient-to-r from-blue-50/90 via-sky-50/50 to-orange-50/50 border border-blue-200/80 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-2xs">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-[#1877F2] text-white flex items-center justify-center shrink-0 shadow-sm">
-                    <Facebook className="w-4 h-4 fill-current" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
-                      <span>Post to Facebook & Social Media</span>
-                      <span className="text-[10px] bg-[#1877F2] text-white font-extrabold px-1.5 py-0.2 rounded">HD</span>
-                    </div>
-                    <p className="text-[11px] text-gray-500">Download photos & generate ready-made Facebook flyers</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsFacebookFlyerOpen(true)}
-                  className="shrink-0 inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 text-[#1877F2] border border-blue-200 text-xs font-bold py-1.5 px-3 rounded-xl shadow-2xs transition-all hover:scale-102 cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Get Flyer</span>
-                </button>
-              </div>
-
               {/* Meta pills */}
               <div className="flex flex-wrap gap-2 text-xs text-gray-600 mb-4">
                 <span className="inline-flex items-center gap-1 bg-gray-100 px-2.5 py-1 rounded-md font-medium">
@@ -620,53 +602,15 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                   {listing.description}
                 </p>
               </div>
-
-              {/* Smart Location & Interactive Distance Map */}
-              <div className="my-4">
-                <AdLocationMapCard listing={listing} />
-              </div>
-
-              {/* Customer Engagement & Trust: Reviews & Ratings */}
-              <div className="my-4 pt-1 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase text-gray-700 tracking-wider flex items-center gap-1.5">
-                    <span>Seller Reputation & Reviews</span>
-                  </h4>
-                  {listing.sellerName && (
-                    <span className="text-[11px] text-gray-500 font-medium">
-                      Seller: <strong className="text-gray-900">{listing.sellerName}</strong>
-                    </span>
-                  )}
-                </div>
-
-                <ReviewList
-                  listingId={listing.id}
-                  sellerRating={currentRating}
-                  reviewCount={currentReviewCount}
-                />
-
-                <ReviewForm
-                  listingId={listing.id}
-                  sellerName={listing.sellerName}
-                  onReviewAdded={(_newRev, newRating, newCount) => {
-                    if (newRating !== undefined) setCurrentRating(newRating);
-                    if (newCount !== undefined) setCurrentReviewCount(newCount);
-                    if (listing) {
-                      listing.sellerRating = newRating;
-                      listing.reviewCount = newCount;
-                    }
-                  }}
-                />
-              </div>
             </div>
 
-            {/* Seller Contact & Actions */}
-            <div className="mt-4 pt-2 space-y-2.5">
-              <div className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-center">
+            {/* 2nd Attached Image Section: Verified Seller Contact & Action Buttons (Right after Description!) */}
+            <div className="pt-1 space-y-3">
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-center shadow-xs">
                 <p className="text-xs text-gray-500 font-medium">
                   {isService ? 'Service Provider Contact' : 'Verified Seller Contact'}
                 </p>
-                <div className="text-lg font-bold text-gray-900 mt-0.5 tracking-wide flex items-center justify-center gap-2">
+                <div className="text-xl font-bold text-gray-900 mt-1 tracking-wide flex items-center justify-center gap-2">
                   <Phone className="w-4 h-4 text-[#FF5A36]" />
                   <a
                     href={`tel:${listing.phone}`}
@@ -677,11 +621,11 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                   </a>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 mt-3">
+                <div className="grid grid-cols-2 gap-2 mt-3.5">
                   <a
                     href={`tel:${listing.phone}`}
                     onClick={() => onRecordAction?.('phone')}
-                    className="flex items-center justify-center gap-1.5 bg-[#181920] hover:bg-black text-white text-xs font-bold py-2.5 px-3 rounded-lg shadow-sm transition-all"
+                    className="flex items-center justify-center gap-1.5 bg-[#181920] hover:bg-black text-white text-xs sm:text-sm font-bold py-2.5 px-3 rounded-xl shadow-xs transition-all cursor-pointer"
                   >
                     <Phone className="w-3.5 h-3.5" />
                     <span>{isService ? 'Call Provider' : 'Call Seller'}</span>
@@ -691,7 +635,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => onRecordAction?.('whatsapp')}
-                    className="flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1DA851] text-white text-xs font-bold py-2.5 px-3 rounded-lg shadow-sm transition-all"
+                    className="flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1DA851] text-white text-xs sm:text-sm font-bold py-2.5 px-3 rounded-xl shadow-xs transition-all cursor-pointer"
                   >
                     <MessageCircle className="w-3.5 h-3.5" />
                     <span>{isService ? 'Request Quote' : 'WhatsApp'}</span>
@@ -703,7 +647,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                   <button
                     type="button"
                     onClick={() => onStartChat(listing)}
-                    className="mt-2.5 w-full flex items-center justify-center gap-2 bg-[#FF5A36] hover:bg-[#E04826] text-white text-xs font-bold py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg hover:shadow-[#FF5A36]/20 transition-all cursor-pointer"
+                    className="mt-2.5 w-full flex items-center justify-center gap-2 bg-[#FF5A36] hover:bg-[#E04826] text-white text-xs sm:text-sm font-bold py-2.5 px-4 rounded-xl shadow-md hover:shadow-lg hover:shadow-[#FF5A36]/20 transition-all cursor-pointer"
                   >
                     <MessageCircle className="w-4 h-4" />
                     <span>Live Chat on HUTA</span>
@@ -718,7 +662,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                   <button
                     type="button"
                     onClick={() => onToggleCompare(listing)}
-                    className={`mt-2 w-full flex items-center justify-center gap-2 text-xs font-bold py-2.5 px-4 rounded-lg border transition-all cursor-pointer ${
+                    className={`mt-2 w-full flex items-center justify-center gap-2 text-xs font-bold py-2.5 px-4 rounded-xl border transition-all cursor-pointer ${
                       isCompared
                         ? 'bg-[#FF5A36]/10 text-[#FF5A36] border-[#FF5A36]/40 hover:bg-[#FF5A36]/20'
                         : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
@@ -759,9 +703,9 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                 </div>
               )}
 
-              {/* Author / Admin Controls */}
+              {/* Author / Admin Controls (Availability, Edit & Delete) */}
               {canManage ? (
-                <div className="pt-2 space-y-2">
+                <div className="pt-1 space-y-2">
                   {isAdminLoggedIn ? (
                     <div className="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl flex items-center justify-between">
                       <span className="flex items-center gap-1.5">
@@ -852,7 +796,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                 </div>
               ) : (
                 /* Customer Self-Service Ad Editing Prompt */
-                <div className="pt-2 border-t border-gray-100 mt-2">
+                <div className="pt-1">
                   <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border border-orange-200 rounded-2xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
                     <div className="text-left">
                       <div className="flex items-center gap-1.5">
@@ -867,7 +811,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                     <button
                       type="button"
                       onClick={() => onRequestOwnerEdit && onRequestOwnerEdit(listing)}
-                      className="w-full sm:w-auto shrink-0 px-4 py-2.5 bg-[#FF5A36] hover:bg-[#E04826] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer hover:scale-102"
+                      className="w-full sm:w-auto shrink-0 px-4 py-2 bg-[#FF5A36] hover:bg-[#E04826] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer hover:scale-102"
                     >
                       <Edit className="w-3.5 h-3.5" />
                       <span>Edit My Ad & Price</span>
@@ -875,6 +819,71 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Section that goes LAST IN: Location, Facebook Media Flyer, and Reviews */}
+            <div className="pt-2 border-t border-gray-100 space-y-4">
+              {/* Smart Location & Interactive Distance Map */}
+              <div>
+                <AdLocationMapCard listing={listing} />
+              </div>
+
+              {/* Facebook & Social Media Promo Card (Placed last as requested) */}
+              <div className="bg-gradient-to-r from-blue-50/90 via-sky-50/50 to-orange-50/50 border border-blue-200/80 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#1877F2] text-white flex items-center justify-center shrink-0 shadow-sm">
+                    <Facebook className="w-4 h-4 fill-current" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                      <span>Post to Facebook & Social Media</span>
+                      <span className="text-[10px] bg-[#1877F2] text-white font-extrabold px-1.5 py-0.2 rounded">HD</span>
+                    </div>
+                    <p className="text-[11px] text-gray-500">Download photos & generate ready-made Facebook flyers</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsFacebookFlyerOpen(true)}
+                  className="shrink-0 inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 text-[#1877F2] border border-blue-200 text-xs font-bold py-1.5 px-3 rounded-xl shadow-2xs transition-all hover:scale-102 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Get Flyer</span>
+                </button>
+              </div>
+
+              {/* Customer Engagement & Trust: Reviews & Ratings */}
+              <div className="pt-1 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase text-gray-700 tracking-wider flex items-center gap-1.5">
+                    <span>Seller Reputation & Reviews</span>
+                  </h4>
+                  {listing.sellerName && (
+                    <span className="text-[11px] text-gray-500 font-medium">
+                      Seller: <strong className="text-gray-900">{listing.sellerName}</strong>
+                    </span>
+                  )}
+                </div>
+
+                <ReviewList
+                  listingId={listing.id}
+                  sellerRating={currentRating}
+                  reviewCount={currentReviewCount}
+                />
+
+                <ReviewForm
+                  listingId={listing.id}
+                  sellerName={listing.sellerName}
+                  onReviewAdded={(_newRev, newRating, newCount) => {
+                    if (newRating !== undefined) setCurrentRating(newRating);
+                    if (newCount !== undefined) setCurrentReviewCount(newCount);
+                    if (listing) {
+                      listing.sellerRating = newRating;
+                      listing.reviewCount = newCount;
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>

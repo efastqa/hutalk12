@@ -289,37 +289,28 @@ export const api = {
       }
     }
 
-    // Process and upload any base64 images to static server storage
+    // Ensure images are preserved durably across all server instances and Firestore
     if (Array.isArray(rawListing.images) && rawListing.images.length > 0) {
       const processedImages: string[] = [];
       for (let i = 0; i < rawListing.images.length; i++) {
-        let img = rawListing.images[i];
-        if (img && typeof img === 'string' && img.startsWith('data:image')) {
-          try {
-            const uploaded = await api.uploadImage(img, `ad-img-${id}-${i}.jpg`);
-            if (uploaded?.url) {
-              img = uploaded.url;
-            }
-          } catch {
-            // Keep compressed data URL if offline/fallback
+        const img = rawListing.images[i];
+        if (img && typeof img === 'string') {
+          if (img.startsWith('data:image')) {
+            // Background cache to server disk if available, but keep data URL for durable cross-container availability
+            api.uploadImage(img, `ad-img-${id}-${i}.jpg`).catch(() => {});
           }
+          processedImages.push(img);
         }
-        if (img) processedImages.push(img);
       }
       if (processedImages.length > 0) {
         rawListing.images = processedImages;
         rawListing.image = processedImages[0];
       }
-    } else if (rawListing.image && typeof rawListing.image === 'string' && rawListing.image.startsWith('data:image')) {
-      try {
-        const uploaded = await api.uploadImage(rawListing.image, `ad-img-${id}-cover.jpg`);
-        if (uploaded?.url) {
-          rawListing.image = uploaded.url;
-          rawListing.images = [uploaded.url];
-        }
-      } catch {
-        // Keep compressed data URL if offline/fallback
+    } else if (rawListing.image && typeof rawListing.image === 'string') {
+      if (rawListing.image.startsWith('data:image')) {
+        api.uploadImage(rawListing.image, `ad-img-${id}-cover.jpg`).catch(() => {});
       }
+      rawListing.images = [rawListing.image];
     }
 
     const newListing = sanitizeForFirestore(rawListing) as Listing;

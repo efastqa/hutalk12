@@ -43,7 +43,44 @@ const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
   Jobs: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80',
 };
 
-const compressImage = (file: File): Promise<string> => {
+const compressImage = async (file: File): Promise<string> => {
+  // 1. Try modern createImageBitmap for fast, orientation-correct, high-res decoding
+  try {
+    if (typeof window !== 'undefined' && 'createImageBitmap' in window) {
+      const bitmap = await createImageBitmap(file);
+      const maxDim = 1000;
+      let width = bitmap.width;
+      let height = bitmap.height;
+      if (width > 0 && height > 0) {
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, width);
+        canvas.height = Math.max(1, height);
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(bitmap, 0, 0, width, height);
+          bitmap.close();
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
+          if (dataUrl && dataUrl.length > 500) {
+            return dataUrl;
+          }
+        }
+      }
+      bitmap.close();
+    }
+  } catch (err) {
+    console.warn('createImageBitmap conversion failed, falling back to FileReader:', err);
+  }
+
+  // 2. Robust fallback via FileReader and HTMLImageElement with naturalWidth/naturalHeight
   return new Promise((resolve) => {
     try {
       const reader = new FileReader();
@@ -53,33 +90,35 @@ const compressImage = (file: File): Promise<string> => {
         if (!result) return resolve('');
         const img = new Image();
         img.onerror = () => {
-          // Safe fallback thumbnail
-          resolve(result.length < 400000 ? result : '');
+          // If decoding failed, preserve original data URL
+          resolve(result);
         };
         img.onload = () => {
           try {
-            const canvas = document.createElement('canvas');
-            const maxDim = 800;
-            let { width, height } = img;
-            if (width > maxDim || height > maxDim) {
-              if (width > height) {
-                height = Math.round((height * maxDim) / width);
-                width = maxDim;
+            const width = img.naturalWidth || img.width || 800;
+            const height = img.naturalHeight || img.height || 600;
+            const maxDim = 1000;
+            let targetW = width;
+            let targetH = height;
+            if (targetW > maxDim || targetH > maxDim) {
+              if (targetW > targetH) {
+                targetH = Math.round((targetH * maxDim) / targetW);
+                targetW = maxDim;
               } else {
-                width = Math.round((width * maxDim) / height);
-                height = maxDim;
+                targetW = Math.round((targetW * maxDim) / targetH);
+                targetH = maxDim;
               }
             }
-            canvas.width = Math.max(1, width);
-            canvas.height = Math.max(1, height);
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, targetW);
+            canvas.height = Math.max(1, targetH);
             const ctx = canvas.getContext('2d');
-            if (!ctx) {
-              return resolve(result.length < 400000 ? result : '');
-            }
-            ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.68));
+            if (!ctx) return resolve(result);
+            ctx.drawImage(img, 0, 0, targetW, targetH);
+            const compressed = canvas.toDataURL('image/jpeg', 0.80);
+            resolve(compressed && compressed.length > 500 ? compressed : result);
           } catch {
-            resolve(result.length < 400000 ? result : '');
+            resolve(result);
           }
         };
         img.src = result;
@@ -329,17 +368,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
         const compressedBase64 = await compressImage(file);
         if (!compressedBase64) continue;
 
-        // Upload to server static disk storage immediately so client payload stays feather-light
-        let finalUrl = compressedBase64;
-        try {
-          setUploadStatusText(`Saving photo ${i + 1} to storage...`);
-          const uploadRes = await api.uploadImage(compressedBase64, `photo-${Date.now()}-${i}.jpg`);
-          if (uploadRes?.url) {
-            finalUrl = uploadRes.url;
-          }
-        } catch {
-          // If offline or standalone, retain compressed base64
-        }
+        // Keep compressed base64 directly on listing so it is 100% durable across server instances & Firestore
+        const finalUrl = compressedBase64;
+        api.uploadImage(compressedBase64, `photo-${Date.now()}-${i}.jpg`).catch(() => {});
 
         newUrls.push(finalUrl);
       }
