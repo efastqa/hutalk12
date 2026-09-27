@@ -932,12 +932,11 @@ async function startServer() {
       return res.status(400).json({ error: 'Please provide an advertisement title.' });
     }
 
-    // Process multiple images
-    const rawImages = Array.isArray(images) ? images.map(String).filter(Boolean) : [];
-    if (image && !rawImages.includes(String(image))) {
-      rawImages.unshift(String(image));
-    }
-    const finalImage = rawImages[0] || image || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80';
+    // Process multiple images (preserve customer's original images strictly in order: 1st, 2nd, etc.)
+    const rawImages = Array.isArray(images) && images.length > 0
+      ? images.map(String).filter(Boolean)
+      : (image ? [String(image)] : []);
+    const finalImage = rawImages[0] || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80';
     const finalImages = rawImages.length > 0 ? rawImages : [finalImage];
 
     const adminCfg = getAdminConfig();

@@ -424,23 +424,22 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                       setIsVideoActive(false);
                       setActiveIdx(idx);
                     }}
-                    className={`relative shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                    className={`relative shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
                       !isVideoActive && idx === activeIdx
-                        ? 'border-[#FF5A36] scale-105 opacity-100'
-                        : 'border-transparent opacity-60 hover:opacity-100'
+                        ? 'border-[#FF5A36] scale-105 opacity-100 ring-2 ring-[#FF5A36]/40'
+                        : 'border-transparent opacity-70 hover:opacity-100'
                     }`}
                   >
                     <img
                       src={img}
                       alt={`Thumbnail ${idx + 1}`}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        if (!target.src.includes('unsplash.com')) {
-                          target.src = 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=200&q=80';
-                        }
-                      }}
                     />
+                    <div className={`absolute bottom-0 inset-x-0 text-[8px] font-bold text-center py-0.5 text-white ${
+                      idx === 0 ? 'bg-[#FF5A36]' : idx === 1 ? 'bg-blue-600' : 'bg-black/70'
+                    }`}>
+                      {idx === 0 ? '1st Cover' : idx === 1 ? '2nd' : `#${idx + 1}`}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -821,69 +820,66 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
               )}
             </div>
 
-            {/* Section that goes LAST IN: Location, Facebook Media Flyer, and Reviews */}
-            <div className="pt-2 border-t border-gray-100 space-y-4">
-              {/* Smart Location & Interactive Distance Map */}
-              <div>
-                <AdLocationMapCard listing={listing} />
+            {/* Seller Reputation & Reviews */}
+            <div className="pt-2 border-t border-gray-100 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold uppercase text-gray-700 tracking-wider flex items-center gap-1.5">
+                  <span>Seller Reputation & Reviews</span>
+                </h4>
+                {listing.sellerName && (
+                  <span className="text-[11px] text-gray-500 font-medium">
+                    Seller: <strong className="text-gray-900">{listing.sellerName}</strong>
+                  </span>
+                )}
               </div>
 
-              {/* Facebook & Social Media Promo Card (Placed last as requested) */}
-              <div className="bg-gradient-to-r from-blue-50/90 via-sky-50/50 to-orange-50/50 border border-blue-200/80 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-2xs">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-[#1877F2] text-white flex items-center justify-center shrink-0 shadow-sm">
-                    <Facebook className="w-4 h-4 fill-current" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
-                      <span>Post to Facebook & Social Media</span>
-                      <span className="text-[10px] bg-[#1877F2] text-white font-extrabold px-1.5 py-0.2 rounded">HD</span>
-                    </div>
-                    <p className="text-[11px] text-gray-500">Download photos & generate ready-made Facebook flyers</p>
-                  </div>
+              <ReviewList
+                listingId={listing.id}
+                sellerRating={currentRating}
+                reviewCount={currentReviewCount}
+              />
+
+              <ReviewForm
+                listingId={listing.id}
+                sellerName={listing.sellerName}
+                onReviewAdded={(_newRev, newRating, newCount) => {
+                  if (newRating !== undefined) setCurrentRating(newRating);
+                  if (newCount !== undefined) setCurrentReviewCount(newCount);
+                  if (listing) {
+                    listing.sellerRating = newRating;
+                    listing.reviewCount = newCount;
+                  }
+                }}
+              />
+            </div>
+
+            {/* Smart Location & Interactive Distance Map */}
+            <div className="pt-2 border-t border-gray-100">
+              <AdLocationMapCard listing={listing} />
+            </div>
+
+            {/* Post to Facebook & Social Media Promo Card (LAST IN as requested) */}
+            <div className="bg-gradient-to-r from-blue-50/90 via-sky-50/50 to-orange-50/50 border border-blue-200/80 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#1877F2] text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <Facebook className="w-4 h-4 fill-current" />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setIsFacebookFlyerOpen(true)}
-                  className="shrink-0 inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 text-[#1877F2] border border-blue-200 text-xs font-bold py-1.5 px-3 rounded-xl shadow-2xs transition-all hover:scale-102 cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Get Flyer</span>
-                </button>
-              </div>
-
-              {/* Customer Engagement & Trust: Reviews & Ratings */}
-              <div className="pt-1 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase text-gray-700 tracking-wider flex items-center gap-1.5">
-                    <span>Seller Reputation & Reviews</span>
-                  </h4>
-                  {listing.sellerName && (
-                    <span className="text-[11px] text-gray-500 font-medium">
-                      Seller: <strong className="text-gray-900">{listing.sellerName}</strong>
-                    </span>
-                  )}
+                <div>
+                  <div className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                    <span>Post to Facebook & Social Media</span>
+                    <span className="text-[10px] bg-[#1877F2] text-white font-extrabold px-1.5 py-0.2 rounded">HD</span>
+                  </div>
+                  <p className="text-[11px] text-gray-500">Download original photos & generate ready-made Facebook flyers</p>
                 </div>
-
-                <ReviewList
-                  listingId={listing.id}
-                  sellerRating={currentRating}
-                  reviewCount={currentReviewCount}
-                />
-
-                <ReviewForm
-                  listingId={listing.id}
-                  sellerName={listing.sellerName}
-                  onReviewAdded={(_newRev, newRating, newCount) => {
-                    if (newRating !== undefined) setCurrentRating(newRating);
-                    if (newCount !== undefined) setCurrentReviewCount(newCount);
-                    if (listing) {
-                      listing.sellerRating = newRating;
-                      listing.reviewCount = newCount;
-                    }
-                  }}
-                />
               </div>
+              <button
+                type="button"
+                onClick={() => setIsFacebookFlyerOpen(true)}
+                className="shrink-0 inline-flex items-center gap-1.5 bg-white hover:bg-gray-50 text-[#1877F2] border border-blue-200 text-xs font-bold py-1.5 px-3 rounded-xl shadow-2xs transition-all hover:scale-102 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Get Flyer</span>
+              </button>
             </div>
           </div>
         </div>

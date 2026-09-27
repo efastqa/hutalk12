@@ -27,6 +27,8 @@ import {
   Phone,
   Layers,
   Eye,
+  Facebook,
+  Share2,
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -44,11 +46,11 @@ const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
 };
 
 const compressImage = async (file: File): Promise<string> => {
-  // 1. Try modern createImageBitmap for fast, orientation-correct, high-res decoding
+  // 1. Try modern createImageBitmap with max 800px and 0.75 JPEG quality for fast, lightweight durable storage
   try {
     if (typeof window !== 'undefined' && 'createImageBitmap' in window) {
       const bitmap = await createImageBitmap(file);
-      const maxDim = 1000;
+      const maxDim = 800;
       let width = bitmap.width;
       let height = bitmap.height;
       if (width > 0 && height > 0) {
@@ -68,7 +70,7 @@ const compressImage = async (file: File): Promise<string> => {
         if (ctx) {
           ctx.drawImage(bitmap, 0, 0, width, height);
           bitmap.close();
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
           if (dataUrl && dataUrl.length > 500) {
             return dataUrl;
           }
@@ -80,7 +82,7 @@ const compressImage = async (file: File): Promise<string> => {
     console.warn('createImageBitmap conversion failed, falling back to FileReader:', err);
   }
 
-  // 2. Robust fallback via FileReader and HTMLImageElement with naturalWidth/naturalHeight
+  // 2. Robust fallback via FileReader and HTMLImageElement
   return new Promise((resolve) => {
     try {
       const reader = new FileReader();
@@ -90,14 +92,13 @@ const compressImage = async (file: File): Promise<string> => {
         if (!result) return resolve('');
         const img = new Image();
         img.onerror = () => {
-          // If decoding failed, preserve original data URL
           resolve(result);
         };
         img.onload = () => {
           try {
             const width = img.naturalWidth || img.width || 800;
             const height = img.naturalHeight || img.height || 600;
-            const maxDim = 1000;
+            const maxDim = 800;
             let targetW = width;
             let targetH = height;
             if (targetW > maxDim || targetH > maxDim) {
@@ -115,7 +116,7 @@ const compressImage = async (file: File): Promise<string> => {
             const ctx = canvas.getContext('2d');
             if (!ctx) return resolve(result);
             ctx.drawImage(img, 0, 0, targetW, targetH);
-            const compressed = canvas.toDataURL('image/jpeg', 0.80);
+            const compressed = canvas.toDataURL('image/jpeg', 0.75);
             resolve(compressed && compressed.length > 500 ? compressed : result);
           } catch {
             resolve(result);
@@ -428,6 +429,13 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
 
   const handleRemoveImage = (indexToRemove: number) => {
     setImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+    onToast(`Photo #${indexToRemove + 1} removed.`, 'info');
+  };
+
+  const handleClearAllImages = () => {
+    if (images.length === 0) return;
+    setImages([]);
+    onToast('All photos removed.', 'info');
   };
 
   const handleSetCover = (indexToCover: number) => {
@@ -831,41 +839,22 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                 )}
               </div>
 
-              {/* Category and District */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Category <span className="text-[#FF5A36]">*</span>
-                  </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none bg-white cursor-pointer"
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    District / Base City <span className="text-[#FF5A36]">*</span>
-                  </label>
-                  <select
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none bg-white cursor-pointer"
-                  >
-                    {DISTRICTS.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {/* Category */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                  Category <span className="text-[#FF5A36]">*</span>
+                </label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none bg-white cursor-pointer"
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Specialized Fields for Services */}
@@ -1092,189 +1081,6 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                 </div>
               </div>
 
-              {/* Multiple Advertisement Photos Manager */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    <Images className="w-3.5 h-3.5 text-[#FF5A36]" />
-                    <span>Photos ({images.length}/{MAX_IMAGES})</span>
-                  </label>
-                  <div className="flex items-center gap-2">
-                    {images.length === 0 && (
-                      <button
-                        type="button"
-                        onClick={handleAddSampleCategoryCover}
-                        className="text-[11px] text-[#FF5A36] hover:underline font-bold cursor-pointer"
-                      >
-                        + Use {category} Cover Photo
-                      </button>
-                    )}
-                    <span className="text-[11px] text-gray-400 font-medium">
-                      First photo is main cover
-                    </span>
-                  </div>
-                </div>
-
-                {/* Upload Buttons & URL Input */}
-                <div className="flex flex-col sm:flex-row gap-2 mb-3">
-                  <label className="cursor-pointer flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 hover:border-[#FF5A36] rounded-xl py-2.5 px-4 text-xs font-bold text-gray-700 hover:text-[#FF5A36] transition-colors bg-gray-50 hover:bg-orange-50/50">
-                    {isUploadingImages ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-[#FF5A36]" />
-                    ) : (
-                      <UploadCloud className="w-4 h-4" />
-                    )}
-                    <span>
-                      {isUploadingImages ? (uploadStatusText || 'Compressing & Adding...') : 'Upload Photos (Multi-Select)'}
-                    </span>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      disabled={isUploadingImages || images.length >= MAX_IMAGES}
-                      onChange={handleMultipleFileUpload}
-                      className="hidden"
-                    />
-                  </label>
-
-                  <div className="flex-1 flex items-center gap-1.5">
-                    <input
-                      type="url"
-                      value={urlInput}
-                      onChange={(e) => setUrlInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddUrl();
-                        }
-                      }}
-                      disabled={images.length >= MAX_IMAGES}
-                      placeholder="Or paste photo link (https://...)"
-                      className="flex-1 px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none disabled:bg-gray-100"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleAddUrl()}
-                      disabled={!urlInput.trim() || images.length >= MAX_IMAGES}
-                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
-                    >
-                      Add URL
-                    </button>
-                  </div>
-                </div>
-
-                {/* Thumbnails Grid */}
-                {images.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-gray-50 p-2.5 rounded-2xl border border-gray-200">
-                    {images.map((img, idx) => (
-                      <div
-                        key={idx}
-                        className={`relative group rounded-xl overflow-hidden aspect-4/3 bg-gray-200 border-2 transition-all ${
-                          idx === 0 ? 'border-[#FF5A36] shadow-sm ring-1 ring-[#FF5A36]/30' : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <img
-                          src={img}
-                          alt={`Photo ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = CATEGORY_DEFAULT_IMAGES[category] || CATEGORY_DEFAULT_IMAGES['Electronics'];
-                          }}
-                        />
-
-                        {/* Cover Photo Badge */}
-                        {idx === 0 ? (
-                          <div className="absolute top-1.5 left-1.5 bg-[#FF5A36] text-white text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md shadow-xs flex items-center gap-1 z-10">
-                            <Star className="w-2.5 h-2.5 fill-current" />
-                            <span>Cover</span>
-                          </div>
-                        ) : (
-                          <div className="absolute top-1.5 left-1.5 bg-black/50 backdrop-blur-xs text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-md z-10">
-                            #{idx + 1}
-                          </div>
-                        )}
-
-                        {/* Action Overlay */}
-                        <div className="absolute inset-0 bg-black/65 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-1.5 text-white z-20">
-                          <div className="flex items-center justify-between">
-                            {idx > 0 ? (
-                              <button
-                                type="button"
-                                onClick={() => handleSetCover(idx)}
-                                className="text-[9px] font-bold bg-white text-gray-900 px-1.5 py-0.5 rounded-md hover:bg-orange-50 hover:text-[#FF5A36] transition-colors cursor-pointer"
-                                title="Make this photo the main cover image"
-                              >
-                                Set Cover
-                              </button>
-                            ) : (
-                              <span className="text-[9px] font-bold text-amber-300">★ Main Cover</span>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveImage(idx)}
-                              className="w-6 h-6 rounded-md bg-red-600/90 hover:bg-red-600 text-white flex items-center justify-center transition-transform hover:scale-105 cursor-pointer"
-                              title="Delete photo"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-
-                          {/* Reorder Buttons */}
-                          <div className="flex items-center justify-between pt-1">
-                            <button
-                              type="button"
-                              disabled={idx === 0}
-                              onClick={() => handleMoveImage(idx, 'left')}
-                              className="w-6 h-6 rounded-md bg-black/50 hover:bg-black/80 disabled:opacity-20 disabled:cursor-not-allowed flex items-center justify-center text-white cursor-pointer"
-                              title="Move earlier"
-                            >
-                              <ChevronLeft className="w-3.5 h-3.5" />
-                            </button>
-                            <span className="text-[10px] font-semibold text-gray-200">
-                              {idx + 1}/{images.length}
-                            </span>
-                            <button
-                              type="button"
-                              disabled={idx === images.length - 1}
-                              onClick={() => handleMoveImage(idx, 'right')}
-                              className="w-6 h-6 rounded-md bg-black/50 hover:bg-black/80 disabled:opacity-20 disabled:cursor-not-allowed flex items-center justify-center text-white cursor-pointer"
-                              title="Move later"
-                            >
-                              <ChevronRight className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Add More Slot if below MAX_IMAGES */}
-                    {images.length < MAX_IMAGES && (
-                      <label className="cursor-pointer border-2 border-dashed border-gray-300 hover:border-[#FF5A36] rounded-xl flex flex-col items-center justify-center gap-1 aspect-4/3 text-gray-400 hover:text-[#FF5A36] transition-colors bg-white hover:bg-orange-50/30">
-                        <Plus className="w-5 h-5" />
-                        <span className="text-[11px] font-bold">Add Photo</span>
-                        <span className="text-[9px] text-gray-400">({MAX_IMAGES - images.length} left)</span>
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          disabled={isUploadingImages}
-                          onChange={handleMultipleFileUpload}
-                          className="hidden"
-                        />
-                      </label>
-                    )}
-                  </div>
-                ) : (
-                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-center flex flex-col items-center justify-center gap-1">
-                    <p className="text-xs text-gray-500">
-                      No photos added yet. Upload up to {MAX_IMAGES} photos of your item (front, angles, condition).
-                    </p>
-                    <p className="text-[10px] text-gray-400">
-                      Ads with clear photos get up to 5x more buyer calls in Sri Lanka.
-                    </p>
-                  </div>
-                )}
-              </div>
-
               {/* Description with AI Assistant */}
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -1324,6 +1130,257 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                     Clear details on condition, warranty, or inspection reduce repetitive questions.
                   </p>
                 )}
+              </div>
+
+              {/* Advertisement Photos Manager (Original Images, 1st & 2nd photo order, Add & Delete options) */}
+              <div className="pt-1">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    <Images className="w-3.5 h-3.5 text-[#FF5A36]" />
+                    <span>Attached Original Photos ({images.length}/{MAX_IMAGES})</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {images.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleClearAllImages}
+                        className="text-[11px] text-red-600 hover:text-red-700 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Clear All Photos</span>
+                      </button>
+                    )}
+                    {images.length === 0 && (
+                      <button
+                        type="button"
+                        onClick={handleAddSampleCategoryCover}
+                        className="text-[11px] text-[#FF5A36] hover:underline font-bold cursor-pointer"
+                      >
+                        + Use {category} Cover Photo
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Upload Buttons & URL Input */}
+                <div className="flex flex-col sm:flex-row gap-2 mb-3">
+                  <label className="cursor-pointer flex items-center justify-center gap-2 border-2 border-dashed border-[#FF5A36]/60 hover:border-[#FF5A36] rounded-xl py-2.5 px-4 text-xs font-bold text-gray-800 hover:text-[#FF5A36] transition-colors bg-orange-50/40 hover:bg-orange-50">
+                    {isUploadingImages ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-[#FF5A36]" />
+                    ) : (
+                      <UploadCloud className="w-4 h-4 text-[#FF5A36]" />
+                    )}
+                    <span>
+                      {isUploadingImages ? (uploadStatusText || 'Compressing & Adding...') : '+ Upload Photos from Device (Multi-Select)'}
+                    </span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      disabled={isUploadingImages || images.length >= MAX_IMAGES}
+                      onChange={handleMultipleFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <div className="flex-1 flex items-center gap-1.5">
+                    <input
+                      type="url"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddUrl();
+                        }
+                      }}
+                      disabled={images.length >= MAX_IMAGES}
+                      placeholder="Or paste photo link (https://...)"
+                      className="flex-1 px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none disabled:bg-gray-100"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleAddUrl()}
+                      disabled={!urlInput.trim() || images.length >= MAX_IMAGES}
+                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
+                    >
+                      Add URL
+                    </button>
+                  </div>
+                </div>
+
+                {/* Thumbnails Grid with EXPLICIT ADD and DELETE controls */}
+                {images.length > 0 ? (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-gray-50 p-2.5 rounded-2xl border border-gray-200">
+                      {images.map((img, idx) => (
+                        <div
+                          key={idx}
+                          className={`relative rounded-xl overflow-hidden aspect-4/3 bg-gray-900 border-2 transition-all group ${
+                            idx === 0
+                              ? 'border-[#FF5A36] shadow-sm ring-2 ring-[#FF5A36]/30'
+                              : idx === 1
+                              ? 'border-blue-500 shadow-xs'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <img
+                            src={img}
+                            alt={`Original Photo ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+
+                          {/* Image Sequence Badge: 1st Image (Cover), 2nd Image, etc. */}
+                          <div className="absolute top-1.5 left-1.5 z-10">
+                            {idx === 0 ? (
+                              <div className="bg-[#FF5A36] text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                                <Star className="w-2.5 h-2.5 fill-current" />
+                                <span>1st Image (Cover)</span>
+                              </div>
+                            ) : idx === 1 ? (
+                              <div className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md shadow-xs">
+                                2nd Image
+                              </div>
+                            ) : (
+                              <div className="bg-black/60 backdrop-blur-xs text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-md">
+                                #{idx + 1}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* ALWAYS-VISIBLE RED DELETE BUTTON (Easy tap on mobile & desktop) */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveImage(idx);
+                            }}
+                            className="absolute top-1.5 right-1.5 z-30 bg-rose-600 hover:bg-rose-700 text-white px-1.5 py-0.5 rounded-md text-[10px] font-bold shadow-md flex items-center gap-1 cursor-pointer transition-transform active:scale-95"
+                            title={`Delete photo #${idx + 1}`}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>Delete</span>
+                          </button>
+
+                          {/* Bottom Action Bar: Set as Cover & Order Controls */}
+                          <div className="absolute bottom-0 inset-x-0 bg-black/75 backdrop-blur-xs p-1 flex items-center justify-between text-white z-20">
+                            {idx > 0 ? (
+                              <button
+                                type="button"
+                                onClick={() => handleSetCover(idx)}
+                                className="text-[9px] font-bold bg-white text-gray-900 px-1.5 py-0.5 rounded hover:bg-orange-50 hover:text-[#FF5A36] transition-colors cursor-pointer"
+                                title="Make this photo 1st (Main cover)"
+                              >
+                                Make 1st
+                              </button>
+                            ) : (
+                              <span className="text-[9px] font-bold text-amber-300 pl-1">★ Main Cover</span>
+                            )}
+
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                disabled={idx === 0}
+                                onClick={() => handleMoveImage(idx, 'left')}
+                                className="w-5 h-5 rounded bg-white/20 hover:bg-white/40 disabled:opacity-20 disabled:cursor-not-allowed flex items-center justify-center text-white cursor-pointer"
+                                title="Move photo earlier"
+                              >
+                                <ChevronLeft className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={idx === images.length - 1}
+                                onClick={() => handleMoveImage(idx, 'right')}
+                                className="w-5 h-5 rounded bg-white/20 hover:bg-white/40 disabled:opacity-20 disabled:cursor-not-allowed flex items-center justify-center text-white cursor-pointer"
+                                title="Move photo later"
+                              >
+                                <ChevronRight className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Add More Slot in Grid */}
+                      {images.length < MAX_IMAGES && (
+                        <label className="cursor-pointer border-2 border-dashed border-[#FF5A36]/60 hover:border-[#FF5A36] rounded-xl flex flex-col items-center justify-center gap-1 aspect-4/3 text-[#FF5A36] hover:bg-orange-50/50 transition-colors bg-white">
+                          <Plus className="w-5 h-5" />
+                          <span className="text-[11px] font-bold">
+                            {images.length === 1 ? '+ Add 2nd Photo' : '+ Add Photo'}
+                          </span>
+                          <span className="text-[9px] text-gray-400">({MAX_IMAGES - images.length} left)</span>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            disabled={isUploadingImages}
+                            onChange={handleMultipleFileUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 px-1 text-[11px] text-gray-500">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span>
+                        Original images preserved: <strong>1st image</strong> is the primary cover, followed by <strong>2nd image</strong>. You can add or delete photos anytime before or after posting.
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3.5 bg-gray-50 rounded-xl border border-dashed border-gray-300 text-center flex flex-col items-center justify-center gap-1.5">
+                    <p className="text-xs text-gray-600 font-medium">
+                      No photos added yet. Upload your original photos (front, details, condition).
+                    </p>
+                    <p className="text-[11px] text-gray-400">
+                      Ads with original photos get up to 5x more buyer calls in Sri Lanka.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* District / Location (Placed towards the end before Facebook Media) */}
+              <div className="pt-1">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-[#FF5A36]" />
+                    <span>District / Base City <span className="text-[#FF5A36]">*</span></span>
+                  </label>
+                  <span className="text-[10px] text-gray-400">Sri Lanka (All 25 Districts)</span>
+                </div>
+                <select
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none bg-white cursor-pointer font-medium"
+                >
+                  {DISTRICTS.map((d) => (
+                    <option key={d} value={d}>
+                      {d} District
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Your ad will be searchable across this district and islandwide.
+                </p>
+              </div>
+
+              {/* Post to Facebook & Social Media Marketing (Placed LAST IN right before submit) */}
+              <div className="bg-gradient-to-r from-blue-50/90 via-sky-50/60 to-indigo-50/60 border border-blue-200/90 rounded-2xl p-3.5 shadow-2xs">
+                <div className="flex items-start gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#1877F2] text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                    <Facebook className="w-4 h-4 fill-current" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-gray-900">Post to Facebook & Social Media Flyer</span>
+                      <span className="text-[9px] bg-[#1877F2] text-white font-extrabold px-1.5 py-0.2 rounded-sm">Included Free</span>
+                    </div>
+                    <p className="text-[11px] text-gray-600 mt-0.5 leading-snug">
+                      Your original 1st and 2nd photos, price, and location in <strong>{location}</strong> will be prepared into a high-resolution Facebook Promo Flyer to share instantly across Facebook Groups, Marketplace & WhatsApp Status.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Admin Quality & Safety Notice */}
