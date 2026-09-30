@@ -12,6 +12,8 @@ import {
   Sliders,
   CheckCircle2,
   Film,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { HeroAd, HeroAdSettings } from '../types';
 import { DualToneHeading } from './DualToneHeading';
@@ -39,7 +41,9 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [isMuted, setIsMuted] = useState<boolean>(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const activeAds = (heroAds || []).filter((ad) => ad.isActive);
 
@@ -224,6 +228,102 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
               const styles = getGradientStyles(ad.gradientTheme);
               const isVideoAd = ad.mediaType === 'video' || Boolean(ad.bgVideo);
               const videoSource = isVideoAd ? (ad.bgVideo?.trim() || '/videos/motion-loop-3.mp4') : null;
+              const isOnlyVideo = isVideoAd && Boolean(ad.onlyVideoVisible || !ad.title || ad.title === 'Video Promotion');
+
+              // CLEAN VIDEO-ONLY AD DISPLAY (No text overlays, no dark scrims, full original video brilliance)
+              if (isOnlyVideo && videoSource) {
+                return (
+                  <motion.div
+                    key={ad.id}
+                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    onClick={() => {
+                      if (ad.ctaAction) handleCtaClick(ad.ctaAction);
+                    }}
+                    className={`w-full relative rounded-3xl border border-[#2D303E] bg-black overflow-hidden shadow-2xl flex items-center justify-center group ${
+                      ad.ctaAction ? 'cursor-pointer' : ''
+                    }`}
+                    style={{
+                      aspectRatio: ad.videoAspectRatio === '21:9' ? '21/9' : '16/9',
+                      maxHeight: '380px',
+                    }}
+                  >
+                    <video
+                      ref={videoRef}
+                      key={videoSource}
+                      src={videoSource}
+                      autoPlay
+                      loop
+                      muted={isMuted}
+                      playsInline
+                      preload="auto"
+                      className="w-full h-full object-cover rounded-3xl"
+                    />
+
+                    {/* Top-Left subtle badge if provided */}
+                    {ad.badge && (
+                      <div className="absolute top-3 left-3 z-20 pointer-events-none">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-black/70 backdrop-blur-md text-white border border-white/20 shadow-md">
+                          <Film className="w-3 h-3 text-[#FF5A36]" />
+                          <span>{ad.badge}</span>
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Interactive Sound Mute/Unmute Control */}
+                    <div className="absolute bottom-3 right-3 z-30 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const nextMuted = !isMuted;
+                          setIsMuted(nextMuted);
+                          if (videoRef.current) {
+                            videoRef.current.muted = nextMuted;
+                            if (!nextMuted) {
+                              videoRef.current.volume = 1;
+                              videoRef.current.play().catch(() => {});
+                            }
+                          }
+                        }}
+                        className="p-2 sm:px-3 sm:py-1.5 rounded-full bg-black/75 hover:bg-black text-white backdrop-blur-md border border-white/20 shadow-xl text-xs font-bold flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer"
+                        title={isMuted ? 'Click to Unmute Audio' : 'Click to Mute Audio'}
+                      >
+                        {isMuted ? (
+                          <>
+                            <VolumeX className="w-3.5 h-3.5 text-gray-300" />
+                            <span className="hidden sm:inline text-[10px]">Unmute</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-3.5 h-3.5 text-[#FF5A36] animate-pulse" />
+                            <span className="hidden sm:inline text-[10px] text-[#FF5A36]">Sound On</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Optional Floating CTA Pill in bottom-left if ctaText is set */}
+                    {ad.ctaText && (
+                      <div className="absolute bottom-3 left-3 z-20">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCtaClick(ad.ctaAction);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#FF5A36] hover:bg-[#E04826] text-white text-xs font-bold shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                        >
+                          <span>{ad.ctaText}</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              }
 
               return (
                 <motion.div

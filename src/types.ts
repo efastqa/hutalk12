@@ -183,6 +183,9 @@ export interface HeroAd {
   bgImage?: string; // optional background graphic
   bgVideo?: string; // optional background animated video (mp4, webm, or animated loop)
   mediaType?: 'image' | 'video'; // media type for hero ad background
+  onlyVideoVisible?: boolean; // When true, displays ONLY the pure clean video without text overlays, badges, or dark scrims!
+  videoAspectRatio?: '16:9' | '21:9' | 'auto'; // Aspect ratio for video banner display
+  enableSound?: boolean; // Whether viewers can toggle audio on the video ad
   gradientTheme?: 'orange' | 'blue' | 'emerald' | 'purple' | 'amber';
   animationType?: HeroAnimationType;
   isActive: boolean;

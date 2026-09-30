@@ -120,6 +120,8 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
   const [formBgImage, setFormBgImage] = useState<string>('');
   const [formBgVideo, setFormBgVideo] = useState<string>('');
   const [formMediaType, setFormMediaType] = useState<'image' | 'video'>('image');
+  const [formOnlyVideoVisible, setFormOnlyVideoVisible] = useState<boolean>(false);
+  const [formVideoAspectRatio, setFormVideoAspectRatio] = useState<'16:9' | '21:9' | 'auto'>('16:9');
   const [formTheme, setFormTheme] = useState<'orange' | 'blue' | 'emerald' | 'purple' | 'amber'>('orange');
   const [formAnimation, setFormAnimation] = useState<HeroAnimationType>('pulse');
   const [formIsActive, setFormIsActive] = useState<boolean>(true);
@@ -170,7 +172,31 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
     setFormBgImage('');
     setFormBgVideo('');
     setFormMediaType('video');
+    setFormOnlyVideoVisible(false);
+    setFormVideoAspectRatio('16:9');
     setCustomMediaUrl('');
+    setFormTheme('orange');
+    setFormAnimation('pulse');
+    setFormIsActive(true);
+    setFormError('');
+    setIsModalOpen(true);
+  };
+
+  // Pure Video-Only Ad (Clean, no text overlays, no dark scrims)
+  const openAddVideoOnlyModal = () => {
+    setEditingAdId(null);
+    setFormBadge('🎬 Featured Video');
+    setFormTitle('Video Promotion');
+    setFormHighlight('');
+    setFormSubtitle('High-definition pure video advertisement');
+    setFormCtaText('');
+    setFormCtaAction('');
+    setFormBgImage('');
+    setFormBgVideo('/videos/motion-loop-3.mp4');
+    setFormMediaType('video');
+    setFormOnlyVideoVisible(true);
+    setFormVideoAspectRatio('16:9');
+    setCustomMediaUrl('/videos/motion-loop-3.mp4');
     setFormTheme('orange');
     setFormAnimation('pulse');
     setFormIsActive(true);
@@ -189,6 +215,8 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
     setFormBgImage(ad.bgImage || '');
     setFormBgVideo(ad.bgVideo || '');
     setFormMediaType(ad.mediaType || (ad.bgVideo ? 'video' : 'image'));
+    setFormOnlyVideoVisible(Boolean(ad.onlyVideoVisible || (!ad.title || ad.title === 'Video Promotion')));
+    setFormVideoAspectRatio(ad.videoAspectRatio || '16:9');
     setCustomMediaUrl(ad.bgVideo || ad.bgImage || '');
     setFormTheme(ad.gradientTheme || 'orange');
     setFormAnimation(ad.animationType || 'slide');
@@ -257,7 +285,12 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formTitle.trim() || !formSubtitle.trim()) {
+
+    const isPureVideoAd = formMediaType === 'video' && formOnlyVideoVisible;
+    const finalTitle = isPureVideoAd ? (formTitle.trim() || 'Video Promotion') : formTitle.trim();
+    const finalSubtitle = isPureVideoAd ? (formSubtitle.trim() || 'High-definition video advertisement') : formSubtitle.trim();
+
+    if (!isPureVideoAd && (!finalTitle || !finalSubtitle)) {
       setFormError('Please enter both a Headline and a Subtitle.');
       return;
     }
@@ -271,14 +304,16 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
 
     const payload: Partial<HeroAd> = {
       badge: formBadge.trim(),
-      title: formTitle.trim(),
+      title: finalTitle,
       highlightText: formHighlight.trim() || undefined,
-      subtitle: formSubtitle.trim(),
+      subtitle: finalSubtitle,
       ctaText: formCtaText.trim() || undefined,
       ctaAction: formCtaAction.trim() || undefined,
       bgImage: formMediaType === 'image' ? (formBgImage.trim() || undefined) : undefined,
       bgVideo: finalBgVideo,
       mediaType: formMediaType,
+      onlyVideoVisible: formMediaType === 'video' ? formOnlyVideoVisible : false,
+      videoAspectRatio: formVideoAspectRatio,
       gradientTheme: formTheme,
       animationType: formAnimation,
       isActive: formIsActive,
@@ -317,14 +352,25 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={openAddModal}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF5A36] hover:bg-[#E04826] text-white font-extrabold text-xs sm:text-sm shadow-md transition-all cursor-pointer shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Create New Animated Ad</span>
-          </button>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <button
+              type="button"
+              onClick={openAddVideoOnlyModal}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs sm:text-sm shadow-md transition-all cursor-pointer shrink-0"
+              title="Create a clean video advertisement where only the video is visible without text overlays"
+            >
+              <Film className="w-4 h-4" />
+              <span>+ Clean Video Ad (Only Video)</span>
+            </button>
+            <button
+              type="button"
+              onClick={openAddModal}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF5A36] hover:bg-[#E04826] text-white font-extrabold text-xs sm:text-sm shadow-md transition-all cursor-pointer shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create Animated Ad</span>
+            </button>
+          </div>
         </div>
 
         {/* Mode Selector Cards */}
@@ -430,6 +476,67 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Video Ads & Size Specifications Guide Box */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-50 via-indigo-50 to-orange-50 border border-purple-200/80">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-600 text-white text-[11px] font-black shadow-xs">
+                <Film className="w-3 h-3" />
+                <span>Video Ads & Supported Sizes Guide</span>
+              </div>
+              <h3 className="text-sm font-black text-gray-900">
+                How to update video ads in this hero banner spot & which sizes are supported:
+              </h3>
+              <p className="text-xs text-gray-600">
+                You can display clean, edge-to-edge video ads with <strong>only the video visible</strong> (no text overlays, no dark scrims, full original brilliance).
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={openAddVideoOnlyModal}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs shadow-sm transition-all cursor-pointer shrink-0"
+            >
+              <Film className="w-3.5 h-3.5" />
+              <span>Upload Video Ad Now</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 pt-3 border-t border-purple-200/60 text-xs">
+            <div className="bg-white/90 rounded-xl p-3 border border-purple-100 shadow-2xs space-y-1">
+              <div className="font-bold text-purple-950 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-purple-600" />
+                <span>1. Supported Video Sizes & Ratio</span>
+              </div>
+              <p className="text-[11px] text-gray-600 leading-relaxed">
+                • <strong>16:9 Widescreen (1920×1080 / 1280×720)</strong>: Best for standard horizontal commercial videos.<br />
+                • <strong>21:9 Ultra-Wide (2560×1080)</strong>: Best for panoramic cinematic hero ribbons.
+              </p>
+            </div>
+
+            <div className="bg-white/90 rounded-xl p-3 border border-purple-100 shadow-2xs space-y-1">
+              <div className="font-bold text-indigo-950 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                <span>2. Supported Formats & File Limit</span>
+              </div>
+              <p className="text-[11px] text-gray-600 leading-relaxed">
+                • <strong>Formats</strong>: MP4 (H.264), WebM, OGG, direct video links.<br />
+                • <strong>File size</strong>: Up to <strong>30 MB</strong> for direct file uploads, or <strong>unlimited size</strong> by pasting a direct hosted video URL link.
+              </p>
+            </div>
+
+            <div className="bg-white/90 rounded-xl p-3 border border-purple-100 shadow-2xs space-y-1">
+              <div className="font-bold text-emerald-950 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                <span>3. "Only Video Visible" Feature</span>
+              </div>
+              <p className="text-[11px] text-gray-600 leading-relaxed">
+                When enabled, hides all headlines, subtitles, and dark background scrims so <strong>ONLY the pure original video</strong> is visible on the live marketplace with sound controls.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 2. Interactive Live Preview */}
@@ -520,7 +627,12 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
                         <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[10px] font-bold">
                           {ad.badge}
                         </div>
-                        {ad.mediaType === 'video' || ad.bgVideo ? (
+                        {ad.onlyVideoVisible ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-600 text-white text-[10px] font-black shadow-2xs">
+                            <Film className="w-2.5 h-2.5" />
+                            <span>Only Video Visible ({ad.videoAspectRatio || '16:9'})</span>
+                          </span>
+                        ) : ad.mediaType === 'video' || ad.bgVideo ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-[10px] font-bold">
                             <Film className="w-2.5 h-2.5 text-purple-600" />
                             <span>Animation Video</span>
@@ -661,14 +773,22 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
               {/* Main Headline */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
-                  Main Headline <span className="text-red-500">*</span>
+                  Main Headline {!(formMediaType === 'video' && formOnlyVideoVisible) ? (
+                    <span className="text-red-500">*</span>
+                  ) : (
+                    <span className="text-purple-600 text-[10px] font-bold ml-1.5">(Optional - hidden in video-only mode)</span>
+                  )}
                 </label>
                 <input
                   type="text"
-                  required
+                  required={!(formMediaType === 'video' && formOnlyVideoVisible)}
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="e.g. Sell Your Vehicle or Property in 24 Hours"
+                  placeholder={
+                    formMediaType === 'video' && formOnlyVideoVisible
+                      ? 'Video Promotion (internal admin label)'
+                      : 'e.g. Sell Your Vehicle or Property in 24 Hours'
+                  }
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-bold focus:border-[#FF5A36] outline-none"
                 />
               </div>
@@ -690,14 +810,22 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
               {/* Subtitle / Details */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
-                  Subtitle / Description <span className="text-red-500">*</span>
+                  Subtitle / Description {!(formMediaType === 'video' && formOnlyVideoVisible) ? (
+                    <span className="text-red-500">*</span>
+                  ) : (
+                    <span className="text-purple-600 text-[10px] font-bold ml-1.5">(Optional - hidden in video-only mode)</span>
+                  )}
                 </label>
                 <textarea
                   rows={2}
-                  required
+                  required={!(formMediaType === 'video' && formOnlyVideoVisible)}
                   value={formSubtitle}
                   onChange={(e) => setFormSubtitle(e.target.value)}
-                  placeholder="Direct WhatsApp inquiries from thousands of verified buyers across all 25 districts with zero broker fees."
+                  placeholder={
+                    formMediaType === 'video' && formOnlyVideoVisible
+                      ? 'High-definition video ad (internal label)'
+                      : 'Direct WhatsApp inquiries from thousands of verified buyers across all 25 districts with zero broker fees.'
+                  }
                   className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-xs focus:border-[#FF5A36] outline-none resize-none"
                 />
               </div>
@@ -817,6 +945,61 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
                 {/* ANIMATION VIDEO MODE */}
                 {formMediaType === 'video' && (
                   <div className="space-y-3 pt-1">
+                    {/* Clean Video-Only Mode Toggle */}
+                    <div className="p-3.5 rounded-xl border border-purple-200 bg-white space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formOnlyVideoVisible}
+                            onChange={(e) => setFormOnlyVideoVisible(e.target.checked)}
+                            className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 cursor-pointer"
+                          />
+                          <span className="text-xs font-black text-gray-900 flex items-center gap-1.5">
+                            <Film className="w-3.5 h-3.5 text-purple-600" />
+                            <span>Only Video Visible (Clean Pure Video)</span>
+                          </span>
+                        </label>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                          {formOnlyVideoVisible ? 'Only Video' : 'Video with Overlays'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-500 leading-relaxed pl-6">
+                        When enabled, <strong>hides all text titles, badges, and dark scrims</strong>. Only the pure original video is displayed on the live marketplace with sound mute/unmute audio control!
+                      </p>
+                    </div>
+
+                    {/* Video Aspect Ratio Selector */}
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">
+                        Video Display Ratio & Size
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {[
+                          { value: '16:9', label: '16:9 Widescreen', desc: '1920×1080 / 1280×720 (Recommended)' },
+                          { value: '21:9', label: '21:9 Ultra-Wide', desc: '2560×1080 (Cinematic Banner)' },
+                          { value: 'auto', label: 'Auto Responsive', desc: 'Fits video native ratio' },
+                        ].map((ratio) => (
+                          <button
+                            key={ratio.value}
+                            type="button"
+                            onClick={() => setFormVideoAspectRatio(ratio.value as '16:9' | '21:9' | 'auto')}
+                            className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                              formVideoAspectRatio === ratio.value
+                                ? 'border-purple-600 bg-purple-50/60 ring-2 ring-purple-600/20'
+                                : 'border-gray-200 hover:border-gray-300 bg-white'
+                            }`}
+                          >
+                            <div className="text-xs font-bold text-gray-900">{ratio.label}</div>
+                            <div className="text-[10px] text-gray-500">{ratio.desc}</div>
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-1">
+                        Supports MP4, WebM, OGG up to 30MB file size, or direct video URL with unlimited size.
+                      </p>
+                    </div>
+
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-[11px] font-bold text-purple-900 flex items-center gap-1">
                         <Video className="w-3.5 h-3.5 text-purple-600" />

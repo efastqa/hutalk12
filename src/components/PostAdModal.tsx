@@ -29,6 +29,8 @@ import {
   Eye,
   Facebook,
   Share2,
+  Film,
+  Video,
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -244,6 +246,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
   // Multiple Images State
   const [images, setImages] = useState<string[]>([]);
   const [urlInput, setUrlInput] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [uploadStatusText, setUploadStatusText] = useState('');
 
@@ -291,6 +294,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       }
       setImages(initialImgs);
       setUrlInput('');
+      setVideoUrl(editingListing.videoUrl || '');
 
       setServiceTrade(editingListing.serviceTrade || 'AC Repair & Servicing');
       setPricingType(editingListing.pricingType || (editingListing.category === 'Services' ? 'starting_at' : 'fixed'));
@@ -308,6 +312,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       setDescription('');
       setImages([]);
       setUrlInput('');
+      setVideoUrl('');
       setServiceTrade('AC Repair & Servicing');
       setPricingType('starting_at');
       setServiceArea('Colombo & Greater Suburbs');
@@ -575,7 +580,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
         description: description.trim(),
         image: primaryImage,
         images: finalImages,
-        videoUrl: editingListing?.videoUrl,
+        videoUrl: videoUrl.trim() || undefined,
         userId: editingListing ? editingListing.userId : (currentUser ? currentUser.id : 'guest'),
         pricingType: isService ? pricingType : (isNegotiable ? 'negotiable' : 'fixed'),
         ...(isService && serviceTrade ? { serviceTrade } : {}),
@@ -1338,6 +1343,32 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                     </p>
                   </div>
                 )}
+              </div>
+
+              {/* Optional Video Ad / Walkthrough (YouTube, MP4, WebM) */}
+              <div className="bg-purple-50/50 rounded-2xl p-3.5 border border-purple-200/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                    <Film className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Video Ad or Walkthrough Clip</span>
+                    <span className="text-[10px] font-normal text-gray-500">(Optional)</span>
+                  </label>
+                  <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                    16:9 / MP4 / YouTube
+                  </span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="url"
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="e.g. https://www.youtube.com/watch?v=... or direct .mp4/.webm video link"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-xs focus:border-purple-600 outline-none bg-white font-medium"
+                  />
+                </div>
+                <p className="text-[11px] text-gray-500 leading-relaxed">
+                  Supported formats: <strong>YouTube links, MP4, WebM</strong>. Optimal size: <strong>16:9 widescreen (1920×1080 or 1280×720)</strong>. Gives buyers a realistic 360° video inspection of your vehicle or property.
+                </p>
               </div>
 
               {/* District / Location (Placed towards the end before Facebook Media) */}

@@ -118,6 +118,9 @@ interface HeroAd {
   bgImage?: string;
   bgVideo?: string;
   mediaType?: 'image' | 'video';
+  onlyVideoVisible?: boolean;
+  videoAspectRatio?: '16:9' | '21:9' | 'auto';
+  enableSound?: boolean;
   gradientTheme?: 'orange' | 'blue' | 'emerald' | 'purple' | 'amber';
   animationType?: 'slide' | 'fade' | 'pulse' | 'glow';
   isActive: boolean;
@@ -1644,23 +1647,33 @@ async function startServer() {
       gradientTheme,
       animationType,
       isActive,
+      onlyVideoVisible,
+      videoAspectRatio,
+      enableSound,
     } = req.body;
 
-    if (!title || !subtitle) {
+    const isCleanVideo = Boolean(onlyVideoVisible);
+    const finalTitle = String(title || (isCleanVideo ? 'Video Promotion' : '')).trim();
+    const finalSubtitle = String(subtitle || (isCleanVideo ? 'Clean Video Ad' : '')).trim();
+
+    if (!isCleanVideo && (!finalTitle || !finalSubtitle)) {
       return res.status(400).json({ error: 'Title and subtitle are required for hero ad' });
     }
 
     const newAd: HeroAd = {
       id: `hero-ad-${Date.now()}`,
-      badge: String(badge || 'Sponsored Promotion').trim(),
-      title: String(title).trim(),
+      badge: String(badge || (isCleanVideo ? 'Sponsored Video' : 'Sponsored Promotion')).trim(),
+      title: finalTitle,
       highlightText: highlightText ? String(highlightText).trim() : undefined,
-      subtitle: String(subtitle).trim(),
+      subtitle: finalSubtitle,
       ctaText: ctaText ? String(ctaText).trim() : undefined,
       ctaAction: ctaAction ? String(ctaAction).trim() : undefined,
       bgImage: bgImage ? String(bgImage).trim() : undefined,
       bgVideo: bgVideo ? String(bgVideo).trim() : undefined,
-      mediaType: mediaType === 'video' || (bgVideo && !bgImage) ? 'video' : 'image',
+      mediaType: mediaType === 'video' || (bgVideo && !bgImage) || isCleanVideo ? 'video' : 'image',
+      onlyVideoVisible: Boolean(onlyVideoVisible),
+      videoAspectRatio: videoAspectRatio || '16:9',
+      enableSound: Boolean(enableSound),
       gradientTheme: gradientTheme || 'orange',
       animationType: animationType || 'slide',
       isActive: isActive !== undefined ? Boolean(isActive) : true,
@@ -1693,6 +1706,9 @@ async function startServer() {
       gradientTheme,
       animationType,
       isActive,
+      onlyVideoVisible,
+      videoAspectRatio,
+      enableSound,
     } = req.body;
 
     heroAdsDataCache.ads[index] = {
@@ -1706,6 +1722,9 @@ async function startServer() {
       bgImage: bgImage !== undefined ? String(bgImage).trim() : existing.bgImage,
       bgVideo: bgVideo !== undefined ? String(bgVideo).trim() : existing.bgVideo,
       mediaType: mediaType !== undefined ? mediaType : (bgVideo ? 'video' : existing.mediaType || 'image'),
+      onlyVideoVisible: onlyVideoVisible !== undefined ? Boolean(onlyVideoVisible) : existing.onlyVideoVisible,
+      videoAspectRatio: videoAspectRatio !== undefined ? videoAspectRatio : existing.videoAspectRatio,
+      enableSound: enableSound !== undefined ? Boolean(enableSound) : existing.enableSound,
       gradientTheme: gradientTheme !== undefined ? gradientTheme : existing.gradientTheme,
       animationType: animationType !== undefined ? animationType : existing.animationType,
       isActive: isActive !== undefined ? Boolean(isActive) : existing.isActive,
