@@ -242,16 +242,31 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
                     onClick={() => {
                       if (ad.ctaAction) handleCtaClick(ad.ctaAction);
                     }}
-                    className={`w-full relative rounded-3xl border border-[#2D303E] bg-black overflow-hidden shadow-2xl flex items-center justify-center group ${
+                    className={`w-full relative rounded-2xl sm:rounded-3xl border border-[#2D303E] bg-black overflow-hidden shadow-2xl flex items-center justify-center group ${
                       ad.ctaAction ? 'cursor-pointer' : ''
                     }`}
                     style={{
                       aspectRatio: ad.videoAspectRatio === '21:9' ? '21/9' : '16/9',
                       maxHeight: '380px',
+                      minHeight: '180px',
                     }}
                   >
                     <video
-                      ref={videoRef}
+                      ref={(el) => {
+                        videoRef.current = el;
+                        if (el) {
+                          el.defaultMuted = isMuted;
+                          el.muted = isMuted;
+                          el.setAttribute('playsinline', '');
+                          el.setAttribute('webkit-playsinline', 'true');
+                          const playPromise = el.play();
+                          if (playPromise !== undefined) {
+                            playPromise.catch(() => {
+                              // Autoplay policy fallback: waiting for user interaction
+                            });
+                          }
+                        }
+                      }}
                       key={videoSource}
                       src={videoSource}
                       autoPlay
@@ -259,7 +274,7 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
                       muted={isMuted}
                       playsInline
                       preload="auto"
-                      className="w-full h-full object-cover rounded-3xl"
+                      className="w-full h-full object-cover rounded-2xl sm:rounded-3xl"
                     />
 
                     {/* Top-Left subtle badge if provided */}
@@ -342,6 +357,8 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
                           if (el) {
                             el.defaultMuted = true;
                             el.muted = true;
+                            el.setAttribute('playsinline', '');
+                            el.setAttribute('webkit-playsinline', 'true');
                             el.play().catch(() => {});
                           }
                         }}

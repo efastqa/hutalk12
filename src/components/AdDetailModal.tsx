@@ -264,10 +264,17 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
               {isVideoActive && listing.videoUrl ? (
                 <div className="relative w-full h-full bg-black flex items-center justify-center">
                   <video
+                    ref={(el) => {
+                      if (el) {
+                        el.setAttribute('playsinline', '');
+                        el.setAttribute('webkit-playsinline', 'true');
+                      }
+                    }}
                     src={listing.videoUrl}
                     controls
                     autoPlay
                     playsInline
+                    preload="metadata"
                     className="w-full h-full object-contain"
                   />
                   <div className="absolute top-3 left-3 bg-purple-900/80 backdrop-blur-xs text-white text-[11px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 border border-purple-500/30">
