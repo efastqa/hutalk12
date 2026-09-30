@@ -45,6 +45,22 @@ interface Listing {
   availabilityStatus?: 'available' | 'reserved' | 'sold';
   sellerRating?: number;
   reviewCount?: number;
+  itemCondition?: string;
+  brand?: string;
+  model?: string;
+  vehicleType?: string;
+  vehicleYear?: number | string;
+  vehicleMileage?: number | string;
+  fuelType?: string;
+  transmission?: string;
+  propertyType?: string;
+  propertySize?: string;
+  bedrooms?: number | string;
+  bathrooms?: number | string;
+  electronicsSubcategory?: string;
+  storageCapacity?: string;
+  jobType?: string;
+  salaryPeriod?: string;
 }
 
 interface ListingReview {

@@ -32,6 +32,11 @@ import {
   Play,
   AlertTriangle,
   CheckCircle2,
+  Car,
+  Home,
+  Briefcase,
+  Fuel,
+  Gauge,
 } from 'lucide-react';
 import { formatLKR } from './ListingsSection';
 import { downloadImage } from '../utils/downloadHelper';
@@ -598,6 +603,136 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                   </span>
                 )}
               </div>
+
+              {/* Custom Category Specifications Grid */}
+              {(listing.vehicleYear ||
+                listing.fuelType ||
+                listing.transmission ||
+                listing.vehicleMileage ||
+                listing.vehicleType ||
+                listing.propertyType ||
+                listing.bedrooms ||
+                listing.bathrooms ||
+                listing.propertySize ||
+                listing.electronicsSubcategory ||
+                listing.storageCapacity ||
+                listing.jobType ||
+                listing.itemCondition ||
+                listing.brand ||
+                listing.model) && (
+                <div className="my-3 p-3.5 bg-gray-50/90 rounded-2xl border border-gray-200/80 space-y-2.5">
+                  <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center justify-between">
+                    <span>Key Specifications & Highlights</span>
+                    <span className="text-[10px] text-gray-400 font-normal">Verified Specs</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {/* Vehicle Specs */}
+                    {listing.brand && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Brand / Make</span>
+                        <span className="text-xs font-bold text-gray-900">{listing.brand}</span>
+                      </div>
+                    )}
+                    {listing.model && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Model</span>
+                        <span className="text-xs font-bold text-gray-900">{listing.model}</span>
+                      </div>
+                    )}
+                    {listing.vehicleYear && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Year</span>
+                        <span className="text-xs font-bold text-gray-900">{listing.vehicleYear}</span>
+                      </div>
+                    )}
+                    {listing.fuelType && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Fuel Type</span>
+                        <span className="text-xs font-bold text-gray-900">{listing.fuelType}</span>
+                      </div>
+                    )}
+                    {listing.transmission && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Transmission</span>
+                        <span className="text-xs font-bold text-gray-900">{listing.transmission}</span>
+                      </div>
+                    )}
+                    {listing.vehicleMileage && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Mileage</span>
+                        <span className="text-xs font-bold text-gray-900">{Number(listing.vehicleMileage).toLocaleString()} km</span>
+                      </div>
+                    )}
+                    {listing.vehicleType && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Vehicle Type</span>
+                        <span className="text-xs font-bold text-gray-900">{listing.vehicleType}</span>
+                      </div>
+                    )}
+
+                    {/* Property Specs */}
+                    {listing.propertyType && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Property Type</span>
+                        <span className="text-xs font-bold text-gray-900">{listing.propertyType}</span>
+                      </div>
+                    )}
+                    {listing.bedrooms !== undefined && listing.bedrooms !== '' && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Bedrooms</span>
+                        <span className="text-xs font-bold text-gray-900">{listing.bedrooms} Beds</span>
+                      </div>
+                    )}
+                    {listing.bathrooms !== undefined && listing.bathrooms !== '' && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Bathrooms</span>
+                        <span className="text-xs font-bold text-gray-900">{listing.bathrooms} Baths</span>
+                      </div>
+                    )}
+                    {listing.propertySize && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Size / Area</span>
+                        <span className="text-xs font-bold text-gray-900">{listing.propertySize}</span>
+                      </div>
+                    )}
+
+                    {/* Electronics & Other */}
+                    {listing.electronicsSubcategory && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Device Type</span>
+                        <span className="text-xs font-bold text-gray-900">{listing.electronicsSubcategory}</span>
+                      </div>
+                    )}
+                    {listing.storageCapacity && listing.storageCapacity !== 'N/A' && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Storage Capacity</span>
+                        <span className="text-xs font-bold text-gray-900">{listing.storageCapacity}</span>
+                      </div>
+                    )}
+                    {listing.itemCondition && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Condition</span>
+                        <span className="text-xs font-bold text-gray-900">{listing.itemCondition}</span>
+                      </div>
+                    )}
+
+                    {/* Jobs */}
+                    {listing.jobType && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Job Type</span>
+                        <span className="text-xs font-bold text-gray-900">{listing.jobType}</span>
+                      </div>
+                    )}
+                    {listing.salaryPeriod && (
+                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Payment Basis</span>
+                        <span className="text-xs font-bold text-gray-900">{listing.salaryPeriod}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Description */}
               <div className="border-t border-b border-gray-100 py-3.5 my-3">

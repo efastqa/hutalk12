@@ -31,6 +31,9 @@ import {
   Share2,
   Film,
   Video,
+  Car,
+  Home,
+  Briefcase,
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -218,6 +221,77 @@ const DISTRICTS = [
   'Kegalle',
 ];
 
+const POPULAR_VEHICLE_BRANDS = [
+  'Toyota',
+  'Honda',
+  'Nissan',
+  'Suzuki',
+  'Mitsubishi',
+  'Bajaj',
+  'Yamaha',
+  'TVS',
+  'Hyundai',
+  'Kia',
+  'Mercedes-Benz',
+  'BMW',
+  'Tata',
+  'Mahindra',
+  'Mazda',
+  'Land Rover',
+  'Other Brand',
+];
+
+const FUEL_TYPES = ['Petrol', 'Diesel', 'Hybrid', 'Electric'];
+const TRANSMISSIONS = ['Automatic', 'Manual', 'Tiptronic'];
+const VEHICLE_BODY_TYPES = [
+  'Car',
+  'SUV / Jeep',
+  'Van',
+  'Motorcycle',
+  'Scooter',
+  'Three-Wheeler',
+  'Lorry / Truck',
+  'Bus',
+  'Other',
+];
+
+const PROPERTY_TYPES = [
+  'House for Sale',
+  'House for Rent',
+  'Land / Perches',
+  'Apartment for Sale',
+  'Apartment for Rent',
+  'Commercial Property',
+  'Room / Annex for Rent',
+  'Villa / Holiday Home',
+];
+const BEDROOM_OPTIONS = ['1', '2', '3', '4', '5+'];
+const BATHROOM_OPTIONS = ['1', '2', '3', '4+'];
+
+const ELECTRONICS_SUBCATEGORIES = [
+  'Mobile Phones & Smartphones',
+  'Laptops & MacBooks',
+  'Desktop Computers & PCs',
+  'TVs & Home Entertainment',
+  'Cameras & Optics',
+  'Audio & Headphones',
+  'Tablets & iPads',
+  'Smartwatches & Wearables',
+  'Gaming & Consoles',
+  'Computer & Phone Accessories',
+];
+const ITEM_CONDITIONS = ['Brand New', 'Used - Like New', 'Used - Good', 'Used - Fair', 'Refurbished'];
+const STORAGE_CAPACITIES = ['32GB', '64GB', '128GB', '256GB', '512GB', '1TB', '2TB', 'N/A'];
+
+const JOB_TYPES = [
+  'Full-time',
+  'Part-time',
+  'Contract / Freelance',
+  'Remote / Work From Home',
+  'Internship',
+];
+const SALARY_PERIODS = ['Monthly', 'Weekly', 'Hourly', 'Project / Negotiable'];
+
 export const PostAdModal: React.FC<PostAdModalProps> = ({
   isOpen,
   onClose,
@@ -255,6 +329,27 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
   const [pricingType, setPricingType] = useState<'fixed' | 'starting_at' | 'hourly' | 'quote'>('starting_at');
   const [serviceArea, setServiceArea] = useState('Colombo & Greater Suburbs');
   const [isEmergency247, setIsEmergency247] = useState(false);
+
+  // Custom Category Fields State
+  const [brand, setBrand] = useState('');
+  const [model, setModel] = useState('');
+  const [vehicleType, setVehicleType] = useState('Car');
+  const [vehicleYear, setVehicleYear] = useState('');
+  const [vehicleMileage, setVehicleMileage] = useState('');
+  const [fuelType, setFuelType] = useState('Petrol');
+  const [transmission, setTransmission] = useState('Automatic');
+
+  const [propertyType, setPropertyType] = useState('House for Sale');
+  const [propertySize, setPropertySize] = useState('');
+  const [bedrooms, setBedrooms] = useState('3');
+  const [bathrooms, setBathrooms] = useState('2');
+
+  const [electronicsSubcategory, setElectronicsSubcategory] = useState('Mobile Phones & Smartphones');
+  const [itemCondition, setItemCondition] = useState('Brand New');
+  const [storageCapacity, setStorageCapacity] = useState('128GB');
+
+  const [jobType, setJobType] = useState('Full-time');
+  const [salaryPeriod, setSalaryPeriod] = useState('Monthly');
 
   // Submission & Validation States
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -300,6 +395,27 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       setPricingType(editingListing.pricingType || (editingListing.category === 'Services' ? 'starting_at' : 'fixed'));
       setServiceArea(editingListing.serviceArea || 'Colombo & Greater Suburbs');
       setIsEmergency247(Boolean(editingListing.isEmergency247));
+
+      // Custom Category Fields initialization
+      setBrand(editingListing.brand || '');
+      setModel(editingListing.model || '');
+      setVehicleType(editingListing.vehicleType || (editingListing.category === 'Motorcycles' ? 'Motorcycle' : 'Car'));
+      setVehicleYear(editingListing.vehicleYear ? String(editingListing.vehicleYear) : '');
+      setVehicleMileage(editingListing.vehicleMileage ? String(editingListing.vehicleMileage) : '');
+      setFuelType((editingListing.fuelType as any) || 'Petrol');
+      setTransmission((editingListing.transmission as any) || 'Automatic');
+
+      setPropertyType((editingListing.propertyType as any) || 'House for Sale');
+      setPropertySize(editingListing.propertySize || '');
+      setBedrooms(editingListing.bedrooms ? String(editingListing.bedrooms) : '3');
+      setBathrooms(editingListing.bathrooms ? String(editingListing.bathrooms) : '2');
+
+      setElectronicsSubcategory(editingListing.electronicsSubcategory || 'Mobile Phones & Smartphones');
+      setItemCondition(editingListing.itemCondition || 'Brand New');
+      setStorageCapacity(editingListing.storageCapacity || '128GB');
+
+      setJobType((editingListing.jobType as any) || 'Full-time');
+      setSalaryPeriod(editingListing.salaryPeriod || 'Monthly');
     } else {
       // New Ad Defaults
       setTitle('');
@@ -317,6 +433,27 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       setPricingType('starting_at');
       setServiceArea('Colombo & Greater Suburbs');
       setIsEmergency247(false);
+
+      // Custom Category Fields reset
+      setBrand('');
+      setModel('');
+      setVehicleType('Car');
+      setVehicleYear('');
+      setVehicleMileage('');
+      setFuelType('Petrol');
+      setTransmission('Automatic');
+
+      setPropertyType('House for Sale');
+      setPropertySize('');
+      setBedrooms('3');
+      setBathrooms('2');
+
+      setElectronicsSubcategory('Mobile Phones & Smartphones');
+      setItemCondition('Brand New');
+      setStorageCapacity('128GB');
+
+      setJobType('Full-time');
+      setSalaryPeriod('Monthly');
     }
   }, [editingListing, isOpen, initialCategory, initialDistrict, currentUser]);
 
@@ -586,6 +723,33 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
         ...(isService && serviceTrade ? { serviceTrade } : {}),
         ...(isService && serviceArea ? { serviceArea } : {}),
         ...(isService ? { isEmergency247: Boolean(isEmergency247) } : {}),
+        ...(category === 'Vehicles' || category === 'Motorcycles' ? {
+          brand: brand.trim() || undefined,
+          model: model.trim() || undefined,
+          vehicleType: vehicleType || undefined,
+          vehicleYear: vehicleYear.trim() ? Number(vehicleYear) || vehicleYear.trim() : undefined,
+          vehicleMileage: vehicleMileage.trim() ? Number(vehicleMileage) || vehicleMileage.trim() : undefined,
+          fuelType: fuelType || undefined,
+          transmission: transmission || undefined,
+          itemCondition: itemCondition || undefined,
+        } : {}),
+        ...(category === 'Property' ? {
+          propertyType: propertyType || undefined,
+          propertySize: propertySize.trim() || undefined,
+          bedrooms: bedrooms ? Number(bedrooms) || bedrooms : undefined,
+          bathrooms: bathrooms ? Number(bathrooms) || bathrooms : undefined,
+        } : {}),
+        ...(category === 'Electronics' || category === 'Home & Garden' || category === 'Fashion' ? {
+          brand: brand.trim() || undefined,
+          model: model.trim() || undefined,
+          electronicsSubcategory: category === 'Electronics' ? electronicsSubcategory : undefined,
+          itemCondition: itemCondition || undefined,
+          storageCapacity: category === 'Electronics' ? storageCapacity : undefined,
+        } : {}),
+        ...(category === 'Jobs' ? {
+          jobType: jobType || undefined,
+          salaryPeriod: salaryPeriod || undefined,
+        } : {}),
         ...(isAdminLoggedIn ? { isAdminLoggedIn: true } : {}),
         ...(editingListing ? {
           status: editingListing.status,
@@ -963,6 +1127,406 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                       </span>
                     </div>
                   </label>
+                </div>
+              )}
+
+              {/* Custom Category Fields: Vehicles & Motorcycles */}
+              {(category === 'Vehicles' || category === 'Motorcycles') && (
+                <div className="p-3.5 sm:p-4 bg-gradient-to-br from-amber-50/70 to-orange-50/40 rounded-2xl border border-amber-200/80 space-y-3.5 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                      <Car className="w-4 h-4 text-[#FF5A36]" />
+                      <span>Vehicle Specifications (Specific Buyer Search Filters)</span>
+                    </span>
+                    <span className="text-[10px] text-amber-800 bg-amber-100 font-bold px-2 py-0.5 rounded-md">
+                      Auto Specs
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {/* Vehicle Body Type */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Body / Vehicle Type
+                      </label>
+                      <select
+                        value={vehicleType}
+                        onChange={(e) => setVehicleType(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      >
+                        {VEHICLE_BODY_TYPES.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Brand / Make */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Brand / Make
+                      </label>
+                      <select
+                        value={brand}
+                        onChange={(e) => setBrand(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      >
+                        <option value="">-- Select Brand --</option>
+                        {POPULAR_VEHICLE_BRANDS.map((b) => (
+                          <option key={b} value={b}>{b}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Model */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Model
+                      </label>
+                      <input
+                        type="text"
+                        value={model}
+                        onChange={(e) => setModel(e.target.value)}
+                        placeholder="e.g. Prius, Axio, Pulsar, Alto"
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    {/* Manufactured Year */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Year
+                      </label>
+                      <input
+                        type="number"
+                        min="1970"
+                        max="2027"
+                        value={vehicleYear}
+                        onChange={(e) => setVehicleYear(e.target.value)}
+                        placeholder="e.g. 2020"
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      />
+                    </div>
+
+                    {/* Mileage */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Mileage (km)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={vehicleMileage}
+                        onChange={(e) => setVehicleMileage(e.target.value)}
+                        placeholder="e.g. 45000"
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      />
+                    </div>
+
+                    {/* Fuel Type */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Fuel Type
+                      </label>
+                      <select
+                        value={fuelType}
+                        onChange={(e) => setFuelType(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      >
+                        {FUEL_TYPES.map((f) => (
+                          <option key={f} value={f}>{f}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Transmission */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Transmission
+                      </label>
+                      <select
+                        value={transmission}
+                        onChange={(e) => setTransmission(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      >
+                        {TRANSMISSIONS.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Custom Category Fields: Property */}
+              {category === 'Property' && (
+                <div className="p-3.5 sm:p-4 bg-gradient-to-br from-emerald-50/70 to-teal-50/40 rounded-2xl border border-emerald-200/80 space-y-3.5 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                      <Home className="w-4 h-4 text-emerald-600" />
+                      <span>Property & Real Estate Specifications</span>
+                    </span>
+                    <span className="text-[10px] text-emerald-800 bg-emerald-100 font-bold px-2 py-0.5 rounded-md">
+                      Property Specs
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {/* Property Type */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Property Type
+                      </label>
+                      <select
+                        value={propertyType}
+                        onChange={(e) => setPropertyType(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      >
+                        {PROPERTY_TYPES.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Land / Floor Size */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Land Size or Floor Area
+                      </label>
+                      <input
+                        type="text"
+                        value={propertySize}
+                        onChange={(e) => setPropertySize(e.target.value)}
+                        placeholder="e.g. 10.5 Perches or 1,800 sqft"
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Bedrooms & Bathrooms */}
+                  {!propertyType.includes('Land') && (
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                          Bedrooms
+                        </label>
+                        <select
+                          value={bedrooms}
+                          onChange={(e) => setBedrooms(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                        >
+                          {BEDROOM_OPTIONS.map((b) => (
+                            <option key={b} value={b}>{b} Bedroom{b !== '1' ? 's' : ''}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                          Bathrooms
+                        </label>
+                        <select
+                          value={bathrooms}
+                          onChange={(e) => setBathrooms(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                        >
+                          {BATHROOM_OPTIONS.map((b) => (
+                            <option key={b} value={b}>{b} Bathroom{b !== '1' ? 's' : ''}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Custom Category Fields: Electronics */}
+              {category === 'Electronics' && (
+                <div className="p-3.5 sm:p-4 bg-gradient-to-br from-indigo-50/70 to-blue-50/40 rounded-2xl border border-indigo-200/80 space-y-3.5 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-indigo-600" />
+                      <span>Device & Gadget Specifications</span>
+                    </span>
+                    <span className="text-[10px] text-indigo-800 bg-indigo-100 font-bold px-2 py-0.5 rounded-md">
+                      Electronics Specs
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {/* Device Subcategory */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Device Type
+                      </label>
+                      <select
+                        value={electronicsSubcategory}
+                        onChange={(e) => setElectronicsSubcategory(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      >
+                        {ELECTRONICS_SUBCATEGORIES.map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Condition */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Condition
+                      </label>
+                      <select
+                        value={itemCondition}
+                        onChange={(e) => setItemCondition(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      >
+                        {ITEM_CONDITIONS.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {/* Brand */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Brand
+                      </label>
+                      <input
+                        type="text"
+                        value={brand}
+                        onChange={(e) => setBrand(e.target.value)}
+                        placeholder="e.g. Apple, Samsung, Sony, HP"
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      />
+                    </div>
+
+                    {/* Model */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Model
+                      </label>
+                      <input
+                        type="text"
+                        value={model}
+                        onChange={(e) => setModel(e.target.value)}
+                        placeholder="e.g. iPhone 15 Pro Max, Galaxy S24"
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      />
+                    </div>
+
+                    {/* Storage / Capacity */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Storage Capacity
+                      </label>
+                      <select
+                        value={storageCapacity}
+                        onChange={(e) => setStorageCapacity(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      >
+                        {STORAGE_CAPACITIES.map((sc) => (
+                          <option key={sc} value={sc}>{sc}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Custom Category Fields: Jobs */}
+              {category === 'Jobs' && (
+                <div className="p-3.5 sm:p-4 bg-gradient-to-br from-sky-50/70 to-blue-50/40 rounded-2xl border border-sky-200/80 space-y-3.5 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                      <Briefcase className="w-4 h-4 text-sky-600" />
+                      <span>Employment & Vacancy Details</span>
+                    </span>
+                    <span className="text-[10px] text-sky-800 bg-sky-100 font-bold px-2 py-0.5 rounded-md">
+                      Job Specs
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {/* Job Type */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Employment Type
+                      </label>
+                      <select
+                        value={jobType}
+                        onChange={(e) => setJobType(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      >
+                        {JOB_TYPES.map((j) => (
+                          <option key={j} value={j}>{j}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Salary Period */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Salary Payment Schedule
+                      </label>
+                      <select
+                        value={salaryPeriod}
+                        onChange={(e) => setSalaryPeriod(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      >
+                        {SALARY_PERIODS.map((sp) => (
+                          <option key={sp} value={sp}>{sp}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Custom Category Fields: Home & Garden or Fashion */}
+              {(category === 'Home & Garden' || category === 'Fashion') && (
+                <div className="p-3.5 sm:p-4 bg-gradient-to-br from-purple-50/70 to-pink-50/40 rounded-2xl border border-purple-200/80 space-y-3 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                      <Tag className="w-4 h-4 text-purple-600" />
+                      <span>Item Details & Condition</span>
+                    </span>
+                    <span className="text-[10px] text-purple-800 bg-purple-100 font-bold px-2 py-0.5 rounded-md">
+                      Item Specs
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Condition
+                      </label>
+                      <select
+                        value={itemCondition}
+                        onChange={(e) => setItemCondition(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      >
+                        {ITEM_CONDITIONS.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Brand / Designer (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={brand}
+                        onChange={(e) => setBrand(e.target.value)}
+                        placeholder="e.g. Damro, IKEA, Singer, Nike, Zara"
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
 

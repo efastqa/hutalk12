@@ -35,6 +35,28 @@ export interface Listing {
   availabilityStatus?: 'available' | 'reserved' | 'sold';
   sellerRating?: number;
   reviewCount?: number;
+
+  // Custom Category Fields
+  // Vehicles & Motorcycles
+  vehicleType?: string;
+  vehicleYear?: number | string;
+  vehicleMileage?: number | string;
+  fuelType?: 'Petrol' | 'Diesel' | 'Hybrid' | 'Electric' | string;
+  transmission?: 'Automatic' | 'Manual' | 'Tiptronic' | string;
+
+  // Property
+  propertyType?: 'House' | 'Land' | 'Apartment' | 'Commercial' | 'Room / Annex' | string;
+  propertySize?: string;
+  bedrooms?: number | string;
+  bathrooms?: number | string;
+
+  // Electronics
+  electronicsSubcategory?: string;
+  storageCapacity?: string;
+
+  // Jobs
+  jobType?: 'Full-time' | 'Part-time' | 'Contract' | 'Remote' | 'Internship' | string;
+  salaryPeriod?: 'Monthly' | 'Weekly' | 'Hourly' | 'Negotiable' | string;
 }
 
 export interface ListingReview {
