@@ -148,7 +148,7 @@ interface HeroAdSettings {
   rotationIntervalSeconds: number;
 }
 
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 const DATA_DIR = path.join(process.cwd(), 'data');
 const LISTINGS_FILE = path.join(DATA_DIR, 'listings.json');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -2801,92 +2801,99 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
   }
 
   // -------------------------------------------------------------
-  // Sync with Cloud Firestore on boot
+  // Start HTTP Server immediately so dev server is ready without delay
   // -------------------------------------------------------------
-  if (firestoreDb) {
-    try {
-      const snap = await getDocs(collection(firestoreDb, 'listings'));
-      if (!snap.empty) {
-        const remoteListings: Listing[] = [];
-        snap.forEach((d) => remoteListings.push(d.data() as Listing));
-        listingsCache = remoteListings;
-        saveStoredListings(listingsCache);
-        console.log(`[Firestore] Initialized server cache with ${listingsCache.length} shared listings`);
-      }
-    } catch (e) {
-      console.warn('[Firestore] Initial sync warning:', e);
-    }
-
-    try {
-      const heroSnap = await getDoc(doc(firestoreDb, 'hero_ads', 'main'));
-      if (heroSnap.exists()) {
-        const remoteHero = heroSnap.data() as { settings?: HeroAdSettings; ads?: HeroAd[] };
-        if (remoteHero && Array.isArray(remoteHero.ads) && remoteHero.ads.length > 0) {
-          heroAdsDataCache = {
-            settings: remoteHero.settings || DEFAULT_HERO_SETTINGS,
-            ads: remoteHero.ads,
-          };
-          saveStoredHeroAdsData(heroAdsDataCache);
-          console.log(`[Firestore] Initialized server hero ads cache with ${heroAdsDataCache.ads.length} ads`);
-        }
-      }
-    } catch (e) {
-      console.warn('[Firestore] Initial hero ads sync warning:', e);
-    }
-
-    try {
-      const revSnap = await getDocs(collection(firestoreDb, 'reviews'));
-      if (!revSnap.empty) {
-        const remoteReviews: ListingReview[] = [];
-        revSnap.forEach((d) => remoteReviews.push(d.data() as ListingReview));
-        reviewsCache = remoteReviews;
-        saveStoredReviews(reviewsCache);
-        console.log(`[Firestore] Initialized server reviews cache with ${reviewsCache.length} customer reviews`);
-      }
-    } catch (e) {
-      console.warn('[Firestore] Initial reviews sync warning:', e);
-    }
-
-    try {
-      const repSnap = await getDocs(collection(firestoreDb, 'reports'));
-      if (!repSnap.empty) {
-        const remoteReports: ListingReport[] = [];
-        repSnap.forEach((d) => remoteReports.push(d.data() as ListingReport));
-        reportsCache = remoteReports;
-        saveStoredReports(reportsCache);
-        console.log(`[Firestore] Initialized server reports cache with ${reportsCache.length} trust reports`);
-      }
-    } catch (e) {
-      console.warn('[Firestore] Initial reports sync warning:', e);
-    }
-
-    try {
-      const userSnap = await getDocs(collection(firestoreDb, 'users'));
-      if (!userSnap.empty) {
-        const remoteUsers: User[] = [];
-        userSnap.forEach((d) => remoteUsers.push(d.data() as User));
-        const userMap = new Map<string, User>();
-        DEFAULT_USERS.forEach((u) => userMap.set(u.id, u));
-        usersCache.forEach((u) => userMap.set(u.id, u));
-        remoteUsers.forEach((u) => userMap.set(u.id, u));
-        usersCache = Array.from(userMap.values());
-        saveStoredUsers(usersCache);
-        console.log(`[Firestore] Initialized server users cache with ${usersCache.length} user accounts`);
-      } else {
-        // Seed default users to Firestore collection
-        for (const u of usersCache) {
-          persistUserToFirestore(u);
-        }
-        console.log(`[Firestore] Seeded initial ${usersCache.length} users to Firestore`);
-      }
-    } catch (e) {
-      console.warn('[Firestore] Initial users sync warning:', e);
-    }
-  }
-
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
+
+  // -------------------------------------------------------------
+  // Sync with Cloud Firestore in background (non-blocking)
+  // -------------------------------------------------------------
+  if (firestoreDb) {
+    (async () => {
+      try {
+        const snap = await getDocs(collection(firestoreDb, 'listings'));
+        if (!snap.empty) {
+          const remoteListings: Listing[] = [];
+          snap.forEach((d) => remoteListings.push(d.data() as Listing));
+          listingsCache = remoteListings;
+          saveStoredListings(listingsCache);
+          console.log(`[Firestore] Initialized server cache with ${listingsCache.length} shared listings`);
+        }
+      } catch (e) {
+        console.warn('[Firestore] Initial sync warning:', e);
+      }
+
+      try {
+        const heroSnap = await getDoc(doc(firestoreDb, 'hero_ads', 'main'));
+        if (heroSnap.exists()) {
+          const remoteHero = heroSnap.data() as { settings?: HeroAdSettings; ads?: HeroAd[] };
+          if (remoteHero && Array.isArray(remoteHero.ads) && remoteHero.ads.length > 0) {
+            heroAdsDataCache = {
+              settings: remoteHero.settings || DEFAULT_HERO_SETTINGS,
+              ads: remoteHero.ads,
+            };
+            saveStoredHeroAdsData(heroAdsDataCache);
+            console.log(`[Firestore] Initialized server hero ads cache with ${heroAdsDataCache.ads.length} ads`);
+          }
+        }
+      } catch (e) {
+        console.warn('[Firestore] Initial hero ads sync warning:', e);
+      }
+
+      try {
+        const revSnap = await getDocs(collection(firestoreDb, 'reviews'));
+        if (!revSnap.empty) {
+          const remoteReviews: ListingReview[] = [];
+          revSnap.forEach((d) => remoteReviews.push(d.data() as ListingReview));
+          reviewsCache = remoteReviews;
+          saveStoredReviews(reviewsCache);
+          console.log(`[Firestore] Initialized server reviews cache with ${reviewsCache.length} customer reviews`);
+        }
+      } catch (e) {
+        console.warn('[Firestore] Initial reviews sync warning:', e);
+      }
+
+      try {
+        const repSnap = await getDocs(collection(firestoreDb, 'reports'));
+        if (!repSnap.empty) {
+          const remoteReports: ListingReport[] = [];
+          repSnap.forEach((d) => remoteReports.push(d.data() as ListingReport));
+          reportsCache = remoteReports;
+          saveStoredReports(reportsCache);
+          console.log(`[Firestore] Initialized server reports cache with ${reportsCache.length} trust reports`);
+        }
+      } catch (e) {
+        console.warn('[Firestore] Initial reports sync warning:', e);
+      }
+
+      try {
+        const userSnap = await getDocs(collection(firestoreDb, 'users'));
+        if (!userSnap.empty) {
+          const remoteUsers: User[] = [];
+          userSnap.forEach((d) => remoteUsers.push(d.data() as User));
+          const userMap = new Map<string, User>();
+          DEFAULT_USERS.forEach((u) => userMap.set(u.id, u));
+          usersCache.forEach((u) => userMap.set(u.id, u));
+          remoteUsers.forEach((u) => userMap.set(u.id, u));
+          usersCache = Array.from(userMap.values());
+          saveStoredUsers(usersCache);
+          console.log(`[Firestore] Initialized server users cache with ${usersCache.length} user accounts`);
+        } else {
+          // Seed default users to Firestore collection
+          for (const u of usersCache) {
+            persistUserToFirestore(u);
+          }
+          console.log(`[Firestore] Seeded initial ${usersCache.length} users to Firestore`);
+        }
+      } catch (e) {
+        console.warn('[Firestore] Initial users sync warning:', e);
+      }
+    })().catch((err) => {
+      console.warn('[Firestore] Initial background sync error:', err);
+    });
+  }
 }
 
 startServer().catch((err) => {
