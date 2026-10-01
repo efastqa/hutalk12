@@ -19,6 +19,7 @@ import {
   Share2
 } from 'lucide-react';
 import { AppSettings } from '../types';
+import { useTheme, ThemeMode } from '../hooks/useTheme';
 
 export const DEFAULT_SETTINGS: AppSettings = {
   deviceLayout: 'auto',
@@ -64,9 +65,20 @@ export const DeviceSettingsPanel: React.FC<DeviceSettingsPanelProps> = ({
   onToast,
   onSettingsChange,
 }) => {
-  const [settings, setSettings] = useState<AppSettings>(getStoredSettings);
-  const [activeSubTab, setActiveSubTab] = useState<'device' | 'display' | 'network' | 'notifications'>('device');
+  const { theme, setTheme: setContextTheme, isDark } = useTheme();
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    const stored = getStoredSettings();
+    return { ...stored, theme: (theme || stored.theme) as any };
+  });
+  const [activeSubTab, setActiveSubTab] = useState<'device' | 'display' | 'network' | 'notifications'>('display');
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Keep settings.theme in sync with context
+  useEffect(() => {
+    if (theme && settings.theme !== theme) {
+      setSettings((prev) => ({ ...prev, theme }));
+    }
+  }, [theme]);
 
   useEffect(() => {
     // Sync browser tab badge setting
@@ -79,6 +91,9 @@ export const DeviceSettingsPanel: React.FC<DeviceSettingsPanelProps> = ({
     const updated = { ...settings, [key]: value };
     setSettings(updated);
     saveStoredSettings(updated);
+    if (key === 'theme') {
+      setContextTheme(value as ThemeMode);
+    }
     if (onSettingsChange) onSettingsChange(updated);
 
     // Trigger slight haptic if enabled and supported
@@ -111,33 +126,33 @@ export const DeviceSettingsPanel: React.FC<DeviceSettingsPanelProps> = ({
   };
 
   return (
-    <div id="device-settings-container" className="bg-white rounded-3xl border border-gray-100 shadow-md p-5 sm:p-7 space-y-6">
+    <div id="device-settings-container" className="bg-white dark:bg-[#151822] rounded-3xl border border-gray-100 dark:border-[#252836] shadow-md p-5 sm:p-7 space-y-6 transition-colors duration-200">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100 dark:border-[#252836]">
         <div>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-[#FF5A36]/10 text-[#FF5A36] flex items-center justify-center">
               <Sliders className="w-4 h-4" />
             </div>
-            <h2 className="text-lg sm:text-xl font-black text-gray-900 tracking-tight">
+            <h2 className="text-lg sm:text-xl font-black text-gray-900 dark:text-white tracking-tight">
               Mobile, Tab & Web Settings
             </h2>
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            Customize layout, device modes, browser tab behaviors, and network settings
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Customize theme appearance, layout modes, card density, and network settings
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           {savedSuccess && (
-            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg flex items-center gap-1 animate-in fade-in duration-200">
+            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-lg flex items-center gap-1 animate-in fade-in duration-200">
               <Check className="w-3.5 h-3.5" /> Saved
             </span>
           )}
           <button
             type="button"
             onClick={resetToDefaults}
-            className="text-xs font-semibold text-gray-500 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
+            className="text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-[#1E2230] hover:bg-gray-200 dark:hover:bg-[#2A2E3D] px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
             title="Reset to default settings"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -147,14 +162,26 @@ export const DeviceSettingsPanel: React.FC<DeviceSettingsPanelProps> = ({
       </div>
 
       {/* Navigation Subtabs */}
-      <div className="flex items-center gap-1.5 bg-gray-100/80 p-1 rounded-2xl overflow-x-auto scrollbar-none text-xs font-bold">
+      <div className="flex items-center gap-1.5 bg-gray-100/80 dark:bg-[#1E2230] p-1 rounded-2xl overflow-x-auto scrollbar-none text-xs font-bold">
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('display')}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
+            activeSubTab === 'display'
+              ? 'bg-white dark:bg-[#2A2E3D] text-gray-900 dark:text-white shadow-xs font-black'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          }`}
+        >
+          <Layout className="w-3.5 h-3.5 text-blue-600" />
+          <span>Display & Theme</span>
+        </button>
         <button
           type="button"
           onClick={() => setActiveSubTab('device')}
           className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
             activeSubTab === 'device'
-              ? 'bg-white text-gray-900 shadow-xs'
-              : 'text-gray-500 hover:text-gray-900'
+              ? 'bg-white dark:bg-[#2A2E3D] text-gray-900 dark:text-white shadow-xs font-black'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
           <Smartphone className="w-3.5 h-3.5 text-[#FF5A36]" />
@@ -162,23 +189,11 @@ export const DeviceSettingsPanel: React.FC<DeviceSettingsPanelProps> = ({
         </button>
         <button
           type="button"
-          onClick={() => setActiveSubTab('display')}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
-            activeSubTab === 'display'
-              ? 'bg-white text-gray-900 shadow-xs'
-              : 'text-gray-500 hover:text-gray-900'
-          }`}
-        >
-          <Layout className="w-3.5 h-3.5 text-blue-600" />
-          <span>Display & Density</span>
-        </button>
-        <button
-          type="button"
           onClick={() => setActiveSubTab('network')}
           className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
             activeSubTab === 'network'
-              ? 'bg-white text-gray-900 shadow-xs'
-              : 'text-gray-500 hover:text-gray-900'
+              ? 'bg-white dark:bg-[#2A2E3D] text-gray-900 dark:text-white shadow-xs font-black'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
           <Wifi className="w-3.5 h-3.5 text-emerald-600" />
@@ -189,8 +204,8 @@ export const DeviceSettingsPanel: React.FC<DeviceSettingsPanelProps> = ({
           onClick={() => setActiveSubTab('notifications')}
           className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
             activeSubTab === 'notifications'
-              ? 'bg-white text-gray-900 shadow-xs'
-              : 'text-gray-500 hover:text-gray-900'
+              ? 'bg-white dark:bg-[#2A2E3D] text-gray-900 dark:text-white shadow-xs font-black'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
           <Bell className="w-3.5 h-3.5 text-amber-600" />
@@ -271,9 +286,95 @@ export const DeviceSettingsPanel: React.FC<DeviceSettingsPanelProps> = ({
 
       {/* 2. Display & Density Tab */}
       {activeSubTab === 'display' && (
-        <div className="space-y-4 animate-in fade-in duration-200">
+        <div className="space-y-5 animate-in fade-in duration-200">
+          {/* Website Theme (Light & Dark Mode) */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                Website Appearance & Theme
+              </label>
+              <span className="text-[11px] font-bold text-[#FF5A36] bg-[#FF5A36]/10 px-2 py-0.5 rounded-full">
+                {theme === 'system' ? 'Auto (System)' : theme === 'dark' ? 'Dark Theme' : 'Light Theme'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Light Mode */}
+              <button
+                type="button"
+                onClick={() => updateSetting('theme', 'light')}
+                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
+                  settings.theme === 'light'
+                    ? 'border-[#FF5A36] bg-orange-50/60 dark:bg-orange-950/20 ring-1 ring-[#FF5A36]/50 shadow-xs'
+                    : 'border-gray-200 dark:border-[#2D303E] bg-white dark:bg-[#181920] hover:border-gray-300 dark:hover:border-gray-600'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                    <Sun className="w-4 h-4 fill-current" />
+                  </div>
+                  {settings.theme === 'light' && <Check className="w-4 h-4 text-[#FF5A36]" />}
+                </div>
+                <div>
+                  <p className="text-xs font-extrabold text-gray-900 dark:text-white">Light Mode</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
+                    Crisp white background, high daylight contrast
+                  </p>
+                </div>
+              </button>
+
+              {/* Dark Mode */}
+              <button
+                type="button"
+                onClick={() => updateSetting('theme', 'dark')}
+                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
+                  settings.theme === 'dark'
+                    ? 'border-[#FF5A36] bg-orange-50/60 dark:bg-orange-950/20 ring-1 ring-[#FF5A36]/50 shadow-xs'
+                    : 'border-gray-200 dark:border-[#2D303E] bg-white dark:bg-[#181920] hover:border-gray-300 dark:hover:border-gray-600'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950/50 text-indigo-500 dark:text-indigo-400 flex items-center justify-center">
+                    <Moon className="w-4 h-4 fill-current" />
+                  </div>
+                  {settings.theme === 'dark' && <Check className="w-4 h-4 text-[#FF5A36]" />}
+                </div>
+                <div>
+                  <p className="text-xs font-extrabold text-gray-900 dark:text-white">Dark Mode</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
+                    Deep OLED blacks, easy on the eyes & battery
+                  </p>
+                </div>
+              </button>
+
+              {/* System Default */}
+              <button
+                type="button"
+                onClick={() => updateSetting('theme', 'system')}
+                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group ${
+                  settings.theme === 'system'
+                    ? 'border-[#FF5A36] bg-orange-50/60 dark:bg-orange-950/20 ring-1 ring-[#FF5A36]/50 shadow-xs'
+                    : 'border-gray-200 dark:border-[#2D303E] bg-white dark:bg-[#181920] hover:border-gray-300 dark:hover:border-gray-600'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-[#2A2E3D] text-gray-600 dark:text-gray-300 flex items-center justify-center">
+                    <Monitor className="w-4 h-4" />
+                  </div>
+                  {settings.theme === 'system' && <Check className="w-4 h-4 text-[#FF5A36]" />}
+                </div>
+                <div>
+                  <p className="text-xs font-extrabold text-gray-900 dark:text-white">System Auto</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
+                    Follows your device's light/dark schedule
+                  </p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
               Listing Cards Grid Density
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -282,15 +383,15 @@ export const DeviceSettingsPanel: React.FC<DeviceSettingsPanelProps> = ({
                 onClick={() => updateSetting('density', 'comfortable')}
                 className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                   settings.density === 'comfortable'
-                    ? 'border-[#FF5A36] bg-orange-50/40 ring-1 ring-[#FF5A36]/40'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-[#FF5A36] bg-orange-50/40 dark:bg-orange-950/20 ring-1 ring-[#FF5A36]/40'
+                    : 'border-gray-200 dark:border-[#2D303E] bg-white dark:bg-[#181920] hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold text-gray-900">Comfortable (Spacious)</p>
+                  <p className="text-xs font-bold text-gray-900 dark:text-white">Comfortable (Spacious)</p>
                   {settings.density === 'comfortable' && <Check className="w-4 h-4 text-[#FF5A36]" />}
                 </div>
-                <p className="text-[11px] text-gray-400 mt-1">
+                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
                   Large photography and generous card padding. Recommended for tablets & desktop.
                 </p>
               </button>
@@ -300,15 +401,15 @@ export const DeviceSettingsPanel: React.FC<DeviceSettingsPanelProps> = ({
                 onClick={() => updateSetting('density', 'compact')}
                 className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                   settings.density === 'compact'
-                    ? 'border-[#FF5A36] bg-orange-50/40 ring-1 ring-[#FF5A36]/40'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-[#FF5A36] bg-orange-50/40 dark:bg-orange-950/20 ring-1 ring-[#FF5A36]/40'
+                    : 'border-gray-200 dark:border-[#2D303E] bg-white dark:bg-[#181920] hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold text-gray-900">Compact (Dense)</p>
+                  <p className="text-xs font-bold text-gray-900 dark:text-white">Compact (Dense)</p>
                   {settings.density === 'compact' && <Check className="w-4 h-4 text-[#FF5A36]" />}
                 </div>
-                <p className="text-[11px] text-gray-400 mt-1">
+                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
                   Higher information density. Fits more listings per screen on mobile phones.
                 </p>
               </button>
@@ -318,13 +419,13 @@ export const DeviceSettingsPanel: React.FC<DeviceSettingsPanelProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             {/* Currency Selector */}
             <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-1.5">
+              <label className="block text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
                 Display Currency
               </label>
               <select
                 value={settings.currency}
                 onChange={(e) => updateSetting('currency', e.target.value as any)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-xs font-bold text-gray-800 focus:outline-none focus:border-[#FF5A36]"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-[#2D303E] bg-gray-50 dark:bg-[#181920] text-xs font-bold text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#FF5A36]"
               >
                 <option value="LKR">LKR — Sri Lankan Rupee (Rs.)</option>
                 <option value="USD">USD — US Dollar ($)</option>
@@ -334,13 +435,13 @@ export const DeviceSettingsPanel: React.FC<DeviceSettingsPanelProps> = ({
 
             {/* Language Selector */}
             <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-1.5">
+              <label className="block text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5">
                 Interface Language
               </label>
               <select
                 value={settings.language}
                 onChange={(e) => updateSetting('language', e.target.value as any)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-xs font-bold text-gray-800 focus:outline-none focus:border-[#FF5A36]"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-[#2D303E] bg-gray-50 dark:bg-[#181920] text-xs font-bold text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#FF5A36]"
               >
                 <option value="en">English (Official)</option>
                 <option value="si">සිංහල (Sinhala)</option>

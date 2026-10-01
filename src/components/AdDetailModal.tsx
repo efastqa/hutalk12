@@ -196,7 +196,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-        className="bg-white rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl relative my-8 border border-gray-100"
+        className="bg-white dark:bg-[#151822] rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl relative my-8 border border-gray-100 dark:border-[#252836] text-gray-900 dark:text-white transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -494,7 +494,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                       </span>
                     )}
                   </div>
-                  <h2 className="text-xl font-extrabold text-[#181920] leading-tight">
+                  <h2 className="text-xl font-extrabold text-[#181920] dark:text-white leading-tight">
                     {listing.title}
                   </h2>
                 </div>
@@ -504,7 +504,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                     type="button"
                     onClick={() => onCopyShareLink(listing)}
                     title="Share listing"
-                    className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center transition-colors cursor-pointer"
+                    className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#1E2230] hover:bg-gray-200 dark:hover:bg-[#282C3D] text-gray-700 dark:text-gray-300 flex items-center justify-center transition-colors cursor-pointer"
                   >
                     <Share2 className="w-4 h-4" />
                   </button>
@@ -516,7 +516,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                       className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
                         isCompared
                           ? 'bg-[#FF5A36] text-white shadow-sm'
-                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                          : 'bg-gray-100 dark:bg-[#1E2230] hover:bg-gray-200 dark:hover:bg-[#282C3D] text-gray-700 dark:text-gray-300'
                       }`}
                     >
                       <ArrowLeftRight className="w-4 h-4" />
@@ -529,7 +529,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                     className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
                       isFavorite
                         ? 'bg-rose-50 text-rose-600'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        : 'bg-gray-100 dark:bg-[#1E2230] hover:bg-gray-200 dark:hover:bg-[#282C3D] text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
@@ -538,7 +538,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                     type="button"
                     onClick={() => setIsReportModalOpen(true)}
                     title="Report this advertisement (scam, sold, wrong price)"
-                    className="w-9 h-9 rounded-full bg-gray-100 hover:bg-rose-50 text-gray-500 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                    className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#1E2230] hover:bg-rose-50 dark:hover:bg-rose-950/40 text-gray-500 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
                   >
                     <Flag className="w-4 h-4" />
                   </button>
@@ -559,9 +559,9 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                         : formatLKR(listing.price)}
                     </div>
                     {listing.serviceArea && (
-                      <p className="text-xs text-gray-600 mt-1 flex items-center gap-1 font-medium">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-1 font-medium">
                         <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                        <span>Coverage Area: <strong className="text-gray-900">{listing.serviceArea}</strong></span>
+                        <span>Coverage Area: <strong className="text-gray-900 dark:text-white">{listing.serviceArea}</strong></span>
                       </p>
                     )}
                   </div>
@@ -573,31 +573,31 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
               </div>
 
               {/* Meta pills */}
-              <div className="flex flex-wrap gap-2 text-xs text-gray-600 mb-4">
-                <span className="inline-flex items-center gap-1 bg-gray-100 px-2.5 py-1 rounded-md font-medium">
+              <div className="flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-300 mb-4">
+                <span className="inline-flex items-center gap-1 bg-gray-100 dark:bg-[#1E2230] px-2.5 py-1 rounded-md font-medium">
                   <MapPin className="w-3.5 h-3.5 text-[#FF5A36]" />
                   {listing.location}, Sri Lanka
                 </span>
                 {listing.serviceTrade && (
-                  <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-800 border border-blue-100 px-2.5 py-1 rounded-md font-medium">
+                  <span className="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border border-blue-100 dark:border-blue-500/30 px-2.5 py-1 rounded-md font-medium">
                     <Wrench className="w-3.5 h-3.5 text-blue-600" />
                     {listing.serviceTrade}
                   </span>
                 )}
-                <span className="inline-flex items-center gap-1 bg-gray-100 px-2.5 py-1 rounded-md font-medium">
+                <span className="inline-flex items-center gap-1 bg-gray-100 dark:bg-[#1E2230] px-2.5 py-1 rounded-md font-medium">
                   <Tag className="w-3.5 h-3.5 text-gray-500" />
                   {listing.category}
                 </span>
-                <span className="inline-flex items-center gap-1 bg-gray-100 px-2.5 py-1 rounded-md font-medium">
+                <span className="inline-flex items-center gap-1 bg-gray-100 dark:bg-[#1E2230] px-2.5 py-1 rounded-md font-medium">
                   <Clock className="w-3.5 h-3.5 text-gray-500" />
                   {listing.date}
                 </span>
-                <span className="inline-flex items-center gap-1 bg-gray-100 px-2.5 py-1 rounded-md font-medium">
+                <span className="inline-flex items-center gap-1 bg-gray-100 dark:bg-[#1E2230] px-2.5 py-1 rounded-md font-medium">
                   <Eye className="w-3.5 h-3.5 text-gray-500" />
                   {listing.views || 0} views
                 </span>
                 {isAdminLoggedIn && (
-                  <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-md font-medium text-xs">
+                  <span className="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 px-2.5 py-1 rounded-md font-medium text-xs">
                     <TrendingUp className="w-3 h-3 text-blue-500" />
                     <span>{(listing.whatsappClicks || 0) + (listing.phoneClicks || 0)} Leads</span>
                   </span>
@@ -620,114 +620,114 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                 listing.itemCondition ||
                 listing.brand ||
                 listing.model) && (
-                <div className="my-3 p-3.5 bg-gray-50/90 rounded-2xl border border-gray-200/80 space-y-2.5">
-                  <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center justify-between">
+                <div className="my-3 p-3.5 bg-gray-50/90 dark:bg-[#181B26] rounded-2xl border border-gray-200/80 dark:border-[#252836] space-y-2.5">
+                  <div className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center justify-between">
                     <span>Key Specifications & Highlights</span>
-                    <span className="text-[10px] text-gray-400 font-normal">Verified Specs</span>
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 font-normal">Verified Specs</span>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {/* Vehicle Specs */}
                     {listing.brand && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Brand / Make</span>
-                        <span className="text-xs font-bold text-gray-900">{listing.brand}</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.brand}</span>
                       </div>
                     )}
                     {listing.model && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Model</span>
-                        <span className="text-xs font-bold text-gray-900">{listing.model}</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.model}</span>
                       </div>
                     )}
                     {listing.vehicleYear && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Year</span>
-                        <span className="text-xs font-bold text-gray-900">{listing.vehicleYear}</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.vehicleYear}</span>
                       </div>
                     )}
                     {listing.fuelType && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Fuel Type</span>
-                        <span className="text-xs font-bold text-gray-900">{listing.fuelType}</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.fuelType}</span>
                       </div>
                     )}
                     {listing.transmission && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Transmission</span>
-                        <span className="text-xs font-bold text-gray-900">{listing.transmission}</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.transmission}</span>
                       </div>
                     )}
                     {listing.vehicleMileage && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Mileage</span>
-                        <span className="text-xs font-bold text-gray-900">{Number(listing.vehicleMileage).toLocaleString()} km</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{Number(listing.vehicleMileage).toLocaleString()} km</span>
                       </div>
                     )}
                     {listing.vehicleType && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Vehicle Type</span>
-                        <span className="text-xs font-bold text-gray-900">{listing.vehicleType}</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.vehicleType}</span>
                       </div>
                     )}
 
                     {/* Property Specs */}
                     {listing.propertyType && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Property Type</span>
-                        <span className="text-xs font-bold text-gray-900">{listing.propertyType}</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.propertyType}</span>
                       </div>
                     )}
                     {listing.bedrooms !== undefined && listing.bedrooms !== '' && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Bedrooms</span>
-                        <span className="text-xs font-bold text-gray-900">{listing.bedrooms} Beds</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.bedrooms} Beds</span>
                       </div>
                     )}
                     {listing.bathrooms !== undefined && listing.bathrooms !== '' && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Bathrooms</span>
-                        <span className="text-xs font-bold text-gray-900">{listing.bathrooms} Baths</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.bathrooms} Baths</span>
                       </div>
                     )}
                     {listing.propertySize && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Size / Area</span>
-                        <span className="text-xs font-bold text-gray-900">{listing.propertySize}</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.propertySize}</span>
                       </div>
                     )}
 
                     {/* Electronics & Other */}
                     {listing.electronicsSubcategory && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Device Type</span>
-                        <span className="text-xs font-bold text-gray-900">{listing.electronicsSubcategory}</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.electronicsSubcategory}</span>
                       </div>
                     )}
                     {listing.storageCapacity && listing.storageCapacity !== 'N/A' && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Storage Capacity</span>
-                        <span className="text-xs font-bold text-gray-900">{listing.storageCapacity}</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.storageCapacity}</span>
                       </div>
                     )}
                     {listing.itemCondition && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Condition</span>
-                        <span className="text-xs font-bold text-gray-900">{listing.itemCondition}</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.itemCondition}</span>
                       </div>
                     )}
 
                     {/* Jobs */}
                     {listing.jobType && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Job Type</span>
-                        <span className="text-xs font-bold text-gray-900">{listing.jobType}</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.jobType}</span>
                       </div>
                     )}
                     {listing.salaryPeriod && (
-                      <div className="bg-white p-2 rounded-xl border border-gray-200/70 shadow-2xs">
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Payment Basis</span>
-                        <span className="text-xs font-bold text-gray-900">{listing.salaryPeriod}</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.salaryPeriod}</span>
                       </div>
                     )}
                   </div>
@@ -735,28 +735,28 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
               )}
 
               {/* Description */}
-              <div className="border-t border-b border-gray-100 py-3.5 my-3">
+              <div className="border-t border-b border-gray-100 dark:border-[#252836] py-3.5 my-3">
                 <h4 className="text-xs font-bold uppercase text-gray-400 tracking-wider mb-1.5">
                   Item Description
                 </h4>
-                <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed">
                   {listing.description}
                 </p>
               </div>
             </div>
 
-            {/* 2nd Attached Image Section: Verified Seller Contact & Action Buttons (Right after Description!) */}
+            {/* 2nd Attached Image Section: Verified Seller Contact & Action Buttons */}
             <div className="pt-1 space-y-3">
-              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-center shadow-xs">
-                <p className="text-xs text-gray-500 font-medium">
+              <div className="bg-gray-50 dark:bg-[#181B26] border border-gray-200 dark:border-[#252836] rounded-2xl p-4 text-center shadow-xs">
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                   {isService ? 'Service Provider Contact' : 'Verified Seller Contact'}
                 </p>
-                <div className="text-xl font-bold text-gray-900 mt-1 tracking-wide flex items-center justify-center gap-2">
+                <div className="text-xl font-bold text-gray-900 dark:text-white mt-1 tracking-wide flex items-center justify-center gap-2">
                   <Phone className="w-4 h-4 text-[#FF5A36]" />
                   <a
                     href={`tel:${listing.phone}`}
                     onClick={() => onRecordAction?.('phone')}
-                    className="hover:underline text-gray-900"
+                    className="hover:underline text-gray-900 dark:text-white"
                   >
                     {listing.phone}
                   </a>
@@ -806,7 +806,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                     className={`mt-2 w-full flex items-center justify-center gap-2 text-xs font-bold py-2.5 px-4 rounded-xl border transition-all cursor-pointer ${
                       isCompared
                         ? 'bg-[#FF5A36]/10 text-[#FF5A36] border-[#FF5A36]/40 hover:bg-[#FF5A36]/20'
-                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        : 'bg-white dark:bg-[#1E2230] text-gray-700 dark:text-gray-200 border-gray-200 dark:border-[#282C3D] hover:bg-gray-50 dark:hover:bg-[#282C3D]'
                     }`}
                   >
                     <ArrowLeftRight className="w-3.5 h-3.5" />

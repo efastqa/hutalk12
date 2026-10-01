@@ -251,7 +251,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
   return (
     <section id="marketplace-listings" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 scroll-mt-20">
       {/* Qatar Living style Category Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-3 mb-5 scrollbar-none border-b border-gray-200">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-3 mb-5 scrollbar-none border-b border-gray-200 dark:border-[#2D303E]">
         {[
           { id: 'All', label: 'All Ads' },
           { id: 'Property', label: 'Properties' },
@@ -270,7 +270,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
               className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 isActive
                   ? 'bg-[#FF5A36] text-white shadow-sm'
-                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  : 'bg-white dark:bg-[#151822] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230] border border-gray-200 dark:border-[#2D303E]'
               }`}
             >
               {cat.label}
@@ -286,9 +286,9 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
         currentCategory === 'Electronics' ||
         currentCategory === 'Jobs' ||
         currentCategory === 'Services') && (
-        <div className="mb-6 p-3.5 bg-gray-50/90 rounded-2xl border border-gray-200/90 space-y-2.5">
+        <div className="mb-6 p-3.5 bg-gray-50/90 dark:bg-[#151822]/90 rounded-2xl border border-gray-200/90 dark:border-[#252836] space-y-2.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+            <span className="text-xs font-bold text-gray-800 dark:text-white flex items-center gap-1.5">
               <SlidersHorizontal className="w-3.5 h-3.5 text-[#FF5A36]" />
               <span>Specific {currentCategory} Filters</span>
               {hasCategoryFilters && (
@@ -315,8 +315,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
             {(currentCategory === 'Vehicles' || currentCategory === 'Motorcycles') && (
               <>
                 {/* Fuel Filter */}
-                <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-gray-200">
-                  <span className="text-[11px] font-bold text-gray-500 px-2 flex items-center gap-1">
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
+                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
                     <Fuel className="w-3 h-3 text-amber-500" />
                     <span>Fuel:</span>
                   </span>
@@ -327,8 +327,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       onClick={() => setFuelFilter(fuel)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                         fuelFilter === fuel
-                          ? 'bg-[#181920] text-white font-bold shadow-2xs'
-                          : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
                       }`}
                     >
                       {fuel === 'all' ? 'All' : fuel}
@@ -337,8 +337,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                 </div>
 
                 {/* Transmission Filter */}
-                <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-gray-200">
-                  <span className="text-[11px] font-bold text-gray-500 px-2">Gear:</span>
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
+                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2">Gear:</span>
                   {['all', 'Automatic', 'Manual'].map((trans) => (
                     <button
                       key={trans}
@@ -346,8 +346,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       onClick={() => setTransmissionFilter(trans)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                         transmissionFilter === trans
-                          ? 'bg-[#181920] text-white font-bold shadow-2xs'
-                          : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
                       }`}
                     >
                       {trans === 'all' ? 'All' : trans}
@@ -356,8 +356,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                 </div>
 
                 {/* Vehicle Body Type */}
-                <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-gray-200">
-                  <span className="text-[11px] font-bold text-gray-500 px-2 flex items-center gap-1">
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
+                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
                     <Car className="w-3 h-3 text-blue-500" />
                     <span>Type:</span>
                   </span>
@@ -368,8 +368,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       onClick={() => setVehicleTypeFilter(vtype)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                         vehicleTypeFilter === vtype
-                          ? 'bg-[#181920] text-white font-bold shadow-2xs'
-                          : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
                       }`}
                     >
                       {vtype === 'all' ? 'All' : vtype}
@@ -382,8 +382,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
             {/* Property filters */}
             {currentCategory === 'Property' && (
               <>
-                <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-gray-200">
-                  <span className="text-[11px] font-bold text-gray-500 px-2 flex items-center gap-1">
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
+                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
                     <Home className="w-3 h-3 text-emerald-500" />
                     <span>Property:</span>
                   </span>
@@ -400,8 +400,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       onClick={() => setPropertyTypeFilter(p.id)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                         propertyTypeFilter === p.id
-                          ? 'bg-[#181920] text-white font-bold shadow-2xs'
-                          : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
                       }`}
                     >
                       {p.label}
@@ -410,8 +410,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                 </div>
 
                 {/* Bedrooms */}
-                <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-gray-200">
-                  <span className="text-[11px] font-bold text-gray-500 px-2">Beds:</span>
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
+                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2">Beds:</span>
                   {['all', '1', '2', '3', '4+'].map((beds) => (
                     <button
                       key={beds}
@@ -419,8 +419,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       onClick={() => setBedroomsFilter(beds)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                         bedroomsFilter === beds
-                          ? 'bg-[#181920] text-white font-bold shadow-2xs'
-                          : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
                       }`}
                     >
                       {beds === 'all' ? 'Any' : `${beds} Beds`}
@@ -433,8 +433,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
             {/* Electronics filters */}
             {currentCategory === 'Electronics' && (
               <>
-                <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-gray-200">
-                  <span className="text-[11px] font-bold text-gray-500 px-2 flex items-center gap-1">
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
+                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
                     <Smartphone className="w-3 h-3 text-indigo-500" />
                     <span>Device:</span>
                   </span>
@@ -451,8 +451,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       onClick={() => setElectronicsSubcategoryFilter(d.id)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                         electronicsSubcategoryFilter === d.id
-                          ? 'bg-[#181920] text-white font-bold shadow-2xs'
-                          : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
                       }`}
                     >
                       {d.label}
@@ -460,8 +460,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                   ))}
                 </div>
 
-                <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-gray-200">
-                  <span className="text-[11px] font-bold text-gray-500 px-2">Condition:</span>
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
+                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2">Condition:</span>
                   {['all', 'Brand New', 'Used'].map((c) => (
                     <button
                       key={c}
@@ -469,8 +469,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       onClick={() => setConditionFilter(c)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                         conditionFilter === c
-                          ? 'bg-[#181920] text-white font-bold shadow-2xs'
-                          : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
                       }`}
                     >
                       {c === 'all' ? 'All' : c}
@@ -482,8 +482,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
 
             {/* Jobs filters */}
             {currentCategory === 'Jobs' && (
-              <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-gray-200">
-                <span className="text-[11px] font-bold text-gray-500 px-2 flex items-center gap-1">
+              <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
+                <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
                   <Briefcase className="w-3 h-3 text-sky-500" />
                   <span>Job Type:</span>
                 </span>
@@ -500,8 +500,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                     onClick={() => setJobTypeFilter(j.id)}
                     className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                       jobTypeFilter === j.id
-                        ? 'bg-[#181920] text-white font-bold shadow-2xs'
-                        : 'text-gray-600 hover:bg-gray-100'
+                        ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
                     }`}
                   >
                     {j.label}
@@ -513,8 +513,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
             {/* Services filters */}
             {currentCategory === 'Services' && (
               <>
-                <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-gray-200">
-                  <span className="text-[11px] font-bold text-gray-500 px-2 flex items-center gap-1">
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
+                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
                     <Wrench className="w-3 h-3 text-blue-500" />
                     <span>Trade:</span>
                   </span>
@@ -532,8 +532,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       onClick={() => setServiceTradeFilter(tr.id)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                         serviceTradeFilter === tr.id
-                          ? 'bg-[#181920] text-white font-bold shadow-2xs'
-                          : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
                       }`}
                     >
                       {tr.label}
@@ -547,7 +547,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
                     emergencyOnlyFilter
                       ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
-                      : 'bg-white text-gray-700 border-gray-200 hover:bg-amber-50'
+                      : 'bg-white dark:bg-[#151822] text-gray-700 dark:text-gray-300 border-gray-200 dark:border-[#252836] hover:bg-amber-50 dark:hover:bg-amber-950/30'
                   }`}
                 >
                   <span>⚡ 24/7 Emergency Only</span>
@@ -564,13 +564,13 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
         initial={{ opacity: 0, y: -5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-3 border-b border-gray-200"
+        className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-3 border-b border-gray-200 dark:border-[#2D303E]"
       >
         <div>
           <DualToneHeading
             as="h2"
             size="lg"
-            theme="light"
+            theme="auto"
             primaryText="Available"
             accentText={['Advertisements', 'Verified Ads', 'Classified Deals']}
             animationType="rotate"
@@ -584,14 +584,14 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
 
         <div className="flex flex-wrap items-center gap-3">
           {/* View Mode Toggle: Grid vs Map */}
-          <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 text-xs font-bold shadow-2xs">
+          <div className="flex items-center bg-gray-100 dark:bg-[#1E2230] p-1 rounded-xl border border-gray-200 dark:border-[#2D303E] text-xs font-bold shadow-2xs">
             <button
               type="button"
               onClick={() => handleSwitchView('grid')}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
                 currentViewMode === 'grid'
-                  ? 'bg-white text-gray-900 shadow-xs'
-                  : 'text-gray-500 hover:text-gray-900'
+                  ? 'bg-white dark:bg-[#2A2E3D] text-gray-900 dark:text-white shadow-xs font-extrabold'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
@@ -602,8 +602,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
               onClick={() => handleSwitchView('map')}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer relative ${
                 currentViewMode === 'map'
-                  ? 'bg-[#FF5A36] text-white shadow-xs'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-[#FF5A36] text-white shadow-xs font-extrabold'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               <Compass className="w-3.5 h-3.5 text-current" />
@@ -614,21 +614,21 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
             </button>
           </div>
 
-          <span className="text-xs sm:text-sm text-gray-500 font-medium">
-            Showing <strong className="text-gray-900">{listings.length}</strong> ad(s)
+          <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">
+            Showing <strong className="text-gray-900 dark:text-white">{listings.length}</strong> ad(s)
           </span>
 
-          <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 shadow-xs text-xs sm:text-sm">
-            <ArrowUpDown className="w-3.5 h-3.5 text-gray-500" />
+          <div className="flex items-center gap-1.5 bg-white dark:bg-[#151822] border border-gray-300 dark:border-[#2D303E] rounded-lg px-2.5 py-1.5 shadow-xs text-xs sm:text-sm text-gray-700 dark:text-gray-200">
+            <ArrowUpDown className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
             <select
               value={sortBy}
               onChange={(e) => onSortChange(e.target.value)}
-              className="bg-transparent border-none outline-none font-medium text-gray-700 cursor-pointer"
+              className="bg-transparent border-none outline-none font-medium text-gray-700 dark:text-gray-200 cursor-pointer"
             >
-              <option value="newest">Newest First</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-              <option value="views">Most Viewed</option>
+              <option value="newest" className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white">Newest First</option>
+              <option value="price-asc" className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white">Price: Low to High</option>
+              <option value="price-desc" className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white">Price: High to Low</option>
+              <option value="views" className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white">Most Viewed</option>
             </select>
           </div>
         </div>
@@ -661,13 +661,13 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
-          className="text-center py-14 px-6 bg-white rounded-3xl border border-dashed border-gray-300 shadow-xs max-w-2xl mx-auto"
+          className="text-center py-14 px-6 bg-white dark:bg-[#151822] rounded-3xl border border-dashed border-gray-300 dark:border-[#252836] shadow-xs max-w-2xl mx-auto transition-colors"
         >
           {(hasActiveFilters || hasCategoryFilters) ? (
             <>
-              <Inbox className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <h3 className="text-lg font-bold text-gray-800">No advertisements match your filters</h3>
-              <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
+              <Inbox className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white">No advertisements match your filters</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-md mx-auto">
                 We couldn't find any listings matching your active filters. Try adjusting your search keyword, category, or district.
               </p>
               <div className="mt-5 flex items-center justify-center gap-2">
@@ -688,7 +688,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       resetCategoryFilters();
                       onResetFilters();
                     }}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-[#1E2230] hover:bg-gray-200 dark:hover:bg-[#2A2E3D] text-gray-700 dark:text-gray-300 font-bold rounded-xl text-xs transition-colors cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Reset All Filters</span>
@@ -698,13 +698,13 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
             </>
           ) : (
             <>
-              <div className="w-14 h-14 rounded-2xl bg-orange-50 text-[#FF5A36] mx-auto flex items-center justify-center mb-4">
+              <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-950/40 text-[#FF5A36] mx-auto flex items-center justify-center mb-4">
                 <Sparkles className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-black text-gray-900 tracking-tight">
+              <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
                 Fresh Marketplace Launch
               </h3>
-              <p className="text-sm text-gray-600 mt-2 max-w-md mx-auto leading-relaxed font-medium">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 max-w-md mx-auto leading-relaxed font-medium">
                 The marketplace is live, clean, and ready! Be the first seller to list your vehicle, property, electronics, or trade service across Sri Lanka.
               </p>
               {onOpenPostAd && (
@@ -741,7 +741,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                 whileHover={{ y: -6 }}
                 transition={{ type: 'spring', stiffness: 350, damping: 25 }}
                 onClick={() => onSelectListing(item)}
-                className="group bg-white rounded-2xl border border-gray-200 hover:border-[#FF5A36] overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col relative"
+                className="group bg-white dark:bg-[#151822] rounded-2xl border border-gray-200 dark:border-[#252836] hover:border-[#FF5A36] dark:hover:border-[#FF5A36] overflow-hidden shadow-xs hover:shadow-xl dark:hover:shadow-black/50 transition-all duration-300 cursor-pointer flex flex-col relative"
               >
                 {/* Badges */}
                 <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1 items-start">
@@ -871,49 +871,49 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                     <span className="text-[11px] font-bold text-[#FF5A36] uppercase tracking-wider line-clamp-1">
                       {item.serviceTrade || item.category}
                     </span>
-                    <h3 className="font-bold text-gray-900 text-sm sm:text-base mt-1 line-clamp-2 leading-snug group-hover:text-[#FF5A36] transition-colors">
+                    <h3 className="font-bold text-gray-900 dark:text-white text-sm sm:text-base mt-1 line-clamp-2 leading-snug group-hover:text-[#FF5A36] transition-colors">
                       {item.title}
                     </h3>
 
                     {/* Category Specific Specification Quick Highlights */}
                     {(item.vehicleYear || item.fuelType || item.transmission || item.vehicleMileage || item.propertyType || item.bedrooms || item.propertySize || item.electronicsSubcategory || item.storageCapacity || item.itemCondition || item.jobType) && (
-                      <div className="flex flex-wrap items-center gap-1 mt-1.5 text-[11px] font-medium text-gray-500 line-clamp-1 overflow-hidden">
+                      <div className="flex flex-wrap items-center gap-1 mt-1.5 text-[11px] font-medium text-gray-500 dark:text-gray-400 line-clamp-1 overflow-hidden">
                         {item.vehicleYear && (
-                          <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700 font-semibold text-[10px]">{item.vehicleYear}</span>
+                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.5 rounded text-gray-700 dark:text-gray-300 font-semibold text-[10px]">{item.vehicleYear}</span>
                         )}
                         {item.fuelType && (
-                          <span className="bg-amber-50 text-amber-800 border border-amber-200/60 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.fuelType}</span>
+                          <span className="bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-500/30 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.fuelType}</span>
                         )}
                         {item.transmission && (
-                          <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 text-[10px]">{item.transmission}</span>
+                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-400 text-[10px]">{item.transmission}</span>
                         )}
                         {item.vehicleMileage && (
-                          <span className="text-gray-500 text-[10px]">{Number(item.vehicleMileage).toLocaleString()} km</span>
+                          <span className="text-gray-500 dark:text-gray-400 text-[10px]">{Number(item.vehicleMileage).toLocaleString()} km</span>
                         )}
                         {item.propertyType && (
-                          <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/60 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.propertyType.split(' ')[0]}</span>
+                          <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-500/30 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.propertyType.split(' ')[0]}</span>
                         )}
                         {item.bedrooms !== undefined && item.bedrooms !== '' && (
-                          <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700 text-[10px] font-semibold">{item.bedrooms} Beds</span>
+                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.5 rounded text-gray-700 dark:text-gray-300 text-[10px] font-semibold">{item.bedrooms} Beds</span>
                         )}
                         {item.propertySize && (
-                          <span className="text-gray-500 text-[10px]">{item.propertySize}</span>
+                          <span className="text-gray-500 dark:text-gray-400 text-[10px]">{item.propertySize}</span>
                         )}
                         {item.electronicsSubcategory && (
-                          <span className="bg-indigo-50 text-indigo-800 border border-indigo-200/60 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.electronicsSubcategory.split(' ')[0]}</span>
+                          <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-500/30 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.electronicsSubcategory.split(' ')[0]}</span>
                         )}
                         {item.storageCapacity && item.storageCapacity !== 'N/A' && (
-                          <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700 text-[10px] font-semibold">{item.storageCapacity}</span>
+                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.5 rounded text-gray-700 dark:text-gray-300 text-[10px] font-semibold">{item.storageCapacity}</span>
                         )}
                         {item.itemCondition && (
-                          <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 text-[10px]">{item.itemCondition}</span>
+                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-400 text-[10px]">{item.itemCondition}</span>
                         )}
                         {item.jobType && (
-                          <span className="bg-sky-50 text-sky-800 border border-sky-200/60 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.jobType}</span>
+                          <span className="bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-300 border border-sky-200/60 dark:border-sky-500/30 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.jobType}</span>
                         )}
                       </div>
                     )}
-                    <div className="text-base sm:text-lg font-extrabold text-[#111217] mt-1.5">
+                    <div className="text-base sm:text-lg font-extrabold text-[#111217] dark:text-white mt-1.5">
                       {item.category === 'Services' && item.pricingType === 'quote'
                         ? 'Quote on Request'
                         : item.category === 'Services' && item.pricingType === 'hourly'
@@ -924,33 +924,33 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                     </div>
                   </div>
 
-                  <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500 space-y-1.5">
+                  <div className="mt-3 pt-3 border-t border-gray-100 dark:border-[#252836] text-xs text-gray-500 dark:text-gray-400 space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1 font-medium text-gray-600">
+                      <span className="inline-flex items-center gap-1 font-medium text-gray-600 dark:text-gray-300">
                         <MapPin className="w-3.5 h-3.5 text-[#FF5A36]" />
                         {item.location}
                       </span>
-                      <span className="inline-flex items-center gap-1 text-[11px] text-gray-400">
+                      <span className="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500">
                         <Clock className="w-3 h-3" />
                         {item.date}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-gray-400">
+                    <div className="flex items-center justify-between text-[11px] text-gray-400 dark:text-gray-500">
                       <span className="inline-flex items-center gap-1">
                         <Eye className="w-3 h-3" />
                         {item.views || 0} views
                       </span>
                       {item.sellerRating ? (
-                        <span className="inline-flex items-center gap-1 text-amber-600 font-bold">
+                        <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-bold">
                           <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                           <span>{item.sellerRating.toFixed(1)}</span>
                           {item.reviewCount ? (
-                            <span className="text-gray-400 font-normal">({item.reviewCount})</span>
+                            <span className="text-gray-400 dark:text-gray-500 font-normal">({item.reviewCount})</span>
                           ) : null}
                         </span>
                       ) : (
-                        <span className="font-medium text-gray-500">
+                        <span className="font-medium text-gray-500 dark:text-gray-400">
                           {item.userId === 'system' ? 'Verified Seller' : 'HUTA Member'}
                         </span>
                       )}

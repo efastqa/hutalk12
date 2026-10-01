@@ -401,7 +401,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F5F7] pb-32 animate-in fade-in duration-200">
+    <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0B0C10] text-[#181920] dark:text-[#F8FAFC] pb-32 animate-in fade-in duration-200 transition-colors">
       {/* 1. Header Hero Banner */}
       <div className="bg-[#111217] text-white pt-8 pb-14 px-4 sm:px-6 lg:px-8 border-b border-[#2D2F39] relative overflow-hidden">
         {/* Ambient background aura */}
@@ -597,14 +597,14 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                 <div className="w-9 h-9 rounded-2xl bg-[#FF5A36]/10 text-[#FF5A36] flex items-center justify-center font-black shadow-xs">
                   <LayoutGrid className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
                   Our Categories
                 </h2>
-                <span className="text-xs font-black bg-orange-100 text-[#FF5A36] px-2.5 py-0.5 rounded-full">
+                <span className="text-xs font-black bg-orange-100 dark:bg-orange-950/40 text-[#FF5A36] px-2.5 py-0.5 rounded-full">
                   {filteredCategories.length}
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-gray-500 mt-1.5 leading-relaxed">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed">
                 Browse verified marketplace classifieds, home repairs, and professional services across Sri Lanka in one place.
               </p>
             </div>
@@ -612,15 +612,15 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
             {/* Filter Pills & Search */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
               {/* Filter Tabs */}
-              <div className="flex items-center bg-gray-100/90 p-1 rounded-2xl text-xs font-bold overflow-x-auto scrollbar-none">
+              <div className="flex items-center bg-gray-100/90 dark:bg-[#1E2230] p-1 rounded-2xl text-xs font-bold overflow-x-auto scrollbar-none">
                 <button
                   type="button"
                   id="huta-cat-tab-all"
                   onClick={() => setCategoryTab('all')}
                   className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
                     categoryTab === 'all'
-                      ? 'bg-white text-gray-900 shadow-xs'
-                      : 'text-gray-500 hover:text-gray-900'
+                      ? 'bg-white dark:bg-[#2A2E3D] text-gray-900 dark:text-white shadow-xs'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
                   All ({HUTA_ALL_CATEGORIES.length})
@@ -631,8 +631,8 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                   onClick={() => setCategoryTab('marketplace')}
                   className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
                     categoryTab === 'marketplace'
-                      ? 'bg-white text-gray-900 shadow-xs'
-                      : 'text-gray-500 hover:text-gray-900'
+                      ? 'bg-white dark:bg-[#2A2E3D] text-gray-900 dark:text-white shadow-xs'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
                   Marketplace
@@ -643,8 +643,8 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                   onClick={() => setCategoryTab('services')}
                   className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
                     categoryTab === 'services'
-                      ? 'bg-white text-gray-900 shadow-xs'
-                      : 'text-gray-500 hover:text-gray-900'
+                      ? 'bg-white dark:bg-[#2A2E3D] text-gray-900 dark:text-white shadow-xs'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
                   Home Services
@@ -655,8 +655,8 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                   onClick={() => setCategoryTab('lifestyle')}
                   className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${
                     categoryTab === 'lifestyle'
-                      ? 'bg-white text-gray-900 shadow-xs'
-                      : 'text-gray-500 hover:text-gray-900'
+                      ? 'bg-white dark:bg-[#2A2E3D] text-gray-900 dark:text-white shadow-xs'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
                   Professional
@@ -672,7 +672,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                   value={categorySearchQuery}
                   onChange={(e) => setCategorySearchQuery(e.target.value)}
                   placeholder="Filter categories..."
-                  className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-900 placeholder:text-gray-400 focus:border-[#FF5A36] focus:bg-white outline-none transition-all shadow-xs"
+                  className="w-full pl-8 pr-7 py-1.5 rounded-xl bg-gray-50 dark:bg-[#151822] border border-gray-200 dark:border-[#252836] text-xs text-gray-900 dark:text-white placeholder:text-gray-400 focus:border-[#FF5A36] focus:bg-white dark:focus:bg-[#1E2230] outline-none transition-all shadow-xs"
                 />
                 {categorySearchQuery && (
                   <button
@@ -698,7 +698,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                   whileHover={{ y: -3, scale: 1.015 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleCategoryClick(cat)}
-                  className="group bg-white rounded-2xl p-4 border border-gray-200/80 hover:border-[#FF5A36]/40 hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden"
+                  className="group bg-white dark:bg-[#151822] rounded-2xl p-4 border border-gray-200/80 dark:border-[#252836] hover:border-[#FF5A36]/40 dark:hover:border-[#FF5A36]/40 hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden"
                 >
                   {/* Subtle hover top border line */}
                   <div className="absolute top-0 left-0 right-0 h-1 bg-transparent group-hover:bg-[#FF5A36] transition-colors" />
@@ -708,14 +708,14 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                       <IconComp className={`w-6 h-6 ${cat.iconColor}`} />
                     </div>
                     {cat.popular && (
-                      <span className="text-[10px] font-black uppercase text-[#FF5A36] bg-orange-50 px-1.5 py-0.5 rounded-md border border-orange-100/60">
+                      <span className="text-[10px] font-black uppercase text-[#FF5A36] bg-orange-50 dark:bg-orange-950/40 px-1.5 py-0.5 rounded-md border border-orange-100/60 dark:border-orange-500/30">
                         Popular
                       </span>
                     )}
                   </div>
 
                   <div className="mt-3.5">
-                    <h3 className="font-extrabold text-xs sm:text-sm text-gray-900 group-hover:text-[#FF5A36] transition-colors leading-snug line-clamp-1">
+                    <h3 className="font-extrabold text-xs sm:text-sm text-gray-900 dark:text-white group-hover:text-[#FF5A36] transition-colors leading-snug line-clamp-1">
                       {cat.name}
                     </h3>
                     <p className="text-[11px] text-gray-400 font-medium mt-1 truncate">
@@ -723,7 +723,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                     </p>
                   </div>
 
-                  <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between text-[11px] font-bold text-gray-400 group-hover:text-[#FF5A36] transition-colors">
+                  <div className="mt-3 pt-2.5 border-t border-gray-100 dark:border-[#252836] flex items-center justify-between text-[11px] font-bold text-gray-400 group-hover:text-[#FF5A36] transition-colors">
                     <span>View ads</span>
                     <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </div>
@@ -925,10 +925,10 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                   key={evt.id}
                   whileHover={{ y: -4 }}
                   onClick={() => setSelectedEventModal(evt)}
-                  className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer group"
+                  className="bg-white dark:bg-[#151822] rounded-3xl overflow-hidden border border-gray-100 dark:border-[#252836] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer group"
                 >
                   {/* Event Cover Image with Ticket Date Stamp & Badges */}
-                  <div className="relative h-52 w-full overflow-hidden bg-gray-100">
+                  <div className="relative h-52 w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
                     <img
                       src={evt.image}
                       alt={evt.title}
@@ -938,11 +938,11 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
 
                     {/* Ticket Date Stamp Box (Classic event pass format) */}
-                    <div className="absolute top-3.5 left-3.5 bg-white rounded-2xl shadow-lg border border-gray-100/80 p-1.5 min-w-[50px] text-center z-10">
+                    <div className="absolute top-3.5 left-3.5 bg-white dark:bg-[#151822] rounded-2xl shadow-lg border border-gray-100/80 dark:border-[#252836] p-1.5 min-w-[50px] text-center z-10">
                       <span className="block text-[10px] font-black text-[#FF5A36] uppercase tracking-wider leading-none">
                         {evt.month}
                       </span>
-                      <span className="block text-base font-black text-gray-900 leading-none mt-1">
+                      <span className="block text-base font-black text-gray-900 dark:text-white leading-none mt-1">
                         {evt.day}
                       </span>
                     </div>
@@ -996,22 +996,22 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                       </div>
 
                       {/* Event Title */}
-                      <h3 className="font-extrabold text-base sm:text-lg text-gray-900 leading-snug group-hover:text-[#FF5A36] transition-colors line-clamp-2">
+                      <h3 className="font-extrabold text-base sm:text-lg text-gray-900 dark:text-white leading-snug group-hover:text-[#FF5A36] transition-colors line-clamp-2">
                         {evt.title}
                       </h3>
 
                       {/* Short Description */}
-                      <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
                         {evt.description}
                       </p>
 
                       {/* Venue & Expected Crowd */}
-                      <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600">
+                      <div className="pt-3 border-t border-gray-100 dark:border-[#252836] flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
                         <div className="flex items-center gap-1.5 truncate max-w-[180px]">
                           <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                           <span className="truncate font-medium">{evt.venue}</span>
                         </div>
-                        <div className="flex items-center gap-1 font-bold text-gray-700 shrink-0">
+                        <div className="flex items-center gap-1 font-bold text-gray-700 dark:text-gray-300 shrink-0">
                           <Users className="w-3.5 h-3.5 text-gray-400" />
                           <span>{evt.attendees}+</span>
                         </div>

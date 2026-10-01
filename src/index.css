@@ -1,1 +1,54 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg-app: #f8fafc;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-subtle: #e2e8f0;
+  color-scheme: light;
+}
+
+html.dark {
+  --bg-app: #0b0c10;
+  --bg-card: #151822;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-subtle: #252836;
+  color-scheme: dark;
+}
+
+body {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html.dark body {
+  background-color: #0b0c10;
+  color: #f8fafc;
+}
+
+/* Dark mode scrollbars & selection */
+html.dark ::selection {
+  background-color: #FF5A36;
+  color: #ffffff;
+}
+
+html.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html.dark ::-webkit-scrollbar-track {
+  background: #111217;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #2D303E;
+  border-radius: 4px;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3F4456;
+}

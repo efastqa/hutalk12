@@ -23,8 +23,11 @@ import {
   Sliders,
   Smartphone,
   Download,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { DeviceSettingsPanel } from './DeviceSettingsPanel';
+import { ThemeToggle } from './ThemeToggle';
 
 interface MorePageProps {
   currentUser: User | null;
@@ -60,9 +63,9 @@ export const MorePage: React.FC<MorePageProps> = ({
   onToast,
 }) => {
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-32 animate-in fade-in duration-200">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0C10] text-[#181920] dark:text-[#F8FAFC] pb-32 animate-in fade-in duration-200 transition-colors duration-200">
       {/* Top Header */}
-      <header className="sticky top-0 z-30 bg-[#0A2540] text-white shadow-md">
+      <header className="sticky top-0 z-30 bg-[#0A2540] dark:bg-[#0C0E14] text-white shadow-md border-b border-transparent dark:border-[#22242F]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -74,7 +77,11 @@ export const MorePage: React.FC<MorePageProps> = ({
             </button>
             <h1 className="font-extrabold text-lg sm:text-xl tracking-tight">More Options</h1>
           </div>
-          <span className="text-xs text-blue-200 font-medium">HUTA.lk</span>
+          <div className="flex items-center gap-3">
+            <ThemeToggle variant="compact" id="more-header-theme-toggle" />
+            <span className="text-[#2D2F39]">|</span>
+            <span className="text-xs text-blue-200 font-medium">HUTA.lk</span>
+          </div>
         </div>
       </header>
 
@@ -255,28 +262,28 @@ export const MorePage: React.FC<MorePageProps> = ({
         <section className="space-y-3">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-[#FF5A36]" />
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Logins & Security Access
             </h3>
           </div>
 
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-100">
+          <div className="bg-white dark:bg-[#151822] rounded-3xl border border-gray-100 dark:border-[#252836] shadow-sm overflow-hidden divide-y divide-gray-100 dark:divide-[#252836]">
             {/* Member Login Item */}
             <button
               type="button"
               id="more-menu-member-login"
               onClick={onOpenUserAuth}
-              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 transition-colors group cursor-pointer"
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#FF5A36] flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-[#FF5A36] flex items-center justify-center group-hover:scale-105 transition-transform">
                   <UserIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900 group-hover:text-[#FF5A36] transition-colors">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-[#FF5A36] transition-colors">
                     {currentUser ? 'Member Account Profile' : 'Member Login & Register'}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
                     {currentUser
                       ? `Logged in as @${currentUser.username}`
                       : 'Access your ads, favorites, and seller inquiries'}
@@ -293,44 +300,44 @@ export const MorePage: React.FC<MorePageProps> = ({
                   type="button"
                   id="more-menu-admin-dashboard"
                   onClick={() => onSelectTab('admin_dashboard')}
-                  className="w-full px-5 py-4 flex items-center justify-between text-left bg-emerald-50/50 hover:bg-emerald-50 transition-colors group cursor-pointer"
+                  className="w-full px-5 py-4 flex items-center justify-between text-left bg-emerald-50/50 dark:bg-emerald-950/20 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors group cursor-pointer"
                 >
                   <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
                       <LayoutGrid className="w-5 h-5" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-emerald-900">
+                        <p className="text-sm font-bold text-emerald-900 dark:text-emerald-300">
                           Open Admin Control Dashboard
                         </p>
-                        <span className="text-[10px] font-bold bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-bold bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100 px-2 py-0.5 rounded-full">
                           Active
                         </span>
                       </div>
-                      <p className="text-xs text-emerald-700">
+                      <p className="text-xs text-emerald-700 dark:text-emerald-400">
                         Edit all ad details, approve pending ads, feature listings, or delete items
                       </p>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-emerald-600" />
+                  <ChevronRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 </button>
 
                 <button
                   type="button"
                   id="more-menu-change-admin-pass"
                   onClick={() => onSelectTab('admin_dashboard')}
-                  className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 transition-colors group cursor-pointer"
+                  className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
                 >
                   <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center">
                       <Lock className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-gray-900 group-hover:text-[#FF5A36] transition-colors">
+                      <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-[#FF5A36] transition-colors">
                         Change Admin Master Password
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-400 dark:text-gray-500">
                         Update administrator credentials inside dashboard
                       </p>
                     </div>
@@ -346,17 +353,17 @@ export const MorePage: React.FC<MorePageProps> = ({
                 type="button"
                 id="more-menu-change-member-pass"
                 onClick={onChangePassword}
-                className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 transition-colors group cursor-pointer"
+                className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
               >
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                     <KeyRound className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-900 group-hover:text-[#FF5A36] transition-colors">
+                    <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-[#FF5A36] transition-colors">
                       Change Member Password
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
                       Update your account security password
                     </p>
                   </div>
@@ -371,28 +378,28 @@ export const MorePage: React.FC<MorePageProps> = ({
         <section className="space-y-3">
           <div className="flex items-center gap-2">
             <Compass className="w-4 h-4 text-[#FF5A36]" />
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Explore Multi-Pages
             </h3>
           </div>
 
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-100">
-            {/* All Categories Page (Looks like Image 2) */}
+          <div className="bg-white dark:bg-[#151822] rounded-3xl border border-gray-100 dark:border-[#252836] shadow-sm overflow-hidden divide-y divide-gray-100 dark:divide-[#252836]">
+            {/* All Categories Page */}
             <button
               type="button"
               id="more-menu-all-categories"
               onClick={() => onSelectTab('categories')}
-              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 transition-colors group cursor-pointer"
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#0A2540] flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-[#0A2540] dark:text-blue-300 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <LayoutGrid className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900 group-hover:text-[#FF5A36] transition-colors">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-[#FF5A36] transition-colors">
                     All Categories & Services Directory
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
                     Classifieds, automotive, cleaning, AC repair & professional services
                   </p>
                 </div>
@@ -400,22 +407,22 @@ export const MorePage: React.FC<MorePageProps> = ({
               <ChevronRight className="w-4 h-4 text-gray-400" />
             </button>
 
-            {/* HUTA in Events Page (Looks like Image 1) */}
+            {/* HUTA in Events Page */}
             <button
               type="button"
               id="more-menu-huta-in"
               onClick={() => onSelectTab('huta_in')}
-              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 transition-colors group cursor-pointer"
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#FF5A36] flex items-center justify-center group-hover:scale-105 transition-transform font-black text-xs">
+                <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-[#FF5A36] flex items-center justify-center group-hover:scale-105 transition-transform font-black text-xs">
                   IN
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900 group-hover:text-[#FF5A36] transition-colors">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-[#FF5A36] transition-colors">
                     HUTA in — Events & Happenings
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
                     Exhibitions, CardCon, auto shows, food festivals & concerts
                   </p>
                 </div>
@@ -434,17 +441,17 @@ export const MorePage: React.FC<MorePageProps> = ({
                   onSelectTab('user_dashboard');
                 }
               }}
-              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 transition-colors group cursor-pointer"
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 flex items-center justify-center">
                   <LayoutGrid className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900 group-hover:text-[#FF5A36] transition-colors">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-[#FF5A36] transition-colors">
                     My Advertisements Dashboard
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
                     Manage active ads, view analytics & edit listings
                   </p>
                 </div>
@@ -457,17 +464,17 @@ export const MorePage: React.FC<MorePageProps> = ({
               type="button"
               id="more-menu-saved-favorites"
               onClick={() => onSelectTab('user_dashboard')}
-              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 transition-colors group cursor-pointer"
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-500 flex items-center justify-center">
                   <Heart className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900 group-hover:text-[#FF5A36] transition-colors">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-[#FF5A36] transition-colors">
                     Saved Favorites ({favoritesCount})
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
                     Bookmarked listings you want to revisit
                   </p>
                 </div>
@@ -480,17 +487,17 @@ export const MorePage: React.FC<MorePageProps> = ({
               type="button"
               id="more-menu-live-chat"
               onClick={onOpenChat}
-              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 transition-colors group cursor-pointer"
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                   <MessageCircle className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900 group-hover:text-[#FF5A36] transition-colors">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-[#FF5A36] transition-colors">
                     Live Chat & Messages
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
                     Real-time conversations with buyers and sellers
                   </p>
                 </div>
@@ -503,23 +510,50 @@ export const MorePage: React.FC<MorePageProps> = ({
               type="button"
               id="more-menu-post-ad"
               onClick={onOpenPostAd}
-              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 transition-colors group cursor-pointer"
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-orange-100 text-[#FF5A36] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950/50 text-[#FF5A36] flex items-center justify-center">
                   <PlusCircle className="w-5 h-5" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-[#FF5A36]">
                     Post a Free Advertisement
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
                     List items, vehicles, properties or services
                   </p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-[#FF5A36]" />
             </button>
+          </div>
+        </section>
+
+        {/* 4. Appearance & Theme (Light / Dark Mode) */}
+        <section className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Sun className="w-4 h-4 text-amber-500" />
+            <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Website Theme & Appearance
+            </h3>
+          </div>
+
+          <div className="bg-white dark:bg-[#151822] rounded-3xl border border-gray-100 dark:border-[#252836] p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <Sun className="w-5 h-5 fill-current" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-gray-900 dark:text-white">
+                  Light Mode & Dark Mode
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  Instant 1-tap theme switching across all devices
+                </p>
+              </div>
+            </div>
+            <ThemeToggle variant="segmented" id="more-page-theme-segmented" />
           </div>
         </section>
 
@@ -537,22 +571,22 @@ export const MorePage: React.FC<MorePageProps> = ({
             </h3>
           </div>
 
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-100">
+          <div className="bg-white dark:bg-[#151822] rounded-3xl border border-gray-100 dark:border-[#252836] shadow-sm overflow-hidden divide-y divide-gray-100 dark:divide-[#252836]">
             <a
               href="https://wa.me/94775260765"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-5 py-4 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer"
+              className="px-5 py-4 flex items-center justify-between hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xs">
                   <Phone className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-emerald-600 transition-colors">
                     24/7 WhatsApp Support
                   </p>
-                  <p className="text-xs text-emerald-600 font-medium">+94 77 526 0765 • Click to chat</p>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">+94 77 526 0765 • Click to chat</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
@@ -560,28 +594,28 @@ export const MorePage: React.FC<MorePageProps> = ({
 
             <a
               href="tel:+94775260765"
-              className="px-5 py-4 flex items-center justify-between hover:bg-gray-50/80 transition-colors group cursor-pointer"
+              className="px-5 py-4 flex items-center justify-between hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs">
                   <Phone className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">
                     Direct Phone Hotline
                   </p>
-                  <p className="text-xs text-gray-500 font-medium">+94 77 526 0765 • Tap to call</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">+94 77 526 0765 • Tap to call</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </a>
 
-            <div className="px-5 py-4 flex items-center justify-between text-xs text-gray-500">
+            <div className="px-5 py-4 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-gray-400" />
                 <span>Terms of Service & Privacy Policy</span>
               </div>
-              <span className="text-[11px] text-gray-400">HUTA.lk v2.0</span>
+              <span className="text-[11px] text-gray-400 dark:text-gray-500">HUTA.lk v2.0</span>
             </div>
           </div>
         </section>

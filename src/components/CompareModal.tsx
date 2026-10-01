@@ -57,7 +57,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.25 }}
-          className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-6xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-gray-200"
+          className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-6xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-gray-200 dark:border-[#252836] transition-colors"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -105,7 +105,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#F8F9FA]">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#F8F9FA] dark:bg-[#0B0C10] transition-colors">
             {compareListings.length === 0 ? (
               <div className="py-16 text-center max-w-md mx-auto space-y-3">
                 <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-400 mx-auto">
@@ -169,10 +169,10 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                       return (
                         <div
                           key={item.id}
-                          className={`bg-white rounded-2xl border transition-all flex flex-col justify-between shadow-xs ${
+                          className={`bg-white dark:bg-[#151822] text-gray-900 dark:text-white rounded-2xl border transition-all flex flex-col justify-between shadow-xs ${
                             isBestPrice
                               ? 'border-emerald-500 ring-2 ring-emerald-500/20'
-                              : 'border-gray-200 hover:border-gray-300'
+                              : 'border-gray-200 dark:border-[#252836] hover:border-gray-300 dark:hover:border-gray-600'
                           }`}
                         >
                           {/* Top Action & Image */}
@@ -221,14 +221,14 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                                   onSelectListing(item);
                                   onClose();
                                 }}
-                                className="font-bold text-gray-900 text-sm mt-1 line-clamp-2 hover:text-[#FF5A36] cursor-pointer"
+                                className="font-bold text-gray-900 dark:text-white text-sm mt-1 line-clamp-2 hover:text-[#FF5A36] cursor-pointer"
                               >
                                 {item.title}
                               </h4>
 
                               {/* Price */}
                               <div className="mt-2 flex items-baseline gap-1.5">
-                                <span className="text-lg font-black text-[#111217]">
+                                <span className="text-lg font-black text-[#111217] dark:text-white">
                                   {formatLKR(item.price)}
                                 </span>
                                 {item.pricingType && item.pricingType !== 'fixed' && (
@@ -240,35 +240,35 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                             </div>
 
                             {/* Key Spec Comparison Rows */}
-                            <div className="space-y-2 text-xs border-t border-gray-100 pt-3">
+                            <div className="space-y-2 text-xs border-t border-gray-100 dark:border-[#252836] pt-3">
                               {/* Location */}
-                              <div className="flex items-center justify-between py-1 border-b border-gray-50">
+                              <div className="flex items-center justify-between py-1 border-b border-gray-50 dark:border-[#1E2230]">
                                 <span className="text-gray-400 font-medium">District</span>
-                                <span className="font-semibold text-gray-800 flex items-center gap-1">
+                                <span className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1">
                                   <MapPin className="w-3 h-3 text-[#FF5A36]" />
                                   {item.location}
                                 </span>
                               </div>
 
                               {/* Category */}
-                              <div className="flex items-center justify-between py-1 border-b border-gray-50">
+                              <div className="flex items-center justify-between py-1 border-b border-gray-50 dark:border-[#1E2230]">
                                 <span className="text-gray-400 font-medium">Category</span>
-                                <span className="font-semibold text-gray-800">{item.category}</span>
+                                <span className="font-semibold text-gray-800 dark:text-gray-200">{item.category}</span>
                               </div>
 
                               {/* Date Posted */}
-                              <div className="flex items-center justify-between py-1 border-b border-gray-50">
+                              <div className="flex items-center justify-between py-1 border-b border-gray-50 dark:border-[#1E2230]">
                                 <span className="text-gray-400 font-medium">Posted</span>
-                                <span className="font-semibold text-gray-800 flex items-center gap-1">
+                                <span className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1">
                                   <Clock className="w-3 h-3 text-gray-400" />
                                   {item.date}
                                 </span>
                               </div>
 
                               {/* Views */}
-                              <div className="flex items-center justify-between py-1 border-b border-gray-50">
+                              <div className="flex items-center justify-between py-1 border-b border-gray-50 dark:border-[#1E2230]">
                                 <span className="text-gray-400 font-medium">Views</span>
-                                <span className="font-semibold text-gray-800 flex items-center gap-1">
+                                <span className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1">
                                   <Eye className="w-3 h-3 text-gray-400" />
                                   {item.views || 0}
                                 </span>
@@ -277,7 +277,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                               {/* Seller Verification */}
                               <div className="flex items-center justify-between py-1">
                                 <span className="text-gray-400 font-medium">Seller Trust</span>
-                                <span className="font-semibold text-gray-800 flex items-center gap-1">
+                                <span className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1">
                                   {item.isVerifiedPro ? (
                                     <span className="inline-flex items-center gap-1 text-emerald-600 font-bold text-[11px]">
                                       <ShieldCheck className="w-3.5 h-3.5" />
@@ -288,7 +288,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                                       ⚡ 24/7 Available
                                     </span>
                                   ) : (
-                                    <span className="text-gray-600 font-medium text-[11px]">
+                                    <span className="text-gray-600 dark:text-gray-400 font-medium text-[11px]">
                                       Standard Seller
                                     </span>
                                   )}

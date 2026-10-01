@@ -60,7 +60,7 @@ export const AppStoreModal: React.FC<AppStoreModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="relative w-full max-w-2xl bg-white dark:bg-[#151822] text-gray-800 dark:text-gray-100 rounded-3xl shadow-2xl border border-gray-100 dark:border-[#252836] overflow-hidden flex flex-col max-h-[92vh] transition-colors">
         {/* Header Header Gradient */}
         <div className="relative bg-gradient-to-r from-[#12141A] via-[#1A1C24] to-[#12141A] text-white p-6 sm:p-7 shrink-0">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF5A36]/15 rounded-full blur-2xl pointer-events-none" />

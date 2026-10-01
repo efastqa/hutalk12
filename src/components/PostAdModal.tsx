@@ -796,13 +796,13 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.96, opacity: 0, y: 15 }}
         transition={{ duration: 0.2 }}
-        className="bg-white rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl relative my-auto max-h-[92vh] overflow-y-auto"
+        className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl relative my-auto max-h-[92vh] overflow-y-auto border border-gray-100 dark:border-[#252836] transition-colors"
       >
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors cursor-pointer z-10"
+          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#1E2230] rounded-full transition-colors cursor-pointer z-10"
           aria-label="Close modal"
         >
           <X className="w-5 h-5" />
@@ -945,10 +945,10 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
               <span className="text-[11px] font-bold tracking-widest text-[#FF5A36] uppercase bg-[#FF5A36]/10 px-2.5 py-0.5 rounded-full inline-block mb-1">
                 {editingListing ? 'Edit Listing' : 'Free Classified Posting'}
               </span>
-              <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
                 {editingListing ? 'Update Your Advertisement' : 'Post an Ad in Sri Lanka'}
               </h2>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 Reach thousands of active buyers across all 25 districts with zero commission.
               </p>
             </div>

@@ -674,7 +674,7 @@ export default function App() {
   }).length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F4F5F7] text-[#181920] pb-16 lg:pb-0">
+    <div className="min-h-screen flex flex-col bg-[#F4F5F7] dark:bg-[#0B0C10] text-[#181920] dark:text-[#F8FAFC] pb-16 lg:pb-0 transition-colors duration-200">
       {/* Toast Notification Layer */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
@@ -735,8 +735,8 @@ export default function App() {
 
             {/* Qatar Living style Browse Districts Bar */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2">
-              <div className="bg-white border border-gray-200 rounded-2xl p-3 shadow-xs flex items-center gap-2 overflow-x-auto scrollbar-none text-xs">
-                <span className="flex items-center gap-1.5 text-gray-700 font-bold whitespace-nowrap shrink-0 px-2">
+              <div className="bg-white dark:bg-[#151822] border border-gray-200 dark:border-[#252836] rounded-2xl p-3 shadow-xs flex items-center gap-2 overflow-x-auto scrollbar-none text-xs">
+                <span className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300 font-bold whitespace-nowrap shrink-0 px-2">
                   <MapPin className="w-3.5 h-3.5 text-[#FF5A36]" />
                   <span>Popular Districts:</span>
                 </span>
@@ -761,8 +761,8 @@ export default function App() {
                       onClick={() => setSelectedLocation(dist)}
                       className={`px-3 py-1.5 rounded-xl whitespace-nowrap font-semibold transition-all cursor-pointer ${
                         isActive
-                          ? 'bg-[#111217] text-[#FF5A36] border border-[#FF5A36] shadow-xs'
-                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-transparent'
+                          ? 'bg-[#111217] dark:bg-[#FF5A36] text-[#FF5A36] dark:text-white border border-[#FF5A36] shadow-xs'
+                          : 'bg-gray-50 dark:bg-[#1E2230] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2A2E3D] hover:text-gray-900 dark:hover:text-white border border-transparent'
                       }`}
                     >
                       {dist}
@@ -781,7 +781,7 @@ export default function App() {
                   className={`px-3 py-1.5 rounded-xl whitespace-nowrap font-bold transition-all cursor-pointer flex items-center gap-1.5 ml-auto shrink-0 shadow-2xs ${
                     listingsViewMode === 'map'
                       ? 'bg-[#FF5A36] text-white'
-                      : 'bg-orange-50 text-[#FF5A36] hover:bg-orange-100 border border-orange-200'
+                      : 'bg-orange-50 dark:bg-orange-950/40 text-[#FF5A36] hover:bg-orange-100 dark:hover:bg-orange-900/40 border border-orange-200 dark:border-orange-500/30'
                   }`}
                   title="Explore all listings on interactive map"
                 >
@@ -842,15 +842,15 @@ export default function App() {
 
             {/* Qatar Living style Post-An-Ad Banner */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-              <div className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="bg-white dark:bg-[#151822] border border-gray-200 dark:border-[#252836] rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6 transition-colors">
                 <div className="space-y-2 text-center md:text-left">
                   <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#FF5A36] uppercase tracking-wider">
                     <span>Direct Buyer-Seller Connection</span>
                   </div>
-                  <h3 className="text-xl sm:text-2xl font-black text-gray-900">
+                  <h3 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
                     Have something to sell or rent in Sri Lanka?
                   </h3>
-                  <p className="text-xs sm:text-sm text-gray-500 max-w-lg">
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-lg">
                     Post your ad for free in 60 seconds with AI assistance. Connect with verified buyers directly via WhatsApp and phone call.
                   </p>
                 </div>

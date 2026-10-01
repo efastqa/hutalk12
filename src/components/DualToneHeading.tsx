@@ -4,7 +4,7 @@ import { Sparkles } from 'lucide-react';
 import flagImg from '../assets/sri-lanka-flag.png';
 
 export type DualToneSize = 'hero' | 'xl' | 'lg' | 'md' | 'sm';
-export type DualToneTheme = 'dark' | 'light';
+export type DualToneTheme = 'dark' | 'light' | 'auto';
 export type DualToneAccent = 'orange' | 'emerald' | 'blue' | 'purple' | 'amber';
 export type DualToneAnimation = 'rotate' | 'shimmer' | 'typewriter' | 'pulse' | 'wave';
 
@@ -139,7 +139,7 @@ export const DualToneHeading: React.FC<DualToneHeadingProps> = ({
   badge,
   as: Component = 'h2',
   size = 'lg',
-  theme = 'dark',
+  theme = 'auto',
   accentColor = 'orange',
   animationType = 'rotate',
   align = 'center',
@@ -262,9 +262,24 @@ export const DualToneHeading: React.FC<DualToneHeadingProps> = ({
       ? 'text-right items-end justify-end'
       : 'text-left items-start justify-start';
 
-  const primaryToneColor = theme === 'dark' ? 'text-white' : 'text-[#111217]';
-  const subtitleToneColor = theme === 'dark' ? 'text-gray-400' : 'text-gray-600';
-  const accentToneColor = theme === 'dark' ? colors.textDark : colors.textLight;
+  const primaryToneColor =
+    theme === 'dark'
+      ? 'text-white'
+      : theme === 'auto'
+      ? 'text-[#111217] dark:text-white'
+      : 'text-[#111217]';
+  const subtitleToneColor =
+    theme === 'dark'
+      ? 'text-gray-400'
+      : theme === 'auto'
+      ? 'text-gray-600 dark:text-gray-400'
+      : 'text-gray-600';
+  const accentToneColor =
+    theme === 'dark'
+      ? colors.textDark
+      : theme === 'auto'
+      ? `${colors.textLight} dark:${colors.textDark}`
+      : colors.textLight;
 
   return (
     <div

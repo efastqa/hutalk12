@@ -96,7 +96,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
         <DualToneHeading
           as="h2"
           size="xl"
-          theme="light"
+          theme="auto"
           primaryText="Explore Our"
           accentText={['Popular Categories', 'Top Sectors', 'Marketplace Hubs']}
           animationType="rotate"
@@ -131,7 +131,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
               className={`relative flex flex-col items-center justify-center p-5 sm:p-6 rounded-2xl sm:rounded-[22px] border transition-all duration-300 text-center cursor-pointer select-none group min-h-[162px] ${
                 isActive
                   ? 'bg-[#121319] border-[#E54D2E] text-white shadow-xl shadow-[#E54D2E]/10 ring-1 ring-[#E54D2E]/60'
-                  : 'bg-white border-[#E5E7EB] text-[#111217] hover:border-gray-300 hover:shadow-lg hover:shadow-gray-200/50'
+                  : 'bg-white dark:bg-[#151822] border-[#E5E7EB] dark:border-[#252836] text-[#111217] dark:text-white hover:border-gray-300 dark:hover:border-[#FF5A36] hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-black/40'
               }`}
             >
               {/* Active ambient glow */}
@@ -148,7 +148,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
                 className={`w-12 h-12 sm:w-13 sm:h-13 rounded-full flex items-center justify-center mb-3 transition-all duration-300 ${
                   isActive
                     ? 'bg-[#2E1D1E] text-[#FF5A36] shadow-xs'
-                    : 'bg-[#F4F5F7] text-[#111217] group-hover:bg-[#FF5A36]/10 group-hover:text-[#FF5A36] group-hover:scale-108'
+                    : 'bg-[#F4F5F7] dark:bg-[#1E2230] text-[#111217] dark:text-gray-200 group-hover:bg-[#FF5A36]/10 group-hover:text-[#FF5A36] group-hover:scale-108'
                 }`}
               >
                 <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${isActive ? 'stroke-[2.2]' : 'stroke-2'}`} />
@@ -157,7 +157,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
               {/* Category Title */}
               <span
                 className={`font-bold text-sm sm:text-base tracking-tight mb-1.5 transition-colors line-clamp-1 ${
-                  isActive ? 'text-white font-extrabold' : 'text-[#111217] group-hover:text-[#FF5A36]'
+                  isActive ? 'text-white font-extrabold' : 'text-[#111217] dark:text-white group-hover:text-[#FF5A36]'
                 }`}
               >
                 {cat.displayLabel || cat.label}
@@ -166,12 +166,12 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
               {/* Bullet status with live ads counter matching image */}
               <div
                 className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-                  isActive ? 'text-gray-400' : 'text-gray-400 group-hover:text-gray-500'
+                  isActive ? 'text-gray-400' : 'text-gray-400 dark:text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'
                 }`}
               >
                 <span
                   className={`inline-block w-2.5 h-2.5 rounded-full border-[1.5px] transition-colors shrink-0 ${
-                    isActive ? 'border-gray-400' : 'border-gray-300 group-hover:border-gray-400'
+                    isActive ? 'border-gray-400' : 'border-gray-300 dark:border-gray-600 group-hover:border-gray-400'
                   }`}
                 />
                 <span>
@@ -189,7 +189,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
             type="button"
             id="view-all-categories-banner-btn"
             onClick={onViewAllCategories}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white hover:bg-gray-50 text-[#0A2540] hover:text-[#FF5A36] text-xs sm:text-sm font-bold border border-gray-200 shadow-sm hover:shadow transition-all cursor-pointer group"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white dark:bg-[#151822] hover:bg-gray-50 dark:hover:bg-[#1E2230] text-[#0A2540] dark:text-white hover:text-[#FF5A36] dark:hover:text-[#FF5A36] text-xs sm:text-sm font-bold border border-gray-200 dark:border-[#252836] shadow-sm hover:shadow transition-all cursor-pointer group"
           >
             <LayoutGrid className="w-4 h-4 text-[#FF5A36] group-hover:scale-110 transition-transform" />
             <span>Explore All Categories & Professional Services Directory</span>

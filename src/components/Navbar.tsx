@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
 } from 'lucide-react';
 import { ViewTab, User } from '../types';
+import { ThemeToggle } from './ThemeToggle';
 
 interface NavbarProps {
   currentTab: ViewTab;
@@ -136,6 +137,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               </>
             )}
+
+            <span className="text-[#2D2F39]">|</span>
+            <ThemeToggle variant="compact" id="nav-theme-toggle-compact" />
 
             <span className="text-[#2D2F39]">|</span>
 
@@ -354,6 +358,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Get App</span>
             </button>
           )}
+
+          {/* Light / Dark Mode Toggle */}
+          <ThemeToggle variant="icon" id="nav-theme-toggle-icon" />
 
           {onOpenPostAd && (
             <motion.button

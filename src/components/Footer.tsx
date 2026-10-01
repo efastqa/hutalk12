@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShieldCheck, MapPin, PhoneCall, HelpCircle, Heart, Lock, Smartphone } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle';
 
 interface FooterProps {
   onSelectCategory: (cat: string) => void;
@@ -156,10 +157,12 @@ export const Footer: React.FC<FooterProps> = ({
         {/* Bottom line */}
         <div className="pt-4 sm:pt-5 flex flex-wrap items-center justify-between gap-3 text-[11px] text-gray-400">
           <p>© {new Date().getFullYear()} HUTA Sri Lanka. All prices in Sri Lankan Rupees (LKR).</p>
-          <div className="flex items-center gap-3">
-            <span>Fast & Secure Trading</span>
-            <span className="text-gray-600">•</span>
-            <span>Gemini AI Listing Assistant</span>
+          <div className="flex items-center gap-3 flex-wrap">
+            <ThemeToggle variant="segmented" id="footer-theme-toggle" />
+            <span className="hidden sm:inline text-gray-600">•</span>
+            <span className="hidden sm:inline">Fast & Secure Trading</span>
+            <span className="hidden sm:inline text-gray-600">•</span>
+            <span className="hidden md:inline">Gemini AI Assistant</span>
             <span className="text-gray-600">•</span>
             <button
               type="button"

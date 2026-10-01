@@ -543,15 +543,15 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
           onClick={onCloseAdminLogin}
         >
           <div
-            className="bg-white rounded-3xl max-w-sm w-full p-6 sm:p-7 shadow-2xl relative border border-gray-100 animate-in zoom-in-95"
+            className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white rounded-3xl max-w-sm w-full p-6 sm:p-7 shadow-2xl relative border border-gray-100 dark:border-[#252836] animate-in zoom-in-95 transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-[#252836]">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-[#FF5A36]/15 text-[#FF5A36] flex items-center justify-center font-bold">
                   <Shield className="w-4 h-4" />
                 </div>
-                <h3 className="font-extrabold text-lg text-gray-900">
+                <h3 className="font-extrabold text-lg text-gray-900 dark:text-white">
                   {isAdminChangingPassword ? 'Change Admin Password' : 'Admin Login'}
                 </h3>
               </div>
@@ -852,10 +852,10 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
           onClick={onCloseUserAuth}
         >
           <div
-            className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl relative border border-gray-100 animate-in zoom-in-95"
+            className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl relative border border-gray-100 dark:border-[#252836] animate-in zoom-in-95 transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-[#252836]">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-[#FF5A36]/15 text-[#FF5A36] flex items-center justify-center font-bold">
                   {targetListingForEdit ? (
@@ -871,7 +871,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                   )}
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-lg text-gray-900 leading-tight">
+                  <h3 className="font-extrabold text-lg text-gray-900 dark:text-white leading-tight">
                     {targetListingForEdit
                       ? 'Verify Ad Ownership'
                       : isLoginMode
@@ -1442,13 +1442,13 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
           onClick={() => setIsForgotModalOpen(false)}
         >
           <div
-            className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl relative border border-gray-100 animate-in zoom-in-95"
+            className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl relative border border-gray-100 dark:border-[#252836] animate-in zoom-in-95 transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-[#252836]">
               <div className="flex items-center gap-2">
                 <KeyRound className="w-5 h-5 text-[#FF5A36]" />
-                <h3 className="font-extrabold text-lg text-gray-900">Reset Account Password</h3>
+                <h3 className="font-extrabold text-lg text-gray-900 dark:text-white">Reset Account Password</h3>
               </div>
               <button
                 type="button"
@@ -1576,13 +1576,13 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
           onClick={onCloseChangePassword}
         >
           <div
-            className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative border border-gray-100 animate-in zoom-in-95"
+            className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative border border-gray-100 dark:border-[#252836] animate-in zoom-in-95 transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-[#252836]">
               <div className="flex items-center gap-2">
                 <KeyRound className="w-5 h-5 text-[#FF5A36]" />
-                <h3 className="font-extrabold text-lg text-gray-900">Change Password</h3>
+                <h3 className="font-extrabold text-lg text-gray-900 dark:text-white">Change Password</h3>
               </div>
               <button
                 type="button"

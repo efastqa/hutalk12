@@ -25,7 +25,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     <nav
       id="bottom-navigation-bar"
       aria-label="Bottom Navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] safe-area-pb lg:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-[#111217] border-t border-gray-200/90 dark:border-[#2D2F39] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)] safe-area-pb lg:hidden transition-colors duration-200"
     >
       <div className="max-w-md md:max-w-lg lg:max-w-2xl mx-auto px-4 flex items-center justify-between relative h-16 sm:h-[68px]">
         {/* 1. Home */}
@@ -34,7 +34,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           id="nav-tab-home"
           onClick={() => onSelectTab('marketplace')}
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-all group ${
-            isHomeActive ? 'text-[#FF5A36]' : 'text-gray-500 hover:text-gray-800'
+            isHomeActive ? 'text-[#FF5A36]' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white'
           }`}
         >
           <div className="relative">
@@ -49,7 +49,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           </div>
           <span
             className={`text-[11px] mt-1 font-bold tracking-tight ${
-              isHomeActive ? 'text-[#FF5A36]' : 'text-gray-600'
+              isHomeActive ? 'text-[#FF5A36]' : 'text-gray-600 dark:text-gray-400'
             }`}
           >
             Home
@@ -62,7 +62,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           id="nav-tab-huta-in"
           onClick={() => onSelectTab('huta_in')}
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-all group ${
-            isHutaInActive ? 'text-[#FF5A36]' : 'text-gray-500 hover:text-gray-800'
+            isHutaInActive ? 'text-[#FF5A36]' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white'
           }`}
         >
           <div className="relative">
@@ -77,7 +77,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           </div>
           <span
             className={`text-[11px] mt-1 font-bold tracking-tight ${
-              isHutaInActive ? 'text-[#FF5A36]' : 'text-gray-700'
+              isHutaInActive ? 'text-[#FF5A36]' : 'text-gray-700 dark:text-gray-400'
             }`}
           >
             HUTA <span className="text-[#FF5A36] font-black">in</span>
@@ -92,11 +92,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             onClick={onOpenPostAd}
             title="Create an Advertisement"
             aria-label="Create Advertisement"
-            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-[#FF5A36] to-[#FF7A50] text-white shadow-[0_8px_20px_rgba(255,90,54,0.4)] flex items-center justify-center border-4 border-white hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
+            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-[#FF5A36] to-[#FF7A50] text-white shadow-[0_8px_20px_rgba(255,90,54,0.4)] flex items-center justify-center border-4 border-white dark:border-[#111217] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
           >
             <Plus className="w-8 h-8 sm:w-9 sm:h-9 stroke-[3]" />
           </button>
-          <span className="text-[11px] font-bold text-gray-700 mt-1 whitespace-nowrap">
+          <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300 mt-1 whitespace-nowrap">
             Create Ad
           </span>
         </div>
@@ -107,7 +107,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           id="nav-tab-dashboard"
           onClick={() => onSelectTab(isAdminLoggedIn ? 'admin_dashboard' : 'user_dashboard')}
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-all group ${
-            isDashboardActive ? 'text-[#FF5A36]' : 'text-gray-500 hover:text-gray-800'
+            isDashboardActive ? 'text-[#FF5A36]' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white'
           }`}
         >
           <div className="relative">
@@ -122,7 +122,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           </div>
           <span
             className={`text-[11px] mt-1 font-bold tracking-tight ${
-              isDashboardActive ? 'text-[#FF5A36]' : 'text-gray-600'
+              isDashboardActive ? 'text-[#FF5A36]' : 'text-gray-600 dark:text-gray-400'
             }`}
           >
             Dashboard
@@ -135,7 +135,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           id="nav-tab-more"
           onClick={() => onSelectTab('more')}
           className={`flex flex-col items-center justify-center flex-1 py-1 transition-all group ${
-            isMoreActive ? 'text-[#FF5A36]' : 'text-gray-500 hover:text-gray-800'
+            isMoreActive ? 'text-[#FF5A36]' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white'
           }`}
         >
           <div className="relative">
@@ -150,7 +150,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           </div>
           <span
             className={`text-[11px] mt-1 font-bold tracking-tight ${
-              isMoreActive ? 'text-[#FF5A36]' : 'text-gray-600'
+              isMoreActive ? 'text-[#FF5A36]' : 'text-gray-600 dark:text-gray-400'
             }`}
           >
             More

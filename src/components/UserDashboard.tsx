@@ -40,6 +40,7 @@ import {
 import { formatLKR } from './ListingsSection';
 import { FacebookFlyerModal } from './FacebookFlyerModal';
 import { api } from '../services/api';
+import { ThemeToggle } from './ThemeToggle';
 
 interface UserDashboardProps {
   currentUser: User | null;
@@ -680,6 +681,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <ThemeToggle variant="compact" id="dashboard-theme-toggle" />
           {onOpenAppStore && (
             <button
               type="button"
@@ -735,62 +737,62 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           onClick={() => setActiveTab('myads')}
           className={`p-6 rounded-2xl border transition-all cursor-pointer ${
             activeTab === 'myads'
-              ? 'bg-white border-[#FF5A36] shadow-lg -translate-y-1'
-              : 'bg-white border-gray-200 hover:border-gray-300'
+              ? 'bg-white dark:bg-[#151822] border-[#FF5A36] shadow-lg -translate-y-1'
+              : 'bg-white dark:bg-[#151822] border-gray-200 dark:border-[#252836] hover:border-gray-300 dark:hover:border-gray-600'
           }`}
         >
-          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">
+          <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
             My Posted Ads
           </div>
-          <div className="text-3xl font-extrabold text-gray-900">{myAds.length}</div>
-          <p className="text-xs text-gray-400 mt-1">{approvedAds.length} live • {pendingAds.length} pending</p>
+          <div className="text-3xl font-extrabold text-gray-900 dark:text-white">{myAds.length}</div>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{approvedAds.length} live • {pendingAds.length} pending</p>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
-          <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+        <div className="bg-white dark:bg-[#151822] p-6 rounded-2xl border border-gray-200 dark:border-[#252836] shadow-xs">
+          <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>Approved & Live</span>
           </div>
-          <div className="text-3xl font-extrabold text-emerald-600">{approvedAds.length}</div>
-          <p className="text-xs text-emerald-600/70 mt-1">Visible to all buyers</p>
+          <div className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">{approvedAds.length}</div>
+          <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1">Visible to all buyers</p>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
-          <div className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+        <div className="bg-white dark:bg-[#151822] p-6 rounded-2xl border border-gray-200 dark:border-[#252836] shadow-xs">
+          <div className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5" />
             <span>Pending Review</span>
           </div>
-          <div className="text-3xl font-extrabold text-amber-600">{pendingAds.length}</div>
-          <p className="text-xs text-amber-600/70 mt-1">Moderator approval in progress</p>
+          <div className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">{pendingAds.length}</div>
+          <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-1">Moderator approval in progress</p>
         </div>
 
         <div
           onClick={() => setActiveTab('favorites')}
           className={`p-6 rounded-2xl border transition-all cursor-pointer ${
             activeTab === 'favorites'
-              ? 'bg-white border-[#FF5A36] shadow-lg -translate-y-1'
-              : 'bg-white border-gray-200 hover:border-gray-300'
+              ? 'bg-white dark:bg-[#151822] border-[#FF5A36] shadow-lg -translate-y-1'
+              : 'bg-white dark:bg-[#151822] border-gray-200 dark:border-[#252836] hover:border-gray-300 dark:hover:border-gray-600'
           }`}
         >
-          <div className="text-xs font-bold text-rose-600 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+          <div className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
             <Heart className="w-3.5 h-3.5" />
             <span>Saved Favorites</span>
           </div>
-          <div className="text-3xl font-extrabold text-rose-600">{favoriteAds.length}</div>
-          <p className="text-xs text-rose-600/70 mt-1">Bookmarked listings</p>
+          <div className="text-3xl font-extrabold text-rose-600 dark:text-rose-400">{favoriteAds.length}</div>
+          <p className="text-xs text-rose-600/70 dark:text-rose-400/70 mt-1">Bookmarked listings</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-6 border-b border-gray-100 pb-4 overflow-x-auto">
+      <div className="bg-white dark:bg-[#151822] rounded-3xl border border-gray-200 dark:border-[#252836] p-6 shadow-sm transition-colors">
+        <div className="flex items-center gap-2 mb-6 border-b border-gray-100 dark:border-[#252836] pb-4 overflow-x-auto">
           <button
             type="button"
             onClick={() => setActiveTab('myads')}
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'myads'
                 ? 'bg-[#FF5A36] text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-[#1E2230] text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#282C3D]'
             }`}
           >
             My Ads ({myAds.length})
@@ -801,7 +803,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'favorites'
                 ? 'bg-[#FF5A36] text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-[#1E2230] text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#282C3D]'
             }`}
           >
             Saved Favorites ({favoriteAds.length})
@@ -812,7 +814,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'sellertips'
                 ? 'bg-[#FF5A36] text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-[#1E2230] text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#282C3D]'
             }`}
           >
             Seller Toolkit & Growth
@@ -823,7 +825,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'security'
                 ? 'bg-[#FF5A36] text-white shadow-md'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-[#1E2230] text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#282C3D]'
             }`}
           >
             <ShieldCheck className="w-4 h-4" />
