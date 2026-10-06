@@ -217,22 +217,22 @@ export const AllCategoriesPage: React.FC<AllCategoriesPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-28 animate-in fade-in duration-200">
-      {/* 1. Deep Navy Header Bar (Exactly matching Image 2 IMG_5248.png) */}
-      <header className="sticky top-0 z-30 bg-[#0A2540] text-white shadow-md">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0C10] text-[#181920] dark:text-[#F8FAFC] pb-28 animate-in fade-in duration-200 transition-colors">
+      {/* 1. Top Header Bar */}
+      <header className="sticky top-0 z-30 bg-white dark:bg-[#0C0E14] text-gray-900 dark:text-white border-b border-gray-200 dark:border-[#22242F] shadow-xs transition-colors">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <button
             type="button"
             id="categories-back-btn"
             onClick={onBack}
-            className="flex items-center gap-2 p-1.5 -ml-2 rounded-xl text-white hover:bg-white/10 active:scale-95 transition-all"
+            className="flex items-center gap-2 p-1.5 -ml-2 rounded-xl text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
             aria-label="Back to home"
           >
             <ArrowLeft className="w-6 h-6 stroke-[2.5]" />
             <span className="font-bold text-lg sm:text-xl tracking-tight">All Categories</span>
           </button>
 
-          <span className="text-xs text-blue-200 font-medium hidden sm:inline">
+          <span className="text-xs text-[#FF5A36] font-bold hidden sm:inline">
             HUTA.lk Marketplace
           </span>
         </div>

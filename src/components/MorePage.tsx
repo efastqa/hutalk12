@@ -65,13 +65,13 @@ export const MorePage: React.FC<MorePageProps> = ({
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0C10] text-[#181920] dark:text-[#F8FAFC] pb-32 animate-in fade-in duration-200 transition-colors duration-200">
       {/* Top Header */}
-      <header className="sticky top-0 z-30 bg-[#0A2540] dark:bg-[#0C0E14] text-white shadow-md border-b border-transparent dark:border-[#22242F]">
+      <header className="sticky top-0 z-30 bg-white dark:bg-[#0C0E14] text-gray-900 dark:text-white shadow-xs border-b border-gray-200 dark:border-[#22242F] transition-colors">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={onBackToHome}
-              className="p-1.5 -ml-2 rounded-xl text-white hover:bg-white/10 transition-colors"
+              className="p-1.5 -ml-2 rounded-xl text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-6 h-6 stroke-[2.5]" />
             </button>
@@ -79,15 +79,15 @@ export const MorePage: React.FC<MorePageProps> = ({
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle variant="compact" id="more-header-theme-toggle" />
-            <span className="text-[#2D2F39]">|</span>
-            <span className="text-xs text-blue-200 font-medium">HUTA.lk</span>
+            <span className="text-gray-300 dark:text-[#2D2F39]">|</span>
+            <span className="text-xs text-[#FF5A36] font-bold">HUTA.lk</span>
           </div>
         </div>
       </header>
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* Quick Actions Panel (Directly Matching Reference Header Action Bar) */}
-        <div className="bg-[#181920] border border-[#2D2F39] rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
+        {/* Quick Actions Panel */}
+        <div className="bg-white dark:bg-[#181920] border border-gray-200 dark:border-[#2D2F39] rounded-3xl p-5 sm:p-6 shadow-md dark:shadow-xl relative overflow-hidden transition-colors">
           {/* Subtle ambient accent glow */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF5A36]/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -100,12 +100,12 @@ export const MorePage: React.FC<MorePageProps> = ({
                   type="button"
                   id="more-panel-user-btn"
                   onClick={() => onSelectTab('user_dashboard')}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#22242E] hover:bg-[#2A2D3A] active:scale-95 text-white font-medium text-sm border border-[#333644] transition-all shadow-sm cursor-pointer group"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 dark:bg-[#22242E] hover:bg-gray-100 dark:hover:bg-[#2A2D3A] active:scale-95 text-gray-900 dark:text-white font-medium text-sm border border-gray-200 dark:border-[#333644] transition-all shadow-sm cursor-pointer group"
                 >
                   <div className="w-5 h-5 rounded-full bg-[#FF5A36]/20 text-[#FF5A36] flex items-center justify-center font-bold text-xs">
                     {((currentUser.fullname || currentUser.username || (currentUser as any).name || 'User').trim().charAt(0) || 'U').toUpperCase()}
                   </div>
-                  <span className="font-semibold text-white max-w-[130px] truncate">
+                  <span className="font-semibold text-gray-900 dark:text-white max-w-[130px] truncate">
                     {currentUser.fullname || currentUser.username}
                   </span>
                 </button>
@@ -114,19 +114,19 @@ export const MorePage: React.FC<MorePageProps> = ({
                   type="button"
                   id="more-panel-login-btn"
                   onClick={onOpenUserAuth}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#22242E] hover:bg-[#2A2D3A] active:scale-95 text-white font-medium text-sm border border-[#333644] transition-all shadow-sm cursor-pointer group"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 dark:bg-[#22242E] hover:bg-gray-100 dark:hover:bg-[#2A2D3A] active:scale-95 text-gray-900 dark:text-white font-medium text-sm border border-gray-200 dark:border-[#333644] transition-all shadow-sm cursor-pointer group"
                 >
                   <UserIcon className="w-4 h-4 text-[#FF5A36] group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold text-white">Login / Register</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">Login / Register</span>
                 </button>
               )}
 
-              {/* 2. Real-time Firebase Live Chat Button */}
+              {/* 2. Real-time Live Chat Button */}
               <button
                 type="button"
                 id="more-panel-chat-btn"
                 onClick={onOpenChat}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#22242E] hover:bg-[#2A2D3A] active:scale-95 text-white font-medium text-sm border border-[#333644] transition-all shadow-sm cursor-pointer group"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-50 dark:bg-[#22242E] hover:bg-gray-100 dark:hover:bg-[#2A2D3A] active:scale-95 text-gray-900 dark:text-white font-medium text-sm border border-gray-200 dark:border-[#333644] transition-all shadow-sm cursor-pointer group"
                 title="Open Real-time Live Chat"
               >
                 <span className="relative flex h-2.5 w-2.5">

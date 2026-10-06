@@ -118,7 +118,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
         onClick={toggleTheme}
         title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-        className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-lg transition-colors cursor-pointer text-gray-300 hover:text-white ${className}`}
+        className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-lg transition-colors cursor-pointer text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white ${className}`}
       >
         <AnimatePresence mode="wait" initial={false}>
           {isDark ? (
@@ -140,9 +140,9 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
               animate={{ rotate: 0, opacity: 1 }}
               exit={{ rotate: -45, opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="flex items-center gap-1 text-amber-400"
+              className="flex items-center gap-1 text-amber-500 font-bold"
             >
-              <Sun className="w-3.5 h-3.5 fill-amber-400" />
+              <Sun className="w-3.5 h-3.5 fill-amber-500" />
               <span className="hidden xs:inline">Light</span>
             </motion.div>
           )}
@@ -164,7 +164,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
       className={`relative p-2 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
         isDark
           ? 'bg-white/10 hover:bg-white/15 text-amber-300 border border-white/10 shadow-xs'
-          : 'bg-white/10 hover:bg-white/15 text-amber-400 border border-white/10 shadow-xs'
+          : 'bg-gray-100 hover:bg-gray-200 text-amber-500 border border-gray-200 shadow-2xs'
       } ${className}`}
     >
       <AnimatePresence mode="wait" initial={false}>
@@ -189,8 +189,8 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
             transition={{ duration: 0.18 }}
             className="flex items-center gap-1.5"
           >
-            <Sun className="w-4 h-4 fill-amber-400 text-amber-400" />
-            {showLabel && <span className="text-xs font-bold text-gray-200">Light</span>}
+            <Sun className="w-4 h-4 fill-amber-500 text-amber-500" />
+            {showLabel && <span className="text-xs font-bold text-gray-700">Light</span>}
           </motion.div>
         )}
       </AnimatePresence>

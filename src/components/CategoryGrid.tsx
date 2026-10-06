@@ -130,15 +130,15 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
               onClick={() => onSelectCategory(cat.key)}
               className={`relative flex flex-col items-center justify-center p-5 sm:p-6 rounded-2xl sm:rounded-[22px] border transition-all duration-300 text-center cursor-pointer select-none group min-h-[162px] ${
                 isActive
-                  ? 'bg-[#121319] border-[#E54D2E] text-white shadow-xl shadow-[#E54D2E]/10 ring-1 ring-[#E54D2E]/60'
-                  : 'bg-white dark:bg-[#151822] border-[#E5E7EB] dark:border-[#252836] text-[#111217] dark:text-white hover:border-gray-300 dark:hover:border-[#FF5A36] hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-black/40'
+                  ? 'bg-white dark:bg-[#121319] border-[#FF5A36] text-[#FF5A36] dark:text-white shadow-xl shadow-[#FF5A36]/10 ring-2 ring-[#FF5A36]/40 dark:ring-[#FF5A36]/60'
+                  : 'bg-white dark:bg-[#151822] border-[#E5E7EB] dark:border-[#252836] text-[#111217] dark:text-white hover:border-[#FF5A36]/60 dark:hover:border-[#FF5A36] hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-black/40'
               }`}
             >
               {/* Active ambient glow */}
               {isActive && (
                 <motion.div
                   layoutId="activeCategoryGlow"
-                  className="absolute inset-0 rounded-2xl sm:rounded-[22px] bg-[#E54D2E]/5 pointer-events-none"
+                  className="absolute inset-0 rounded-2xl sm:rounded-[22px] bg-[#FF5A36]/5 pointer-events-none"
                   transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                 />
               )}
@@ -147,8 +147,8 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
               <div
                 className={`w-12 h-12 sm:w-13 sm:h-13 rounded-full flex items-center justify-center mb-3 transition-all duration-300 ${
                   isActive
-                    ? 'bg-[#2E1D1E] text-[#FF5A36] shadow-xs'
-                    : 'bg-[#F4F5F7] dark:bg-[#1E2230] text-[#111217] dark:text-gray-200 group-hover:bg-[#FF5A36]/10 group-hover:text-[#FF5A36] group-hover:scale-108'
+                    ? 'bg-[#FF5A36]/15 dark:bg-[#2E1D1E] text-[#FF5A36] shadow-xs'
+                    : 'bg-gray-100 dark:bg-[#1E2230] text-gray-800 dark:text-gray-200 group-hover:bg-[#FF5A36]/10 group-hover:text-[#FF5A36] group-hover:scale-108'
                 }`}
               >
                 <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${isActive ? 'stroke-[2.2]' : 'stroke-2'}`} />
@@ -157,21 +157,21 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
               {/* Category Title */}
               <span
                 className={`font-bold text-sm sm:text-base tracking-tight mb-1.5 transition-colors line-clamp-1 ${
-                  isActive ? 'text-white font-extrabold' : 'text-[#111217] dark:text-white group-hover:text-[#FF5A36]'
+                  isActive ? 'text-[#FF5A36] dark:text-white font-extrabold' : 'text-[#111217] dark:text-white group-hover:text-[#FF5A36]'
                 }`}
               >
                 {cat.displayLabel || cat.label}
               </span>
 
-              {/* Bullet status with live ads counter matching image */}
+              {/* Bullet status with live ads counter */}
               <div
                 className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-                  isActive ? 'text-gray-400' : 'text-gray-400 dark:text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300'
+                  isActive ? 'text-[#FF5A36]/90 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'
                 }`}
               >
                 <span
                   className={`inline-block w-2.5 h-2.5 rounded-full border-[1.5px] transition-colors shrink-0 ${
-                    isActive ? 'border-gray-400' : 'border-gray-300 dark:border-gray-600 group-hover:border-gray-400'
+                    isActive ? 'border-[#FF5A36] bg-[#FF5A36]' : 'border-gray-300 dark:border-gray-600 group-hover:border-gray-400'
                   }`}
                 />
                 <span>

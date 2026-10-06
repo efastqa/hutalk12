@@ -13,11 +13,20 @@ interface ThemeContextType {
 
 const THEME_STORAGE_KEY = 'huta_theme';
 const SETTINGS_STORAGE_KEY = 'huta_app_device_settings';
+const THEME_RESET_KEY = 'huta_theme_reset_v2_light';
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function getInitialTheme(): ThemeMode {
   try {
+    // Ensure fresh switch to light theme for user's test
+    const resetDone = localStorage.getItem(THEME_RESET_KEY);
+    if (!resetDone) {
+      localStorage.setItem(THEME_RESET_KEY, 'done');
+      localStorage.setItem(THEME_STORAGE_KEY, 'light');
+      return 'light';
+    }
+
     const saved = localStorage.getItem(THEME_STORAGE_KEY);
     if (saved === 'light' || saved === 'dark' || saved === 'system') {
       return saved;

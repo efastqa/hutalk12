@@ -403,7 +403,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
   return (
     <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0B0C10] text-[#181920] dark:text-[#F8FAFC] pb-32 animate-in fade-in duration-200 transition-colors">
       {/* 1. Header Hero Banner */}
-      <div className="bg-[#111217] text-white pt-8 pb-14 px-4 sm:px-6 lg:px-8 border-b border-[#2D2F39] relative overflow-hidden">
+      <div className="bg-white dark:bg-[#111217] text-[#181920] dark:text-white pt-8 pb-14 px-4 sm:px-6 lg:px-8 border-b border-gray-200 dark:border-[#2D2F39] relative overflow-hidden transition-colors">
         {/* Ambient background aura */}
         <div className="absolute -top-10 right-10 w-96 h-96 bg-[#FF5A36]/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute top-1/2 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -414,7 +414,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
               type="button"
               id="huta-in-back-btn"
               onClick={onBackToHome}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-xs sm:text-sm font-semibold text-gray-300 hover:text-white transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Marketplace</span>
@@ -429,7 +429,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
               <div className="flex items-center gap-2.5">
-                <span className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
+                <span className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight">
                   HUTA
                 </span>
                 <span className="text-3xl sm:text-4xl md:text-5xl font-black text-white bg-[#FF5A36] px-2.5 py-0.5 rounded-2xl tracking-tight leading-none shadow-lg shadow-[#FF5A36]/30">
@@ -440,7 +440,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                 <DualToneHeading
                   as="h1"
                   size="lg"
-                  theme="dark"
+                  theme="auto"
                   primaryText="Discover"
                   accentText={[
                     'Festivals & Expos 🎪',

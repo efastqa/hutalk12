@@ -63,54 +63,54 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="bg-[#111217] border-b border-[#2D2F39] sticky top-0 z-40 shadow-md">
+    <header className="bg-white dark:bg-[#111217] border-b border-gray-200 dark:border-[#2D2F39] text-gray-900 dark:text-white sticky top-0 z-40 shadow-xs transition-colors duration-200">
       {/* 1. Qatar Living Style Top Utility Bar */}
-      <div className="border-b border-[#22242F] bg-[#0C0D11] text-xs text-gray-300">
+      <div className="border-b border-gray-200 dark:border-[#22242F] bg-gray-50/90 dark:bg-[#0C0D11] text-xs text-gray-600 dark:text-gray-300 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex items-center justify-between gap-3">
           {/* Location & Slogan */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors">
+            <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
               <MapPin className="w-3.5 h-3.5 text-[#FF5A36] shrink-0" />
               {onLocationChange ? (
                 <select
                   value={selectedLocation}
                   onChange={(e) => onLocationChange(e.target.value)}
-                  className="bg-transparent text-xs text-gray-200 font-semibold outline-none cursor-pointer hover:text-white border-none pr-1"
+                  className="bg-transparent text-xs text-gray-700 dark:text-gray-200 font-semibold outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white border-none pr-1"
                 >
                   {DISTRICTS_POPULAR.map((loc) => (
-                    <option key={loc} value={loc} className="bg-[#181920] text-white">
+                    <option key={loc} value={loc} className="bg-white dark:bg-[#181920] text-gray-900 dark:text-white">
                       {loc}
                     </option>
                   ))}
                 </select>
               ) : (
-                <span className="font-semibold">{selectedLocation}</span>
+                <span className="font-semibold text-gray-800 dark:text-gray-200">{selectedLocation}</span>
               )}
             </div>
 
-            <span className="hidden sm:inline text-[#2D2F39]">|</span>
-            <span className="hidden sm:inline text-[11px] text-gray-400">
+            <span className="hidden sm:inline text-gray-300 dark:text-[#2D2F39]">|</span>
+            <span className="hidden sm:inline text-[11px] text-gray-500 dark:text-gray-400">
               Sri Lanka's #1 Classifieds Portal
             </span>
           </div>
 
           {/* Quick Links & Account */}
-          <div className="flex items-center gap-4 text-xs font-semibold">
+          <div className="flex items-center gap-3 sm:gap-4 text-xs font-semibold">
             <button
               type="button"
               onClick={() => onSelectTab('huta_in')}
-              className="inline-flex items-center gap-1 text-gray-300 hover:text-white transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
             >
               <Sparkles className="w-3 h-3 text-[#FF5A36]" />
               <span className="hidden xs:inline">Community:</span>
               <span className="text-[#FF5A36] font-bold">HUTA IN</span>
             </button>
 
-            <span className="text-[#2D2F39]">|</span>
+            <span className="text-gray-300 dark:text-[#2D2F39]">|</span>
             <button
               type="button"
               onClick={() => onSelectTab('user_dashboard')}
-              className="inline-flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
               title="View your posted ads & track approval status"
             >
               <LayoutDashboard className="w-3.5 h-3.5 text-[#FF5A36]" />
@@ -124,11 +124,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {onOpenAppStore && (
               <>
-                <span className="text-[#2D2F39]">|</span>
+                <span className="text-gray-300 dark:text-[#2D2F39]">|</span>
                 <button
                   type="button"
                   onClick={onOpenAppStore}
-                  className="inline-flex items-center gap-1 text-gray-300 hover:text-white transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
                   title="Google Play and App Store"
                 >
                   <Smartphone className="w-3.5 h-3.5 text-[#FF5A36]" />
@@ -138,10 +138,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               </>
             )}
 
-            <span className="text-[#2D2F39]">|</span>
+            <span className="text-gray-300 dark:text-[#2D2F39]">|</span>
             <ThemeToggle variant="compact" id="nav-theme-toggle-compact" />
 
-            <span className="text-[#2D2F39]">|</span>
+            <span className="text-gray-300 dark:text-[#2D2F39]">|</span>
 
             {currentUser ? (
               (() => {
@@ -155,9 +155,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <button
                     type="button"
                     onClick={() => onSelectTab('user_dashboard')}
-                    className="flex items-center gap-1.5 text-gray-200 hover:text-white transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
                   >
-                    <div className="w-5 h-5 rounded-full bg-[#FF5A36]/20 text-[#FF5A36] flex items-center justify-center text-[10px] font-bold">
+                    <div className="w-5 h-5 rounded-full bg-[#FF5A36]/15 text-[#FF5A36] flex items-center justify-center text-[10px] font-bold">
                       {initial}
                     </div>
                     <span className="max-w-[100px] truncate">{displayName}</span>
@@ -168,7 +168,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={onOpenUserAuth}
-                className="flex items-center gap-1 text-gray-300 hover:text-white transition-colors cursor-pointer"
+                className="flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-[#FF5A36] dark:hover:text-white transition-colors cursor-pointer"
               >
                 <UserIcon className="w-3.5 h-3.5 text-[#FF5A36]" />
                 <span>Log In / Sign Up</span>
@@ -190,9 +190,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           }}
           className="flex items-center gap-3 cursor-pointer group select-none py-1"
         >
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-[#181920] border-2 border-[#2D2F39] flex items-center justify-center p-1.5 shadow-lg group-hover:border-[#FF5A36] group-hover:shadow-[#FF5A36]/20 transition-all duration-300">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-white dark:bg-[#181920] border-2 border-gray-200 dark:border-[#2D2F39] flex items-center justify-center p-1.5 shadow-md group-hover:border-[#FF5A36] group-hover:shadow-[#FF5A36]/20 transition-all duration-300">
             <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-sm">
-              <rect width="100" height="100" rx="20" fill="#181920" />
+              <rect width="100" height="100" rx="20" className="fill-gray-900 dark:fill-[#181920]" />
               <rect x="20" y="16" width="18" height="68" rx="9" fill="#FF5A36" />
               <rect x="62" y="16" width="18" height="68" rx="9" fill="#FF5A36" />
               <path d="M 24 64 L 76 28 L 76 42 L 24 78 Z" fill="#FFFFFF" />
@@ -201,14 +201,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           <div className="flex flex-col leading-none justify-center">
             <div className="flex items-baseline gap-1">
-              <span className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              <span className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
                 HUTA
               </span>
               <span className="text-xl sm:text-2xl font-black text-[#FF5A36] tracking-tight">
                 .lk
               </span>
             </div>
-            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
+            <span className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider mt-0.5">
               Sri Lanka Marketplace
             </span>
           </div>
@@ -225,7 +225,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               currentTab === 'marketplace' && activeCategory === 'Property'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
-                : 'text-gray-300 hover:text-white hover:bg-[#181920]'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920]'
             }`}
           >
             <Home className="w-3.5 h-3.5" />
@@ -241,7 +241,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               currentTab === 'marketplace' && activeCategory === 'Vehicles'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
-                : 'text-gray-300 hover:text-white hover:bg-[#181920]'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920]'
             }`}
           >
             <Car className="w-3.5 h-3.5" />
@@ -257,7 +257,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               currentTab === 'marketplace' && activeCategory === 'Electronics'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
-                : 'text-gray-300 hover:text-white hover:bg-[#181920]'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920]'
             }`}
           >
             <ShoppingBag className="w-3.5 h-3.5" />
@@ -273,7 +273,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               currentTab === 'marketplace' && activeCategory === 'Services'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
-                : 'text-gray-300 hover:text-white hover:bg-[#181920]'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920]'
             }`}
           >
             <Wrench className="w-3.5 h-3.5" />
@@ -289,7 +289,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               currentTab === 'marketplace' && activeCategory === 'Jobs'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
-                : 'text-gray-300 hover:text-white hover:bg-[#181920]'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920]'
             }`}
           >
             <Briefcase className="w-3.5 h-3.5" />
@@ -302,7 +302,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
               currentTab === 'huta_in'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
-                : 'text-gray-300 hover:text-white hover:bg-[#181920]'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920]'
             }`}
           >
             <span>HUTA</span>
@@ -317,7 +317,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               currentTab === 'categories'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
-                : 'text-gray-300 hover:text-white hover:bg-[#181920]'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920]'
             }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
@@ -334,7 +334,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               currentTab === 'user_dashboard'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
-                : 'bg-white/5 hover:bg-white/10 text-gray-200 hover:text-white border border-white/10'
+                : 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/10'
             }`}
             title="View your posted ads & track approval status"
           >
@@ -351,7 +351,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenAppStore}
-              className="hidden xl:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-200 hover:text-white border border-white/10 text-xs font-bold transition-all cursor-pointer"
+              className="hidden xl:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/10 text-xs font-bold transition-all cursor-pointer"
               title="Google Play and App Store"
             >
               <Smartphone className="w-3.5 h-3.5 text-[#FF5A36]" />
@@ -379,7 +379,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             type="button"
             onClick={() => onSelectTab('more')}
-            className="md:hidden p-2 rounded-xl text-gray-300 hover:text-white hover:bg-[#181920] transition-colors"
+            className="md:hidden p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920] transition-colors"
             aria-label="Open menu"
           >
             <LayoutGrid className="w-5 h-5" />

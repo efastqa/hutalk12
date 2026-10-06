@@ -199,7 +199,7 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
               <DualToneHeading
                 as="h1"
                 size="hero"
-                theme="dark"
+                theme="auto"
                 primaryText="Buy & Sell Everything in"
                 accentText={[
                   'Sri Lanka',
@@ -455,7 +455,7 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
             type="button"
             onClick={handlePrev}
             aria-label="Previous Hero Ad"
-            className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors cursor-pointer border border-white/5"
+            className="p-1.5 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer border border-gray-200 dark:border-white/5"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -472,7 +472,7 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
                   className={`h-1.5 rounded-full transition-all cursor-pointer ${
                     isSelected
                       ? 'w-6 bg-[#FF5A36]'
-                      : 'w-1.5 bg-gray-600 hover:bg-gray-400'
+                      : 'w-1.5 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400'
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
@@ -485,7 +485,7 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
             type="button"
             onClick={handleNext}
             aria-label="Next Hero Ad"
-            className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors cursor-pointer border border-white/5"
+            className="p-1.5 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer border border-gray-200 dark:border-white/5"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
