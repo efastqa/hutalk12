@@ -80,7 +80,7 @@ export const MorePage: React.FC<MorePageProps> = ({
           <div className="flex items-center gap-3">
             <ThemeToggle variant="compact" id="more-header-theme-toggle" />
             <span className="text-gray-300 dark:text-[#2D2F39]">|</span>
-            <span className="text-xs text-[#FF5A36] font-bold">HUTA.lk</span>
+            <span className="text-xs text-[#FF5A36] font-bold">HUTA.LK</span>
           </div>
         </div>
       </header>
@@ -615,7 +615,7 @@ export const MorePage: React.FC<MorePageProps> = ({
                 <FileText className="w-4 h-4 text-gray-400" />
                 <span>Terms of Service & Privacy Policy</span>
               </div>
-              <span className="text-[11px] text-gray-400 dark:text-gray-500">HUTA.lk v2.0</span>
+              <span className="text-[11px] text-gray-400 dark:text-gray-500">HUTA.LK v2.0</span>
             </div>
           </div>
         </section>

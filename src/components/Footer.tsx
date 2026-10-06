@@ -34,18 +34,18 @@ export const Footer: React.FC<FooterProps> = ({
                 </svg>
               </div>
               <div className="flex flex-col leading-none">
-                <div className="flex items-baseline gap-1">
+                <div className="flex items-baseline">
                   <span className="text-xl font-black text-gray-900 dark:text-white tracking-tight">HUTA</span>
-                  <span className="text-xl font-black text-[#FF5A36] tracking-tight">.lk</span>
+                  <span className="text-xl font-black text-[#FF5A36] tracking-tight ml-0.5">.lk</span>
                 </div>
-                <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider uppercase mt-0.5">
-                  Sri Lanka Marketplace
+                <span className="text-[10px] font-extrabold text-gray-500 dark:text-gray-400 tracking-widest uppercase mt-0.5">
+                  SRI LANKA
                 </span>
               </div>
             </div>
 
             <p className="text-xs text-gray-600 dark:text-gray-400 max-w-sm leading-relaxed">
-              Sri Lanka's trusted trading platform. Buy, sell, and find anything from vehicles and smartphones to houses and local services across all 25 districts.
+              HUTA.LK is Sri Lanka's trusted trading platform. Buy, sell, and find anything from vehicles and smartphones to houses and local services across all 25 districts.
             </p>
 
             <div className="flex items-center gap-2 text-[11px] text-gray-600 dark:text-gray-400 pt-1">
@@ -156,7 +156,7 @@ export const Footer: React.FC<FooterProps> = ({
 
         {/* Bottom line */}
         <div className="pt-4 sm:pt-5 flex flex-wrap items-center justify-between gap-3 text-[11px] text-gray-500 dark:text-gray-400">
-          <p>© {new Date().getFullYear()} HUTA Sri Lanka. All prices in Sri Lankan Rupees (LKR).</p>
+          <p>© {new Date().getFullYear()} HUTA.LK — Sri Lanka. All prices in Sri Lankan Rupees (LKR).</p>
           <div className="flex items-center gap-3 flex-wrap">
             <ThemeToggle variant="segmented" id="footer-theme-toggle" />
             <span className="hidden sm:inline text-gray-300 dark:text-gray-600">•</span>

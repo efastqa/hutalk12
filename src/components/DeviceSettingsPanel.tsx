@@ -83,7 +83,7 @@ export const DeviceSettingsPanel: React.FC<DeviceSettingsPanelProps> = ({
   useEffect(() => {
     // Sync browser tab badge setting
     if (settings.browserTabBadges) {
-      document.title = 'HUTA Marketplace — Sri Lanka';
+      document.title = "HUTA.LK — Sri Lanka's Premier Marketplace";
     }
   }, [settings.browserTabBadges]);
 

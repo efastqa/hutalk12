@@ -89,8 +89,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             <span className="hidden sm:inline text-gray-300 dark:text-[#2D2F39]">|</span>
-            <span className="hidden sm:inline text-[11px] text-gray-500 dark:text-gray-400">
-              Sri Lanka's #1 Classifieds Portal
+            <span className="hidden sm:inline text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+              <strong className="text-gray-800 dark:text-gray-200">HUTA.LK</strong> • Sri Lanka's #1 Classifieds Portal
             </span>
           </div>
 
@@ -200,16 +200,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             </svg>
           </div>
           <div className="flex flex-col leading-none justify-center">
-            <div className="flex items-baseline gap-1">
+            <div className="flex items-baseline">
               <span className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
                 HUTA
               </span>
-              <span className="text-xl sm:text-2xl font-black text-[#FF5A36] tracking-tight">
+              <span className="text-xl sm:text-2xl font-black text-[#FF5A36] tracking-tight ml-0.5">
                 .lk
               </span>
             </div>
-            <span className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider mt-0.5">
-              Sri Lanka Marketplace
+            <span className="text-[10px] text-gray-500 dark:text-gray-400 font-extrabold uppercase tracking-widest mt-0.5">
+              SRI LANKA
             </span>
           </div>
         </motion.div>

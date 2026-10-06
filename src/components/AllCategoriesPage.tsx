@@ -233,7 +233,7 @@ export const AllCategoriesPage: React.FC<AllCategoriesPageProps> = ({
           </button>
 
           <span className="text-xs text-[#FF5A36] font-bold hidden sm:inline">
-            HUTA.lk Marketplace
+            HUTA.LK
           </span>
         </div>
       </header>
