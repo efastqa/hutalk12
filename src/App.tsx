@@ -23,6 +23,7 @@ import { CompareModal } from './components/CompareModal';
 import { CompareFloatingBar } from './components/CompareFloatingBar';
 import { AppStoreModal } from './components/AppStoreModal';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
+import { VideoReelsSection } from './components/VideoReelsSection';
 import { testConnection } from './firebase';
 import { MapPin, Sparkles, PlusCircle, Calendar, ArrowRight, Star, Compass } from 'lucide-react';
 
@@ -723,6 +724,14 @@ export default function App() {
               onOpenPostAd={handleOpenPostAd}
               isAdminLoggedIn={isAdminLoggedIn}
               onAdminManage={() => setCurrentTab('admin_dashboard')}
+            />
+
+            {/* Video Stories / Short Walk-through Reels Bar */}
+            <VideoReelsSection
+              listings={listings}
+              onSelectListing={(listing) => setSelectedListing(listing)}
+              onOpenPostAd={handleOpenPostAd}
+              onToast={showToast}
             />
 
             {/* Category Browser */}
