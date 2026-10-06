@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Listing, User, ViewTab, EventItem, HeroAd, HeroAdSettings } from './types';
+import { Listing, User, ViewTab, EventItem, HeroAd, HeroAdSettings, VideoReelItem } from './types';
 import { api } from './services/api';
 
 // Components
@@ -66,6 +66,7 @@ export default function App() {
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [videoReels, setVideoReels] = useState<VideoReelItem[]>([]);
 
   // Real-time Chat State (Firebase Firestore)
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
@@ -179,10 +180,31 @@ export default function App() {
     fetchListings();
     fetchEvents();
     fetchHeroAds();
+    fetchVideoReels();
+
+    // Subscribe to live video stories updates
+    const unsubReels = api.subscribeToVideoReels((reels) => {
+      setVideoReels(reels);
+    });
 
     // 4. Test Firebase Firestore connection
     testConnection();
+
+    return () => {
+      unsubReels();
+    };
   }, []);
+
+  const fetchVideoReels = async () => {
+    try {
+      const data = await api.getVideoReels();
+      if (Array.isArray(data)) {
+        setVideoReels(data);
+      }
+    } catch {
+      // Graceful fallback
+    }
+  };
 
   const fetchHeroAds = async () => {
     try {
@@ -729,8 +751,11 @@ export default function App() {
             {/* Video Stories / Short Walk-through Reels Bar */}
             <VideoReelsSection
               listings={listings}
+              reels={videoReels}
+              onReelsChange={setVideoReels}
               onSelectListing={(listing) => setSelectedListing(listing)}
               onOpenPostAd={handleOpenPostAd}
+              currentUser={currentUser}
               onToast={showToast}
             />
 
@@ -973,6 +998,8 @@ export default function App() {
             events={events}
             heroAds={heroAds}
             heroSettings={heroSettings}
+            videoReels={videoReels}
+            onReelsChange={setVideoReels}
             onUpdateHeroSettings={handleUpdateHeroSettings}
             onCreateHeroAd={handleCreateHeroAd}
             onUpdateHeroAd={handleUpdateHeroAd}

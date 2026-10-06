@@ -94,6 +94,12 @@ service cloud.firestore {
       allow create, update, delete: if isValidId(heroAdId);
     }
 
+    // Video Stories & Inspection Reels
+    match /video_reels/{reelId} {
+      allow get, list: if true;
+      allow create, update, delete: if isValidId(reelId);
+    }
+
     // Administrative Configuration & Moderation
     match /admin_config/{configId} {
       allow get, list: if true;

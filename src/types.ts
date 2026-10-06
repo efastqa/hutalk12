@@ -219,6 +219,26 @@ export interface HeroAdSettings {
   rotationIntervalSeconds: number;
 }
 
+export interface VideoReelItem {
+  id: string;
+  title: string;
+  videoUrl: string;
+  posterImage?: string;
+  category?: string;
+  price?: number;
+  location?: string;
+  district?: string;
+  sellerName?: string;
+  phone?: string;
+  isVerified?: boolean;
+  specsSummary?: string;
+  listingId?: string;
+  listing?: Listing;
+  isActive?: boolean;
+  createdAt?: string;
+  views?: number;
+}
+
 export interface SmsDeliveryLog {
   id: string;
   recipient: string;

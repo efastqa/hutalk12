@@ -19,115 +19,49 @@ import {
   Video,
   Eye,
 } from 'lucide-react';
-import { Listing } from '../types';
+import { Listing, VideoReelItem } from '../types';
 import { formatLKR } from './ListingsSection';
+import { AddStoryModal } from './AddStoryModal';
+import { api } from '../services/api';
 
-export interface VideoReelItem {
-  id: string;
-  title: string;
-  videoUrl: string;
-  posterImage: string;
-  category: string;
-  price: number;
-  location: string;
-  district?: string;
-  sellerName?: string;
-  phone?: string;
-  isVerified?: boolean;
-  specsSummary?: string;
-  listingId?: string;
-  listing?: Listing;
-}
-
-// Curated inspection walkthrough video reels using existing verified video assets
-const CURATED_WALKTHROUGH_REELS: VideoReelItem[] = [
-  {
-    id: 'reel-drone-4k',
-    title: 'DJI 4K Drone Flight & Camera Gimbal Test',
-    videoUrl: '/uploads/videos/anim-video-1790102854586-d1bwkp.mp4',
-    posterImage: 'https://images.unsplash.com/photo-1527977966376-1c8408f9f108?auto=format&fit=crop&w=600&q=80',
-    category: 'Electronics',
-    price: 45000,
-    location: 'Colombo 03',
-    district: 'Colombo',
-    sellerName: 'Kasun Electronics',
-    phone: '0771234567',
-    isVerified: true,
-    specsSummary: '4K 60fps • 3-Axis Gimbal • 32m Flight Time',
-  },
-  {
-    id: 'reel-toyota-prius',
-    title: '2018 Toyota Prius S-Grade Hybrid Inspection',
-    videoUrl: '/videos/motion-loop-1.mp4',
-    posterImage: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80',
-    category: 'Vehicles',
-    price: 12850000,
-    location: 'Nugegoda, Colombo',
-    district: 'Colombo',
-    sellerName: 'AutoPoint Lanka',
-    phone: '0775260765',
-    isVerified: true,
-    specsSummary: 'Hybrid • Auto • Battery 94% • 1st Owner',
-  },
-  {
-    id: 'reel-luxury-apartment',
-    title: 'Luxury 3BR Apartment Walkthrough Tour',
-    videoUrl: '/videos/motion-loop-3.mp4',
-    posterImage: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=80',
-    category: 'Property',
-    price: 48500000,
-    location: 'Kollupitiya, Colombo',
-    district: 'Colombo',
-    sellerName: 'Island Prime Realty',
-    phone: '0712345678',
-    isVerified: true,
-    specsSummary: '3 Beds • 2 Baths • Sea View Balcony • Pool',
-  },
-  {
-    id: 'reel-yamaha-bike',
-    title: 'Yamaha FZ-S V3 Exhaust Sound & Tyre Inspection',
-    videoUrl: '/uploads/videos/anim-video-1790102817239-ea2zkk.mp4',
-    posterImage: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80',
-    category: 'Motorcycles',
-    price: 890000,
-    location: 'Kandy City',
-    district: 'Kandy',
-    sellerName: 'MotoHub Kandy',
-    phone: '0769876543',
-    isVerified: true,
-    specsSummary: '150cc • Single Disc • Mint Condition 2021',
-  },
-  {
-    id: 'reel-iphone-test',
-    title: 'iPhone 15 Pro Max 256GB Battery & OLED Inspection',
-    videoUrl: '/videos/motion-loop-2.mp4',
-    posterImage: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80',
-    category: 'Electronics',
-    price: 310000,
-    location: 'Galle Fort',
-    district: 'Galle',
-    sellerName: 'SmartFix Galle',
-    phone: '0701122334',
-    isVerified: true,
-    specsSummary: 'Battery 100% • 256GB • Full Box • Natural Titanium',
-  },
-];
+// By default, no dummy inspection reels (per user request to remove default reels)
+const DEFAULT_CURATED_REELS: VideoReelItem[] = [];
 
 interface VideoReelsSectionProps {
   listings: Listing[];
+  reels?: VideoReelItem[];
+  onReelsChange?: (reels: VideoReelItem[]) => void;
   onSelectListing: (listing: Listing) => void;
-  onOpenPostAd: () => void;
+  onOpenPostAd?: () => void;
+  currentUser?: { fullname?: string; phone?: string; username?: string } | null;
   onToast?: (msg: string, type?: 'success' | 'error' | 'info') => void;
 }
 
 export const VideoReelsSection: React.FC<VideoReelsSectionProps> = ({
   listings,
+  reels: externalReels,
+  onReelsChange,
   onSelectListing,
   onOpenPostAd,
+  currentUser,
   onToast,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [activeReelIndex, setActiveReelIndex] = useState<number | null>(null);
+  const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState<boolean>(false);
+  const [localReels, setLocalReels] = useState<VideoReelItem[]>([]);
+
+  // Fetch saved video reels on mount if not provided externally
+  useEffect(() => {
+    if (externalReels !== undefined) {
+      setLocalReels(externalReels);
+    } else {
+      api.getVideoReels().then((data) => {
+        setLocalReels(data);
+      }).catch(() => {});
+    }
+  }, [externalReels]);
+
   const [viewedReelIds, setViewedReelIds] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('huta_viewed_reels');
@@ -137,8 +71,10 @@ export const VideoReelsSection: React.FC<VideoReelsSectionProps> = ({
     }
   });
 
-  // Combine listings with videoUrl and curated inspection reels
+  // Combine listings with videoUrl and custom uploaded reels (NO hardcoded dummy reels)
   const allReels: VideoReelItem[] = React.useMemo(() => {
+    const activeCustomReels = (externalReels || localReels).filter((r) => r.isActive !== false);
+
     const listFromAds: VideoReelItem[] = listings
       .filter((l) => Boolean(l.videoUrl && l.status === 'approved'))
       .map((l) => ({
@@ -162,7 +98,15 @@ export const VideoReelsSection: React.FC<VideoReelsSectionProps> = ({
     const seenUrls = new Set<string>();
     const merged: VideoReelItem[] = [];
 
-    // Prioritize real user ads with video first
+    // Prioritize custom reels (from Add Story or Admin)
+    activeCustomReels.forEach((item) => {
+      if (!seenUrls.has(item.videoUrl)) {
+        seenUrls.add(item.videoUrl);
+        merged.push(item);
+      }
+    });
+
+    // Then add ads with video walkthrough
     listFromAds.forEach((item) => {
       if (!seenUrls.has(item.videoUrl)) {
         seenUrls.add(item.videoUrl);
@@ -170,22 +114,16 @@ export const VideoReelsSection: React.FC<VideoReelsSectionProps> = ({
       }
     });
 
-    // Then append curated inspection reels to keep the rail full and lively
-    CURATED_WALKTHROUGH_REELS.forEach((item) => {
-      if (!seenUrls.has(item.videoUrl)) {
-        seenUrls.add(item.videoUrl);
-        // Link to matching listing if available
-        const matched = listings.find((l) => l.title.toLowerCase().includes(item.category.toLowerCase()));
-        merged.push({
-          ...item,
-          listing: matched,
-          listingId: matched?.id,
-        });
-      }
-    });
-
     return merged;
-  }, [listings]);
+  }, [listings, externalReels, localReels]);
+
+  const handleStoryCreated = (newReel: VideoReelItem) => {
+    const updated = [newReel, ...localReels];
+    setLocalReels(updated);
+    if (onReelsChange) {
+      onReelsChange(updated);
+    }
+  };
 
   const handleOpenReel = (index: number) => {
     setActiveReelIndex(index);
@@ -259,12 +197,12 @@ export const VideoReelsSection: React.FC<VideoReelsSectionProps> = ({
           {/* Post Reel Button */}
           <button
             type="button"
-            onClick={onOpenPostAd}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-white/10 dark:hover:bg-white/15 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/10 text-xs font-bold transition-all cursor-pointer"
-            title="Post an ad with video walk-through"
+            onClick={() => setIsAddStoryModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 dark:bg-[#FF5A36]/15 dark:hover:bg-[#FF5A36]/25 text-[#FF5A36] border border-orange-200 dark:border-[#FF5A36]/30 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+            title="Post a video story"
           >
-            <Plus className="w-3.5 h-3.5 text-[#FF5A36]" />
-            <span className="hidden sm:inline">Add Video Ad</span>
+            <Plus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Add Story</span>
             <span className="sm:hidden">Add</span>
           </button>
 
@@ -299,8 +237,8 @@ export const VideoReelsSection: React.FC<VideoReelsSectionProps> = ({
         <motion.div
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
-          onClick={onOpenPostAd}
-          className="snap-start shrink-0 w-28 sm:w-32 h-44 sm:h-48 rounded-2xl sm:rounded-3xl border-2 border-dashed border-[#FF5A36]/40 hover:border-[#FF5A36] bg-gradient-to-b from-white to-orange-50/50 dark:from-[#151822] dark:to-[#201518] p-3 flex flex-col items-center justify-center text-center cursor-pointer shadow-xs hover:shadow-md transition-all group"
+          onClick={() => setIsAddStoryModalOpen(true)}
+          className="snap-start shrink-0 w-28 sm:w-32 h-44 sm:h-48 rounded-2xl sm:rounded-3xl border-2 border-dashed border-[#FF5A36]/50 hover:border-[#FF5A36] bg-gradient-to-b from-white via-orange-50/40 to-orange-100/30 dark:from-[#151822] dark:to-[#221718] p-3 flex flex-col items-center justify-center text-center cursor-pointer shadow-xs hover:shadow-md transition-all group"
         >
           <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#FF5A36] text-white flex items-center justify-center shadow-md shadow-[#FF5A36]/30 group-hover:scale-110 transition-transform mb-2">
             <Plus className="w-6 h-6 stroke-[3]" />
@@ -309,9 +247,30 @@ export const VideoReelsSection: React.FC<VideoReelsSectionProps> = ({
             Add Your Story
           </span>
           <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 leading-snug">
-            Free video ad for your item
+            15s video walkthrough
           </span>
         </motion.div>
+
+        {/* If no custom reels uploaded yet, display an inviting placeholder card */}
+        {allReels.length === 0 && (
+          <motion.div
+            whileHover={{ scale: 1.01 }}
+            onClick={() => setIsAddStoryModalOpen(true)}
+            className="snap-start shrink-0 h-44 sm:h-48 rounded-2xl sm:rounded-3xl border border-dashed border-gray-300 dark:border-gray-800 bg-gray-50/70 dark:bg-white/5 p-4 flex flex-col justify-center min-w-[210px] sm:min-w-[240px] cursor-pointer hover:border-[#FF5A36]/50 transition-all text-left"
+          >
+            <div className="flex items-center gap-1.5 text-xs font-black text-gray-800 dark:text-gray-200">
+              <Sparkles className="w-4 h-4 text-[#FF5A36]" />
+              <span>Share 1st Video Story</span>
+            </div>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+              Default dummy inspection reels removed. Post your real car, gadget, or home video tour now!
+            </p>
+            <div className="mt-2.5 inline-flex items-center gap-1 text-[11px] font-black text-[#FF5A36]">
+              <span>Upload Video</span>
+              <span>&rarr;</span>
+            </div>
+          </motion.div>
+        )}
 
         {/* Dynamic Walkthrough Video Reels */}
         {allReels.map((reel, index) => {
@@ -401,6 +360,14 @@ export const VideoReelsSection: React.FC<VideoReelsSectionProps> = ({
           />
         )}
       </AnimatePresence>
+      {/* 4. Streamlined Video Story Uploader Modal */}
+      <AddStoryModal
+        isOpen={isAddStoryModalOpen}
+        onClose={() => setIsAddStoryModalOpen(false)}
+        onStoryCreated={handleStoryCreated}
+        currentUser={currentUser}
+        onToast={onToast}
+      />
     </section>
   );
 };

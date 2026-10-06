@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Listing, EventItem, HeroAd, HeroAdSettings } from '../types';
+import { Listing, EventItem, HeroAd, HeroAdSettings, VideoReelItem } from '../types';
 import {
   ShieldCheck,
   Clock,
@@ -44,6 +44,7 @@ import {
   FileText,
   CheckSquare,
   ExternalLink,
+  Video,
 } from 'lucide-react';
 import { formatLKR } from './ListingsSection';
 import { api } from '../services/api';
@@ -52,6 +53,7 @@ import { AdminReachAnalytics } from './AdminReachAnalytics';
 import { AdminReportsManager } from './AdminReportsManager';
 import { AdminSmsGateway } from './AdminSmsGateway';
 import { AdminCustomDomain } from './AdminCustomDomain';
+import { AdminReelsManager } from './AdminReelsManager';
 
 const compressBannerImage = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -103,6 +105,8 @@ interface AdminDashboardProps {
   events?: EventItem[];
   heroAds?: HeroAd[];
   heroSettings?: HeroAdSettings;
+  videoReels?: VideoReelItem[];
+  onReelsChange?: (reels: VideoReelItem[]) => void;
   onApprove: (id: string, verificationNotes?: string) => Promise<void>;
   onReject: (id: string, verificationNotes?: string) => Promise<void>;
   onVerifyCustomer?: (
@@ -138,6 +142,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   events,
   heroAds = [],
   heroSettings = { mode: 'default', rotationIntervalSeconds: 6 },
+  videoReels,
+  onReelsChange,
   onApprove,
   onReject,
   onVerifyCustomer,
@@ -160,7 +166,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onToggleHeroAd,
   onDeleteHeroAd,
 }) => {
-  const [filterTab, setFilterTab] = useState<'all' | 'pending' | 'featured' | 'services' | 'spotlight' | 'hero_ads' | 'reach_analytics' | 'reports' | 'sms_gateway' | 'custom_domain'>('all');
+  const [filterTab, setFilterTab] = useState<'all' | 'pending' | 'featured' | 'services' | 'spotlight' | 'hero_ads' | 'reels' | 'reach_analytics' | 'reports' | 'sms_gateway' | 'custom_domain'>('all');
+  const [localVideoReels, setLocalVideoReels] = useState<VideoReelItem[]>(videoReels || []);
+
+  useEffect(() => {
+    if (videoReels !== undefined) {
+      setLocalVideoReels(videoReels);
+    } else {
+      api.getVideoReels().then(setLocalVideoReels).catch(() => {});
+    }
+  }, [videoReels]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('all');
   const [showMonetizationGuide, setShowMonetizationGuide] = useState(true);
@@ -1340,6 +1355,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             Mode: {heroSettings.mode.replace('_', ' ')}
           </p>
         </div>
+
+        <div
+          id="admin-metric-video-reels"
+          onClick={() => setFilterTab('reels')}
+          className={`p-6 rounded-2xl border transition-all cursor-pointer ${
+            filterTab === 'reels'
+              ? 'bg-white border-[#FF5A36] shadow-lg -translate-y-1 ring-2 ring-[#FF5A36]/20'
+              : 'bg-white border-gray-200 hover:border-gray-300'
+          }`}
+        >
+          <div className="flex items-center justify-between text-[#FF5A36] mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Video Stories & Reels</span>
+            <Video className="w-5 h-5 text-[#FF5A36]" />
+          </div>
+          <div className="text-3xl font-extrabold text-[#FF5A36]">{localVideoReels.length}</div>
+          <p className="text-xs text-gray-500 mt-1 font-medium">
+            {localVideoReels.filter((r) => r.isActive !== false).length} Active Live • Click to manage
+          </p>
+        </div>
       </div>
 
       {/* Admin Strategy: How Admin Benefits from Services */}
@@ -1521,6 +1555,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>Hero Ads & Banners ({heroAds.length})</span>
             </button>
             <button
+              id="admin-filter-reels-tab"
+              type="button"
+              onClick={() => setFilterTab('reels')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                filterTab === 'reels'
+                  ? 'bg-[#FF5A36] text-white shadow-sm'
+                  : 'bg-orange-50 text-[#FF5A36] hover:bg-orange-100 border border-orange-200/60'
+              }`}
+            >
+              <Video className="w-3.5 h-3.5" />
+              <span>Video Stories & Reels ({localVideoReels.length})</span>
+            </button>
+            <button
               id="admin-filter-reach-analytics-tab"
               type="button"
               onClick={() => setFilterTab('reach_analytics')}
@@ -1586,7 +1633,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </button>
           )}
 
-          {filterTab !== 'hero_ads' && filterTab !== 'sms_gateway' && filterTab !== 'custom_domain' && (
+          {filterTab !== 'hero_ads' && filterTab !== 'reels' && filterTab !== 'sms_gateway' && filterTab !== 'custom_domain' && (
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
                 <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
@@ -1626,7 +1673,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
 
         {/* Content Section */}
-        {filterTab === 'sms_gateway' ? (
+        {filterTab === 'reels' ? (
+          <div className="p-4 sm:p-6">
+            <AdminReelsManager
+              reels={localVideoReels}
+              onReelsChange={(updated) => {
+                setLocalVideoReels(updated);
+                if (onReelsChange) onReelsChange(updated);
+              }}
+              onToast={onToast}
+            />
+          </div>
+        ) : filterTab === 'sms_gateway' ? (
           <div className="p-4 sm:p-6">
             <AdminSmsGateway onToast={onToast} />
           </div>

@@ -9,7 +9,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Listing, User, EventItem, HeroAd, HeroAdSettings, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge } from '../types';
+import { Listing, User, EventItem, HeroAd, HeroAdSettings, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem } from '../types';
 
 const API_BASE = '/api';
 
@@ -2108,6 +2108,166 @@ For quick inquiries, call or send a message via WhatsApp!`;
       throw new Error(err.error || 'Failed to upload video');
     }
     return res.json();
+  },
+
+  // -------------------------------------------------------------
+  // Video Stories & Inspection Reels (Firestore + LocalStorage)
+  // -------------------------------------------------------------
+
+  async getVideoReels(): Promise<VideoReelItem[]> {
+    // 1. Try Cloud Firestore first
+    try {
+      const colRef = collection(db, 'video_reels');
+      const snap = await getDocs(colRef);
+      const items: VideoReelItem[] = [];
+      snap.forEach((d) => {
+        items.push(d.data() as VideoReelItem);
+      });
+      if (items.length > 0) {
+        // Sort newest first
+        items.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        try {
+          localStorage.setItem('huta_video_reels_cache', JSON.stringify(items));
+        } catch {
+          // ignore
+        }
+        return items;
+      }
+    } catch (err) {
+      console.warn('[VideoReels] Firestore get error, checking cache:', err);
+    }
+
+    // 2. Check local storage cache
+    try {
+      const cached = localStorage.getItem('huta_video_reels_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+
+    // By default, return empty list (per user request: no default dummy reels)
+    return [];
+  },
+
+  subscribeToVideoReels(callback: (reels: VideoReelItem[]) => void): () => void {
+    try {
+      const colRef = collection(db, 'video_reels');
+      return onSnapshot(
+        colRef,
+        (snapshot) => {
+          const items: VideoReelItem[] = [];
+          snapshot.forEach((docSnap) => {
+            items.push(docSnap.data() as VideoReelItem);
+          });
+          items.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+          try {
+            localStorage.setItem('huta_video_reels_cache', JSON.stringify(items));
+          } catch {
+            // ignore
+          }
+          callback(items);
+        },
+        (err) => {
+          console.warn('[VideoReels] Firestore real-time error:', err);
+        }
+      );
+    } catch {
+      return () => {};
+    }
+  },
+
+  async createVideoReel(data: Partial<VideoReelItem>): Promise<VideoReelItem> {
+    const id = data.id || `reel_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const newReel: VideoReelItem = {
+      id,
+      title: data.title ? String(data.title).trim() : 'Video Story',
+      videoUrl: data.videoUrl || '',
+      posterImage: data.posterImage || '',
+      category: data.category || 'General',
+      price: typeof data.price === 'number' ? data.price : 0,
+      location: data.location || 'Colombo',
+      district: data.district || 'Colombo',
+      sellerName: data.sellerName || 'HUTA Seller',
+      phone: data.phone || '',
+      isVerified: Boolean(data.isVerified),
+      specsSummary: data.specsSummary || (data.category ? `${data.category} • ${data.location || 'Sri Lanka'}` : ''),
+      isActive: data.isActive !== undefined ? Boolean(data.isActive) : true,
+      createdAt: data.createdAt || new Date().toISOString(),
+      views: data.views || 0,
+      listingId: data.listingId,
+    };
+
+    // Save to Firestore
+    try {
+      await setDoc(doc(db, 'video_reels', id), sanitizeForFirestore(newReel));
+    } catch (fsErr) {
+      console.warn('[VideoReels] Firestore set error:', fsErr);
+    }
+
+    // Update local cache
+    try {
+      const cached = localStorage.getItem('huta_video_reels_cache');
+      const list: VideoReelItem[] = cached ? JSON.parse(cached) : [];
+      const updated = [newReel, ...list.filter((r) => r.id !== id)];
+      localStorage.setItem('huta_video_reels_cache', JSON.stringify(updated));
+    } catch {
+      // ignore
+    }
+
+    return newReel;
+  },
+
+  async updateVideoReel(id: string, data: Partial<VideoReelItem>): Promise<VideoReelItem> {
+    try {
+      await setDoc(doc(db, 'video_reels', id), sanitizeForFirestore(data), { merge: true });
+    } catch (fsErr) {
+      console.warn('[VideoReels] Firestore update error:', fsErr);
+    }
+
+    try {
+      const cached = localStorage.getItem('huta_video_reels_cache');
+      if (cached) {
+        const list: VideoReelItem[] = JSON.parse(cached);
+        const updated = list.map((r) => (r.id === id ? { ...r, ...data } : r));
+        localStorage.setItem('huta_video_reels_cache', JSON.stringify(updated));
+      }
+    } catch {
+      // ignore
+    }
+
+    const all = await this.getVideoReels();
+    return all.find((r) => r.id === id) || (data as VideoReelItem);
+  },
+
+  async toggleVideoReel(id: string): Promise<VideoReelItem> {
+    const all = await this.getVideoReels();
+    const target = all.find((r) => r.id === id);
+    const nextActive = target ? target.isActive === false : false;
+    return this.updateVideoReel(id, { isActive: nextActive });
+  },
+
+  async deleteVideoReel(id: string): Promise<{ success: boolean }> {
+    try {
+      await deleteDoc(doc(db, 'video_reels', id));
+    } catch (fsErr) {
+      console.warn('[VideoReels] Firestore delete error:', fsErr);
+    }
+
+    try {
+      const cached = localStorage.getItem('huta_video_reels_cache');
+      if (cached) {
+        const list: VideoReelItem[] = JSON.parse(cached);
+        const updated = list.filter((r) => r.id !== id);
+        localStorage.setItem('huta_video_reels_cache', JSON.stringify(updated));
+      }
+    } catch {
+      // ignore
+    }
+
+    return { success: true };
   },
 
   async uploadImage(data: string, filename?: string): Promise<{ success: boolean; url: string; size?: number }> {
