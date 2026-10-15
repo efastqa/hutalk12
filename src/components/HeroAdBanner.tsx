@@ -184,17 +184,17 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
       )}
 
       {/* Main Slide Card Container */}
-      <div className="relative min-h-[160px] sm:min-h-[175px] flex items-center justify-center">
+      <div className="relative min-h-[185px] sm:min-h-[175px] flex items-center justify-center overflow-hidden">
         <AnimatePresence mode="wait">
           {currentSlide.type === 'default' ? (
             /* DEFAULT HERO SLIDE (Dual-Tone Animated Heading System) */
             <motion.div
               key="default-slide"
-              initial={{ opacity: 0, y: 8, scale: 0.99 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.99 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
-              className="w-full text-center"
+              initial={{ opacity: 0, scale: 0.99 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.99 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="w-full text-center flex flex-col items-center justify-center"
             >
               <DualToneHeading
                 as="h1"
@@ -203,9 +203,9 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
                 primaryText="Buy & Sell Everything in"
                 accentText={[
                   'Sri Lanka',
-                  'Colombo & 25 Districts',
+                  'All 25 Districts',
                   'Vehicles & Motors 🚗',
-                  'Homes & Land Plots 🏡',
+                  'Homes & Lands 🏡',
                   'Smart Electronics 📱',
                   'Verified Deals 🏷️',
                 ]}
@@ -215,7 +215,7 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
                 }}
                 subtitle="Properties, Vehicles, Classifieds, Jobs & Local Services across all 25 districts with direct WhatsApp & telephone contact."
                 animationType="rotate"
-                rotationInterval={3200}
+                rotationInterval={3600}
                 showUnderline={false}
                 align="center"
                 id="hero-dual-tone-heading"

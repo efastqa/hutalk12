@@ -119,24 +119,24 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   };
 
   return (
-    <section className="relative bg-white dark:bg-[#111217] text-[#181920] dark:text-white py-10 sm:py-14 px-4 sm:px-6 lg:px-8 border-b border-gray-200 dark:border-[#2D2F39] overflow-hidden transition-colors duration-200">
-      {/* Ambient background glow */}
+    <section className="relative bg-white dark:bg-[#111217] text-[#181920] dark:text-white py-8 sm:py-14 px-4 sm:px-6 lg:px-8 border-b border-gray-200 dark:border-[#2D2F39] overflow-hidden w-full max-w-full contain-paint transition-colors duration-200">
+      {/* Ambient background glow with transform-gpu */}
       <motion.div
         animate={{
-          scale: [1, 1.15, 1],
-          opacity: [0.08, 0.16, 0.08],
+          scale: [1, 1.1, 1],
+          opacity: [0.08, 0.14, 0.08],
         }}
         transition={{
           duration: 8,
           repeat: Infinity,
           ease: 'easeInOut',
         }}
-        className="absolute top-1/2 -left-20 w-80 h-80 bg-[#FF5A36] rounded-full blur-3xl pointer-events-none -translate-y-1/2"
+        className="absolute top-1/2 -left-20 w-80 h-80 bg-[#FF5A36] rounded-full blur-3xl pointer-events-none -translate-y-1/2 transform-gpu will-change-transform"
       />
       <motion.div
         animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.06, 0.14, 0.06],
+          scale: [1, 1.12, 1],
+          opacity: [0.06, 0.12, 0.06],
         }}
         transition={{
           duration: 9,
@@ -144,7 +144,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
           ease: 'easeInOut',
           delay: 1,
         }}
-        className="absolute -top-10 right-0 w-96 h-96 bg-[#FF5A36] rounded-full blur-3xl pointer-events-none"
+        className="absolute -top-10 right-0 w-96 h-96 bg-[#FF5A36] rounded-full blur-3xl pointer-events-none transform-gpu will-change-transform"
       />
 
       <div className="relative max-w-5xl mx-auto space-y-6 text-center">

@@ -110,8 +110,8 @@ const ACCENT_COLOR_MAP: Record<
 
 const SIZE_STYLES: Record<DualToneSize, { heading: string; subtitle: string }> = {
   hero: {
-    heading: 'text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight',
-    subtitle: 'text-xs sm:text-sm md:text-base max-w-2xl mt-3 font-medium leading-relaxed',
+    heading: 'text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight',
+    subtitle: 'text-xs sm:text-sm md:text-base max-w-2xl mt-2.5 sm:mt-3 font-medium leading-relaxed',
   },
   xl: {
     heading: 'text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight leading-snug',
@@ -324,17 +324,16 @@ export const DualToneHeading: React.FC<DualToneHeadingProps> = ({
           } transition-transform`}
         >
           {animationType === 'rotate' ? (
-            <span className="relative inline-block overflow-hidden py-1">
-              <AnimatePresence mode="wait">
+            <span className="relative inline-block overflow-hidden py-0.5 align-baseline">
+              <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
                   key={currentAccentWord}
-                  initial={{ y: 24, opacity: 0, filter: 'blur(4px)' }}
-                  animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-                  exit={{ y: -24, opacity: 0, filter: 'blur(4px)' }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
                   transition={{
-                    type: 'spring',
-                    stiffness: 380,
-                    damping: 26,
+                    duration: 0.25,
+                    ease: 'easeOut',
                   }}
                   className={`inline-block ${accentToneColor} font-black`}
                 >

@@ -697,7 +697,7 @@ export default function App() {
   }).length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F4F5F7] dark:bg-[#0B0C10] text-[#181920] dark:text-[#F8FAFC] pb-16 lg:pb-0 transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-[#F4F5F7] dark:bg-[#0B0C10] text-[#181920] dark:text-[#F8FAFC] pb-16 lg:pb-0 transition-colors duration-200 overflow-x-hidden w-full max-w-full">
       {/* Toast Notification Layer */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
