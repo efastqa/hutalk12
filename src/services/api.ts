@@ -1624,10 +1624,27 @@ For quick inquiries, call or send a message via WhatsApp!`;
   async getEvents(params?: { category?: string; district?: string; spotlight?: boolean }): Promise<EventItem[]> {
     let events: EventItem[] = [];
 
+    // Track deleted event IDs in localStorage so deleted events never resurrect
+    const deletedIds: string[] = (() => {
+      try {
+        const raw = localStorage.getItem('huta_deleted_events');
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    })();
+
+    const hasInitialized = localStorage.getItem('huta_events_initialized') === 'true';
+
     try {
       const snap = await getDocs(collection(db, 'events'));
       if (!snap.empty) {
-        snap.forEach((d) => events.push(d.data() as EventItem));
+        snap.forEach((d) => {
+          const item = d.data() as EventItem;
+          if (!deletedIds.includes(item.id)) {
+            events.push(item);
+          }
+        });
       }
     } catch {
       // fallback
@@ -1637,37 +1654,45 @@ For quick inquiries, call or send a message via WhatsApp!`;
       try {
         const res = await fetch(`${API_BASE}/events`);
         if (res.ok) {
-          events = await res.json();
+          const remoteEvents: EventItem[] = await res.json();
+          if (Array.isArray(remoteEvents)) {
+            events = remoteEvents.filter((e) => !deletedIds.includes(e.id));
+          }
         }
       } catch {
         // ignore
       }
     }
 
-    // Fallback seed events if empty
-    if (events.length === 0) {
-      events = [
-        {
-          id: 'evt-colombo-motor-show',
-          title: 'Colombo International Motor Show 2026',
-          category: 'Automotive',
-          district: 'Colombo',
-          date: 'OCT 24 - 26, 2026',
-          month: 'OCT',
-          day: '24',
-          time: '09:00 AM - 08:00 PM',
-          location: 'BMICH, Colombo 07',
-          venue: 'Sirimavo Bandaranaike Memorial Exhibition Centre',
-          image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80',
-          badge: 'Premier Expo',
-          price: 'Rs. 500 Entry',
-          isFree: false,
-          attendees: 15000,
-          description: "Sri Lanka's largest automotive gathering featuring new vehicle launches, classic car displays, EV technology showcases, and custom bike expos.",
-          organizer: 'Motor Traders Association of Sri Lanka',
-          isSpotlight: true,
-        },
-      ];
+    // Only seed the initial demo event on very first visit if user has never initialized or deleted
+    if (events.length === 0 && !hasInitialized && !deletedIds.includes('evt-colombo-motor-show')) {
+      const defaultEvent: EventItem = {
+        id: 'evt-colombo-motor-show',
+        title: 'Colombo International Motor Show 2026',
+        category: 'Automotive',
+        district: 'Colombo',
+        date: 'OCT 24 - 26, 2026',
+        month: 'OCT',
+        day: '24',
+        time: '09:00 AM - 08:00 PM',
+        location: 'BMICH, Colombo 07',
+        venue: 'Sirimavo Bandaranaike Memorial Exhibition Centre',
+        image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80',
+        badge: 'Premier Expo',
+        price: 'Rs. 500 Entry',
+        isFree: false,
+        attendees: 15000,
+        description: "Sri Lanka's largest automotive gathering featuring new vehicle launches, classic car displays, EV technology showcases, and custom bike expos.",
+        organizer: 'Motor Traders Association of Sri Lanka',
+        isSpotlight: true,
+      };
+      events = [defaultEvent];
+      try {
+        await setDoc(doc(db, 'events', defaultEvent.id), defaultEvent);
+      } catch {}
+      try {
+        localStorage.setItem('huta_events_initialized', 'true');
+      } catch {}
     }
 
     let filtered = [...events];
@@ -1760,6 +1785,19 @@ For quick inquiries, call or send a message via WhatsApp!`;
     } catch {
       // ignore
     }
+
+    try {
+      const raw = localStorage.getItem('huta_deleted_events');
+      const deleted: string[] = raw ? JSON.parse(raw) : [];
+      if (!deleted.includes(id)) {
+        deleted.push(id);
+        localStorage.setItem('huta_deleted_events', JSON.stringify(deleted));
+      }
+      localStorage.setItem('huta_events_initialized', 'true');
+    } catch {
+      // ignore
+    }
+
     try {
       await fetch(`${API_BASE}/events/${id}`, { method: 'DELETE' });
     } catch {

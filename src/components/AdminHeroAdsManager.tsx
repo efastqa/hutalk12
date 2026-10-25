@@ -131,6 +131,8 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
   const [isUploadingBg, setIsUploadingBg] = useState<boolean>(false);
   const [isUploadingVideo, setIsUploadingVideo] = useState<boolean>(false);
   const [customMediaUrl, setCustomMediaUrl] = useState<string>('');
+  const [adToDelete, setAdToDelete] = useState<HeroAd | null>(null);
+  const [isDeletingAd, setIsDeletingAd] = useState(false);
 
   const activeAdsCount = heroAds.filter((a) => a.isActive).length;
 
@@ -702,11 +704,7 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
                         </button>
                         <button
                           type="button"
-                          onClick={async () => {
-                            if (window.confirm(`Delete "${ad.title}"?`)) {
-                              if (onDeleteHeroAd) await onDeleteHeroAd(ad.id);
-                            }
-                          }}
+                          onClick={() => setAdToDelete(ad)}
                           className="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                           title="Delete Ad"
                         >
@@ -1272,6 +1270,54 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Ad Confirmation Modal */}
+      {adToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-gray-100 text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 mx-auto flex items-center justify-center mb-4 border border-rose-100">
+              <Trash2 className="w-7 h-7" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">
+              Delete Hero Ad?
+            </h3>
+            <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+              Are you sure you want to permanently delete <strong className="text-gray-900 font-bold">"{adToDelete.title}"</strong>?
+            </p>
+            <div className="mt-6 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setAdToDelete(null)}
+                disabled={isDeletingAd}
+                className="w-1/2 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingAd}
+                onClick={async () => {
+                  if (!onDeleteHeroAd || !adToDelete) return;
+                  setIsDeletingAd(true);
+                  try {
+                    await onDeleteHeroAd(adToDelete.id);
+                    setAdToDelete(null);
+                  } finally {
+                    setIsDeletingAd(false);
+                  }
+                }}
+                className="w-1/2 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-md cursor-pointer"
+              >
+                {isDeletingAd ? (
+                  <span>Deleting...</span>
+                ) : (
+                  <span>Yes, Delete</span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

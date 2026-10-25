@@ -351,6 +351,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [editingEvent, setEditingEvent] = useState<EventItem | null>(null);
   const [isSubmittingEvent, setIsSubmittingEvent] = useState(false);
   const [eventFormError, setEventFormError] = useState('');
+  const [eventToDelete, setEventToDelete] = useState<EventItem | null>(null);
+  const [isDeletingEvent, setIsDeletingEvent] = useState(false);
 
   // Event search & filters
   const [eventSearchTerm, setEventSearchTerm] = useState('');
@@ -609,18 +611,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
-  const handleDeleteEventAction = async (id: string, title: string) => {
-    if (!window.confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) {
-      return;
-    }
+  const handleDeleteEventClick = (evt: EventItem) => {
+    setEventToDelete(evt);
+  };
+
+  const handleConfirmDeleteEvent = async () => {
+    if (!eventToDelete) return;
+    setIsDeletingEvent(true);
+    const { id, title } = eventToDelete;
     try {
       await api.deleteEvent(id);
       setLocalEvents((prev) => prev.filter((e) => e.id !== id));
       if (onDeleteEvent) onDeleteEvent(id);
       if (onToast) onToast(`"${title}" deleted successfully`, 'info');
+      setEventToDelete(null);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to delete event';
       if (onToast) onToast(msg, 'error');
+    } finally {
+      setIsDeletingEvent(false);
     }
   };
 
@@ -1849,7 +1858,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleDeleteEventAction(evt.id, evt.title)}
+                            onClick={() => handleDeleteEventClick(evt)}
                             title="Delete Event permanently"
                             className="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                           >
@@ -2393,6 +2402,51 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upcoming Event & Spotlight Delete Confirmation Modal */}
+      {eventToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-gray-100 text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 mx-auto flex items-center justify-center mb-4 border border-rose-100">
+              <Trash2 className="w-7 h-7" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">
+              Delete Upcoming Event?
+            </h3>
+            <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+              Are you sure you want to permanently delete <strong className="text-gray-900 font-bold">"{eventToDelete.title}"</strong>?
+            </p>
+            <p className="text-xs text-rose-600 font-semibold mt-1">
+              This will remove it from the HUTA IN Events Hub and the Homepage Upcoming Spotlight banner permanently.
+            </p>
+            <div className="mt-6 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setEventToDelete(null)}
+                disabled={isDeletingEvent}
+                className="w-1/2 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingEvent}
+                onClick={handleConfirmDeleteEvent}
+                className="w-1/2 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-md cursor-pointer"
+              >
+                {isDeletingEvent ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>Yes, Delete</span>
+                )}
+              </button>
             </div>
           </div>
         </div>

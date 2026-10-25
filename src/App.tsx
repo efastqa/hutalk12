@@ -521,10 +521,6 @@ export default function App() {
 
   // Delete Ad
   const handleDeleteListing = async (adId: string) => {
-    if (!window.confirm('Are you sure you want to permanently delete this advertisement?')) {
-      return;
-    }
-
     try {
       await api.deleteListing(adId);
       setListings((prev) => prev.filter((item) => item.id !== adId));

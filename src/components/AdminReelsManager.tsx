@@ -96,6 +96,10 @@ export const AdminReelsManager: React.FC<AdminReelsManagerProps> = ({
   const [formIsVerified, setFormIsVerified] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [reelToDelete, setReelToDelete] = useState<VideoReelItem | null>(null);
+  const [isDeletingReel, setIsDeletingReel] = useState(false);
+  const [isClearAllModalOpen, setIsClearAllModalOpen] = useState(false);
+  const [isClearingAll, setIsClearingAll] = useState(false);
 
   const totalReels = reels.length;
   const activeReels = reels.filter((r) => r.isActive !== false).length;
@@ -116,16 +120,19 @@ export const AdminReelsManager: React.FC<AdminReelsManagerProps> = ({
     }
   };
 
-  const handleDeleteReel = async (id: string, title: string) => {
-    if (!window.confirm(`Are you sure you want to delete the story "${title}"?`)) {
-      return;
-    }
+  const handleConfirmDeleteReel = async () => {
+    if (!reelToDelete) return;
+    setIsDeletingReel(true);
+    const { id, title } = reelToDelete;
     try {
       await api.deleteVideoReel(id);
       onReelsChange(reels.filter((r) => r.id !== id));
       if (onToast) onToast(`Story reel "${title}" deleted`, 'info');
+      setReelToDelete(null);
     } catch {
       if (onToast) onToast('Failed to delete story reel', 'error');
+    } finally {
+      setIsDeletingReel(false);
     }
   };
 
@@ -217,18 +224,19 @@ export const AdminReelsManager: React.FC<AdminReelsManagerProps> = ({
     }
   };
 
-  const handleClearAllReels = async () => {
-    if (!window.confirm('Are you sure you want to delete ALL story reels? This will remove all video stories from the homepage.')) {
-      return;
-    }
+  const handleConfirmClearAllReels = async () => {
+    setIsClearingAll(true);
     try {
       for (const r of reels) {
         await api.deleteVideoReel(r.id);
       }
       onReelsChange([]);
       if (onToast) onToast('All story reels have been cleared. Homepage is clean.', 'info');
+      setIsClearAllModalOpen(false);
     } catch {
       if (onToast) onToast('Failed to clear some reels', 'error');
+    } finally {
+      setIsClearingAll(false);
     }
   };
 
@@ -271,7 +279,7 @@ export const AdminReelsManager: React.FC<AdminReelsManagerProps> = ({
           {reels.length > 0 && (
             <button
               type="button"
-              onClick={handleClearAllReels}
+              onClick={() => setIsClearAllModalOpen(true)}
               className="px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -426,7 +434,7 @@ export const AdminReelsManager: React.FC<AdminReelsManagerProps> = ({
 
                     <button
                       type="button"
-                      onClick={() => handleDeleteReel(reel.id, reel.title)}
+                      onClick={() => setReelToDelete(reel)}
                       className="p-1.5 rounded-xl border border-rose-200 dark:border-rose-900 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                       title="Delete reel"
                     >
@@ -645,6 +653,90 @@ export const AdminReelsManager: React.FC<AdminReelsManagerProps> = ({
               playsInline
               className="w-full aspect-[9/16] object-cover"
             />
+          </div>
+        </div>
+      )}
+
+      {/* 5. Delete Single Reel Confirmation Modal */}
+      {reelToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-gray-100 dark:border-[#2D2F39] text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-500 mx-auto flex items-center justify-center mb-4 border border-rose-100 dark:border-rose-900/50">
+              <Trash2 className="w-7 h-7" />
+            </div>
+            <h3 className="text-xl font-bold">
+              Delete Video Story?
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 leading-relaxed">
+              Are you sure you want to permanently delete <strong className="text-gray-900 dark:text-white font-bold">"{reelToDelete.title}"</strong>?
+            </p>
+            <div className="mt-6 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setReelToDelete(null)}
+                disabled={isDeletingReel}
+                className="w-1/2 py-2.5 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 text-gray-700 dark:text-gray-200 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingReel}
+                onClick={handleConfirmDeleteReel}
+                className="w-1/2 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-md cursor-pointer"
+              >
+                {isDeletingReel ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>Yes, Delete</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. Clear All Reels Confirmation Modal */}
+      {isClearAllModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-gray-100 dark:border-[#2D2F39] text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-500 mx-auto flex items-center justify-center mb-4 border border-rose-100 dark:border-rose-900/50">
+              <AlertCircle className="w-7 h-7" />
+            </div>
+            <h3 className="text-xl font-bold">
+              Clear All Story Reels?
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 leading-relaxed">
+              Are you sure you want to delete ALL story reels? This will remove all video stories from the homepage.
+            </p>
+            <div className="mt-6 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsClearAllModalOpen(false)}
+                disabled={isClearingAll}
+                className="w-1/2 py-2.5 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 text-gray-700 dark:text-gray-200 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isClearingAll}
+                onClick={handleConfirmClearAllReels}
+                className="w-1/2 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-md cursor-pointer"
+              >
+                {isClearingAll ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Clearing...</span>
+                  </>
+                ) : (
+                  <span>Yes, Clear All</span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
