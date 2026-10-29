@@ -391,6 +391,30 @@ export default function App() {
     setMaxPrice('');
   };
 
+  const handleSelectCategory = useCallback(
+    (category: string, query?: string, shouldScroll: boolean = true) => {
+      setSelectedCategory(category);
+      if (query !== undefined) {
+        setSearchTerm(query);
+      } else {
+        // Clear search input so all listings within the chosen category show immediately
+        setSearchTerm('');
+      }
+      if (currentTab !== 'marketplace') {
+        setCurrentTab('marketplace');
+      }
+      if (shouldScroll) {
+        setTimeout(() => {
+          const el = document.getElementById('marketplace-listings');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 50);
+      }
+    },
+    [currentTab]
+  );
+
   // Favorites Toggle
   const handleToggleFavorite = (adId: string) => {
     let updated: string[];
@@ -701,14 +725,7 @@ export default function App() {
       <Navbar
         currentTab={currentTab}
         onSelectTab={(tab) => setCurrentTab(tab)}
-        onSelectCategory={(category) => {
-          setSelectedCategory(category);
-          setCurrentTab('marketplace');
-          setTimeout(() => {
-            const el = document.getElementById('marketplace-listings');
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
-          }, 50);
-        }}
+        onSelectCategory={(category) => handleSelectCategory(category, undefined, true)}
         onOpenPostAd={handleOpenPostAd}
         onOpenUserAuth={() => setIsUserAuthOpen(true)}
         currentUser={currentUser}
@@ -736,7 +753,7 @@ export default function App() {
               onResetFilters={handleResetFilters}
               hasActiveFilters={hasActiveFilters}
               selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
+              onSelectCategory={(category) => handleSelectCategory(category, undefined, true)}
               heroAds={heroAds}
               heroSettings={heroSettings}
               onOpenPostAd={handleOpenPostAd}
@@ -755,10 +772,10 @@ export default function App() {
               onToast={showToast}
             />
 
-            {/* Category Browser */}
+            {/* Category Browser ("Explore Our Popular Categories") */}
             <CategoryGrid
               currentCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
+              onSelectCategory={(category) => handleSelectCategory(category, undefined, true)}
               listings={listings}
               onViewAllCategories={() => setCurrentTab('categories')}
             />
@@ -911,13 +928,7 @@ export default function App() {
             onBackToHome={() => setCurrentTab('marketplace')}
             onOpenPostAd={handleOpenPostAd}
             onSelectCategory={(cat, query) => {
-              setSelectedCategory(cat);
-              if (query) {
-                setSearchTerm(query);
-              } else {
-                setSearchTerm('');
-              }
-              setCurrentTab('marketplace');
+              handleSelectCategory(cat, query, true);
             }}
             onToast={showToast}
           />
@@ -927,13 +938,7 @@ export default function App() {
           <AllCategoriesPage
             onBack={() => setCurrentTab('marketplace')}
             onSelectCategory={(cat, query) => {
-              setSelectedCategory(cat);
-              if (query) {
-                setSearchTerm(query);
-              } else {
-                setSearchTerm('');
-              }
-              setCurrentTab('marketplace');
+              handleSelectCategory(cat, query, true);
             }}
             listings={listings}
           />
@@ -1162,8 +1167,7 @@ export default function App() {
       {/* Footer */}
       <Footer
         onSelectCategory={(cat) => {
-          setSelectedCategory(cat);
-          setCurrentTab('marketplace');
+          handleSelectCategory(cat, undefined, true);
         }}
         onSelectLocation={(loc) => {
           setSelectedLocation(loc);

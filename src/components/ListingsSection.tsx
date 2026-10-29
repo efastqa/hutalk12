@@ -254,9 +254,10 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
       <div className="flex items-center gap-1.5 overflow-x-auto pb-3 mb-5 scrollbar-none border-b border-gray-200 dark:border-[#2D303E]">
         {[
           { id: 'All', label: 'All Ads' },
-          { id: 'Property', label: 'Properties' },
           { id: 'Vehicles', label: 'Vehicles' },
-          { id: 'Electronics', label: 'Classifieds' },
+          { id: 'Motorcycles', label: 'Motorcycles' },
+          { id: 'Property', label: 'Properties' },
+          { id: 'Electronics', label: 'Electronics' },
           { id: 'Home & Garden', label: 'Home & Garden' },
           { id: 'Jobs', label: 'Jobs' },
           { id: 'Services', label: 'Services' },
@@ -567,17 +568,38 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
         className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-3 border-b border-gray-200 dark:border-[#2D303E]"
       >
         <div>
+          {currentCategory && currentCategory !== 'All' && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#FF5A36]/10 text-[#FF5A36] text-xs font-extrabold border border-[#FF5A36]/25 mb-1.5">
+              <span>Category: {currentCategory}</span>
+              <button
+                type="button"
+                onClick={() => onSelectCategory && onSelectCategory('All')}
+                className="ml-1 text-[#FF5A36] hover:text-[#111217] dark:hover:text-white transition-colors cursor-pointer text-xs font-black"
+                title="View All Ads"
+              >
+                ✕
+              </button>
+            </div>
+          )}
           <DualToneHeading
             as="h2"
             size="lg"
             theme="auto"
-            primaryText="Available"
-            accentText={['Advertisements', 'Verified Ads', 'Classified Deals']}
+            primaryText={currentCategory && currentCategory !== 'All' ? `${currentCategory}` : "Available"}
+            accentText={
+              currentCategory && currentCategory !== 'All'
+                ? ['in Sri Lanka', 'Verified Deals', 'Latest Listings']
+                : ['Advertisements', 'Verified Ads', 'Classified Deals']
+            }
             animationType="rotate"
             rotationInterval={4200}
             align="left"
             showUnderline={false}
-            subtitle="Verified marketplace listings with seller telephone & direct WhatsApp"
+            subtitle={
+              currentCategory && currentCategory !== 'All'
+                ? `Explore verified ${currentCategory.toLowerCase()} listings with direct seller contact`
+                : "Verified marketplace listings with seller telephone & direct WhatsApp"
+            }
             id="listings-dual-tone-heading"
           />
         </div>

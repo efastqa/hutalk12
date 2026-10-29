@@ -84,6 +84,17 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
     }
   });
 
+  const handleCategoryClick = (catKey: string) => {
+    onSelectCategory(catKey);
+    // Instantly scroll smoothly to the marketplace listings section
+    setTimeout(() => {
+      const el = document.getElementById('marketplace-listings');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 40);
+  };
+
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6">
       {/* Dual-Tone Title & Subtitle */}
@@ -127,7 +138,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
               variants={cardVariants}
               whileHover={{ y: -6, scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => onSelectCategory(cat.key)}
+              onClick={() => handleCategoryClick(cat.key)}
               className={`relative flex flex-col items-center justify-center p-5 sm:p-6 rounded-2xl sm:rounded-[22px] border transition-all duration-300 text-center cursor-pointer select-none group min-h-[162px] ${
                 isActive
                   ? 'bg-white dark:bg-[#121319] border-[#FF5A36] text-[#FF5A36] dark:text-white shadow-xl shadow-[#FF5A36]/10 ring-2 ring-[#FF5A36]/40 dark:ring-[#FF5A36]/60'
