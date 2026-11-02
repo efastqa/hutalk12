@@ -11,8 +11,6 @@ import {
   Briefcase,
   Wrench,
   ShoppingBag,
-  Smartphone,
-  LayoutDashboard,
 } from 'lucide-react';
 import { ViewTab, User } from '../types';
 import { ThemeToggle } from './ThemeToggle';
@@ -64,123 +62,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="bg-white dark:bg-[#111217] border-b border-gray-200 dark:border-[#2D2F39] text-gray-900 dark:text-white sticky top-0 z-40 shadow-xs transition-colors duration-200">
-      {/* 1. Qatar Living Style Top Utility Bar */}
-      <div className="border-b border-gray-200 dark:border-[#22242F] bg-gray-50/90 dark:bg-[#0C0D11] text-xs text-gray-600 dark:text-gray-300 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex items-center justify-between gap-3">
-          {/* Location & Slogan */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
-              <MapPin className="w-3.5 h-3.5 text-[#FF5A36] shrink-0" />
-              {onLocationChange ? (
-                <select
-                  value={selectedLocation}
-                  onChange={(e) => onLocationChange(e.target.value)}
-                  className="bg-transparent text-xs text-gray-700 dark:text-gray-200 font-semibold outline-none cursor-pointer hover:text-gray-900 dark:hover:text-white border-none pr-1"
-                >
-                  {DISTRICTS_POPULAR.map((loc) => (
-                    <option key={loc} value={loc} className="bg-white dark:bg-[#181920] text-gray-900 dark:text-white">
-                      {loc}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <span className="font-semibold text-gray-800 dark:text-gray-200">{selectedLocation}</span>
-              )}
-            </div>
-
-            <span className="hidden sm:inline text-gray-300 dark:text-[#2D2F39]">|</span>
-            <span className="hidden sm:inline text-[11px] text-gray-500 dark:text-gray-400 font-medium">
-              <strong className="text-gray-800 dark:text-gray-200">HUTA.LK</strong> • Sri Lanka's #1 Classifieds Portal
-            </span>
-          </div>
-
-          {/* Quick Links & Account */}
-          <div className="flex items-center gap-3 sm:gap-4 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => onSelectTab('huta_in')}
-              className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
-            >
-              <Sparkles className="w-3 h-3 text-[#FF5A36]" />
-              <span className="hidden xs:inline">Community:</span>
-              <span className="text-[#FF5A36] font-bold">HUTA IN</span>
-            </button>
-
-            <span className="text-gray-300 dark:text-[#2D2F39]">|</span>
-            <button
-              type="button"
-              onClick={() => onSelectTab('user_dashboard')}
-              className="inline-flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
-              title="View your posted ads & track approval status"
-            >
-              <LayoutDashboard className="w-3.5 h-3.5 text-[#FF5A36]" />
-              <span>My Ads</span>
-              {typeof myAdsCount === 'number' && myAdsCount > 0 && (
-                <span className="bg-[#FF5A36] text-white text-[10px] font-black px-1.5 py-0.2 rounded-full leading-none">
-                  {myAdsCount}
-                </span>
-              )}
-            </button>
-
-            {onOpenAppStore && (
-              <>
-                <span className="text-gray-300 dark:text-[#2D2F39]">|</span>
-                <button
-                  type="button"
-                  onClick={onOpenAppStore}
-                  className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
-                  title="Google Play and App Store"
-                >
-                  <Smartphone className="w-3.5 h-3.5 text-[#FF5A36]" />
-                  <span className="hidden sm:inline">Get Mobile App</span>
-                  <span className="sm:hidden text-[11px] font-bold text-[#FF5A36]">App</span>
-                </button>
-              </>
-            )}
-
-            <span className="text-gray-300 dark:text-[#2D2F39]">|</span>
-            <ThemeToggle variant="compact" id="nav-theme-toggle-compact" />
-
-            <span className="text-gray-300 dark:text-[#2D2F39]">|</span>
-
-            {currentUser ? (
-              (() => {
-                const displayName =
-                  currentUser.fullname ||
-                  (currentUser as any).name ||
-                  currentUser.username ||
-                  'User';
-                const initial = (displayName.trim().charAt(0) || 'U').toUpperCase();
-                return (
-                  <button
-                    type="button"
-                    onClick={() => onSelectTab('user_dashboard')}
-                    className="flex items-center gap-1.5 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
-                  >
-                    <div className="w-5 h-5 rounded-full bg-[#FF5A36]/15 text-[#FF5A36] flex items-center justify-center text-[10px] font-bold">
-                      {initial}
-                    </div>
-                    <span className="max-w-[100px] truncate">{displayName}</span>
-                  </button>
-                );
-              })()
-            ) : (
-              <button
-                type="button"
-                onClick={onOpenUserAuth}
-                className="flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-[#FF5A36] dark:hover:text-white transition-colors cursor-pointer"
-              >
-                <UserIcon className="w-3.5 h-3.5 text-[#FF5A36]" />
-                <span>Log In / Sign Up</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Main Brand & Actions Header */}
+      {/* Main Brand & Actions Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-4">
-        {/* Brand Logo */}
+        {/* Brand Logo & Location */}
+        <div className="flex items-center gap-3">
         <motion.div
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -213,6 +98,26 @@ export const Navbar: React.FC<NavbarProps> = ({
             </span>
           </div>
         </motion.div>
+
+        {/* Location Dropdown */}
+        {onLocationChange && (
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gray-100 dark:bg-[#181920] border border-gray-200 dark:border-[#2D2F39] text-xs font-semibold text-gray-700 dark:text-gray-300">
+            <MapPin className="w-3.5 h-3.5 text-[#FF5A36] shrink-0" />
+            <select
+              value={selectedLocation}
+              onChange={(e) => onLocationChange(e.target.value)}
+              className="bg-transparent text-xs text-gray-700 dark:text-gray-200 font-semibold outline-none cursor-pointer border-none pr-1"
+              aria-label="Filter by district"
+            >
+              {DISTRICTS_POPULAR.map((loc) => (
+                <option key={loc} value={loc} className="bg-white dark:bg-[#181920] text-gray-900 dark:text-white">
+                  {loc}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        </div>
 
         {/* Center: Qatar Living Style Navigation Menu */}
         <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
@@ -327,35 +232,37 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2">
-          {/* Quick My Ads Button */}
-          <button
-            type="button"
-            onClick={() => onSelectTab('user_dashboard')}
-            className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              currentTab === 'user_dashboard'
-                ? 'bg-[#FF5A36] text-white shadow-xs'
-                : 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/10'
-            }`}
-            title="View your posted ads & track approval status"
-          >
-            <LayoutDashboard className="w-3.5 h-3.5 text-[#FF5A36]" />
-            <span>My Ads</span>
-            {typeof myAdsCount === 'number' && myAdsCount > 0 && (
-              <span className="bg-[#FF5A36] text-white text-[10px] font-black px-1.5 py-0.2 rounded-full leading-none">
-                {myAdsCount}
-              </span>
-            )}
-          </button>
-
-          {onOpenAppStore && (
+          {/* User Account / Login */}
+          {currentUser ? (
+            (() => {
+              const displayName =
+                currentUser.fullname ||
+                (currentUser as any).name ||
+                currentUser.username ||
+                'User';
+              const initial = (displayName.trim().charAt(0) || 'U').toUpperCase();
+              return (
+                <button
+                  type="button"
+                  onClick={() => onSelectTab('user_dashboard')}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/10 text-xs font-bold transition-all cursor-pointer"
+                  title="My Profile & Account"
+                >
+                  <div className="w-5 h-5 rounded-full bg-[#FF5A36]/15 text-[#FF5A36] flex items-center justify-center text-[10px] font-bold">
+                    {initial}
+                  </div>
+                  <span className="max-w-[100px] truncate">{displayName}</span>
+                </button>
+              );
+            })()
+          ) : (
             <button
               type="button"
-              onClick={onOpenAppStore}
-              className="hidden xl:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/10 text-xs font-bold transition-all cursor-pointer"
-              title="Google Play and App Store"
+              onClick={onOpenUserAuth}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-gray-700 dark:text-gray-200 hover:text-[#FF5A36] dark:hover:text-[#FF5A36] hover:bg-gray-100 dark:hover:bg-white/5 text-xs font-bold transition-colors cursor-pointer"
             >
-              <Smartphone className="w-3.5 h-3.5 text-[#FF5A36]" />
-              <span>Get App</span>
+              <UserIcon className="w-3.5 h-3.5 text-[#FF5A36]" />
+              <span>Log In</span>
             </button>
           )}
 
