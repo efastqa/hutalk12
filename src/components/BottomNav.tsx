@@ -25,6 +25,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     <nav
       id="bottom-navigation-bar"
       aria-label="Bottom Navigation"
+      style={{
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0px)',
+      }}
       className="fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-[#111217] border-t border-gray-200/90 dark:border-[#2D2F39] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)] safe-area-pb lg:hidden transition-colors duration-200"
     >
       <div className="max-w-md md:max-w-lg lg:max-w-2xl mx-auto px-4 flex items-center justify-between relative h-16 sm:h-[68px]">

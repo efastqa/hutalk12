@@ -52,3 +52,24 @@ html.dark ::-webkit-scrollbar-thumb {
 html.dark ::-webkit-scrollbar-thumb:hover {
   background: #3F4456;
 }
+
+/* iOS Safe Area Insets for Notch, Dynamic Island, and Home Indicator */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-pt {
+  padding-top: max(env(safe-area-inset-top, 0px), 0px);
+}
+
+.safe-area-pb {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
+}
+
+/* Standalone PWA / WebApp specific top padding on mobile */
+@media all and (display-mode: standalone) {
+  .app-header-safe {
+    padding-top: max(env(safe-area-inset-top, 24px), 24px);
+  }
+}
