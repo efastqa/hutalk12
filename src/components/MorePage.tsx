@@ -25,6 +25,7 @@ import {
   Download,
   Sun,
   Moon,
+  Store,
 } from 'lucide-react';
 import { DeviceSettingsPanel } from './DeviceSettingsPanel';
 import { ThemeToggle } from './ThemeToggle';
@@ -406,6 +407,35 @@ export const MorePage: React.FC<MorePageProps> = ({
               </div>
               <ChevronRight className="w-4 h-4 text-gray-400" />
             </button>
+
+            {/* Sri Lanka E-Stores Directory (Opens in new tab) */}
+            <a
+              href="?tab=estore"
+              target="_blank"
+              rel="noopener noreferrer"
+              id="more-menu-estore"
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer no-underline"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Store className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                      Sri Lanka E-Stores & Online Merchants
+                    </p>
+                    <span className="text-[10px] font-black bg-emerald-500 text-white px-1.5 py-0.2 rounded-full uppercase tracking-wider">
+                      New ↗
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    Direct web stores, online boutiques & brand catalogs across Sri Lanka
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </a>
 
             {/* HUTA in Events Page */}
             <button

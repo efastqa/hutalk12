@@ -100,6 +100,12 @@ service cloud.firestore {
       allow create, update, delete: if isValidId(reelId);
     }
 
+    // Sri Lankan E-Stores & Online Merchant Directory
+    match /estores/{storeId} {
+      allow get, list: if true;
+      allow create, update, delete: if isValidId(storeId);
+    }
+
     // Administrative Configuration & Moderation
     match /admin_config/{configId} {
       allow get, list: if true;

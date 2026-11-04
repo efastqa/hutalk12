@@ -103,6 +103,9 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
   const [localViewMode, setLocalViewMode] = useState<'grid' | 'map'>(viewMode || 'grid');
   const currentViewMode = viewMode !== undefined ? viewMode : localViewMode;
 
+  // Small / Compact Grid (Permanently small to show maximum ads visible)
+  const gridDensity = 'compact';
+
   // Category-Specific Local Filters
   const [fuelFilter, setFuelFilter] = useState<string>('all');
   const [transmissionFilter, setTransmissionFilter] = useState<string>('all');
@@ -604,15 +607,15 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
           {/* View Mode Toggle: Grid vs Map */}
-          <div className="flex items-center bg-gray-100 dark:bg-[#1E2230] p-1 rounded-xl border border-gray-200 dark:border-[#2D303E] text-xs font-bold shadow-2xs">
+          <div className="flex items-center bg-gray-100/80 dark:bg-[#181920]/80 p-1 rounded-xl border border-gray-200/80 dark:border-white/10 backdrop-blur-sm text-xs font-bold shadow-2xs">
             <button
               type="button"
               onClick={() => handleSwitchView('grid')}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
                 currentViewMode === 'grid'
-                  ? 'bg-white dark:bg-[#2A2E3D] text-gray-900 dark:text-white shadow-xs font-extrabold'
+                  ? 'bg-white dark:bg-[#2A2E3D] text-gray-900 dark:text-white shadow-xs font-black'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -624,7 +627,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
               onClick={() => handleSwitchView('map')}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer relative ${
                 currentViewMode === 'map'
-                  ? 'bg-[#FF5A36] text-white shadow-xs font-extrabold'
+                  ? 'bg-gradient-to-r from-[#FF5A36] to-[#FF7A59] text-white shadow-xs font-black'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
@@ -640,7 +643,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
             Showing <strong className="text-gray-900 dark:text-white">{listings.length}</strong> ad(s)
           </span>
 
-          <div className="flex items-center gap-1.5 bg-white dark:bg-[#151822] border border-gray-300 dark:border-[#2D303E] rounded-lg px-2.5 py-1.5 shadow-xs text-xs sm:text-sm text-gray-700 dark:text-gray-200">
+          <div className="flex items-center gap-1.5 bg-white/90 dark:bg-[#151822]/90 backdrop-blur-sm border border-gray-200/80 dark:border-white/10 rounded-xl px-2.5 py-1.5 shadow-xs text-xs sm:text-sm text-gray-700 dark:text-gray-200">
             <ArrowUpDown className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
             <select
               value={sortBy}
@@ -665,15 +668,14 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
           initialDistrict={selectedDistrict}
         />
       ) : isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-200 overflow-hidden animate-pulse">
-              <div className="h-44 bg-gray-200 w-full" />
-              <div className="p-4 space-y-3">
-                <div className="h-4 bg-gray-200 rounded w-1/3" />
-                <div className="h-5 bg-gray-200 rounded w-4/5" />
-                <div className="h-6 bg-gray-200 rounded w-1/2" />
-                <div className="h-4 bg-gray-200 rounded w-full" />
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-2.5 md:gap-3.5">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
+            <div key={i} className="bg-white dark:bg-[#151822] rounded-xl sm:rounded-2xl border border-gray-200 dark:border-[#252836] overflow-hidden animate-pulse">
+              <div className={gridDensity === 'compact' ? 'h-32 sm:h-36 bg-gray-200 dark:bg-gray-800 w-full' : 'h-44 bg-gray-200 dark:bg-gray-800 w-full'} />
+              <div className="p-3 space-y-2">
+                <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/3" />
+                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-4/5" />
+                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/2" />
               </div>
             </div>
           ))}
@@ -749,7 +751,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
           variants={listContainerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6"
+          className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-2.5 md:gap-3.5"
         >
           {displayListings.map((item) => {
             const isFav = favorites.includes(item.id);
@@ -760,56 +762,57 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
               <motion.div
                 key={item.id}
                 variants={cardItemVariants}
-                whileHover={{ y: -6 }}
+                whileHover={{ y: -4 }}
                 transition={{ type: 'spring', stiffness: 350, damping: 25 }}
                 onClick={() => onSelectListing(item)}
-                className="group bg-white dark:bg-[#151822] rounded-2xl border border-gray-200 dark:border-[#252836] hover:border-[#FF5A36] dark:hover:border-[#FF5A36] overflow-hidden shadow-xs hover:shadow-xl dark:hover:shadow-black/50 transition-all duration-300 cursor-pointer flex flex-col relative"
+                className={`group bg-white dark:bg-[#151822] rounded-xl sm:rounded-2xl border border-gray-200/90 dark:border-white/10 hover:border-[#FF5A36] dark:hover:border-[#FF5A36] overflow-hidden shadow-2xs hover:shadow-xl dark:hover:shadow-[0_12px_28px_rgba(0,0,0,0.6)] transition-all duration-300 cursor-pointer flex flex-col relative`}
               >
-                {/* Badges */}
-                <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1 items-start">
+                {/* Badges on Top Left */}
+                <div className={`absolute z-10 flex flex-col gap-1 items-start ${gridDensity === 'compact' ? 'top-2 left-2' : 'top-2.5 left-2.5'}`}>
                   {item.availabilityStatus === 'sold' && (
-                    <span className="inline-flex items-center gap-1 bg-rose-600 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full shadow-md">
+                    <span className="inline-flex items-center gap-1 bg-rose-600 text-white text-[9px] sm:text-[10px] font-black uppercase px-1.5 sm:px-2 py-0.5 rounded-full shadow-md">
                       Sold
                     </span>
                   )}
                   {item.availabilityStatus === 'reserved' && (
-                    <span className="inline-flex items-center gap-1 bg-amber-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full shadow-md">
+                    <span className="inline-flex items-center gap-1 bg-amber-500 text-white text-[9px] sm:text-[10px] font-black uppercase px-1.5 sm:px-2 py-0.5 rounded-full shadow-md">
                       Reserved
                     </span>
                   )}
                   {item.videoUrl && (
-                    <span className="inline-flex items-center gap-1 bg-purple-700/90 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full shadow-md backdrop-blur-xs">
-                      <Film className="w-3 h-3 text-purple-200" />
-                      <span>Video Ad</span>
+                    <span className="inline-flex items-center gap-1 bg-purple-700/90 text-white text-[9px] sm:text-[10px] font-black uppercase px-1.5 sm:px-2 py-0.5 rounded-full shadow-md backdrop-blur-xs">
+                      <Film className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-200" />
+                      <span className="hidden sm:inline">Video Ad</span>
+                      <span className="sm:hidden">Video</span>
                     </span>
                   )}
                   {item.isFeatured && (
-                    <span className="inline-flex items-center gap-1 bg-[#FF5A36] text-white text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full shadow-md animate-pulse">
-                      <Star className="w-3 h-3 fill-current" />
-                      Featured
+                    <span className="inline-flex items-center gap-1 bg-[#FF5A36] text-white text-[9px] sm:text-[10px] font-extrabold uppercase px-1.5 sm:px-2 py-0.5 rounded-full shadow-md animate-pulse">
+                      <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current" />
+                      <span>Featured</span>
                     </span>
                   )}
                   {item.isVerifiedPro && (
-                    <span className="inline-flex items-center gap-1 bg-emerald-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm">
-                      <ShieldCheck className="w-3 h-3" />
-                      Verified Pro
+                    <span className="inline-flex items-center gap-1 bg-emerald-600 text-white text-[9px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm">
+                      <ShieldCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                      <span>Verified</span>
                     </span>
                   )}
                   {item.isEmergency247 && (
-                    <span className="inline-flex items-center gap-0.5 bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm">
+                    <span className="inline-flex items-center gap-0.5 bg-amber-500 text-white text-[9px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm">
                       ⚡ 24/7
                     </span>
                   )}
                   {isNew && !item.isVerifiedPro && !item.isEmergency247 && (
-                    <span className="inline-flex items-center gap-1 bg-blue-600 text-white text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full shadow-sm">
-                      <Zap className="w-3 h-3 fill-current" />
-                      New
+                    <span className="inline-flex items-center gap-1 bg-blue-600 text-white text-[9px] sm:text-[10px] font-extrabold uppercase px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm">
+                      <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current" />
+                      <span>New</span>
                     </span>
                   )}
                 </div>
 
                 {/* Top Action Buttons (Compare & Favorite) */}
-                <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5">
+                <div className={`absolute z-10 flex items-center gap-1 sm:gap-1.5 ${gridDensity === 'compact' ? 'top-2 right-2' : 'top-2.5 right-2.5'}`}>
                   {onToggleCompare && (
                     <motion.button
                       type="button"
@@ -820,13 +823,15 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                         onToggleCompare(item);
                       }}
                       title={isCompared ? 'Remove from compare' : 'Compare this ad'}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                      className={`rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                        gridDensity === 'compact' ? 'w-6 h-6 sm:w-7 sm:h-7' : 'w-8 h-8'
+                      } ${
                         isCompared
                           ? 'bg-[#FF5A36] text-white shadow-md scale-105 ring-2 ring-white'
-                          : 'bg-black/40 text-white hover:bg-black/60'
+                          : 'bg-black/40 text-white hover:bg-black/60 backdrop-blur-xs'
                       }`}
                     >
-                      <ArrowLeftRight className="w-3.5 h-3.5" />
+                      <ArrowLeftRight className={gridDensity === 'compact' ? 'w-3 h-3' : 'w-3.5 h-3.5'} />
                     </motion.button>
                   )}
 
@@ -839,18 +844,24 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       onToggleFavorite(item.id);
                     }}
                     title={isFav ? 'Remove from favorites' : 'Add to favorites'}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                    className={`rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                      gridDensity === 'compact' ? 'w-6 h-6 sm:w-7 sm:h-7' : 'w-8 h-8'
+                    } ${
                       isFav
-                        ? 'bg-rose-50 text-rose-600 shadow-sm scale-110'
-                        : 'bg-black/40 text-white hover:bg-black/60'
+                        ? 'bg-rose-50 text-rose-600 shadow-sm scale-105'
+                        : 'bg-black/40 text-white hover:bg-black/60 backdrop-blur-xs'
                     }`}
                   >
-                    <Heart className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`} />
+                    <Heart className={`${gridDensity === 'compact' ? 'w-3 h-3 sm:w-3.5 sm:h-3.5' : 'w-4 h-4'} ${isFav ? 'fill-current' : ''}`} />
                   </motion.button>
                 </div>
 
                 {/* Card Media (Video or Image) */}
-                <div className="w-full h-44 sm:h-48 overflow-hidden bg-gray-950 relative">
+                <div
+                  className={`w-full overflow-hidden bg-gray-950 relative ${
+                    gridDensity === 'compact' ? 'h-32 sm:h-36 md:h-40' : 'h-44 sm:h-48'
+                  }`}
+                >
                   {item.videoUrl ? (
                     <div className="w-full h-full relative">
                       <video
@@ -862,9 +873,9 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-                      <div className="absolute bottom-2.5 left-2.5 bg-purple-950/85 backdrop-blur-xs text-purple-200 border border-purple-400/40 text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-md pointer-events-none">
+                      <div className="absolute bottom-2 left-2 bg-purple-950/85 backdrop-blur-xs text-purple-200 border border-purple-400/40 text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-md pointer-events-none">
                         <Play className="w-2.5 h-2.5 fill-current text-purple-300" />
-                        <span>Animation Video</span>
+                        <span>Video</span>
                       </div>
                     </div>
                   ) : (
@@ -872,7 +883,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       src={item.image || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80'}
                       alt={item.title}
                       loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
                           'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80';
@@ -880,62 +891,55 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                     />
                   )}
                   {item.images && item.images.length > 1 && !item.videoUrl && (
-                    <div className="absolute bottom-2.5 right-2.5 bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs pointer-events-none">
-                      <Images className="w-3 h-3" />
+                    <div className="absolute bottom-2 right-2 bg-black/65 backdrop-blur-xs text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-xs pointer-events-none">
+                      <Images className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                       <span>{item.images.length}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Card Body */}
-                <div className="p-4 flex-1 flex flex-col justify-between">
+                <div className={`flex-1 flex flex-col justify-between ${gridDensity === 'compact' ? 'p-2.5 sm:p-3' : 'p-4'}`}>
                   <div>
-                    <span className="text-[11px] font-bold text-[#FF5A36] uppercase tracking-wider line-clamp-1">
+                    <span className="text-[10px] sm:text-[11px] font-bold text-[#FF5A36] uppercase tracking-wider line-clamp-1">
                       {item.serviceTrade || item.category}
                     </span>
-                    <h3 className="font-bold text-gray-900 dark:text-white text-sm sm:text-base mt-1 line-clamp-2 leading-snug group-hover:text-[#FF5A36] transition-colors">
+                    <h3
+                      className={`font-bold text-gray-900 dark:text-white line-clamp-2 leading-snug group-hover:text-[#FF5A36] transition-colors ${
+                        gridDensity === 'compact' ? 'text-xs sm:text-sm mt-0.5' : 'text-sm sm:text-base mt-1'
+                      }`}
+                    >
                       {item.title}
                     </h3>
 
                     {/* Category Specific Specification Quick Highlights */}
                     {(item.vehicleYear || item.fuelType || item.transmission || item.vehicleMileage || item.propertyType || item.bedrooms || item.propertySize || item.electronicsSubcategory || item.storageCapacity || item.itemCondition || item.jobType) && (
-                      <div className="flex flex-wrap items-center gap-1 mt-1.5 text-[11px] font-medium text-gray-500 dark:text-gray-400 line-clamp-1 overflow-hidden">
+                      <div className="flex flex-wrap items-center gap-1 mt-1 text-[9px] sm:text-[10px] font-medium text-gray-500 dark:text-gray-400 line-clamp-1 overflow-hidden">
                         {item.vehicleYear && (
-                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.5 rounded text-gray-700 dark:text-gray-300 font-semibold text-[10px]">{item.vehicleYear}</span>
+                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.2 rounded text-gray-700 dark:text-gray-300 font-semibold">{item.vehicleYear}</span>
                         )}
                         {item.fuelType && (
-                          <span className="bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-500/30 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.fuelType}</span>
-                        )}
-                        {item.transmission && (
-                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-400 text-[10px]">{item.transmission}</span>
-                        )}
-                        {item.vehicleMileage && (
-                          <span className="text-gray-500 dark:text-gray-400 text-[10px]">{Number(item.vehicleMileage).toLocaleString()} km</span>
+                          <span className="bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-500/30 px-1.5 py-0.2 rounded font-bold">{item.fuelType}</span>
                         )}
                         {item.propertyType && (
-                          <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-500/30 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.propertyType.split(' ')[0]}</span>
+                          <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-500/30 px-1.5 py-0.2 rounded font-bold">{item.propertyType.split(' ')[0]}</span>
                         )}
                         {item.bedrooms !== undefined && item.bedrooms !== '' && (
-                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.5 rounded text-gray-700 dark:text-gray-300 text-[10px] font-semibold">{item.bedrooms} Beds</span>
-                        )}
-                        {item.propertySize && (
-                          <span className="text-gray-500 dark:text-gray-400 text-[10px]">{item.propertySize}</span>
+                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.2 rounded text-gray-700 dark:text-gray-300 font-semibold">{item.bedrooms} Beds</span>
                         )}
                         {item.electronicsSubcategory && (
-                          <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-500/30 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.electronicsSubcategory.split(' ')[0]}</span>
-                        )}
-                        {item.storageCapacity && item.storageCapacity !== 'N/A' && (
-                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.5 rounded text-gray-700 dark:text-gray-300 text-[10px] font-semibold">{item.storageCapacity}</span>
+                          <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-500/30 px-1.5 py-0.2 rounded font-bold">{item.electronicsSubcategory.split(' ')[0]}</span>
                         )}
                         {item.itemCondition && (
-                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-400 text-[10px]">{item.itemCondition}</span>
-                        )}
-                        {item.jobType && (
-                          <span className="bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-300 border border-sky-200/60 dark:border-sky-500/30 px-1.5 py-0.5 rounded text-[10px] font-bold">{item.jobType}</span>
+                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.2 rounded text-gray-600 dark:text-gray-400">{item.itemCondition}</span>
                         )}
                       </div>
                     )}
-                    <div className="text-base sm:text-lg font-extrabold text-[#111217] dark:text-white mt-1.5">
+                    <div
+                      className={`font-black text-[#111217] dark:text-white ${
+                        gridDensity === 'compact' ? 'text-xs sm:text-sm md:text-base mt-1' : 'text-base sm:text-lg font-extrabold mt-1.5'
+                      }`}
+                    >
                       {item.category === 'Services' && item.pricingType === 'quote'
                         ? 'Quote on Request'
                         : item.category === 'Services' && item.pricingType === 'hourly'
@@ -946,34 +950,35 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                     </div>
                   </div>
 
-                  <div className="mt-3 pt-3 border-t border-gray-100 dark:border-[#252836] text-xs text-gray-500 dark:text-gray-400 space-y-1.5">
+                  <div
+                    className={`border-t border-gray-100 dark:border-[#252836] text-gray-500 dark:text-gray-400 ${
+                      gridDensity === 'compact' ? 'mt-2 pt-2 text-[10px] sm:text-[11px] space-y-1' : 'mt-3 pt-3 text-xs space-y-1.5'
+                    }`}
+                  >
                     <div className="flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1 font-medium text-gray-600 dark:text-gray-300">
-                        <MapPin className="w-3.5 h-3.5 text-[#FF5A36]" />
-                        {item.location}
+                      <span className="inline-flex items-center gap-1 font-medium text-gray-600 dark:text-gray-300 truncate max-w-[55%]">
+                        <MapPin className="w-3 h-3 text-[#FF5A36] shrink-0" />
+                        <span className="truncate">{item.location}</span>
                       </span>
-                      <span className="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500">
-                        <Clock className="w-3 h-3" />
-                        {item.date}
+                      <span className="inline-flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500 shrink-0">
+                        <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        <span>{item.date}</span>
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-gray-400 dark:text-gray-500">
+                    <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-gray-400 dark:text-gray-500">
                       <span className="inline-flex items-center gap-1">
-                        <Eye className="w-3 h-3" />
-                        {item.views || 0} views
+                        <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        <span>{item.views || 0} views</span>
                       </span>
                       {item.sellerRating ? (
                         <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-bold">
-                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                          <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-amber-400 text-amber-400" />
                           <span>{item.sellerRating.toFixed(1)}</span>
-                          {item.reviewCount ? (
-                            <span className="text-gray-400 dark:text-gray-500 font-normal">({item.reviewCount})</span>
-                          ) : null}
                         </span>
                       ) : (
-                        <span className="font-medium text-gray-500 dark:text-gray-400">
-                          {item.userId === 'system' ? 'Verified Seller' : 'HUTA Member'}
+                        <span className="font-medium text-gray-500 dark:text-gray-400 truncate max-w-[50%]">
+                          {item.userId === 'system' ? 'Verified' : 'HUTA Member'}
                         </span>
                       )}
                     </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Listing, User, ViewTab, EventItem, HeroAd, HeroAdSettings, VideoReelItem } from './types';
+import { Listing, User, ViewTab, EventItem, HeroAd, HeroAdSettings, VideoReelItem, EStore } from './types';
 import { api } from './services/api';
 
 // Components
@@ -7,6 +7,8 @@ import { Navbar } from './components/Navbar';
 import { HeroSearch } from './components/HeroSearch';
 import { CategoryGrid } from './components/CategoryGrid';
 import { ListingsSection } from './components/ListingsSection';
+import { ExploreMoreEStoresBanner } from './components/ExploreMoreEStoresBanner';
+import { EStorePage } from './components/EStorePage';
 import { AdDetailModal } from './components/AdDetailModal';
 import { PostAdModal } from './components/PostAdModal';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -27,9 +29,24 @@ import { VideoReelsSection } from './components/VideoReelsSection';
 import { testConnection } from './firebase';
 import { MapPin, Sparkles, PlusCircle, Calendar, ArrowRight, Star, Compass } from 'lucide-react';
 
+function getInitialTab(): ViewTab {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab === 'estore') return 'estore';
+    if (tab === 'huta_in') return 'huta_in';
+    if (tab === 'categories') return 'categories';
+    if (tab === 'user_dashboard') return 'user_dashboard';
+    if (tab === 'admin_dashboard') return 'admin_dashboard';
+    if (tab === 'more') return 'more';
+    if (window.location.hash === '#estore') return 'estore';
+  } catch {}
+  return 'marketplace';
+}
+
 export default function App() {
-  // Navigation & View State
-  const [currentTab, setCurrentTab] = useState<ViewTab>('marketplace');
+  // Navigation & View State (supports ?tab=estore in new browser tabs)
+  const [currentTab, setCurrentTab] = useState<ViewTab>(getInitialTab);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
   const [listingsViewMode, setListingsViewMode] = useState<'grid' | 'map'>('grid');
@@ -67,6 +84,8 @@ export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [videoReels, setVideoReels] = useState<VideoReelItem[]>([]);
+  const [eStores, setEStores] = useState<EStore[]>([]);
+  const [targetEStoreForView, setTargetEStoreForView] = useState<EStore | null>(null);
 
   // Real-time Chat State (Firebase Firestore)
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
@@ -127,6 +146,36 @@ export default function App() {
     }
   }, [compareIds]);
 
+  // Keep browser URL query in sync with currentTab (?tab=estore)
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      if (currentTab === 'marketplace') {
+        url.searchParams.delete('tab');
+      } else {
+        url.searchParams.set('tab', currentTab);
+      }
+      window.history.replaceState({}, '', url.toString());
+    } catch {
+      // ignore
+    }
+  }, [currentTab]);
+
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const tab = (params.get('tab') as ViewTab) || 'marketplace';
+        setCurrentTab(tab);
+      } catch {
+        // ignore
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   // Derive compared listings objects
   const compareListings = useMemo(() => {
     return listings.filter((item) => compareIds.includes(item.id));
@@ -181,6 +230,7 @@ export default function App() {
     fetchEvents();
     fetchHeroAds();
     fetchVideoReels();
+    fetchEStores();
 
     // Subscribe to live video stories updates
     const unsubReels = api.subscribeToVideoReels((reels) => {
@@ -194,6 +244,17 @@ export default function App() {
       unsubReels();
     };
   }, []);
+
+  const fetchEStores = async () => {
+    try {
+      const data = await api.getEStores();
+      if (Array.isArray(data)) {
+        setEStores(data);
+      }
+    } catch {
+      // Graceful fallback
+    }
+  };
 
   const fetchVideoReels = async () => {
     try {
@@ -322,9 +383,45 @@ export default function App() {
 
     // Category Filter
     if (selectedCategory !== 'All') {
-      result = result.filter(
-        (item) => item.category.toLowerCase() === selectedCategory.toLowerCase()
-      );
+      const catLower = selectedCategory.toLowerCase();
+      result = result.filter((item) => {
+        const itemCat = (item.category || '').toLowerCase();
+        const itemTitle = (item.title || '').toLowerCase();
+        const itemDesc = (item.description || '').toLowerCase();
+
+        if (itemCat === catLower) return true;
+        if (catLower === 'vehicles') {
+          return itemCat.includes('vehicle') || itemCat.includes('car') || itemCat.includes('motorcycle') || itemCat.includes('bike');
+        }
+        if (catLower === 'property') {
+          return itemCat.includes('property') || itemCat.includes('land') || itemCat.includes('house') || itemCat.includes('apartment');
+        }
+        if (catLower === 'phones') {
+          return itemCat.includes('phone') || itemCat.includes('electronic') && (itemTitle.includes('phone') || itemTitle.includes('iphone') || itemTitle.includes('samsung') || itemDesc.includes('phone'));
+        }
+        if (catLower === 'computers') {
+          return itemCat.includes('computer') || itemCat.includes('electronic') && (itemTitle.includes('laptop') || itemTitle.includes('pc') || itemTitle.includes('computer') || itemTitle.includes('macbook'));
+        }
+        if (catLower === "women's") {
+          return itemCat.includes('fashion') && (itemTitle.includes('women') || itemTitle.includes('dress') || itemTitle.includes('saree') || itemDesc.includes('women')) || itemCat === "women's";
+        }
+        if (catLower === "men's") {
+          return itemCat.includes('fashion') && (itemTitle.includes('men') || itemTitle.includes('shirt') || itemTitle.includes('suit') || itemDesc.includes('men')) || itemCat === "men's";
+        }
+        if (catLower === 'services') {
+          return itemCat.includes('service') || itemCat.includes('repair') || itemCat.includes('maintenance');
+        }
+        if (catLower === 'jobs') {
+          return itemCat.includes('job') || itemCat.includes('career') || itemCat.includes('vacancy');
+        }
+        if (catLower === 'beauty') {
+          return itemCat.includes('beauty') || itemTitle.includes('beauty') || itemTitle.includes('cosmetic') || itemTitle.includes('salon');
+        }
+        if (catLower === 'luxury') {
+          return itemCat.includes('luxury') || itemTitle.includes('gem') || itemTitle.includes('sapphire') || itemTitle.includes('gold') || itemTitle.includes('jewelry');
+        }
+        return itemCat.includes(catLower);
+      });
     }
 
     // Location Filter
@@ -717,7 +814,7 @@ export default function App() {
   }).length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F4F5F7] dark:bg-[#0B0C10] text-[#181920] dark:text-[#F8FAFC] pb-16 lg:pb-0 transition-colors duration-200 overflow-x-hidden w-full max-w-full">
+    <div className="min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-[#0B0C10] text-[#0F172A] dark:text-[#F8FAFC] pb-16 lg:pb-0 transition-colors duration-200 overflow-x-hidden w-full max-w-full">
       {/* Toast Notification Layer */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
@@ -761,29 +858,18 @@ export default function App() {
               onAdminManage={() => setCurrentTab('admin_dashboard')}
             />
 
-            {/* Video Stories / Short Walk-through Reels Bar */}
-            <VideoReelsSection
-              listings={listings}
-              reels={videoReels}
-              onReelsChange={setVideoReels}
-              onSelectListing={(listing) => setSelectedListing(listing)}
-              onOpenPostAd={handleOpenPostAd}
-              currentUser={currentUser}
-              onToast={showToast}
-            />
-
             {/* Category Browser ("Explore Our Popular Categories") */}
             <CategoryGrid
               currentCategory={selectedCategory}
-              onSelectCategory={(category) => handleSelectCategory(category, undefined, true)}
+              onSelectCategory={(category, query) => handleSelectCategory(category, query, true)}
               listings={listings}
               onViewAllCategories={() => setCurrentTab('categories')}
             />
 
-            {/* Qatar Living style Browse Districts Bar */}
+            {/* Qatar Living style Browse Districts Bar - Frosted Glass with Seamless Contrast */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2">
-              <div className="bg-white dark:bg-[#151822] border border-gray-200 dark:border-[#252836] rounded-2xl p-3 shadow-xs flex items-center gap-2 overflow-x-auto scrollbar-none text-xs">
-                <span className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300 font-bold whitespace-nowrap shrink-0 px-2">
+              <div className="bg-white/90 dark:bg-[#151822]/90 backdrop-blur-xl border border-gray-200/80 dark:border-white/10 rounded-2xl p-3 shadow-md dark:shadow-[0_8px_24px_rgba(0,0,0,0.35)] flex items-center gap-2 overflow-x-auto scrollbar-none text-xs transition-colors">
+                <span className="flex items-center gap-1.5 text-gray-800 dark:text-gray-200 font-black whitespace-nowrap shrink-0 px-2">
                   <MapPin className="w-3.5 h-3.5 text-[#FF5A36]" />
                   <span>Popular Districts:</span>
                 </span>
@@ -806,10 +892,10 @@ export default function App() {
                       key={dist}
                       type="button"
                       onClick={() => setSelectedLocation(dist)}
-                      className={`px-3 py-1.5 rounded-xl whitespace-nowrap font-semibold transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-xl whitespace-nowrap font-bold transition-all cursor-pointer ${
                         isActive
-                          ? 'bg-[#111217] dark:bg-[#FF5A36] text-[#FF5A36] dark:text-white border border-[#FF5A36] shadow-xs'
-                          : 'bg-gray-50 dark:bg-[#1E2230] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2A2E3D] hover:text-gray-900 dark:hover:text-white border border-transparent'
+                          ? 'bg-gradient-to-r from-[#FF5A36] to-[#FF7A59] text-white shadow-xs'
+                          : 'bg-gray-100/80 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-gray-200/80 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white border border-gray-200/50 dark:border-white/5'
                       }`}
                     >
                       {dist}
@@ -827,8 +913,8 @@ export default function App() {
                   }}
                   className={`px-3 py-1.5 rounded-xl whitespace-nowrap font-bold transition-all cursor-pointer flex items-center gap-1.5 ml-auto shrink-0 shadow-2xs ${
                     listingsViewMode === 'map'
-                      ? 'bg-[#FF5A36] text-white'
-                      : 'bg-orange-50 dark:bg-orange-950/40 text-[#FF5A36] hover:bg-orange-100 dark:hover:bg-orange-900/40 border border-orange-200 dark:border-orange-500/30'
+                      ? 'bg-gradient-to-r from-[#FF5A36] to-[#FF7A59] text-white shadow-xs'
+                      : 'bg-orange-50/80 dark:bg-orange-950/40 text-[#FF5A36] hover:bg-orange-100 dark:hover:bg-orange-900/40 border border-orange-200 dark:border-orange-500/30'
                   }`}
                   title="Explore all listings on interactive map"
                 >
@@ -857,6 +943,39 @@ export default function App() {
               viewMode={listingsViewMode}
               onViewModeChange={setListingsViewMode}
               selectedDistrict={selectedLocation}
+            />
+
+            {/* Video Stories / Short Walk-through Reels Bar (Moved Page Down) */}
+            <div className="py-2">
+              <VideoReelsSection
+                listings={listings}
+                reels={videoReels}
+                onReelsChange={setVideoReels}
+                onSelectListing={(listing) => setSelectedListing(listing)}
+                onOpenPostAd={handleOpenPostAd}
+                currentUser={currentUser}
+                onToast={showToast}
+              />
+            </div>
+
+            {/* Explore More Listings: Sri Lanka E-Stores & Online Merchants Showcase Banner */}
+            <ExploreMoreEStoresBanner
+              stores={eStores}
+              onExploreEStores={() => {
+                setTargetEStoreForView(null);
+                setCurrentTab('estore');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onRegisterStore={() => {
+                setTargetEStoreForView(null);
+                setCurrentTab('estore');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onOpenStore={(store) => {
+                setTargetEStoreForView(store);
+                setCurrentTab('estore');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
             />
 
             {/* HUTA IN Community & Events Hub Teaser Banner */}
@@ -912,6 +1031,18 @@ export default function App() {
               </div>
             </div>
           </div>
+        )}
+
+        {currentTab === 'estore' && (
+          <EStorePage
+            stores={eStores}
+            onStoresChange={setEStores}
+            onBackToMarketplace={() => setCurrentTab('marketplace')}
+            onToast={showToast}
+            currentUser={currentUser}
+            initialSelectedStore={targetEStoreForView}
+            isAdminLoggedIn={isAdminLoggedIn}
+          />
         )}
 
         {currentTab === 'huta_in' && (
@@ -1176,6 +1307,7 @@ export default function App() {
         onOpenPostAd={handleOpenPostAd}
         onOpenAdminLogin={() => setIsAdminLoginOpen(true)}
         onOpenAppStore={() => setIsAppStoreOpen(true)}
+        onSelectTab={setCurrentTab}
       />
 
       {/* Google Play & App Store Modal */}

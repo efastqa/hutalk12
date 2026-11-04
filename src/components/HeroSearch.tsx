@@ -119,32 +119,44 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   };
 
   return (
-    <section className="relative bg-white dark:bg-[#111217] text-[#181920] dark:text-white py-8 sm:py-14 px-4 sm:px-6 lg:px-8 border-b border-gray-200 dark:border-[#2D2F39] overflow-hidden w-full max-w-full contain-paint transition-colors duration-200">
-      {/* Ambient background glow with transform-gpu */}
+    <section className="relative bg-gradient-to-b from-white via-white to-[#F8FAFC]/50 dark:from-[#0B0C10] dark:via-[#111217] dark:to-[#0B0C10] text-[#181920] dark:text-white py-8 sm:py-14 px-4 sm:px-6 lg:px-8 border-b border-gray-200/70 dark:border-white/10 overflow-hidden w-full max-w-full contain-paint transition-colors duration-200">
+      {/* Light Theme Marketplace Visual (Vehicle/Phone on Left, Villa/Shopping on Right) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none opacity-90 dark:opacity-20 transition-opacity duration-500">
+        <img
+          src="/assets/hero_light_bg.jpg"
+          alt="HUTA Sri Lanka Marketplace"
+          className="w-full h-full object-cover object-center filter saturate-105"
+        />
+        {/* Multi-directional soft gradients ensuring center text and search card remain 100% crisp & readable */}
+        <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/40 to-white/30 dark:from-[#0B0C10] dark:via-[#0B0C10]/85 dark:to-[#0B0C10]/70" />
+        <div className="absolute inset-0 bg-gradient-to-r from-white/15 via-white/60 to-white/15 dark:from-[#0B0C10]/30 dark:via-[#0B0C10]/75 dark:to-[#0B0C10]/30" />
+      </div>
+
+      {/* Ambient background glows for luxurious depth */}
       <motion.div
         animate={{
-          scale: [1, 1.1, 1],
-          opacity: [0.08, 0.14, 0.08],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-        className="absolute top-1/2 -left-20 w-80 h-80 bg-[#FF5A36] rounded-full blur-3xl pointer-events-none -translate-y-1/2 transform-gpu will-change-transform"
-      />
-      <motion.div
-        animate={{
-          scale: [1, 1.12, 1],
-          opacity: [0.06, 0.12, 0.06],
+          scale: [1, 1.15, 1],
+          opacity: [0.1, 0.18, 0.1],
         }}
         transition={{
           duration: 9,
           repeat: Infinity,
           ease: 'easeInOut',
-          delay: 1,
         }}
-        className="absolute -top-10 right-0 w-96 h-96 bg-[#FF5A36] rounded-full blur-3xl pointer-events-none transform-gpu will-change-transform"
+        className="absolute top-1/2 -left-28 w-96 h-96 bg-[#FF5A36] rounded-full blur-[110px] pointer-events-none -translate-y-1/2 transform-gpu will-change-transform"
+      />
+      <motion.div
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.08, 0.15, 0.08],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: 'easeInOut',
+          delay: 1.5,
+        }}
+        className="absolute -top-12 -right-16 w-[420px] h-[420px] bg-[#FF7A59] rounded-full blur-[120px] pointer-events-none transform-gpu will-change-transform"
       />
 
       <div className="relative max-w-5xl mx-auto space-y-6 text-center">
@@ -172,7 +184,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                   onClick={() => handleTabClick(tab.id)}
                   className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-t-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
                     isActive
-                      ? 'bg-white dark:bg-[#181920] text-[#FF5A36] border-t-2 border-[#FF5A36] shadow-sm'
+                      ? 'bg-white dark:bg-[#151822] text-[#FF5A36] border-t-2 border-[#FF5A36] shadow-sm'
                       : 'bg-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100/80 dark:hover:bg-white/5'
                   }`}
                 >
@@ -183,15 +195,15 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
             })}
           </div>
 
-          {/* Main Search Bar Box */}
+          {/* Main Search Bar Box - Frosted Glass with Deep Shadow */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="bg-white dark:bg-[#181920] border border-gray-200 dark:border-[#2D2F39] p-2.5 sm:p-3 rounded-2xl shadow-xl dark:shadow-2xl flex flex-col md:flex-row items-stretch gap-2 text-left transition-colors"
+            className="bg-white/90 dark:bg-[#151822]/90 backdrop-blur-xl border border-gray-200/80 dark:border-white/10 p-2.5 sm:p-3 rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col md:flex-row items-stretch gap-2 text-left transition-colors"
           >
             {/* Keyword Input */}
-            <div className="flex items-center gap-2.5 bg-gray-50 dark:bg-[#22242F] px-3.5 py-2.5 rounded-xl flex-1 border border-gray-200 dark:border-transparent focus-within:border-[#FF5A36] transition-colors">
+            <div className="flex items-center gap-2.5 bg-gray-100/70 dark:bg-[#1E2230]/90 px-3.5 py-2.5 rounded-xl flex-1 border border-gray-200/80 dark:border-white/5 focus-within:border-[#FF5A36] focus-within:ring-2 focus-within:ring-[#FF5A36]/20 transition-all">
               <Search className="w-5 h-5 text-gray-400 shrink-0" />
               <input
                 type="text"
@@ -212,7 +224,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
             </div>
 
             {/* Location Selector */}
-            <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#22242F] px-3.5 py-2.5 rounded-xl md:w-52 shrink-0 border border-gray-200 dark:border-transparent focus-within:border-[#FF5A36] transition-colors">
+            <div className="flex items-center gap-2 bg-gray-100/70 dark:bg-[#1E2230]/90 px-3.5 py-2.5 rounded-xl md:w-52 shrink-0 border border-gray-200/80 dark:border-white/5 focus-within:border-[#FF5A36] focus-within:ring-2 focus-within:ring-[#FF5A36]/20 transition-all">
               <MapPin className="w-4 h-4 text-[#FF5A36] shrink-0" />
               <select
                 value={selectedLocation}
@@ -228,14 +240,14 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
             </div>
 
             {/* Price Range */}
-            <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#22242F] px-3 py-2 rounded-xl md:w-56 shrink-0 border border-gray-200 dark:border-transparent focus-within:border-[#FF5A36] transition-colors">
+            <div className="flex items-center gap-2 bg-gray-100/70 dark:bg-[#1E2230]/90 px-3 py-2 rounded-xl md:w-56 shrink-0 border border-gray-200/80 dark:border-white/5 focus-within:border-[#FF5A36] focus-within:ring-2 focus-within:ring-[#FF5A36]/20 transition-all">
               <span className="text-[11px] text-gray-500 dark:text-gray-400 font-bold">Rs</span>
               <input
                 type="number"
                 placeholder="Min"
                 value={minPrice}
                 onChange={(e) => onMinPriceChange(e.target.value)}
-                className="bg-white dark:bg-transparent border border-gray-300 dark:border-[#3D3F4A] rounded px-2 py-1 text-gray-900 dark:text-white text-xs w-full outline-none focus:border-[#FF5A36]"
+                className="bg-white dark:bg-[#151822] border border-gray-300 dark:border-[#3D3F4A] rounded px-2 py-1 text-gray-900 dark:text-white text-xs w-full outline-none focus:border-[#FF5A36]"
               />
               <span className="text-gray-400 text-xs">-</span>
               <input
@@ -243,7 +255,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                 placeholder="Max"
                 value={maxPrice}
                 onChange={(e) => onMaxPriceChange(e.target.value)}
-                className="bg-white dark:bg-transparent border border-gray-300 dark:border-[#3D3F4A] rounded px-2 py-1 text-gray-900 dark:text-white text-xs w-full outline-none focus:border-[#FF5A36]"
+                className="bg-white dark:bg-[#151822] border border-gray-300 dark:border-[#3D3F4A] rounded px-2 py-1 text-gray-900 dark:text-white text-xs w-full outline-none focus:border-[#FF5A36]"
               />
             </div>
 
@@ -254,7 +266,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                 const el = document.getElementById('marketplace-listings');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#FF5A36] hover:bg-[#E04826] text-white rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#FF5A36] via-[#FF623E] to-[#FF7A59] hover:from-[#E04826] hover:to-[#FF5A36] text-white rounded-xl text-xs sm:text-sm font-black shadow-md shadow-[#FF5A36]/30 hover:shadow-lg hover:shadow-[#FF5A36]/40 hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
             >
               <Search className="w-4 h-4" />
               <span>Search</span>

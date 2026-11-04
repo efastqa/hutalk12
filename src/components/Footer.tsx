@@ -8,6 +8,7 @@ interface FooterProps {
   onOpenPostAd: () => void;
   onOpenAdminLogin: () => void;
   onOpenAppStore?: () => void;
+  onSelectTab?: (tab: 'marketplace' | 'estore' | 'huta_in' | 'categories') => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -16,6 +17,7 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenPostAd,
   onOpenAdminLogin,
   onOpenAppStore,
+  onSelectTab,
 }) => {
   return (
     <footer className="bg-white dark:bg-[#111217] text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-[#2D2F39]/60 mt-10 sm:mt-12 pt-8 sm:pt-9 pb-6 transition-colors duration-200">
@@ -134,6 +136,16 @@ export const Footer: React.FC<FooterProps> = ({
                 >
                   <PhoneCall className="w-3.5 h-3.5" />
                   <span>Support: +94 77 526 0765</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="?tab=estore"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-emerald-500 transition-colors font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 cursor-pointer no-underline"
+                >
+                  <span>🛍️ Sri Lanka E-Stores Directory ↗</span>
                 </a>
               </li>
               <li>

@@ -126,6 +126,7 @@ export interface CategoryInfo {
 
 export type ViewTab =
   | 'marketplace'
+  | 'estore'
   | 'huta_in'
   | 'categories'
   | 'user_dashboard'
@@ -306,6 +307,48 @@ export interface CustomDomainStatus {
   currentAppUrl: string;
   sslStatus: string;
   lastChecked: string;
+}
+
+// -------------------------------------------------------------
+// Sri Lanka E-Store & Online Merchant Directory
+// -------------------------------------------------------------
+
+export interface EStoreProduct {
+  id: string;
+  storeId: string;
+  name: string;
+  price: number;
+  originalPrice?: number;
+  image: string;
+  productUrl: string; // Direct link to product on merchant's official website
+  description: string;
+  category: string;
+  inStock: boolean;
+  featured?: boolean;
+}
+
+export interface EStore {
+  id: string;
+  storeName: string;
+  tagline: string;
+  description: string;
+  category: string; // e.g. "Fashion & Apparel", "Tech & Gadgets", "Ceylon Tea & Spices", "Beauty & Cosmetics", "Handmade & Crafts", "Home & Living", "Gourmet Foods"
+  district: string; // e.g. "Colombo", "Gampaha", "Kandy", "Galle", "Islandwide"
+  websiteUrl: string; // The merchant's verified Sri Lankan online website URL
+  whatsapp: string; // WhatsApp ordering/inquiry contact
+  phone?: string;
+  email?: string;
+  logo: string;
+  bannerImage?: string;
+  rating: number;
+  reviewCount: number;
+  isVerifiedMerchant: boolean;
+  deliveryInfo: string; // e.g. "Islandwide Delivery • Cash on Delivery (COD) Available"
+  returnPolicy?: string; // e.g. "7-day return/exchange policy"
+  foundedYear?: string;
+  ownerId?: string;
+  products: EStoreProduct[];
+  createdAt: string;
 }
 
 

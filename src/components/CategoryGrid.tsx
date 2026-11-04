@@ -1,67 +1,107 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
-import {
-  LayoutGrid,
-  Car,
-  Bike,
-  Home,
-  Smartphone,
-  Sofa,
-  Briefcase,
-  Wrench,
-  LucideIcon,
-} from 'lucide-react';
+import { LayoutGrid, Sparkles, RotateCcw } from 'lucide-react';
 import { Listing } from '../types';
 import { DualToneHeading } from './DualToneHeading';
 
-interface CategoryGridProps {
+export interface CategoryGridProps {
   currentCategory: string;
-  onSelectCategory: (category: string) => void;
+  onSelectCategory: (category: string, query?: string) => void;
   listings: Listing[];
   onViewAllCategories?: () => void;
 }
 
-interface CategoryMeta {
+export interface CategoryItem {
   key: string;
   label: string;
-  displayLabel?: string;
-  icon: LucideIcon;
+  image: string;
+  searchQuery?: string;
+  targetCategory?: string;
 }
 
-const CATEGORIES_META: CategoryMeta[] = [
-  { key: 'All', label: 'All Items', icon: LayoutGrid },
-  { key: 'Vehicles', label: 'Vehicles', icon: Car },
-  { key: 'Motorcycles', label: 'Motorcycles', icon: Bike },
-  { key: 'Property', label: 'Property', icon: Home },
-  { key: 'Electronics', label: 'Electronics', icon: Smartphone },
-  { key: 'Home & Garden', label: 'Home & Garden', displayLabel: 'Home &...', icon: Sofa },
-  { key: 'Jobs', label: 'Jobs', icon: Briefcase },
-  { key: 'Services', label: 'Services', icon: Wrench },
+// Exactly matching the 10 3D categories from the attached screenshot
+export const CATEGORIES_ITEMS: CategoryItem[] = [
+  {
+    key: 'Vehicles',
+    label: 'Vehicles',
+    image: '/assets/categories/vehicles.png',
+    targetCategory: 'Vehicles',
+  },
+  {
+    key: 'Property',
+    label: 'Property',
+    image: '/assets/categories/property.png',
+    targetCategory: 'Property',
+  },
+  {
+    key: 'Phones',
+    label: 'Phones',
+    image: '/assets/categories/phones.png',
+    targetCategory: 'Phones',
+    searchQuery: 'phone',
+  },
+  {
+    key: "Women's",
+    label: "Women's",
+    image: '/assets/categories/womens.png',
+    targetCategory: "Women's",
+    searchQuery: 'women',
+  },
+  {
+    key: 'Services',
+    label: 'Services',
+    image: '/assets/categories/services.png',
+    targetCategory: 'Services',
+  },
+  {
+    key: 'Computers',
+    label: 'Computers',
+    image: '/assets/categories/computers.png',
+    targetCategory: 'Computers',
+    searchQuery: 'computer',
+  },
+  {
+    key: 'Jobs',
+    label: 'Jobs',
+    image: '/assets/categories/jobs.png',
+    targetCategory: 'Jobs',
+  },
+  {
+    key: "Men's",
+    label: "Men's",
+    image: '/assets/categories/mens.png',
+    targetCategory: "Men's",
+    searchQuery: 'men',
+  },
+  {
+    key: 'Beauty',
+    label: 'Beauty',
+    image: '/assets/categories/beauty.png',
+    targetCategory: 'Beauty',
+    searchQuery: 'beauty',
+  },
+  {
+    key: 'Luxury',
+    label: 'Luxury',
+    image: '/assets/categories/luxury.png',
+    targetCategory: 'Luxury',
+    searchQuery: 'gem',
+  },
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.1,
-    },
-  },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: 'spring',
-      stiffness: 300,
-      damping: 24,
-    },
-  },
-};
+// Trending chips matching the top bar of the attached design
+const TRENDING_CHIPS = [
+  { label: 'Cars', category: 'Vehicles', query: 'car' },
+  { label: 'Mobile Phones', category: 'Phones', query: 'phone' },
+  { label: 'Dresses', category: "Women's", query: 'dress' },
+  { label: 'Houses & Lands', category: 'Property', query: 'house' },
+  { label: 'Motorbikes', category: 'Vehicles', query: 'bike' },
+  { label: 'Laptops', category: 'Computers', query: 'laptop' },
+  { label: 'AC Services', category: 'Services', query: 'ac' },
+  { label: 'Jobs', category: 'Jobs', query: 'job' },
+  { label: 'Ceylon Gems', category: 'Luxury', query: 'gem' },
+  { label: 'Salons & Spas', category: 'Beauty', query: 'salon' },
+];
 
 export const CategoryGrid: React.FC<CategoryGridProps> = ({
   currentCategory,
@@ -69,24 +109,70 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
   listings,
   onViewAllCategories,
 }) => {
-  // Calculate live ads count per category
-  const counts: Record<string, number> = { All: 0 };
-  CATEGORIES_META.forEach((cat) => {
-    counts[cat.key] = 0;
-  });
+  // Calculate live ads count per category accurately
+  const counts = useMemo(() => {
+    const map: Record<string, number> = {};
+    CATEGORIES_ITEMS.forEach((c) => {
+      map[c.key] = 0;
+    });
 
-  listings.forEach((item) => {
-    if (item.status === 'approved') {
-      counts.All = (counts.All || 0) + 1;
-      if (counts[item.category] !== undefined) {
-        counts[item.category]++;
+    listings.forEach((item) => {
+      if (item.status && item.status !== 'approved') return;
+      const cat = (item.category || '').toLowerCase();
+      const title = (item.title || '').toLowerCase();
+      const desc = (item.description || '').toLowerCase();
+
+      // Vehicles
+      if (cat.includes('vehicle') || cat.includes('car') || cat.includes('motorcycle')) {
+        map['Vehicles'] = (map['Vehicles'] || 0) + 1;
       }
-    }
-  });
+      // Property
+      if (cat.includes('property') || cat.includes('land') || cat.includes('house') || cat.includes('apartment')) {
+        map['Property'] = (map['Property'] || 0) + 1;
+      }
+      // Phones
+      if (cat.includes('phone') || title.includes('phone') || title.includes('iphone') || title.includes('samsung') || title.includes('redmi')) {
+        map['Phones'] = (map['Phones'] || 0) + 1;
+      }
+      // Women's
+      if (cat.includes('fashion') && (title.includes('women') || title.includes('dress') || title.includes('saree') || title.includes('frock') || desc.includes('women'))) {
+        map["Women's"] = (map["Women's"] || 0) + 1;
+      } else if (cat.includes('fashion') && !title.includes('men')) {
+        map["Women's"] = (map["Women's"] || 0) + 1;
+      }
+      // Services
+      if (cat.includes('service') || cat.includes('repair') || cat.includes('maintenance')) {
+        map['Services'] = (map['Services'] || 0) + 1;
+      }
+      // Computers
+      if (cat.includes('electronic') && (title.includes('laptop') || title.includes('computer') || title.includes('macbook') || title.includes('pc') || desc.includes('computer'))) {
+        map['Computers'] = (map['Computers'] || 0) + 1;
+      } else if (cat.includes('electronic') && !title.includes('phone')) {
+        map['Computers'] = (map['Computers'] || 0) + 1;
+      }
+      // Jobs
+      if (cat.includes('job') || cat.includes('career') || cat.includes('vacancy')) {
+        map['Jobs'] = (map['Jobs'] || 0) + 1;
+      }
+      // Men's
+      if (cat.includes('fashion') && (title.includes('men') || title.includes('shirt') || title.includes('suit') || title.includes('trouser') || desc.includes('men'))) {
+        map["Men's"] = (map["Men's"] || 0) + 1;
+      }
+      // Beauty
+      if (cat.includes('beauty') || title.includes('beauty') || title.includes('cosmetic') || title.includes('salon') || desc.includes('cosmetic')) {
+        map['Beauty'] = (map['Beauty'] || 0) + 1;
+      }
+      // Luxury
+      if (cat.includes('luxury') || title.includes('gem') || title.includes('gold') || title.includes('sapphire') || title.includes('jewelry') || title.includes('watch') || desc.includes('gem')) {
+        map['Luxury'] = (map['Luxury'] || 0) + 1;
+      }
+    });
 
-  const handleCategoryClick = (catKey: string) => {
-    onSelectCategory(catKey);
-    // Instantly scroll smoothly to the marketplace listings section
+    return map;
+  }, [listings]);
+
+  const handleCategoryClick = (cat: CategoryItem) => {
+    onSelectCategory(cat.targetCategory || cat.key, cat.searchQuery);
     setTimeout(() => {
       const el = document.getElementById('marketplace-listings');
       if (el) {
@@ -95,112 +181,157 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
     }, 40);
   };
 
+  const handleTrendingClick = (chip: typeof TRENDING_CHIPS[number]) => {
+    onSelectCategory(chip.category, chip.query);
+    setTimeout(() => {
+      const el = document.getElementById('marketplace-listings');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 40);
+  };
+
+  const isAnyCategoryActive = currentCategory !== 'All';
+
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6">
-      {/* Dual-Tone Title & Subtitle */}
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
+      {/* 1. TRENDING BAR (Matching attached format with frosted glass pills) */}
+      <div className="mb-6 flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none select-none">
+        <span className="text-[11px] sm:text-xs font-black tracking-wider text-gray-500 dark:text-gray-400 uppercase shrink-0 flex items-center gap-1.5 mr-1">
+          <Sparkles className="w-3.5 h-3.5 text-[#FF5A36]" />
+          <span>TRENDING:</span>
+        </span>
+
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
+          {TRENDING_CHIPS.map((chip) => (
+            <button
+              key={chip.label}
+              type="button"
+              onClick={() => handleTrendingClick(chip)}
+              className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/90 dark:bg-[#151822]/90 backdrop-blur-sm text-gray-700 dark:text-gray-300 border border-gray-200/80 dark:border-white/10 hover:border-[#FF5A36] dark:hover:border-[#FF5A36] hover:text-[#FF5A36] dark:hover:text-[#FF5A36] hover:bg-orange-50/50 dark:hover:bg-orange-950/20 transition-all whitespace-nowrap shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer"
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 2. Dual-Tone Heading */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="text-center mb-8"
+        transition={{ duration: 0.35 }}
+        className="text-center mb-6 sm:mb-8"
       >
         <DualToneHeading
           as="h2"
           size="xl"
           theme="auto"
           primaryText="Explore Our"
-          accentText={['Popular Categories', 'Top Sectors', 'Marketplace Hubs']}
+          accentText={['Categories', 'Top Sectors', 'Marketplace Hubs']}
           animationType="rotate"
           rotationInterval={3600}
           align="center"
           showUnderline={false}
-          subtitle="Everything Sri Lanka needs to buy and sell — all in one place."
+          subtitle="Everything Sri Lanka needs to buy, sell, and discover — all in one place."
           id="categories-dual-tone-heading"
         />
-      </motion.div>
 
-      {/* Grid matching the screenshot (6 columns on desktop so 1st row has 6 items, 2nd row has 2 items) */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5 sm:gap-4 lg:gap-5"
-      >
-        {CATEGORIES_META.map((cat) => {
-          const Icon = cat.icon;
-          const isActive = currentCategory === cat.key;
-          const count = counts[cat.key] || 0;
-
-          return (
-            <motion.button
-              key={cat.key}
+        {isAnyCategoryActive && (
+          <div className="mt-2.5 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-50/90 dark:bg-orange-950/60 border border-[#FF5A36]/40 backdrop-blur-xs text-xs text-[#FF5A36] font-bold shadow-xs">
+            <span>Filtering by: {currentCategory}</span>
+            <button
               type="button"
-              variants={cardVariants}
-              whileHover={{ y: -6, scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => handleCategoryClick(cat.key)}
-              className={`relative flex flex-col items-center justify-center p-5 sm:p-6 rounded-2xl sm:rounded-[22px] border transition-all duration-300 text-center cursor-pointer select-none group min-h-[162px] ${
-                isActive
-                  ? 'bg-white dark:bg-[#121319] border-[#FF5A36] text-[#FF5A36] dark:text-white shadow-xl shadow-[#FF5A36]/10 ring-2 ring-[#FF5A36]/40 dark:ring-[#FF5A36]/60'
-                  : 'bg-white dark:bg-[#151822] border-[#E5E7EB] dark:border-[#252836] text-[#111217] dark:text-white hover:border-[#FF5A36]/60 dark:hover:border-[#FF5A36] hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-black/40'
-              }`}
+              onClick={() => onSelectCategory('All', '')}
+              className="hover:underline flex items-center gap-1 ml-1 cursor-pointer font-extrabold"
+              title="Reset category filter"
             >
-              {/* Active ambient glow */}
-              {isActive && (
-                <motion.div
-                  layoutId="activeCategoryGlow"
-                  className="absolute inset-0 rounded-2xl sm:rounded-[22px] bg-[#FF5A36]/5 pointer-events-none"
-                  transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                />
-              )}
-
-              {/* Icon Container */}
-              <div
-                className={`w-12 h-12 sm:w-13 sm:h-13 rounded-full flex items-center justify-center mb-3 transition-all duration-300 ${
-                  isActive
-                    ? 'bg-[#FF5A36]/15 dark:bg-[#2E1D1E] text-[#FF5A36] shadow-xs'
-                    : 'bg-gray-100 dark:bg-[#1E2230] text-gray-800 dark:text-gray-200 group-hover:bg-[#FF5A36]/10 group-hover:text-[#FF5A36] group-hover:scale-108'
-                }`}
-              >
-                <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${isActive ? 'stroke-[2.2]' : 'stroke-2'}`} />
-              </div>
-
-              {/* Category Title */}
-              <span
-                className={`font-bold text-sm sm:text-base tracking-tight mb-1.5 transition-colors line-clamp-1 ${
-                  isActive ? 'text-[#FF5A36] dark:text-white font-extrabold' : 'text-[#111217] dark:text-white group-hover:text-[#FF5A36]'
-                }`}
-              >
-                {cat.displayLabel || cat.label}
-              </span>
-
-              {/* Bullet status with live ads counter */}
-              <div
-                className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-                  isActive ? 'text-[#FF5A36]/90 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'
-                }`}
-              >
-                <span
-                  className={`inline-block w-2.5 h-2.5 rounded-full border-[1.5px] transition-colors shrink-0 ${
-                    isActive ? 'border-[#FF5A36] bg-[#FF5A36]' : 'border-gray-300 dark:border-gray-600 group-hover:border-gray-400'
-                  }`}
-                />
-                <span>
-                  {count} live ads
-                </span>
-              </div>
-            </motion.button>
-          );
-        })}
+              <RotateCcw className="w-3 h-3" />
+              <span>Show All</span>
+            </button>
+          </div>
+        )}
       </motion.div>
 
+      {/* 3. 4-Column Category Grid Matching Attached Screenshot with Frosted Glass & 3D Depth */}
+      <div className="bg-white/90 dark:bg-[#12141D]/90 backdrop-blur-xl rounded-3xl p-5 sm:p-7 lg:p-8 border border-gray-200/80 dark:border-white/10 shadow-xl dark:shadow-[0_16px_40px_rgba(0,0,0,0.45)] relative overflow-hidden">
+        {/* Subtle top ambient glow */}
+        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-96 h-32 bg-[#FF5A36]/10 dark:bg-[#FF5A36]/15 blur-3xl pointer-events-none rounded-full" />
+
+        <div className="relative grid grid-cols-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5 gap-x-2 sm:gap-x-4 md:gap-x-6 gap-y-6 sm:gap-y-8">
+          {CATEGORIES_ITEMS.map((cat, idx) => {
+            const isActive =
+              currentCategory.toLowerCase() === cat.key.toLowerCase() ||
+              currentCategory.toLowerCase() === (cat.targetCategory || '').toLowerCase();
+            const count = counts[cat.key] || 0;
+
+            return (
+              <motion.button
+                key={cat.key}
+                type="button"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: idx * 0.03 }}
+                whileHover={{ y: -5 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => handleCategoryClick(cat)}
+                className={`relative flex flex-col items-center justify-start text-center cursor-pointer select-none group p-2.5 rounded-2xl transition-all duration-300 ${
+                  isActive
+                    ? 'bg-gradient-to-b from-[#FF5A36]/12 to-transparent dark:from-[#FF5A36]/20 dark:to-transparent border border-[#FF5A36]/50 shadow-md shadow-[#FF5A36]/10'
+                    : 'hover:bg-white dark:hover:bg-[#1A1E2B] hover:shadow-md hover:shadow-black/5 dark:hover:shadow-black/40 border border-transparent hover:border-gray-200/80 dark:hover:border-white/10'
+                }`}
+                title={`Browse ${cat.label} (${count} ads)`}
+              >
+                {/* 3D Icon Presentation with Ground Shadow */}
+                <div className="relative w-16 h-14 sm:w-20 sm:h-18 md:w-24 md:h-20 flex flex-col items-center justify-center mb-1">
+                  <img
+                    src={cat.image}
+                    alt={cat.label}
+                    className="w-full h-full object-contain filter group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 ease-out select-none pointer-events-none drop-shadow-sm group-hover:drop-shadow-[0_10px_18px_rgba(255,90,54,0.25)]"
+                    loading="lazy"
+                  />
+                  {/* 3D Ground Contact Shadow */}
+                  <div className="w-10 sm:w-14 h-1.5 bg-black/10 dark:bg-black/50 rounded-full blur-[2px] mt-0.5 group-hover:scale-90 group-hover:opacity-40 transition-all duration-300" />
+
+                  {/* Active Indicator Glow Dot */}
+                  {isActive && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#FF5A36] rounded-full ring-2 ring-white dark:ring-[#12141D] shadow-sm animate-pulse" />
+                  )}
+                </div>
+
+                {/* Category Label */}
+                <span
+                  className={`text-xs sm:text-sm font-black tracking-tight transition-colors line-clamp-1 mt-1 ${
+                    isActive
+                      ? 'text-[#FF5A36] dark:text-[#FF7A59]'
+                      : 'text-gray-900 dark:text-gray-100 group-hover:text-[#FF5A36] dark:group-hover:text-[#FF5A36]'
+                  }`}
+                >
+                  {cat.label}
+                </span>
+
+                {/* Ads Count */}
+                <span
+                  className={`text-[10px] sm:text-[11px] font-semibold mt-0.5 transition-colors ${
+                    isActive ? 'text-[#FF5A36]/90 dark:text-[#FF7A59]/90' : 'text-gray-400 dark:text-gray-500'
+                  }`}
+                >
+                  {count} ads
+                </span>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 4. Explore All Categories & Directory Button */}
       {onViewAllCategories && (
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <button
             type="button"
             id="view-all-categories-banner-btn"
             onClick={onViewAllCategories}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white dark:bg-[#151822] hover:bg-gray-50 dark:hover:bg-[#1E2230] text-[#0A2540] dark:text-white hover:text-[#FF5A36] dark:hover:text-[#FF5A36] text-xs sm:text-sm font-bold border border-gray-200 dark:border-[#252836] shadow-sm hover:shadow transition-all cursor-pointer group"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white dark:bg-[#151822] hover:bg-gray-50 dark:hover:bg-[#1E2230] text-[#0A2540] dark:text-white hover:text-[#FF5A36] dark:hover:text-[#FF5A36] text-xs sm:text-sm font-bold border border-gray-200 dark:border-[#252836] shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
           >
             <LayoutGrid className="w-4 h-4 text-[#FF5A36] group-hover:scale-110 transition-transform" />
             <span>Explore All Categories & Professional Services Directory</span>
@@ -211,4 +342,3 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
     </section>
   );
 };
-

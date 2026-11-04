@@ -9,7 +9,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Listing, User, EventItem, HeroAd, HeroAdSettings, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem } from '../types';
+import { Listing, User, EventItem, HeroAd, HeroAdSettings, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem, EStore, EStoreProduct } from '../types';
 
 const API_BASE = '/api';
 
@@ -2306,6 +2306,201 @@ For quick inquiries, call or send a message via WhatsApp!`;
     }
 
     return { success: true };
+  },
+
+  // -------------------------------------------------------------
+  // Sri Lankan E-Store Directory & Online Marketplace Platform
+  // -------------------------------------------------------------
+
+  async getEStores(): Promise<EStore[]> {
+    const rawDeleted = localStorage.getItem('huta_deleted_estores');
+    const deletedIds: string[] = rawDeleted ? JSON.parse(rawDeleted) : [];
+
+    // Clean up previous default/sample store IDs so they never appear
+    const sampleIdsToRemove = [
+      'estore-ceylon-spices',
+      'estore-urban-lanka',
+      'estore-techgadgets-lk',
+      'estore-ayurveda-lanka',
+    ];
+
+    for (const sId of sampleIdsToRemove) {
+      if (!deletedIds.includes(sId)) {
+        deletedIds.push(sId);
+        try {
+          deleteDoc(doc(db, 'estores', sId)).catch(() => {});
+        } catch {}
+      }
+    }
+    try {
+      localStorage.setItem('huta_deleted_estores', JSON.stringify(deletedIds));
+    } catch {}
+
+    // 1. Try Cloud Firestore first (returns genuine registered stores)
+    try {
+      const snap = await getDocs(collection(db, 'estores'));
+      if (!snap.empty) {
+        const list: EStore[] = [];
+        snap.forEach((d) => {
+          const item = d.data() as EStore;
+          if (!deletedIds.includes(item.id) && !sampleIdsToRemove.includes(item.id)) {
+            list.push({ ...item, id: d.id, products: Array.isArray(item.products) ? item.products : [] });
+          }
+        });
+        try {
+          localStorage.setItem('huta_estores_cache', JSON.stringify(list));
+        } catch {}
+        return list;
+      }
+    } catch (fsErr) {
+      console.warn('[EStores] Firestore fetch error:', fsErr);
+    }
+
+    // 2. Try localStorage cache (excluding deleted and sample stores)
+    try {
+      const cached = localStorage.getItem('huta_estores_cache');
+      if (cached) {
+        const list: EStore[] = JSON.parse(cached);
+        const filtered = list.filter((s) => !deletedIds.includes(s.id) && !sampleIdsToRemove.includes(s.id));
+        return filtered;
+      }
+    } catch {}
+
+    // No default sample ads or stores; ready for users to add their own stores
+    return [];
+  },
+
+  async getEStoreById(id: string): Promise<EStore | null> {
+    try {
+      const snap = await getDoc(doc(db, 'estores', id));
+      if (snap.exists()) {
+        const item = snap.data() as EStore;
+        return { ...item, id: snap.id, products: Array.isArray(item.products) ? item.products : [] };
+      }
+    } catch {}
+
+    const all = await this.getEStores();
+    return all.find((s) => s.id === id) || null;
+  },
+
+  async createEStore(data: Partial<EStore>): Promise<EStore> {
+    const id = data.id || `estore_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const newStore: EStore = {
+      id,
+      storeName: String(data.storeName || 'My Sri Lanka Online Store').trim(),
+      tagline: String(data.tagline || 'Authentic Sri Lankan products & online shopping').trim(),
+      description: String(data.description || '').trim(),
+      category: data.category || 'Fashion & Apparel',
+      district: data.district || 'Colombo',
+      websiteUrl: data.websiteUrl ? String(data.websiteUrl).trim() : 'https://huta.lk',
+      whatsapp: data.whatsapp ? String(data.whatsapp).trim() : '0775260765',
+      phone: data.phone ? String(data.phone).trim() : '',
+      email: data.email ? String(data.email).trim() : '',
+      logo: data.logo || 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=400&q=80',
+      bannerImage: data.bannerImage || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80',
+      rating: 5.0,
+      reviewCount: 1,
+      isVerifiedMerchant: true,
+      deliveryInfo: data.deliveryInfo || 'Islandwide Cash on Delivery (COD) Available • Fast 2-3 Days Delivery',
+      returnPolicy: data.returnPolicy || '7-Day Easy Exchange & Return Policy',
+      foundedYear: data.foundedYear || new Date().getFullYear().toString(),
+      ownerId: data.ownerId || '',
+      products: Array.isArray(data.products) ? data.products : [],
+      createdAt: new Date().toISOString(),
+    };
+
+    // Save to Firestore
+    try {
+      await setDoc(doc(db, 'estores', id), sanitizeForFirestore(newStore));
+    } catch (fsErr) {
+      console.warn('[EStores] Firestore set error:', fsErr);
+    }
+
+    // Update cache
+    try {
+      const cached = localStorage.getItem('huta_estores_cache');
+      const list: EStore[] = cached ? JSON.parse(cached) : [];
+      const updated = [newStore, ...list.filter((s) => s.id !== id)];
+      localStorage.setItem('huta_estores_cache', JSON.stringify(updated));
+    } catch {}
+
+    return newStore;
+  },
+
+  async updateEStore(id: string, data: Partial<EStore>): Promise<EStore> {
+    try {
+      await setDoc(doc(db, 'estores', id), sanitizeForFirestore(data), { merge: true });
+    } catch (fsErr) {
+      console.warn('[EStores] Firestore update error:', fsErr);
+    }
+
+    try {
+      const cached = localStorage.getItem('huta_estores_cache');
+      if (cached) {
+        const list: EStore[] = JSON.parse(cached);
+        const updated = list.map((s) => (s.id === id ? { ...s, ...data } : s));
+        localStorage.setItem('huta_estores_cache', JSON.stringify(updated));
+      }
+    } catch {}
+
+    const store = await this.getEStoreById(id);
+    return store || (data as EStore);
+  },
+
+  async deleteEStore(id: string): Promise<{ success: boolean }> {
+    try {
+      await deleteDoc(doc(db, 'estores', id));
+    } catch (fsErr) {
+      console.warn('[EStores] Firestore delete error:', fsErr);
+    }
+
+    try {
+      const raw = localStorage.getItem('huta_deleted_estores');
+      const deleted: string[] = raw ? JSON.parse(raw) : [];
+      if (!deleted.includes(id)) {
+        deleted.push(id);
+        localStorage.setItem('huta_deleted_estores', JSON.stringify(deleted));
+      }
+      const cached = localStorage.getItem('huta_estores_cache');
+      if (cached) {
+        const list: EStore[] = JSON.parse(cached);
+        const updated = list.filter((s) => s.id !== id);
+        localStorage.setItem('huta_estores_cache', JSON.stringify(updated));
+      }
+    } catch {}
+
+    return { success: true };
+  },
+
+  async addProductToEStore(storeId: string, productData: Partial<EStoreProduct>): Promise<EStore> {
+    const store = await this.getEStoreById(storeId);
+    if (!store) throw new Error('E-Store not found');
+
+    const productId = productData.id || `prod_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const newProduct: EStoreProduct = {
+      id: productId,
+      storeId,
+      name: String(productData.name || 'Store Item').trim(),
+      price: typeof productData.price === 'number' ? productData.price : 0,
+      originalPrice: productData.originalPrice,
+      image: productData.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80',
+      productUrl: productData.productUrl ? String(productData.productUrl).trim() : store.websiteUrl,
+      description: String(productData.description || '').trim(),
+      category: productData.category || store.category,
+      inStock: productData.inStock !== undefined ? Boolean(productData.inStock) : true,
+      featured: Boolean(productData.featured),
+    };
+
+    const updatedProducts = [newProduct, ...(store.products || [])];
+    return this.updateEStore(storeId, { products: updatedProducts });
+  },
+
+  async deleteProductFromEStore(storeId: string, productId: string): Promise<EStore> {
+    const store = await this.getEStoreById(storeId);
+    if (!store) throw new Error('E-Store not found');
+
+    const updatedProducts = (store.products || []).filter((p) => p.id !== productId);
+    return this.updateEStore(storeId, { products: updatedProducts });
   },
 
   async uploadImage(data: string, filename?: string): Promise<{ success: boolean; url: string; size?: number }> {
