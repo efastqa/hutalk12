@@ -37,6 +37,9 @@ import {
   Grid3X3,
   ArrowUpDown,
   ShieldAlert,
+  Zap,
+  Send,
+  CreditCard,
 } from 'lucide-react';
 import { EStore, EStoreProduct, User } from '../types';
 import { api } from '../services/api';
@@ -441,6 +444,19 @@ export const EStorePage: React.FC<EStorePageProps> = ({
     featured: false,
   });
 
+  // 1-Click WhatsApp Quick Order Modal State
+  const [quickOrderTarget, setQuickOrderTarget] = useState<{
+    store: EStore;
+    product?: EStoreProduct;
+  } | null>(null);
+
+  const [orderQuantity, setOrderQuantity] = useState<number>(1);
+  const [orderDistrict, setOrderDistrict] = useState<string>('Colombo');
+  const [orderDeliveryCity, setOrderDeliveryCity] = useState<string>('');
+  const [orderPaymentMethod, setOrderPaymentMethod] = useState<'cod' | 'bank'>('cod');
+  const [orderCustomerNote, setOrderCustomerNote] = useState<string>('');
+  const [orderCustomerName, setOrderCustomerName] = useState<string>('');
+
   // Auto-open modal or store from URL (e.g. ?tab=estore#register or ?tab=estore&store=123)
   useEffect(() => {
     try {
@@ -563,8 +579,30 @@ export const EStorePage: React.FC<EStorePageProps> = ({
     }
   };
 
-  // WhatsApp Order Helper
-  const handleWhatsAppOrder = (store: EStore, product?: EStoreProduct) => {
+  // 1-Click WhatsApp Quick Order Trigger (Opens the instant checkout sheet)
+  const openQuickOrder = (store: EStore, product?: EStoreProduct) => {
+    setQuickOrderTarget({ store, product });
+    setOrderQuantity(1);
+    setOrderDistrict(store.district && store.district !== 'All Sri Lanka' ? store.district : 'Colombo');
+    setOrderDeliveryCity('');
+    setOrderPaymentMethod('cod');
+    setOrderCustomerNote('');
+    setOrderCustomerName(currentUser?.fullname || (currentUser as any)?.name || '');
+  };
+
+  // WhatsApp Order Execution (Generates structured, copy-pasteable order details for the merchant)
+  const executeSendWhatsAppOrder = (
+    store: EStore,
+    product?: EStoreProduct,
+    customDetails?: {
+      quantity?: number;
+      district?: string;
+      city?: string;
+      paymentMethod?: 'cod' | 'bank';
+      note?: string;
+      customerName?: string;
+    }
+  ) => {
     let cleanPhone = store.whatsapp.replace(/[^0-9]/g, '');
     if (cleanPhone.startsWith('0')) {
       cleanPhone = '94' + cleanPhone.substring(1);
@@ -572,17 +610,63 @@ export const EStorePage: React.FC<EStorePageProps> = ({
       cleanPhone = '94' + cleanPhone;
     }
 
-    let message = `Hello ${store.storeName}! I found your store on HUTA.LK.`;
+    const qty = customDetails?.quantity || orderQuantity || 1;
+    const district = customDetails?.district || orderDistrict || store.district || 'All Sri Lanka';
+    const city = customDetails?.city || orderDeliveryCity || '';
+    const payment = customDetails?.paymentMethod || orderPaymentMethod || 'cod';
+    const paymentLabel = payment === 'cod' ? 'Cash on Delivery (COD) 💵' : 'Bank Transfer 🏦';
+    const note = customDetails?.note || orderCustomerNote || '';
+    const customer = customDetails?.customerName || orderCustomerName || '';
+
+    let message = '';
     if (product) {
-      message = `Hello ${store.storeName}! I'm interested in buying "${product.name}" (${formatLKR(
-        product.price
-      )}) listed on your HUTA E-Store showcase.\nWebsite link: ${product.productUrl || store.websiteUrl}\nIs this in stock for delivery?`;
+      const totalPrice = (Number(product.price) || 0) * qty;
+      message = `🛒 *NEW 1-CLICK ORDER — HUTA E-STORE*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `🏪 *Store:* ${store.storeName}\n`;
+      message += `📦 *Product:* ${product.name}\n`;
+      message += `🔢 *Quantity:* ${qty}\n`;
+      message += `💰 *Unit Price:* ${formatLKR(product.price)}\n`;
+      if (qty > 1) {
+        message += `💵 *Total Amount:* ${formatLKR(totalPrice)}\n`;
+      }
+      message += `📍 *Delivery Area:* ${district}${city ? ` (${city})` : ''}\n`;
+      message += `💳 *Payment Preference:* ${paymentLabel}\n`;
+      if (customer) {
+        message += `👤 *Customer Name:* ${customer}\n`;
+      }
+      if (note) {
+        message += `📝 *Order Note:* ${note}\n`;
+      }
+      if (product.productUrl || store.websiteUrl) {
+        message += `🔗 *Product Link:* ${product.productUrl || store.websiteUrl}\n`;
+      }
+      message += `━━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `Hi! Please confirm availability, delivery charges, and dispatch schedule!`;
     } else {
-      message += ` I'd like to browse your catalog and inquire about delivery to my area.`;
+      message = `🛍️ *STORE INQUIRY — HUTA E-STORE*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `🏪 *Store:* ${store.storeName}\n`;
+      message += `📍 *My District:* ${district}${city ? ` (${city})` : ''}\n`;
+      if (customer) {
+        message += `👤 *My Name:* ${customer}\n`;
+      }
+      if (note) {
+        message += `📝 *Inquiry:* ${note}\n`;
+      }
+      message += `━━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `Hi! I found your storefront on HUTA.LK and would like to inquire about your products and delivery options.`;
     }
 
     const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
+    setQuickOrderTarget(null);
+    onToast('Opening WhatsApp with your order details!', 'success');
+  };
+
+  // WhatsApp Order Helper
+  const handleWhatsAppOrder = (store: EStore, product?: EStoreProduct) => {
+    openQuickOrder(store, product);
   };
 
   // Register Store Submit
@@ -1748,11 +1832,11 @@ export const EStorePage: React.FC<EStorePageProps> = ({
 
                         <button
                           type="button"
-                          onClick={() => handleWhatsAppOrder(store, product)}
-                          className="w-full py-1.5 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                          onClick={() => openQuickOrder(store, product)}
+                          className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-500/25 transition-all cursor-pointer active:scale-98"
                         >
-                          <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                          <span>Order on WhatsApp</span>
+                          <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
+                          <span>1-Click WhatsApp Order</span>
                         </button>
                       </div>
                     </motion.div>
@@ -1973,11 +2057,12 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                             <div className="flex items-center gap-1">
                               <button
                                 type="button"
-                                onClick={() => handleWhatsAppOrder(selectedStore, product)}
-                                className="p-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 cursor-pointer"
-                                title="Order via WhatsApp"
+                                onClick={() => openQuickOrder(selectedStore, product)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-extrabold shadow-2xs transition-all cursor-pointer"
+                                title="1-Click WhatsApp Order"
                               >
-                                <MessageCircle className="w-3.5 h-3.5" />
+                                <Zap className="w-3 h-3 fill-amber-300 text-amber-300" />
+                                <span>Quick Order</span>
                               </button>
 
                               <button
@@ -2680,6 +2765,288 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                   className="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 cursor-pointer"
                 >
                   Yes, Remove Item
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ------------------------------------------------------------- */}
+      {/* MODAL: 1-Click WhatsApp Quick Order Sheet                     */}
+      {/* ------------------------------------------------------------- */}
+      <AnimatePresence>
+        {quickOrderTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-[#151822] rounded-3xl max-w-lg w-full border border-gray-200 dark:border-[#252836] shadow-2xl overflow-hidden my-6"
+            >
+              {/* Header */}
+              <div className="p-4 sm:p-5 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 text-white flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shadow-inner">
+                    <MessageCircle className="w-5 h-5 fill-current text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] uppercase font-black tracking-wider bg-black/20 px-2 py-0.5 rounded-full">
+                        Fast WhatsApp Checkout
+                      </span>
+                      <span className="text-[10px] bg-amber-400 text-black px-1.5 py-0.2 rounded font-black flex items-center gap-0.5">
+                        <Zap className="w-2.5 h-2.5 fill-black" />
+                        1-Click
+                      </span>
+                    </div>
+                    <h3 className="text-base sm:text-lg font-black tracking-tight leading-tight mt-0.5">
+                      Instant WhatsApp Order
+                    </h3>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setQuickOrderTarget(null)}
+                  className="w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 flex items-center justify-center text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-4 sm:p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                {/* Store mini banner */}
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 dark:bg-[#1E2230] border border-gray-200/80 dark:border-[#2D303E]">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {quickOrderTarget.store.logo ? (
+                      <img
+                        src={quickOrderTarget.store.logo}
+                        alt={quickOrderTarget.store.storeName}
+                        className="w-9 h-9 rounded-xl object-cover border border-gray-200 dark:border-gray-700 shrink-0"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center font-black text-sm shrink-0">
+                        {quickOrderTarget.store.storeName.charAt(0)}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <h4 className="font-extrabold text-xs sm:text-sm text-gray-900 dark:text-white truncate">
+                        {quickOrderTarget.store.storeName}
+                      </h4>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center gap-1 truncate">
+                        <MapPin className="w-3 h-3 text-[#FF5A36] shrink-0" />
+                        <span>{quickOrderTarget.store.district}</span>
+                        {quickOrderTarget.store.isVerifiedMerchant && (
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1">✓ Verified Merchant</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 block">
+                      Direct WhatsApp
+                    </span>
+                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                      {quickOrderTarget.store.whatsapp}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Product Card if Ordering Product */}
+                {quickOrderTarget.product ? (
+                  <div className="p-3.5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-500/30 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src={quickOrderTarget.product.image || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80'}
+                        alt={quickOrderTarget.product.name}
+                        className="w-14 h-14 rounded-xl object-cover shrink-0 border border-emerald-500/20"
+                      />
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block truncate">
+                          {quickOrderTarget.product.category || 'Selected Item'}
+                        </span>
+                        <h5 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white truncate">
+                          {quickOrderTarget.product.name}
+                        </h5>
+                        <div className="text-xs font-black text-gray-900 dark:text-white mt-0.5">
+                          {formatLKR(quickOrderTarget.product.price)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quantity Selector */}
+                    <div className="flex items-center gap-2 bg-white dark:bg-[#1A1D2B] p-1 rounded-xl border border-gray-200 dark:border-[#2D303E] shrink-0 shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => setOrderQuantity(Math.max(1, orderQuantity - 1))}
+                        className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold flex items-center justify-center hover:bg-gray-200 cursor-pointer text-xs"
+                      >
+                        -
+                      </button>
+                      <span className="text-xs font-black px-1 min-w-[20px] text-center text-gray-900 dark:text-white">
+                        {orderQuantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setOrderQuantity(orderQuantity + 1)}
+                        className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold flex items-center justify-center hover:bg-gray-200 cursor-pointer text-xs"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3.5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-500/30 text-xs text-blue-900 dark:text-blue-200">
+                    💡 You are inquiring directly about <strong>{quickOrderTarget.store.storeName}</strong>&apos;s full catalog, custom orders, or delivery options.
+                  </div>
+                )}
+
+                {/* Delivery & Order Details Form */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-extrabold text-gray-700 dark:text-gray-300 mb-1">
+                      Your Delivery District *
+                    </label>
+                    <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-[#1E2230] px-3 py-2 rounded-xl border border-gray-200 dark:border-[#2D303E]">
+                      <MapPin className="w-3.5 h-3.5 text-[#FF5A36] shrink-0" />
+                      <select
+                        value={orderDistrict}
+                        onChange={(e) => setOrderDistrict(e.target.value)}
+                        className="bg-transparent border-none outline-none text-xs font-bold text-gray-800 dark:text-white w-full cursor-pointer"
+                      >
+                        {DISTRICTS.filter((d) => d !== 'All Sri Lanka').map((dist) => (
+                          <option key={dist} value={dist} className="bg-white dark:bg-[#181920] text-gray-900 dark:text-white">
+                            {dist}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-extrabold text-gray-700 dark:text-gray-300 mb-1">
+                      City / Nearest Town
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Maharagama, Kandy, Galle"
+                      value={orderDeliveryCity}
+                      onChange={(e) => setOrderDeliveryCity(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1E2230] border border-gray-200 dark:border-[#2D303E] text-xs font-medium text-gray-900 dark:text-white outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Customer Name & Payment Method */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-extrabold text-gray-700 dark:text-gray-300 mb-1">
+                      Your Name (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Your name for delivery slip"
+                      value={orderCustomerName}
+                      onChange={(e) => setOrderCustomerName(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1E2230] border border-gray-200 dark:border-[#2D303E] text-xs font-medium text-gray-900 dark:text-white outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-extrabold text-gray-700 dark:text-gray-300 mb-1">
+                      Payment Preference
+                    </label>
+                    <div className="grid grid-cols-2 gap-1.5 p-1 bg-gray-100 dark:bg-[#1E2230] rounded-xl text-xs font-bold">
+                      <button
+                        type="button"
+                        onClick={() => setOrderPaymentMethod('cod')}
+                        className={`py-1.5 rounded-lg transition-all cursor-pointer text-center text-[11px] ${
+                          orderPaymentMethod === 'cod'
+                            ? 'bg-emerald-600 text-white shadow-xs font-black'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
+                        }`}
+                      >
+                        Cash on Delivery
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOrderPaymentMethod('bank')}
+                        className={`py-1.5 rounded-lg transition-all cursor-pointer text-center text-[11px] ${
+                          orderPaymentMethod === 'bank'
+                            ? 'bg-emerald-600 text-white shadow-xs font-black'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
+                        }`}
+                      >
+                        Bank Transfer
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Special Instructions / Color / Size Note */}
+                <div>
+                  <label className="block text-[11px] font-extrabold text-gray-700 dark:text-gray-300 mb-1">
+                    Special Note / Size / Delivery Instructions
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Size L, Color: Navy, or Deliver after 5 PM"
+                    value={orderCustomerNote}
+                    onChange={(e) => setOrderCustomerNote(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-[#1E2230] border border-gray-200 dark:border-[#2D303E] text-xs font-medium text-gray-900 dark:text-white outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                {/* Order Summary & Pricing Calculation */}
+                {quickOrderTarget.product && (
+                  <div className="p-3 rounded-2xl bg-gray-50 dark:bg-[#1A1D2B] border border-gray-200 dark:border-[#2D303E] space-y-1 text-xs">
+                    <div className="flex items-center justify-between text-gray-500 dark:text-gray-400">
+                      <span>Subtotal ({orderQuantity} item{orderQuantity > 1 ? 's' : ''}):</span>
+                      <span className="font-bold text-gray-800 dark:text-gray-200">
+                        {formatLKR(quickOrderTarget.product.price * orderQuantity)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-gray-500 dark:text-gray-400 text-[11px]">
+                      <span>Islandwide Courier:</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">Standard Store Rates Apply</span>
+                    </div>
+                    <div className="border-t border-gray-200 dark:border-gray-800 pt-1.5 mt-1 flex items-center justify-between font-black text-sm text-gray-900 dark:text-white">
+                      <span>Total to Pay:</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 text-base">
+                        {formatLKR(quickOrderTarget.product.price * orderQuantity)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Trust guarantee pill */}
+                <div className="flex items-center justify-center gap-2 text-[10px] text-gray-500 dark:text-gray-400 py-1">
+                  <span>🔒 Direct merchant contact</span>
+                  <span>•</span>
+                  <span>⚡ 0% commission fees</span>
+                  <span>•</span>
+                  <span>💬 Instant WhatsApp confirmation</span>
+                </div>
+              </div>
+
+              {/* Footer CTA */}
+              <div className="p-4 sm:p-5 border-t border-gray-100 dark:border-[#252836] bg-gray-50/80 dark:bg-[#181B26]/80 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => setQuickOrderTarget(null)}
+                  className="px-4 py-2.5 rounded-xl bg-gray-200 dark:bg-[#222533] text-gray-700 dark:text-gray-300 font-bold text-xs hover:bg-gray-300 cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => executeSendWhatsAppOrder(quickOrderTarget.store, quickOrderTarget.product)}
+                  className="flex-1 py-3 px-5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 active:scale-98 transition-all cursor-pointer"
+                >
+                  <MessageCircle className="w-4 h-4 fill-current" />
+                  <span>Send Order to Merchant on WhatsApp</span>
                 </button>
               </div>
             </motion.div>
