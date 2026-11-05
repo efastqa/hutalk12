@@ -1,61 +1,79 @@
 {
   "settings": {
-    "mode": "rotate",
+    "mode": "default",
     "rotationIntervalSeconds": 6
   },
   "ads": [
     {
-      "ctaText": "Post Free Ad Now",
       "animationType": "pulse",
-      "gradientTheme": "purple",
-      "mediaType": "video",
-      "badge": "Sponsored Promotion",
-      "id": "hero-ad-1790152022301",
-      "createdAt": "2026-09-23T08:27:02.301Z",
-      "bgVideo": "/uploads/videos/anim-video-1790151970607-mz6krp.mp4",
-      "ctaAction": "post_ad",
       "title": "Sell Your Vehicle or Property in 24 Hours",
+      "gradientTheme": "orange",
+      "onlyVideoVisible": false,
+      "videoAspectRatio": "16:9",
       "isActive": true,
-      "subtitle": "huta.lk"
+      "enableSound": false,
+      "badge": "🌟 Special Promotion",
+      "mediaType": "video",
+      "id": "hero-ad-1790755937775",
+      "createdAt": "2026-09-30T08:12:17.775Z",
+      "subtitle": "Direct WhatsApp inquiries from thousands of buyers across all 25 districts with zero broker fees.",
+      "ctaAction": "post_ad",
+      "bgVideo": "/uploads/videos/anim-video-1790755911419-ef13ku.mp4",
+      "highlightText": "with HUTA Turbo Ad",
+      "ctaText": "Post Free Ad Now"
     },
     {
+      "isActive": true,
+      "ctaText": "Post Free Ad Now",
+      "createdAt": "2026-09-23T08:27:02.301Z",
+      "bgVideo": "/uploads/videos/anim-video-1790151970607-mz6krp.mp4",
+      "mediaType": "video",
+      "gradientTheme": "purple",
       "badge": "Sponsored Promotion",
       "ctaAction": "post_ad",
-      "gradientTheme": "emerald",
+      "id": "hero-ad-1790152022301",
+      "title": "Sell Your Vehicle or Property in 24 Hours",
+      "subtitle": "huta.lk",
+      "animationType": "pulse"
+    },
+    {
+      "title": "All services in one Place",
+      "ctaText": "Post Free Ad Now",
+      "badge": "Sponsored Promotion",
+      "subtitle": "Direct WhatsApp inquiries from thousands of buyers across all 25 districts with zero broker fees.",
+      "id": "hero-ad-1789640542565",
       "animationType": "slide",
       "createdAt": "2026-09-17T10:22:22.565Z",
       "highlightText": "with HUTA IN",
-      "ctaText": "Post Free Ad Now",
-      "subtitle": "Direct WhatsApp inquiries from thousands of buyers across all 25 districts with zero broker fees.",
-      "title": "All services in one Place",
-      "id": "hero-ad-1789640542565",
+      "ctaAction": "post_ad",
+      "gradientTheme": "emerald",
       "isActive": true
     },
     {
-      "isActive": true,
       "badge": "🌟 Exclusive Promotion",
-      "subtitle": "Direct WhatsApp inquiries from thousands of verified buyers across all 25 districts with zero broker fees.",
-      "highlightText": "with HUTA Turbo Ad",
-      "gradientTheme": "orange",
-      "animationType": "pulse",
       "createdAt": "2026-09-16T15:57:16.228Z",
+      "animationType": "pulse",
+      "isActive": true,
+      "title": "Sell Your Vehicle or Property in 24 Hours",
+      "highlightText": "with HUTA Turbo Ad",
       "ctaText": "Post Free Ad Now",
       "ctaAction": "post_ad",
-      "id": "hero-ad-1",
-      "title": "Sell Your Vehicle or Property in 24 Hours"
+      "subtitle": "Direct WhatsApp inquiries from thousands of verified buyers across all 25 districts with zero broker fees.",
+      "gradientTheme": "orange",
+      "id": "hero-ad-1"
     },
     {
-      "id": "hero-ad-2",
-      "title": "Discover Luxury Beachside Apartments & Land",
-      "gradientTheme": "blue",
-      "animationType": "slide",
       "highlightText": "in Colombo, Galle & Kandy",
-      "ctaText": "Explore Properties",
+      "id": "hero-ad-2",
       "ctaAction": "Property",
+      "isActive": true,
+      "gradientTheme": "blue",
+      "subtitle": "Explore 1,200+ verified listings with clear deeds, video walkthroughs, and direct developer contacts.",
       "badge": "🏢 Featured Developer",
       "createdAt": "2026-09-16T15:57:16.228Z",
-      "subtitle": "Explore 1,200+ verified listings with clear deeds, video walkthroughs, and direct developer contacts.",
-      "isActive": true
+      "title": "Discover Luxury Beachside Apartments & Land",
+      "animationType": "slide",
+      "ctaText": "Explore Properties"
     }
   ]
 }

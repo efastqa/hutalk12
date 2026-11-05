@@ -1,7 +1,14 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, signInAnonymously } from 'firebase/auth';
-import { initializeFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { initializeFirestore, doc, getDocFromServer, setLogLevel } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
+
+// Silence benign internal Firestore stream timeout / idle disconnect logs
+try {
+  setLogLevel('silent');
+} catch {
+  // ignore
+}
 
 const app = initializeApp(firebaseConfig);
 export const db = initializeFirestore(
@@ -41,8 +48,21 @@ export interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const msg = error instanceof Error ? error.message : String(error);
+
+  // Benign idle stream timeouts, cancellation, or stream closures should be handled gracefully
+  if (
+    msg.includes('Disconnecting idle stream') ||
+    msg.includes('CANCELLED') ||
+    msg.includes('cancelling stream') ||
+    msg.includes('idle stream') ||
+    (error && typeof error === 'object' && 'code' in error && (error as any).code === 'cancelled')
+  ) {
+    return;
+  }
+
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: msg,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -57,17 +77,22 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path,
   };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+
+  // Only throw exceptions for explicit mutating write operations where form submits expect a catch block
+  if (operationType === OperationType.CREATE || operationType === OperationType.UPDATE || operationType === OperationType.DELETE || operationType === OperationType.WRITE) {
+    console.error('Firestore Write Error: ', JSON.stringify(errInfo));
+    throw new Error(JSON.stringify(errInfo));
+  } else {
+    // For background reads/listeners, do not throw unhandled runtime exceptions
+    console.warn('Firestore Read Warning: ', msg);
+  }
 }
 
 export async function testConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error('Please check your Firebase configuration.');
-    }
+  } catch {
+    // Graceful offline or quota fallback without noisy console errors
   }
 }
 

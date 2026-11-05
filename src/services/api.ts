@@ -65,9 +65,10 @@ export const api = {
    * Subscribe to live real-time listing updates across all devices & deployments
    */
   subscribeToListings(callback: (listings: Listing[]) => void): () => void {
+    let fallbackTimer: ReturnType<typeof setInterval> | null = null;
     try {
       const colRef = collection(db, 'listings');
-      return onSnapshot(
+      const unsub = onSnapshot(
         colRef,
         (snapshot) => {
           const items: Listing[] = [];
@@ -78,11 +79,26 @@ export const api = {
           items.sort((a, b) => new Date(b.createdAt || b.date || 0).getTime() - new Date(a.createdAt || a.date || 0).getTime());
           callback(items);
         },
-        (err) => {
-          console.warn('Firestore real-time subscription error, using polling fallback:', err);
+        () => {
+          // Gracefully fall back to local REST API when Firestore stream disconnects or reaches quota
+          if (!fallbackTimer) {
+            api.getListings().then(callback).catch(() => {});
+            fallbackTimer = setInterval(() => {
+              api.getListings().then(callback).catch(() => {});
+            }, 30000);
+          }
         }
       );
+      return () => {
+        try {
+          unsub();
+        } catch {
+          // ignore
+        }
+        if (fallbackTimer) clearInterval(fallbackTimer);
+      };
     } catch {
+      api.getListings().then(callback).catch(() => {});
       return () => {};
     }
   },
@@ -2193,7 +2209,7 @@ For quick inquiries, call or send a message via WhatsApp!`;
   subscribeToVideoReels(callback: (reels: VideoReelItem[]) => void): () => void {
     try {
       const colRef = collection(db, 'video_reels');
-      return onSnapshot(
+      const unsub = onSnapshot(
         colRef,
         (snapshot) => {
           const items: VideoReelItem[] = [];
@@ -2208,11 +2224,20 @@ For quick inquiries, call or send a message via WhatsApp!`;
           }
           callback(items);
         },
-        (err) => {
-          console.warn('[VideoReels] Firestore real-time error:', err);
+        () => {
+          // Gracefully fall back to cached reels or REST call
+          api.getVideoReels().then(callback).catch(() => {});
         }
       );
+      return () => {
+        try {
+          unsub();
+        } catch {
+          // ignore
+        }
+      };
     } catch {
+      api.getVideoReels().then(callback).catch(() => {});
       return () => {};
     }
   },

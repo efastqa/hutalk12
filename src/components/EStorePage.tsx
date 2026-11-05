@@ -35,6 +35,7 @@ import {
   Copy,
   LayoutGrid,
   Grid3X3,
+  List,
   ArrowUpDown,
   ShieldAlert,
   Zap,
@@ -370,8 +371,8 @@ export const EStorePage: React.FC<EStorePageProps> = ({
   // Main view toggle: 'stores' or 'products'
   const [activeView, setActiveView] = useState<'stores' | 'products'>('stores');
 
-  // Medium Grid format (default, shows more shops at once as requested!) vs Spacious cards
-  const [gridDensity, setGridDensity] = useState<'medium' | 'spacious'>('medium');
+  // Grid density: 'compact' (2-column mobile), 'comfortable' (1-column high-legibility mobile), 'spacious' (detailed cards with previews)
+  const [gridDensity, setGridDensity] = useState<'compact' | 'comfortable' | 'spacious' | 'medium'>('compact');
 
   // Sorting: 'rating' | 'products' | 'newest' | 'name'
   const [sortBy, setSortBy] = useState<'rating' | 'products' | 'newest' | 'name'>('rating');
@@ -1031,28 +1032,28 @@ export const EStorePage: React.FC<EStorePageProps> = ({
             </div>
 
             {/* Mobile View Switcher */}
-            <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-black/40 border border-white/10 text-xs">
+            <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-black/40 border border-white/10 text-xs">
               <button
                 type="button"
                 onClick={() => setActiveView('stores')}
-                className={`py-2 rounded-lg font-bold transition-all cursor-pointer ${
+                className={`py-2 px-1 rounded-lg font-bold transition-all cursor-pointer text-center truncate ${
                   activeView === 'stores'
                     ? 'bg-emerald-500 text-white shadow-xs font-black'
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                Grocery Directory ({filteredStores.length})
+                Stores ({filteredStores.length})
               </button>
               <button
                 type="button"
                 onClick={() => setActiveView('products')}
-                className={`py-2 rounded-lg font-bold transition-all cursor-pointer ${
+                className={`py-2 px-1 rounded-lg font-bold transition-all cursor-pointer text-center truncate ${
                   activeView === 'products'
                     ? 'bg-emerald-500 text-white shadow-xs font-black'
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
-                All Products ({allFilteredProducts.length})
+                Products ({allFilteredProducts.length})
               </button>
             </div>
 
@@ -1109,8 +1110,39 @@ export const EStorePage: React.FC<EStorePageProps> = ({
             })}
           </div>
 
-          {/* Districts Bar */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {/* Mobile Quick District Selector Dropdown (Ideal for smaller screens) */}
+          <div className="sm:hidden flex items-center justify-between gap-2 pt-0.5">
+            <div className="flex items-center gap-1.5 flex-1 bg-white dark:bg-[#151822] px-3 py-2 rounded-xl border border-gray-200 dark:border-[#2D303E] text-xs font-bold text-gray-800 dark:text-gray-200 shadow-2xs">
+              <MapPin className="w-3.5 h-3.5 text-[#FF5A36] shrink-0" />
+              <span className="text-gray-400 font-medium text-[11px] shrink-0">District:</span>
+              <select
+                value={selectedDistrict}
+                onChange={(e) => setSelectedDistrict(e.target.value)}
+                className="bg-transparent text-xs text-gray-800 dark:text-gray-200 font-bold outline-none cursor-pointer border-none w-full"
+                aria-label="Filter stores by district"
+              >
+                {DISTRICTS.map((d) => (
+                  <option key={d} value={d} className="bg-white dark:bg-[#181920] text-gray-900 dark:text-white">
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {(selectedCategory !== 'All' || selectedDistrict !== 'All Sri Lanka' || searchQuery) && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="text-xs font-bold text-rose-500 hover:text-rose-600 bg-rose-50 dark:bg-rose-950/40 px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/40 shrink-0 cursor-pointer flex items-center gap-1 shadow-2xs"
+                title="Reset all filters"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
+            )}
+          </div>
+
+          {/* Districts Bar (Horizontal Scroll) */}
+          <div className="hidden sm:flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
             <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider shrink-0 flex items-center gap-1 mr-1">
               <MapPin className="w-3.5 h-3.5 text-[#FF5A36]" />
               <span>District:</span>
@@ -1188,30 +1220,30 @@ export const EStorePage: React.FC<EStorePageProps> = ({
             )}
 
             {/* Directory Toolbar: Density Toggle, Sort, Delivery Chips */}
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-[#151822] p-3 rounded-2xl border border-gray-200 dark:border-[#252836] shadow-xs">
-              {/* Left: Store Count & Delivery Quick Filters */}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 mr-1">
-                  Showing <span className="font-black text-gray-900 dark:text-white">{filteredStores.length}</span> shops
+            <div className="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-2.5 bg-white dark:bg-[#151822] p-2.5 sm:p-3 rounded-2xl border border-gray-200 dark:border-[#252836] shadow-xs">
+              {/* Row 1 / Left: Store Count & Delivery Quick Filters */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-none w-full md:w-auto">
+                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 shrink-0 mr-0.5">
+                  <span className="font-black text-gray-900 dark:text-white">{filteredStores.length}</span> shops
                 </span>
 
                 {/* Quick Trust / Delivery Filters */}
-                <div className="flex items-center gap-1.5 overflow-x-auto">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     type="button"
                     onClick={() => setDeliveryFilter('all')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                       deliveryFilter === 'all'
                         ? 'bg-emerald-600 text-white shadow-2xs'
                         : 'bg-gray-100 dark:bg-[#1E2230] text-gray-600 dark:text-gray-400 hover:bg-gray-200'
                     }`}
                   >
-                    All Shops
+                    All
                   </button>
                   <button
                     type="button"
                     onClick={() => setDeliveryFilter('cod')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
                       deliveryFilter === 'cod'
                         ? 'bg-emerald-600 text-white shadow-2xs'
                         : 'bg-gray-100 dark:bg-[#1E2230] text-gray-600 dark:text-gray-400 hover:bg-gray-200'
@@ -1219,23 +1251,23 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                     title="Stores offering Cash on Delivery"
                   >
                     <Truck className="w-3 h-3" />
-                    <span>Islandwide COD</span>
+                    <span>COD</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setDeliveryFilter('islandwide')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                       deliveryFilter === 'islandwide'
                         ? 'bg-emerald-600 text-white shadow-2xs'
                         : 'bg-gray-100 dark:bg-[#1E2230] text-gray-600 dark:text-gray-400 hover:bg-gray-200'
                     }`}
                   >
-                    Islandwide Delivery
+                    Islandwide
                   </button>
                   <button
                     type="button"
                     onClick={() => setDeliveryFilter('verified')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
                       deliveryFilter === 'verified'
                         ? 'bg-emerald-600 text-white shadow-2xs'
                         : 'bg-gray-100 dark:bg-[#1E2230] text-gray-600 dark:text-gray-400 hover:bg-gray-200'
@@ -1243,56 +1275,69 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                     title="Verified Sri Lankan online merchants only"
                   >
                     <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                    <span>Verified Only</span>
+                    <span>Verified</span>
                   </button>
                 </div>
               </div>
 
-              {/* Right: Sort and Grid Density Switcher */}
-              <div className="flex items-center gap-2.5 ml-auto">
+              {/* Row 2 / Right: Sort and Grid Density Switcher */}
+              <div className="flex items-center justify-between sm:justify-end gap-2 w-full md:w-auto pt-1 md:pt-0 border-t md:border-t-0 border-gray-100 dark:border-[#252836]">
                 {/* Sort dropdown */}
-                <div className="flex items-center gap-1.5 text-xs">
+                <div className="flex items-center gap-1 text-xs">
                   <ArrowUpDown className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
                     aria-label="Sort E-Stores by"
-                    className="bg-gray-100 dark:bg-[#1E2230] text-gray-800 dark:text-gray-200 font-bold px-2.5 py-1.5 rounded-xl border-none text-xs focus:ring-2 focus:ring-emerald-500 cursor-pointer outline-none"
+                    className="bg-gray-100 dark:bg-[#1E2230] text-gray-800 dark:text-gray-200 font-bold px-2 py-1.5 rounded-xl border-none text-xs focus:ring-2 focus:ring-emerald-500 cursor-pointer outline-none"
                   >
                     <option value="rating">Top Rated ⭐</option>
-                    <option value="products">Most Products 📦</option>
+                    <option value="products">Most Items 📦</option>
                     <option value="newest">Recently Added 🕒</option>
-                    <option value="name">Store Name (A-Z) 🔤</option>
+                    <option value="name">A to Z 🔤</option>
                   </select>
                 </div>
 
-                {/* Density Switcher: Medium Grid (Default) vs Spacious */}
+                {/* Density Switcher: 2-Col Grid vs 1-Col List vs Detailed Spacious */}
                 <div className="flex items-center p-0.5 rounded-xl bg-gray-100 dark:bg-[#1E2230] border border-gray-200 dark:border-[#2D303E]">
                   <button
                     type="button"
-                    onClick={() => setGridDensity('medium')}
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-xs font-bold ${
-                      gridDensity === 'medium'
+                    onClick={() => setGridDensity('compact')}
+                    className={`px-2 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-xs font-bold ${
+                      gridDensity === 'compact' || gridDensity === 'medium'
                         ? 'bg-white dark:bg-[#151822] text-emerald-600 dark:text-emerald-400 shadow-2xs'
                         : 'text-gray-500 hover:text-gray-800 dark:hover:text-white'
                     }`}
-                    title="Medium Grid View (More shops visible at once)"
+                    title="2-Column Grid View"
                   >
-                    <Grid3X3 className="w-4 h-4" />
-                    <span className="hidden sm:inline text-[11px]">Medium Grid</span>
+                    <Grid3X3 className="w-3.5 h-3.5" />
+                    <span className="text-[11px]">2-Col</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGridDensity('comfortable')}
+                    className={`px-2 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-xs font-bold ${
+                      gridDensity === 'comfortable'
+                        ? 'bg-white dark:bg-[#151822] text-emerald-600 dark:text-emerald-400 shadow-2xs'
+                        : 'text-gray-500 hover:text-gray-800 dark:hover:text-white'
+                    }`}
+                    title="1-Column View (Larger text & buttons for older phones)"
+                  >
+                    <List className="w-3.5 h-3.5" />
+                    <span className="text-[11px]">1-Col</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setGridDensity('spacious')}
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-xs font-bold ${
+                    className={`px-2 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-xs font-bold ${
                       gridDensity === 'spacious'
                         ? 'bg-white dark:bg-[#151822] text-emerald-600 dark:text-emerald-400 shadow-2xs'
                         : 'text-gray-500 hover:text-gray-800 dark:hover:text-white'
                     }`}
-                    title="Spacious Cards View (With product previews)"
+                    title="Detailed Spacious Cards"
                   >
-                    <LayoutGrid className="w-4 h-4" />
-                    <span className="hidden sm:inline text-[11px]">Spacious</span>
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    <span className="text-[11px] hidden xs:inline">Previews</span>
                   </button>
                 </div>
               </div>
@@ -1331,179 +1376,314 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                   </button>
                 </div>
               </div>
-            ) : gridDensity === 'medium' ? (
+            ) : gridDensity === 'comfortable' ? (
               /* ======================================================== */
-              /* FORMAT A: MEDIUM GRID VIEW (Visible more shops at once)   */
+              /* FORMAT A1: COMFORTABLE 1-COL LIST (Max Legibility)        */
+              /* Specially optimized for older/smaller smartphone screens */
               /* ======================================================== */
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
                 {filteredStores.map((store) => (
                   <motion.div
                     key={store.id}
                     layout
                     whileHover={{ y: -3 }}
                     transition={{ duration: 0.18 }}
-                    className="bg-white dark:bg-[#151822] rounded-2xl border border-gray-200 dark:border-[#252836] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
+                    className="bg-white dark:bg-[#151822] rounded-2xl sm:rounded-3xl border border-gray-200 dark:border-[#252836] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
                   >
                     <div>
-                      {/* Compact Store Banner */}
-                      <div className="relative h-24 sm:h-28 w-full overflow-hidden bg-gray-900">
+                      {/* Banner */}
+                      <div className="relative h-28 sm:h-36 w-full overflow-hidden bg-gray-900">
                         <img
-                          src={store.bannerImage || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80'}
+                          src={store.bannerImage || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=800&q=80'}
                           alt={store.storeName}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           loading="lazy"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
 
-                        {/* Top District & Category Badges */}
-                        <div className="absolute top-2 left-2 right-2 flex items-center justify-between text-[10px] z-10">
-                          <span className="px-2 py-0.5 rounded-lg bg-black/70 backdrop-blur-md text-white font-bold flex items-center gap-1 border border-white/10">
-                            <MapPin className="w-2.5 h-2.5 text-[#FF5A36]" />
-                            <span className="truncate max-w-[70px] sm:max-w-[100px]">{store.district}</span>
+                        {/* Top District & Category & Rating */}
+                        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between text-xs z-10">
+                          <span className="px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md text-white font-bold flex items-center gap-1 border border-white/10 text-[11px]">
+                            <MapPin className="w-3 h-3 text-[#FF5A36]" />
+                            <span>{store.district}</span>
                           </span>
-                          <span className="px-2 py-0.5 rounded-lg bg-emerald-600/90 backdrop-blur-md text-white font-bold truncate max-w-[85px] sm:max-w-[110px]">
-                            {store.category}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="px-2 py-0.5 rounded-lg bg-emerald-600/90 backdrop-blur-md text-white font-bold text-[10px]">
+                              {store.category}
+                            </span>
+                            <div className="flex items-center gap-1 bg-amber-400 text-gray-900 px-2 py-0.5 rounded-lg text-[10px] font-black shadow-xs">
+                              <Star className="w-2.5 h-2.5 fill-gray-900" />
+                              <span>{store.rating ? store.rating.toFixed(1) : '5.0'}</span>
+                            </div>
+                          </div>
                         </div>
 
-                        {/* Floating Store Logo */}
-                        <div className="absolute -bottom-3 left-3 z-10">
+                        {/* Store Logo floating */}
+                        <div className="absolute -bottom-3.5 left-4 z-10">
                           <img
                             src={store.logo}
                             alt={store.storeName}
-                            className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl object-cover border-2 border-white dark:border-[#151822] shadow-md bg-white"
+                            className="w-13 h-13 sm:w-15 sm:h-15 rounded-xl sm:rounded-2xl object-cover border-2 sm:border-3 border-white dark:border-[#151822] shadow-md bg-white"
                           />
                         </div>
                       </div>
 
-                      {/* Store Content */}
-                      <div className="pt-4 px-3 pb-2.5">
-                        <div className="flex items-start justify-between gap-1">
+                      {/* Store Information */}
+                      <div className="pt-5 px-4 pb-3">
+                        <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5">
                               <h3
                                 onClick={() => setSelectedStore(store)}
-                                className="font-extrabold text-xs sm:text-sm text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate cursor-pointer"
+                                className="font-black text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate cursor-pointer"
                                 title={store.storeName}
                               >
                                 {store.storeName}
                               </h3>
                               {store.isVerifiedMerchant && (
                                 <ShieldCheck
-                                  className="w-3.5 h-3.5 text-emerald-500 shrink-0"
+                                  className="w-4 h-4 text-emerald-500 shrink-0"
                                   title="Verified Sri Lankan Online Merchant"
                                 />
                               )}
                             </div>
-                            <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                              {store.tagline || store.category}
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5 font-medium">
+                              {store.tagline || `${store.category} • ${store.district}`}
                             </p>
                           </div>
-
-                          <div className="flex items-center gap-0.5 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-lg text-[10px] font-black shrink-0 border border-amber-200 dark:border-amber-800/40">
-                            <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-500" />
-                            <span>{store.rating ? store.rating.toFixed(1) : '5.0'}</span>
-                          </div>
                         </div>
 
-                        {/* Product Count & Delivery Tag */}
-                        <div className="mt-2 flex items-center justify-between text-[10px]">
-                          <span className="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-md border border-emerald-500/20 flex items-center gap-1">
-                            <ShoppingBag className="w-2.5 h-2.5 text-emerald-500" />
-                            <span>{store.products?.length || 0} items</span>
+                        {/* Delivery Info & Products Count */}
+                        <div className="mt-2.5 flex items-center justify-between text-xs">
+                          <span className="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-lg border border-emerald-500/20 flex items-center gap-1.5">
+                            <ShoppingBag className="w-3 h-3 text-emerald-500" />
+                            <span>{store.products?.length || 0} catalog items</span>
                           </span>
-                          <span className="text-gray-500 dark:text-gray-400 truncate max-w-[110px]">
-                            {store.deliveryInfo?.includes('COD') ? 'Cash on Delivery' : 'Islandwide Delivery'}
+                          <span className="text-gray-600 dark:text-gray-300 font-semibold flex items-center gap-1">
+                            <Truck className="w-3 h-3 text-teal-500" />
+                            <span className="truncate max-w-[140px]">{store.deliveryInfo?.includes('COD') ? 'Cash on Delivery' : 'Islandwide Delivery'}</span>
                           </span>
                         </div>
 
-                        <p className="text-[11px] text-gray-600 dark:text-gray-300 line-clamp-2 mt-1.5 leading-snug">
+                        <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 mt-2 leading-relaxed">
                           {store.description}
                         </p>
                       </div>
                     </div>
 
-                    {/* Bottom Area: Admin Toolbar + Action Buttons */}
+                    {/* Bottom Area: Large Touch Targets (44px) */}
                     <div>
-                      {/* Admin Quick Action Strip on Card */}
                       {hasAdminPrivileges && (
-                        <div className="px-2.5 py-1.5 bg-amber-500/10 dark:bg-amber-950/30 border-t border-amber-200/50 dark:border-amber-800/40 flex items-center justify-between gap-1">
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleVerifyMerchant(store)}
-                              className={`px-1.5 py-0.5 rounded text-[9px] font-black transition-all cursor-pointer ${
-                                store.isVerifiedMerchant
-                                  ? 'bg-emerald-600 text-white'
-                                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-emerald-500 hover:text-white'
-                              }`}
-                              title="Toggle merchant verification"
-                            >
-                              {store.isVerifiedMerchant ? 'Verified ✓' : 'Unverified'}
-                            </button>
-                          </div>
-
-                          <div className="flex items-center gap-1">
+                        <div className="px-3 py-1.5 bg-amber-500/10 dark:bg-amber-950/30 border-t border-amber-200/50 dark:border-amber-800/40 flex items-center justify-between text-xs font-bold">
+                          <span className="text-[10px] text-amber-700 dark:text-amber-300 font-black">Admin Controls</span>
+                          <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => handleOpenEditStore(store)}
-                              className="px-2 py-0.5 rounded-md bg-amber-500/20 hover:bg-amber-500 text-amber-800 dark:text-amber-200 hover:text-white transition-colors cursor-pointer text-[10px] font-bold flex items-center gap-0.5"
-                              title="Edit E-Store"
+                              className="text-amber-800 dark:text-amber-200 hover:underline flex items-center gap-1"
                             >
-                              <Pencil className="w-2.5 h-2.5" />
-                              <span>Edit</span>
+                              <Pencil className="w-3 h-3" /> Edit
                             </button>
                             <button
                               type="button"
                               onClick={() => setStoreToDelete(store)}
-                              className="px-2 py-0.5 rounded-md bg-red-500/20 hover:bg-red-600 text-red-700 dark:text-red-300 hover:text-white transition-colors cursor-pointer text-[10px] font-bold flex items-center gap-0.5"
-                              title="Delete E-Store"
+                              className="text-red-600 hover:underline flex items-center gap-1"
                             >
-                              <Trash2 className="w-2.5 h-2.5" />
-                              <span>Delete</span>
+                              <Trash2 className="w-3 h-3" /> Delete
                             </button>
                           </div>
                         </div>
                       )}
 
-                      {/* Client Action Buttons */}
-                      <div className="p-2 sm:p-2.5 border-t border-gray-100 dark:border-[#252836] bg-gray-50/60 dark:bg-[#181B26]/60 flex items-center justify-between gap-1">
+                      <div className="p-3 border-t border-gray-100 dark:border-[#252836] bg-gray-50/70 dark:bg-[#181B26]/70 flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => setSelectedStore(store)}
-                          className="flex-1 py-1.5 px-2 rounded-xl bg-[#111217] dark:bg-white text-white dark:text-[#111217] hover:bg-emerald-600 dark:hover:bg-emerald-400 font-extrabold text-[11px] text-center flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs"
+                          className="flex-1 min-h-[44px] py-2 px-3 rounded-xl bg-[#111217] dark:bg-white text-white dark:text-[#111217] hover:bg-emerald-600 font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-98"
                         >
-                          <Store className="w-3 h-3" />
-                          <span>Storefront</span>
+                          <Store className="w-4 h-4 shrink-0" />
+                          <span>View Store</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => handleWhatsAppOrder(store)}
-                          className="p-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white border border-emerald-500/30 transition-all cursor-pointer shrink-0"
-                          title="Chat / Inquire on WhatsApp"
+                          className="flex-1 min-h-[44px] py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-700 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-98"
+                          title="1-Click WhatsApp Order"
                         >
-                          <MessageCircle className="w-3.5 h-3.5" />
+                          <MessageCircle className="w-4 h-4 fill-white shrink-0" />
+                          <span>WhatsApp Order</span>
                         </button>
 
                         <a
                           href={store.websiteUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 rounded-xl bg-white dark:bg-[#222533] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2A2E3D] border border-gray-200 dark:border-[#2D303E] transition-all cursor-pointer shrink-0"
-                          title={`Visit ${store.storeName}'s official website`}
+                          className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl bg-white dark:bg-[#222533] text-gray-700 dark:text-gray-300 hover:bg-gray-100 border border-gray-200 dark:border-[#2D303E] flex items-center justify-center shrink-0 cursor-pointer shadow-2xs"
+                          title={`Visit official site`}
                         >
-                          <Globe className="w-3.5 h-3.5 text-blue-500" />
+                          <Globe className="w-4 h-4 text-blue-500" />
                         </a>
 
                         <button
                           type="button"
                           onClick={() => handleShareStore(store)}
-                          className="p-1.5 rounded-xl bg-white dark:bg-[#222533] text-gray-500 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-[#2D303E] transition-all cursor-pointer shrink-0"
-                          title="Copy direct link to store"
+                          className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl bg-white dark:bg-[#222533] text-gray-500 hover:text-gray-900 border border-gray-200 dark:border-[#2D303E] flex items-center justify-center shrink-0 cursor-pointer shadow-2xs"
+                          title="Share store"
                         >
-                          <Share2 className="w-3.5 h-3.5" />
+                          <Share2 className="w-4 h-4" />
                         </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : gridDensity === 'compact' || gridDensity === 'medium' ? (
+              /* ======================================================== */
+              /* FORMAT A2: COMPACT 2-COL GRID (Fine-tuned for 320-375px)  */
+              /* ======================================================== */
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3.5">
+                {filteredStores.map((store) => (
+                  <motion.div
+                    key={store.id}
+                    layout
+                    whileHover={{ y: -3 }}
+                    transition={{ duration: 0.18 }}
+                    className="bg-white dark:bg-[#151822] rounded-xl sm:rounded-2xl border border-gray-200 dark:border-[#252836] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
+                  >
+                    <div>
+                      {/* Compact Store Banner */}
+                      <div className="relative h-20 sm:h-26 w-full overflow-hidden bg-gray-950">
+                        <img
+                          src={store.bannerImage || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80'}
+                          alt={store.storeName}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+
+                        {/* Top Left District & Top Right Rating (Non-colliding) */}
+                        <div className="absolute top-1.5 left-1.5 right-1.5 flex items-center justify-between text-[10px] z-10">
+                          <span className="px-1.5 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-white font-bold flex items-center gap-0.5 border border-white/10 text-[9px] sm:text-[10px]">
+                            <MapPin className="w-2.5 h-2.5 text-[#FF5A36] shrink-0" />
+                            <span className="truncate max-w-[65px] sm:max-w-[90px]">{store.district}</span>
+                          </span>
+
+                          <div className="flex items-center gap-0.5 bg-amber-400 text-gray-900 px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black shadow-xs shrink-0">
+                            <Star className="w-2.5 h-2.5 fill-gray-900" />
+                            <span>{store.rating ? store.rating.toFixed(1) : '5.0'}</span>
+                          </div>
+                        </div>
+
+                        {/* Floating Store Logo */}
+                        <div className="absolute -bottom-2.5 left-2.5 z-10">
+                          <img
+                            src={store.logo}
+                            alt={store.storeName}
+                            className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl object-cover border-2 border-white dark:border-[#151822] shadow-md bg-white"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Store Content */}
+                      <div className="pt-3.5 px-2 sm:px-3 pb-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1">
+                            <h3
+                              onClick={() => setSelectedStore(store)}
+                              className="font-extrabold text-xs sm:text-sm text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate cursor-pointer leading-tight"
+                              title={store.storeName}
+                            >
+                              {store.storeName}
+                            </h3>
+                            {store.isVerifiedMerchant && (
+                              <ShieldCheck
+                                className="w-3 h-3 text-emerald-500 shrink-0"
+                                title="Verified Sri Lankan Online Merchant"
+                              />
+                            )}
+                          </div>
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate mt-0.5 font-medium">
+                            {store.category}
+                          </p>
+                        </div>
+
+                        {/* Product Count & Delivery Tag */}
+                        <div className="mt-1.5 flex items-center justify-between text-[10px] text-gray-600 dark:text-gray-300">
+                          <span className="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-1 py-0.2 rounded border border-emerald-500/20 text-[9px] sm:text-[10px] flex items-center gap-0.5 shrink-0">
+                            <ShoppingBag className="w-2.5 h-2.5 text-emerald-500" />
+                            <span>{store.products?.length || 0} items</span>
+                          </span>
+                          <span className="text-gray-500 dark:text-gray-400 truncate max-w-[80px] sm:max-w-none text-[9px] sm:text-[10px]">
+                            {store.deliveryInfo?.includes('COD') ? 'COD Avail.' : 'Islandwide'}
+                          </span>
+                        </div>
+
+                        <p className="text-[10px] sm:text-[11px] text-gray-600 dark:text-gray-300 line-clamp-2 mt-1 leading-snug">
+                          {store.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Bottom Area: Clean 3-Button Strip (No crowding) */}
+                    <div>
+                      {hasAdminPrivileges && (
+                        <div className="px-2 py-1 bg-amber-500/10 dark:bg-amber-950/30 border-t border-amber-200/50 dark:border-amber-800/40 flex items-center justify-between text-[9px] font-bold">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleVerifyMerchant(store)}
+                            className="text-amber-800 dark:text-amber-200 hover:underline"
+                          >
+                            {store.isVerifiedMerchant ? 'Verified ✓' : 'Verify'}
+                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditStore(store)}
+                              className="text-amber-800 dark:text-amber-200 hover:underline"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setStoreToDelete(store)}
+                              className="text-red-600 hover:underline"
+                            >
+                              Del
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action buttons: Storefront + WhatsApp Quick Order + Website */}
+                      <div className="p-1.5 sm:p-2 border-t border-gray-100 dark:border-[#252836] bg-gray-50/70 dark:bg-[#181B26]/70 flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedStore(store)}
+                          className="flex-1 min-h-[38px] py-1 px-1.5 rounded-lg sm:rounded-xl bg-[#111217] dark:bg-white text-white dark:text-[#111217] hover:bg-emerald-600 dark:hover:bg-emerald-400 font-extrabold text-[10px] sm:text-[11px] text-center flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs truncate"
+                        >
+                          <Store className="w-3 h-3 shrink-0" />
+                          <span className="truncate">Storefront</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleWhatsAppOrder(store)}
+                          className="min-h-[38px] min-w-[38px] px-2 rounded-lg sm:rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center shadow-2xs shrink-0 cursor-pointer transition-all active:scale-95"
+                          title="1-Click WhatsApp Order"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5 fill-white shrink-0" />
+                        </button>
+
+                        <a
+                          href={store.websiteUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="min-h-[38px] min-w-[32px] p-1.5 rounded-lg sm:rounded-xl bg-white dark:bg-[#222533] text-gray-700 dark:text-gray-300 hover:bg-gray-100 border border-gray-200 dark:border-[#2D303E] flex items-center justify-center shrink-0 cursor-pointer shadow-2xs"
+                          title={`Visit ${store.storeName}'s website`}
+                        >
+                          <Globe className="w-3.5 h-3.5 text-blue-500" />
+                        </a>
                       </div>
                     </div>
                   </motion.div>
@@ -1511,20 +1691,20 @@ export const EStorePage: React.FC<EStorePageProps> = ({
               </div>
             ) : (
               /* ======================================================== */
-              /* FORMAT B: SPACIOUS CARDS VIEW (Detailed with previews)   */
+              /* FORMAT C: DETAILED SPACIOUS CARDS (With product previews) */
               /* ======================================================== */
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {filteredStores.map((store) => (
                   <motion.div
                     key={store.id}
                     layout
                     whileHover={{ y: -4 }}
                     transition={{ duration: 0.2 }}
-                    className="bg-white dark:bg-[#151822] rounded-3xl border border-gray-200 dark:border-[#252836] overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between group"
+                    className="bg-white dark:bg-[#151822] rounded-2xl sm:rounded-3xl border border-gray-200 dark:border-[#252836] overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between group"
                   >
                     <div>
                       {/* Store Banner */}
-                      <div className="relative h-32 w-full overflow-hidden bg-gray-900">
+                      <div className="relative h-28 sm:h-36 w-full overflow-hidden bg-gray-900">
                         <img
                           src={store.bannerImage || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=800&q=80'}
                           alt={store.storeName}
@@ -1532,8 +1712,8 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
-                        {/* Top District & Category Badges + Admin Edit/Delete Actions */}
-                        <div className="absolute top-3 left-3 right-3 flex items-center justify-between text-[11px] z-10">
+                        {/* Top Badges */}
+                        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between text-[11px] z-10">
                           <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white font-bold flex items-center gap-1 border border-white/10">
                             <MapPin className="w-3 h-3 text-[#FF5A36]" />
                             {store.district}
@@ -1543,54 +1723,39 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                               {store.category}
                             </span>
                             {hasAdminPrivileges && (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenEditStore(store);
-                                  }}
-                                  className="px-2 py-1 rounded-lg bg-black/75 hover:bg-amber-500 text-white backdrop-blur-md border border-white/20 transition-all text-[11px] font-bold flex items-center gap-1 cursor-pointer shadow-xs"
-                                  title="Edit E-Store"
-                                >
-                                  <Pencil className="w-3 h-3 text-amber-300" />
-                                  <span className="hidden sm:inline">Edit</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setStoreToDelete(store);
-                                  }}
-                                  className="px-2 py-1 rounded-lg bg-black/75 hover:bg-red-600 text-white backdrop-blur-md border border-white/20 transition-all text-[11px] font-bold flex items-center gap-1 cursor-pointer shadow-xs"
-                                  title="Delete E-Store"
-                                >
-                                  <Trash2 className="w-3 h-3 text-red-300" />
-                                  <span className="hidden sm:inline">Delete</span>
-                                </button>
-                              </>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenEditStore(store);
+                                }}
+                                className="px-2 py-1 rounded-lg bg-black/75 hover:bg-amber-500 text-white backdrop-blur-md border border-white/20 transition-all text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                                title="Edit E-Store"
+                              >
+                                <Pencil className="w-3 h-3 text-amber-300" />
+                              </button>
                             )}
                           </div>
                         </div>
 
                         {/* Store Logo floating */}
-                        <div className="absolute -bottom-4 left-5">
+                        <div className="absolute -bottom-3.5 left-4">
                           <img
                             src={store.logo}
                             alt={store.storeName}
-                            className="w-16 h-16 rounded-2xl object-cover border-3 border-white dark:border-[#151822] shadow-md bg-white"
+                            className="w-13 h-13 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl object-cover border-2 sm:border-3 border-white dark:border-[#151822] shadow-md bg-white"
                           />
                         </div>
                       </div>
 
                       {/* Store Details Header */}
-                      <div className="pt-6 px-5 pb-3">
+                      <div className="pt-5 px-4 sm:px-5 pb-3">
                         <div className="flex items-start justify-between gap-2">
-                          <div>
+                          <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <h3
                                 onClick={() => setSelectedStore(store)}
-                                className="font-black text-lg text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors cursor-pointer"
+                                className="font-black text-base sm:text-lg text-gray-900 dark:text-white group-hover:text-emerald-600 transition-colors cursor-pointer truncate"
                               >
                                 {store.storeName}
                               </h3>
@@ -1602,11 +1767,11 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                               )}
                             </div>
                             <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">
-                              {store.tagline}
+                              {store.tagline || store.category}
                             </p>
                           </div>
 
-                          <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-xl text-xs font-black border border-amber-200 dark:border-amber-800/40">
+                          <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-xl text-xs font-black border border-amber-200 dark:border-amber-800/40 shrink-0">
                             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
                             <span>{store.rating ? store.rating.toFixed(1) : '5.0'}</span>
                           </div>
@@ -1617,13 +1782,13 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                         </p>
 
                         {/* Delivery policy pill */}
-                        <div className="mt-3 py-1.5 px-2.5 rounded-xl bg-gray-50 dark:bg-[#1E2230] border border-gray-100 dark:border-[#2D303E] flex items-center gap-2 text-[11px] text-gray-600 dark:text-gray-300">
+                        <div className="mt-2.5 py-1.5 px-2.5 rounded-xl bg-gray-50 dark:bg-[#1E2230] border border-gray-100 dark:border-[#2D303E] flex items-center gap-2 text-[11px] text-gray-600 dark:text-gray-300">
                           <Truck className="w-3.5 h-3.5 text-teal-500 shrink-0" />
                           <span className="truncate">{store.deliveryInfo}</span>
                         </div>
 
                         {/* Products Mini Grid */}
-                        <div className="mt-4 pt-3 border-t border-gray-100 dark:border-[#252836]">
+                        <div className="mt-3.5 pt-3 border-t border-gray-100 dark:border-[#252836]">
                           <div className="flex items-center justify-between text-xs mb-2">
                             <span className="font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1">
                               <ShoppingBag className="w-3.5 h-3.5 text-emerald-500" />
@@ -1648,7 +1813,7 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                                 <img
                                   src={prod.image}
                                   alt={prod.name}
-                                  className="w-full h-16 object-cover rounded-lg mb-1"
+                                  className="w-full h-14 sm:h-16 object-cover rounded-lg mb-1"
                                 />
                                 <p className="text-[10px] font-bold text-gray-800 dark:text-gray-200 truncate">
                                   {prod.name}
@@ -1663,15 +1828,36 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                       </div>
                     </div>
 
-                    {/* Bottom Actions Row */}
-                    <div className="p-4 pt-2 border-t border-gray-100 dark:border-[#252836] bg-gray-50/50 dark:bg-[#181B26]/50 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
+                    {/* Bottom Actions Row — Responsive Stack on Mobile */}
+                    <div className="p-3 sm:p-4 pt-2 border-t border-gray-100 dark:border-[#252836] bg-gray-50/50 dark:bg-[#181B26]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="grid grid-cols-2 sm:flex sm:items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedStore(store)}
+                          className="min-h-[42px] sm:min-h-0 py-2 px-3 rounded-xl bg-[#111217] dark:bg-white text-white dark:text-[#111217] hover:bg-[#FF5A36] text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1 shadow-xs"
+                        >
+                          <span>Storefront</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleWhatsAppOrder(store)}
+                          className="min-h-[42px] sm:min-h-0 py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1"
+                          title="Chat / Order on WhatsApp"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5 fill-white" />
+                          <span>WhatsApp</span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-start gap-2 pt-1 sm:pt-0">
                         <a
                           href={store.websiteUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-[#222533] hover:bg-gray-100 dark:hover:bg-[#2A2E3D] text-gray-800 dark:text-white text-xs font-bold border border-gray-200 dark:border-[#2D303E] transition-all cursor-pointer"
-                          title={`Visit ${store.storeName}'s official website`}
+                          className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-[#222533] hover:bg-gray-100 text-gray-800 dark:text-white text-xs font-bold border border-gray-200 dark:border-[#2D303E] transition-all cursor-pointer"
+                          title={`Visit official site`}
                         >
                           <Globe className="w-3.5 h-3.5 text-emerald-500" />
                           <span>Website</span>
@@ -1681,31 +1867,10 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                         <button
                           type="button"
                           onClick={() => handleShareStore(store)}
-                          className="p-2 rounded-xl bg-white dark:bg-[#222533] hover:bg-gray-100 dark:hover:bg-[#2A2E3D] text-gray-500 hover:text-gray-800 dark:hover:text-white border border-gray-200 dark:border-[#2D303E] transition-all cursor-pointer"
+                          className="p-2 rounded-xl bg-white dark:bg-[#222533] hover:bg-gray-100 text-gray-500 hover:text-gray-800 border border-gray-200 dark:border-[#2D303E] transition-all cursor-pointer"
                           title="Share store link"
                         >
                           <Share2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => handleWhatsAppOrder(store)}
-                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
-                          title="Chat / Order on WhatsApp"
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          <span>WhatsApp</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setSelectedStore(store)}
-                          className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-[#111217] dark:bg-white text-white dark:text-[#111217] hover:bg-[#FF5A36] dark:hover:bg-emerald-400 text-xs font-extrabold transition-all cursor-pointer"
-                        >
-                          <span>Storefront</span>
-                          <ChevronRight className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
@@ -1737,7 +1902,7 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 min-[340px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4.5">
                 {allFilteredProducts.map(({ product, store }) => {
                   const hasDiscount =
                     product.originalPrice && product.originalPrice > product.price;
@@ -1751,9 +1916,9 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                     <motion.div
                       key={product.id}
                       layout
-                      whileHover={{ y: -4 }}
-                      transition={{ duration: 0.2 }}
-                      className="bg-white dark:bg-[#151822] rounded-2xl border border-gray-200 dark:border-[#252836] overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between group"
+                      whileHover={{ y: -3 }}
+                      transition={{ duration: 0.18 }}
+                      className="bg-white dark:bg-[#151822] rounded-xl sm:rounded-2xl border border-gray-200 dark:border-[#252836] overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between group"
                     >
                       <div>
                         {/* Product Image */}
@@ -1762,18 +1927,19 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                             src={product.image}
                             alt={product.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
                           />
 
                           {/* Discount badge */}
                           {hasDiscount && (
-                            <span className="absolute top-2.5 left-2.5 bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-sm">
+                            <span className="absolute top-2 left-2 bg-rose-500 text-white text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded shadow-sm">
                               -{discountPercent}% OFF
                             </span>
                           )}
 
                           {/* In Stock Badge */}
                           <span
-                            className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm ${
+                            className={`absolute top-2 right-2 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm ${
                               product.inStock
                                 ? 'bg-emerald-600/90 text-white'
                                 : 'bg-gray-800/90 text-gray-300'
@@ -1784,11 +1950,11 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                         </div>
 
                         {/* Product Info */}
-                        <div className="p-3.5">
+                        <div className="p-2.5 sm:p-3.5">
                           {/* Store attribution */}
                           <div
                             onClick={() => setSelectedStore(store)}
-                            className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer mb-1 truncate"
+                            className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer mb-1 truncate"
                           >
                             <Store className="w-3 h-3 text-emerald-500 shrink-0" />
                             <span className="truncate">{store.storeName}</span>
@@ -1797,46 +1963,46 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                             )}
                           </div>
 
-                          <h4 className="font-bold text-sm text-gray-900 dark:text-white line-clamp-2 leading-snug group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                          <h4 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white line-clamp-2 leading-snug min-h-[2.2rem] group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                             {product.name}
                           </h4>
 
-                          <div className="mt-2 flex items-baseline gap-2">
-                            <span className="text-base font-black text-emerald-600 dark:text-emerald-400">
+                          <div className="mt-1.5 flex items-baseline gap-1.5 flex-wrap">
+                            <span className="text-xs sm:text-base font-black text-emerald-600 dark:text-emerald-400">
                               {formatLKR(product.price)}
                             </span>
                             {hasDiscount && (
-                              <span className="text-xs text-gray-400 line-through">
+                              <span className="text-[10px] sm:text-xs text-gray-400 line-through">
                                 {formatLKR(product.originalPrice!)}
                               </span>
                             )}
                           </div>
 
-                          <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 mt-1 leading-relaxed">
+                          <p className="text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 mt-1 leading-relaxed">
                             {product.description}
                           </p>
                         </div>
                       </div>
 
-                      {/* Buy CTAs */}
-                      <div className="p-3 pt-0 flex flex-col gap-1.5">
+                      {/* Buy CTAs (Clear and finger-friendly on mobile) */}
+                      <div className="p-2.5 sm:p-3 pt-0 flex flex-col gap-1.5">
                         <a
                           href={product.productUrl || store.websiteUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full py-2 px-3 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-emerald-600 dark:hover:bg-emerald-400 font-extrabold text-xs text-center flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                          className="w-full min-h-[36px] py-1.5 px-2 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-emerald-600 dark:hover:bg-emerald-400 font-extrabold text-[11px] sm:text-xs text-center flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs"
                         >
-                          <span>Buy on Store Website</span>
-                          <ExternalLink className="w-3 h-3" />
+                          <span>Visit Website</span>
+                          <ExternalLink className="w-3 h-3 shrink-0" />
                         </a>
 
                         <button
                           type="button"
                           onClick={() => openQuickOrder(store, product)}
-                          className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-500/25 transition-all cursor-pointer active:scale-98"
+                          className="w-full min-h-[36px] py-1.5 px-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-700 text-white font-extrabold text-[11px] sm:text-xs flex items-center justify-center gap-1 shadow-xs transition-all cursor-pointer active:scale-98"
                         >
-                          <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
-                          <span>1-Click WhatsApp Order</span>
+                          <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300 shrink-0" />
+                          <span>WhatsApp Order</span>
                         </button>
                       </div>
                     </motion.div>
@@ -2010,21 +2176,22 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                       </button>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 min-[340px]:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4">
                       {selectedStore.products.map((product) => (
                         <div
                           key={product.id}
-                          className="bg-white dark:bg-[#1E2230] rounded-2xl border border-gray-200 dark:border-[#2D303E] overflow-hidden p-3 flex flex-col justify-between shadow-2xs group"
+                          className="bg-white dark:bg-[#1E2230] rounded-xl sm:rounded-2xl border border-gray-200 dark:border-[#2D303E] overflow-hidden p-2.5 sm:p-3 flex flex-col justify-between shadow-2xs group"
                         >
                           <div>
-                            <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-2.5 bg-gray-100 dark:bg-gray-900">
+                            <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-2 bg-gray-100 dark:bg-gray-900">
                               <img
                                 src={product.image}
                                 alt={product.name}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                loading="lazy"
                               />
                               <span
-                                className={`absolute top-2 right-2 text-[9px] font-black px-1.5 py-0.5 rounded shadow-sm ${
+                                className={`absolute top-1.5 right-1.5 text-[9px] font-black px-1.5 py-0.5 rounded shadow-sm ${
                                   product.inStock ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-300'
                                 }`}
                               >
@@ -2038,19 +2205,19 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                             <p className="text-xs font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
                               {formatLKR(product.price)}
                             </p>
-                            <p className="text-[11px] text-gray-500 line-clamp-2 mt-1">
+                            <p className="text-[10px] sm:text-[11px] text-gray-500 line-clamp-2 mt-1">
                               {product.description}
                             </p>
                           </div>
 
-                          <div className="pt-2.5 mt-2 border-t border-gray-100 dark:border-[#2D303E] flex items-center justify-between gap-1.5">
+                          <div className="pt-2 mt-2 border-t border-gray-100 dark:border-[#2D303E] flex flex-col xs:flex-row items-stretch xs:items-center justify-between gap-1.5">
                             <a
                               href={product.productUrl || selectedStore.websiteUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-[11px] font-bold text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer"
+                              className="inline-flex items-center justify-center gap-1 min-h-[34px] text-[11px] font-bold text-gray-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer"
                             >
-                              <span>Buy on Website</span>
+                              <span>Website</span>
                               <ExternalLink className="w-3 h-3" />
                             </a>
 
@@ -2058,11 +2225,11 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                               <button
                                 type="button"
                                 onClick={() => openQuickOrder(selectedStore, product)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-extrabold shadow-2xs transition-all cursor-pointer"
+                                className="flex-1 xs:flex-none inline-flex items-center justify-center gap-1 min-h-[34px] px-2.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-extrabold shadow-2xs transition-all cursor-pointer"
                                 title="1-Click WhatsApp Order"
                               >
                                 <Zap className="w-3 h-3 fill-amber-300 text-amber-300" />
-                                <span>Quick Order</span>
+                                <span>Order</span>
                               </button>
 
                               <button

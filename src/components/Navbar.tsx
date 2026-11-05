@@ -64,9 +64,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header
       style={{
-        paddingTop: 'max(env(safe-area-inset-top, 0px), 0px)',
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 10px)',
       }}
-      className="sticky top-0 z-40 backdrop-blur-xl bg-white/90 dark:bg-[#0B0C10]/90 border-b border-gray-200/70 dark:border-white/10 text-gray-900 dark:text-white shadow-xs transition-all duration-300 supports-[backdrop-filter]:bg-white/85 supports-[backdrop-filter]:dark:bg-[#0B0C10]/85 safe-area-pt app-header-safe"
+      className="sticky top-0 z-40 backdrop-blur-xl bg-white/95 dark:bg-[#0B0C10]/95 border-b border-gray-200/70 dark:border-white/10 text-gray-900 dark:text-white shadow-xs transition-all duration-300 supports-[backdrop-filter]:bg-white/90 supports-[backdrop-filter]:dark:bg-[#0B0C10]/90"
     >
       {/* Main Brand & Actions Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-4">

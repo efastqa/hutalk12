@@ -82,8 +82,8 @@ export function subscribeUserConversations(
   );
 
   return () => {
-    unsubBuyer();
-    unsubSeller();
+    try { unsubBuyer(); } catch {}
+    try { unsubSeller(); } catch {}
   };
 }
 
@@ -101,25 +101,34 @@ export function subscribeMessages(
   }
 
   const messagesPath = `conversations/${conversationId}/messages`;
-  const messagesQuery = query(
-    collection(db, 'conversations', conversationId, 'messages'),
-    orderBy('createdAt', 'asc')
-  );
+  try {
+    const messagesQuery = query(
+      collection(db, 'conversations', conversationId, 'messages'),
+      orderBy('createdAt', 'asc')
+    );
 
-  return onSnapshot(
-    messagesQuery,
-    (snapshot) => {
-      const messages = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...(d.data() as Omit<ChatMessage, 'id'>),
-      }));
-      onUpdate(messages);
-    },
-    (err) => {
-      handleFirestoreError(err, OperationType.LIST, messagesPath);
-      if (onError) onError(err);
-    }
-  );
+    const unsub = onSnapshot(
+      messagesQuery,
+      (snapshot) => {
+        const messages = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<ChatMessage, 'id'>),
+        }));
+        onUpdate(messages);
+      },
+      (err) => {
+        handleFirestoreError(err, OperationType.LIST, messagesPath);
+        if (onError) onError(err);
+      }
+    );
+
+    return () => {
+      try { unsub(); } catch {}
+    };
+  } catch (e) {
+    if (onError) onError(e);
+    return () => {};
+  }
 }
 
 /**

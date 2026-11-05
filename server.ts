@@ -15,6 +15,41 @@ import {
 } from 'firebase/firestore';
 import firebaseConfig from './firebase-applet-config.json';
 
+// Prevent process exits from benign Firestore stream cancellations or network interruptions
+process.on('uncaughtException', (err: any) => {
+  const msg = err?.message || String(err);
+  if (
+    msg.includes('Disconnecting idle stream') ||
+    msg.includes('Timed out waiting for new targets') ||
+    msg.includes('CANCELLED') ||
+    msg.includes('cancelled') ||
+    msg.includes('GrpcConnection') ||
+    msg.includes('ECONNRESET') ||
+    msg.includes('EPIPE')
+  ) {
+    console.warn('[Server] Gracefully handled benign stream/network notice:', msg);
+    return;
+  }
+  console.error('[Server] Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason: any) => {
+  const msg = reason?.message || String(reason);
+  if (
+    msg.includes('Disconnecting idle stream') ||
+    msg.includes('Timed out waiting for new targets') ||
+    msg.includes('CANCELLED') ||
+    msg.includes('cancelled') ||
+    msg.includes('GrpcConnection') ||
+    msg.includes('ECONNRESET') ||
+    msg.includes('EPIPE')
+  ) {
+    console.warn('[Server] Gracefully handled benign stream/network rejection:', msg);
+    return;
+  }
+  console.error('[Server] Unhandled Rejection:', reason);
+});
+
 interface Listing {
   id: string;
   title: string;
@@ -148,7 +183,15 @@ interface HeroAdSettings {
   rotationIntervalSeconds: number;
 }
 
-const PORT = Number(process.env.PORT) || 3000;
+function resolvePort(): number {
+  const portArgIndex = process.argv.indexOf('--port');
+  if (portArgIndex !== -1 && process.argv[portArgIndex + 1]) {
+    const val = parseInt(process.argv[portArgIndex + 1], 10);
+    if (!isNaN(val) && val > 0) return val;
+  }
+  return Number(process.env.PORT) || 3000;
+}
+const PORT = resolvePort();
 const DATA_DIR = path.join(process.cwd(), 'data');
 const LISTINGS_FILE = path.join(DATA_DIR, 'listings.json');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -2803,8 +2846,16 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
   // -------------------------------------------------------------
   // Start HTTP Server immediately so dev server is ready without delay
   // -------------------------------------------------------------
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
+  });
+
+  server.on('error', (err: any) => {
+    if (err?.code === 'EADDRINUSE') {
+      console.warn(`[Server] Port ${PORT} currently busy, waiting or already bound.`);
+    } else {
+      console.error('[Server] Listen error:', err);
+    }
   });
 
   // -------------------------------------------------------------

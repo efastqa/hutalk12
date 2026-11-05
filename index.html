@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
     <script>
-      // Suppress benign [vite] HMR websocket notices in sandbox environment
+      // Suppress benign [vite] HMR websocket notices & idle Firestore stream cancellations in sandbox environment
       (function() {
-        function isViteHmr(item) {
+        function isBenignNotice(item) {
           if (!item) return false;
           var str = '';
           try {
@@ -21,7 +21,11 @@
             str.indexOf('WebSocket') !== -1 ||
             str.indexOf('ws://') !== -1 ||
             str.indexOf('wss://') !== -1 ||
-            str.indexOf('vite:ws') !== -1
+            str.indexOf('Disconnecting idle stream') !== -1 ||
+            str.indexOf('Timed out waiting for new targets') !== -1 ||
+            str.indexOf('GrpcConnection') !== -1 ||
+            str.indexOf('RpcException') !== -1 ||
+            (str.indexOf('@firebase/firestore') !== -1 && (str.indexOf('CANCELLED') !== -1 || str.indexOf('idle stream') !== -1))
           );
         }
 
@@ -29,7 +33,7 @@
           var orig = console[fn];
           console[fn] = function() {
             for (var i = 0; i < arguments.length; i++) {
-              if (isViteHmr(arguments[i])) {
+              if (isBenignNotice(arguments[i])) {
                 return;
               }
             }
@@ -38,7 +42,7 @@
         });
 
         window.addEventListener('error', function(e) {
-          if (isViteHmr(e.message) || isViteHmr(e.error) || (e.filename && e.filename.indexOf('vite') !== -1)) {
+          if (isBenignNotice(e.message) || isBenignNotice(e.error) || (e.filename && e.filename.indexOf('vite') !== -1)) {
             e.stopImmediatePropagation();
             e.preventDefault();
             return true;
@@ -46,7 +50,7 @@
         }, true);
 
         window.addEventListener('unhandledrejection', function(e) {
-          if (isViteHmr(e.reason)) {
+          if (isBenignNotice(e.reason)) {
             e.stopImmediatePropagation();
             e.preventDefault();
             return true;
