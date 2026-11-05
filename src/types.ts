@@ -351,4 +351,30 @@ export interface EStore {
   createdAt: string;
 }
 
+export type CourierSpeed = 'standard' | 'express' | 'pickup';
+
+export interface CartItem {
+  id: string;
+  storeId: string;
+  storeName: string;
+  storeWhatsapp: string;
+  storeDistrict: string;
+  storeLogo?: string;
+  storeIsVerified?: boolean;
+  product: EStoreProduct;
+  quantity: number;
+  addedAt: number;
+}
+
+export interface CourierCalculation {
+  courierFee: number;
+  isFreeDelivery: boolean;
+  freeDeliveryThreshold: number;
+  amountNeededForFree: number;
+  freeDeliveryProgressPercent: number;
+  tierName: string;
+  estimatedDays: string;
+  recommendedService: string;
+}
+
 

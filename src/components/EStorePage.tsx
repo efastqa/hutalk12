@@ -42,8 +42,9 @@ import {
   Send,
   CreditCard,
 } from 'lucide-react';
-import { EStore, EStoreProduct, User } from '../types';
+import { EStore, EStoreProduct, User, CartItem } from '../types';
 import { api } from '../services/api';
+import { EStoreSmartCart } from './EStoreSmartCart';
 
 // Image compression helper for fast client-side upload & data URL conversion
 async function compressImageFile(file: File, maxDim = 800, quality = 0.82): Promise<string> {
@@ -457,6 +458,82 @@ export const EStorePage: React.FC<EStorePageProps> = ({
   const [orderPaymentMethod, setOrderPaymentMethod] = useState<'cod' | 'bank'>('cod');
   const [orderCustomerNote, setOrderCustomerNote] = useState<string>('');
   const [orderCustomerName, setOrderCustomerName] = useState<string>('');
+
+  // Multi-Item WhatsApp Smart Cart State
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('huta_estore_smart_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isSmartCartOpen, setIsSmartCartOpen] = useState<boolean>(false);
+
+  // Sync cart with localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('huta_estore_smart_cart', JSON.stringify(cartItems));
+    } catch {}
+  }, [cartItems]);
+
+  // Cart operations
+  const handleAddToCart = (store: EStore, product: EStoreProduct, quantity = 1, openCart = false) => {
+    const itemId = `${store.id}_${product.id}`;
+    setCartItems((prev) => {
+      const existing = prev.find((it) => it.id === itemId);
+      if (existing) {
+        return prev.map((it) =>
+          it.id === itemId ? { ...it, quantity: it.quantity + quantity } : it
+        );
+      }
+      return [
+        ...prev,
+        {
+          id: itemId,
+          storeId: store.id,
+          storeName: store.storeName,
+          storeWhatsapp: store.whatsapp,
+          storeDistrict: store.district,
+          storeLogo: store.logo,
+          storeIsVerified: store.isVerifiedMerchant,
+          product,
+          quantity,
+          addedAt: Date.now(),
+        },
+      ];
+    });
+
+    onToast(`Added "${product.name}" to Smart Cart! 🛒`, 'success');
+    if (openCart) {
+      setIsSmartCartOpen(true);
+    }
+  };
+
+  const handleUpdateCartQuantity = (itemId: string, newQty: number) => {
+    if (newQty <= 0) {
+      handleRemoveCartItem(itemId);
+      return;
+    }
+    setCartItems((prev) =>
+      prev.map((it) => (it.id === itemId ? { ...it, quantity: newQty } : it))
+    );
+  };
+
+  const handleRemoveCartItem = (itemId: string) => {
+    setCartItems((prev) => prev.filter((it) => it.id !== itemId));
+    onToast('Item removed from cart', 'info');
+  };
+
+  const handleClearCart = (storeId?: string) => {
+    if (storeId) {
+      setCartItems((prev) => prev.filter((it) => it.storeId !== storeId));
+      onToast('Cleared store items from cart', 'info');
+    } else {
+      setCartItems([]);
+      onToast('Cart cleared', 'info');
+    }
+  };
 
   // Auto-open modal or store from URL (e.g. ?tab=estore#register or ?tab=estore&store=123)
   useEffect(() => {
@@ -1015,20 +1092,37 @@ export const EStorePage: React.FC<EStorePageProps> = ({
               <button
                 type="button"
                 onClick={onBackToMarketplace}
-                className="inline-flex items-center gap-1.5 text-xs text-gray-300 bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-xl border border-white/10 font-bold active:scale-95 transition-all cursor-pointer"
+                className="inline-flex items-center gap-1 text-xs text-gray-300 bg-white/10 hover:bg-white/15 px-2.5 py-1.5 rounded-xl border border-white/10 font-bold active:scale-95 transition-all cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Back to HUTA</span>
+                <span>Back</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => setIsRegisterModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-xs shadow-sm active:scale-95 transition-all cursor-pointer"
-              >
-                <PlusCircle className="w-3.5 h-3.5" />
-                <span>+ Register Store</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setIsSmartCartOpen(true)}
+                  className="relative inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 active:scale-95 transition-all cursor-pointer"
+                  title="Open Smart Shopping Cart"
+                >
+                  <ShoppingBag className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Cart</span>
+                  {cartItems.length > 0 && (
+                    <span className="bg-[#FF5A36] text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
+                      {cartItems.reduce((a, b) => a + b.quantity, 0)}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsRegisterModalOpen(true)}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-xs shadow-sm active:scale-95 transition-all cursor-pointer"
+                >
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  <span>+ Register Store</span>
+                </button>
+              </div>
             </div>
 
             {/* Mobile View Switcher */}
@@ -1984,26 +2078,51 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                         </div>
                       </div>
 
-                      {/* Buy CTAs (Clear and finger-friendly on mobile) */}
+                      {/* Multi-Item Smart Cart & Buy CTAs */}
                       <div className="p-2.5 sm:p-3 pt-0 flex flex-col gap-1.5">
-                        <a
-                          href={product.productUrl || store.websiteUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full min-h-[36px] py-1.5 px-2 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-emerald-600 dark:hover:bg-emerald-400 font-extrabold text-[11px] sm:text-xs text-center flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs"
-                        >
-                          <span>Visit Website</span>
-                          <ExternalLink className="w-3 h-3 shrink-0" />
-                        </a>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleAddToCart(store, product, 1, false)}
+                            className={`min-h-[36px] py-1.5 px-2 rounded-xl font-extrabold text-[11px] sm:text-xs flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer active:scale-98 ${
+                              cartItems.some((it) => it.id === `${store.id}_${product.id}`)
+                                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40'
+                                : 'bg-gray-100 hover:bg-gray-200 dark:bg-white/10 dark:hover:bg-white/15 text-gray-800 dark:text-gray-100'
+                            }`}
+                            title="Add to Smart Cart"
+                          >
+                            <ShoppingBag className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span>
+                              {cartItems.some((it) => it.id === `${store.id}_${product.id}`)
+                                ? `+ Add More (${
+                                    cartItems.find((it) => it.id === `${store.id}_${product.id}`)?.quantity
+                                  })`
+                                : '+ Cart'}
+                            </span>
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() => openQuickOrder(store, product)}
-                          className="w-full min-h-[36px] py-1.5 px-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-700 text-white font-extrabold text-[11px] sm:text-xs flex items-center justify-center gap-1 shadow-xs transition-all cursor-pointer active:scale-98"
-                        >
-                          <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300 shrink-0" />
-                          <span>WhatsApp Order</span>
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => handleAddToCart(store, product, 1, true)}
+                            className="min-h-[36px] py-1.5 px-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-700 text-white font-extrabold text-[11px] sm:text-xs flex items-center justify-center gap-1 shadow-xs transition-all cursor-pointer active:scale-98"
+                            title="Instant checkout with live courier calculator"
+                          >
+                            <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-300 shrink-0" />
+                            <span>Buy Now</span>
+                          </button>
+                        </div>
+
+                        {product.productUrl && (
+                          <a
+                            href={product.productUrl || store.websiteUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-1 text-center text-[10px] text-gray-500 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 font-semibold flex items-center justify-center gap-1 transition-colors"
+                          >
+                            <span>Visit Official Store</span>
+                            <ExternalLink className="w-2.5 h-2.5 shrink-0" />
+                          </a>
+                        )}
                       </div>
                     </motion.div>
                   );
@@ -2224,12 +2343,32 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                             <div className="flex items-center gap-1">
                               <button
                                 type="button"
-                                onClick={() => openQuickOrder(selectedStore, product)}
+                                onClick={() => handleAddToCart(selectedStore, product, 1, false)}
+                                className={`inline-flex items-center justify-center gap-1 min-h-[34px] px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold transition-all cursor-pointer ${
+                                  cartItems.some((it) => it.id === `${selectedStore.id}_${product.id}`)
+                                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40'
+                                    : 'bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 text-gray-800 dark:text-gray-100'
+                                }`}
+                                title="Add to Multi-Item Cart"
+                              >
+                                <ShoppingBag className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                                <span>
+                                  {cartItems.some((it) => it.id === `${selectedStore.id}_${product.id}`)
+                                    ? `+ (${
+                                        cartItems.find((it) => it.id === `${selectedStore.id}_${product.id}`)?.quantity
+                                      })`
+                                    : '+ Cart'}
+                                </span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleAddToCart(selectedStore, product, 1, true)}
                                 className="flex-1 xs:flex-none inline-flex items-center justify-center gap-1 min-h-[34px] px-2.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-extrabold shadow-2xs transition-all cursor-pointer"
-                                title="1-Click WhatsApp Order"
+                                title="Instant WhatsApp Checkout with Courier Calculator"
                               >
                                 <Zap className="w-3 h-3 fill-amber-300 text-amber-300" />
-                                <span>Order</span>
+                                <span>Buy Now</span>
                               </button>
 
                               <button
@@ -3220,6 +3359,21 @@ export const EStorePage: React.FC<EStorePageProps> = ({
           </div>
         )}
       </AnimatePresence>
+
+      {/* ------------------------------------------------------------- */}
+      {/* SMART CART & SRI LANKA COURIER FEE CALCULATOR DRAWER         */}
+      {/* ------------------------------------------------------------- */}
+      <EStoreSmartCart
+        cartItems={cartItems}
+        onUpdateQuantity={handleUpdateCartQuantity}
+        onRemoveItem={handleRemoveCartItem}
+        onClearCart={handleClearCart}
+        isOpen={isSmartCartOpen}
+        onClose={() => setIsSmartCartOpen(false)}
+        onOpen={() => setIsSmartCartOpen(true)}
+        currentUser={currentUser}
+        onToast={onToast}
+      />
     </div>
   );
 };
