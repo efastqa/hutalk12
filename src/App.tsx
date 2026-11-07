@@ -26,6 +26,7 @@ import { CompareFloatingBar } from './components/CompareFloatingBar';
 import { AppStoreModal } from './components/AppStoreModal';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { VideoReelsSection } from './components/VideoReelsSection';
+import { LegalPoliciesModal, PolicyTab } from './components/LegalPoliciesModal';
 import { testConnection } from './firebase';
 import { MapPin, Sparkles, PlusCircle, Calendar, ArrowRight, Star, Compass } from 'lucide-react';
 
@@ -136,6 +137,15 @@ export default function App() {
     }
   });
   const [isCompareModalOpen, setIsCompareModalOpen] = useState<boolean>(false);
+
+  // Legal Policies Modal State (Terms & Conditions, Privacy Policy, Cookie Policy)
+  const [policyModalOpen, setPolicyModalOpen] = useState<boolean>(false);
+  const [initialPolicyTab, setInitialPolicyTab] = useState<PolicyTab>('terms');
+
+  const handleOpenPolicy = (tab: PolicyTab = 'terms') => {
+    setInitialPolicyTab(tab);
+    setPolicyModalOpen(true);
+  };
 
   // Save comparison IDs to localStorage
   useEffect(() => {
@@ -1094,6 +1104,7 @@ export default function App() {
             onLogoutAdmin={handleLogoutAdmin}
             onBackToHome={() => setCurrentTab('marketplace')}
             onToast={showToast}
+            onOpenPolicy={handleOpenPolicy}
           />
         )}
 
@@ -1309,6 +1320,14 @@ export default function App() {
         onOpenAdminLogin={() => setIsAdminLoginOpen(true)}
         onOpenAppStore={() => setIsAppStoreOpen(true)}
         onSelectTab={setCurrentTab}
+        onOpenPolicy={handleOpenPolicy}
+      />
+
+      {/* Legal Policies Modal (Terms & Conditions, Privacy Policy, Cookie Policy) */}
+      <LegalPoliciesModal
+        isOpen={policyModalOpen}
+        initialTab={initialPolicyTab}
+        onClose={() => setPolicyModalOpen(false)}
       />
 
       {/* Google Play & App Store Modal */}

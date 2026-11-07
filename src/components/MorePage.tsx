@@ -45,6 +45,7 @@ interface MorePageProps {
   onLogoutAdmin: () => void;
   onBackToHome: () => void;
   onToast?: (msg: string, type?: 'success' | 'info' | 'error') => void;
+  onOpenPolicy?: (tab?: 'terms' | 'privacy' | 'cookies') => void;
 }
 
 export const MorePage: React.FC<MorePageProps> = ({
@@ -62,6 +63,7 @@ export const MorePage: React.FC<MorePageProps> = ({
   onLogoutAdmin,
   onBackToHome,
   onToast,
+  onOpenPolicy,
 }) => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0C10] text-[#181920] dark:text-[#F8FAFC] pb-32 animate-in fade-in duration-200 transition-colors duration-200">
@@ -640,13 +642,20 @@ export const MorePage: React.FC<MorePageProps> = ({
               <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
             </a>
 
-            <div className="px-5 py-4 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+            <button
+              type="button"
+              onClick={() => onOpenPolicy?.('terms')}
+              className="w-full px-5 py-4 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer text-left"
+            >
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-gray-400" />
-                <span>Terms of Service & Privacy Policy</span>
+                <span>Terms of Service, Privacy & Cookie Policy</span>
               </div>
-              <span className="text-[11px] text-gray-400 dark:text-gray-500">HUTA.LK v2.0</span>
-            </div>
+              <div className="flex items-center gap-1.5 text-gray-400">
+                <span className="text-[11px]">Draft v1.0</span>
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </button>
           </div>
         </section>
       </div>

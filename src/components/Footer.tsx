@@ -10,6 +10,7 @@ interface FooterProps {
   onOpenAppStore?: () => void;
   onSelectTab?: (tab: 'marketplace' | 'estore' | 'huta_in' | 'categories') => void;
   currentTab?: string;
+  onOpenPolicy?: (tab: 'terms' | 'privacy' | 'cookies') => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -20,6 +21,7 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenAppStore,
   onSelectTab,
   currentTab,
+  onOpenPolicy,
 }) => {
   const isEStore = currentTab === 'estore';
 
@@ -178,15 +180,34 @@ export const Footer: React.FC<FooterProps> = ({
           </div>
         </div>
 
-        {/* Bottom line */}
-        <div className="pt-4 sm:pt-5 flex flex-wrap items-center justify-between gap-3 text-[11px] text-gray-500 dark:text-gray-400">
-          <p>© {new Date().getFullYear()} HUTA.LK — Sri Lanka. All prices in Sri Lankan Rupees (LKR).</p>
+        {/* Policy Links Row matching user screenshot (Terms & Conditions, Privacy Policy, Cookie Policy) */}
+        <div className="pt-4 sm:pt-5 border-t border-gray-100 dark:border-[#2D2F39]/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-4 sm:gap-6 text-gray-500 dark:text-gray-400 font-medium flex-wrap justify-center sm:justify-start">
+            <button
+              type="button"
+              onClick={() => onOpenPolicy?.('terms')}
+              className="hover:text-[#FF5A36] dark:hover:text-white transition-colors cursor-pointer text-xs sm:text-sm"
+            >
+              Terms & Conditions
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenPolicy?.('privacy')}
+              className="hover:text-[#FF5A36] dark:hover:text-white transition-colors cursor-pointer text-xs sm:text-sm"
+            >
+              Privacy Policy
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenPolicy?.('cookies')}
+              className="hover:text-[#FF5A36] dark:hover:text-white transition-colors cursor-pointer text-xs sm:text-sm"
+            >
+              Cookie Policy
+            </button>
+          </div>
+
           <div className="flex items-center gap-3 flex-wrap">
             <ThemeToggle variant="segmented" id="footer-theme-toggle" />
-            <span className="hidden sm:inline text-gray-300 dark:text-gray-600">•</span>
-            <span className="hidden sm:inline">Fast & Secure Trading</span>
-            <span className="hidden sm:inline text-gray-300 dark:text-gray-600">•</span>
-            <span className="hidden md:inline">Gemini AI Assistant</span>
             <span className="text-gray-300 dark:text-gray-600">•</span>
             <button
               type="button"
@@ -199,6 +220,11 @@ export const Footer: React.FC<FooterProps> = ({
               <Lock className="w-3 h-3" />
             </button>
           </div>
+        </div>
+
+        {/* Copyright notice */}
+        <div className="pt-3 text-center sm:text-left text-[11px] text-gray-400 dark:text-gray-500">
+          <p>© {new Date().getFullYear()} HUTA.LK — Sri Lanka. All prices in Sri Lankan Rupees (LKR).</p>
         </div>
       </div>
     </footer>
