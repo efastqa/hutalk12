@@ -1297,6 +1297,7 @@ export default function App() {
 
       {/* Footer */}
       <Footer
+        currentTab={currentTab}
         onSelectCategory={(cat) => {
           handleSelectCategory(cat, undefined, true);
         }}

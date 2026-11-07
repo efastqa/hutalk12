@@ -9,6 +9,7 @@ interface FooterProps {
   onOpenAdminLogin: () => void;
   onOpenAppStore?: () => void;
   onSelectTab?: (tab: 'marketplace' | 'estore' | 'huta_in' | 'categories') => void;
+  currentTab?: string;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -18,11 +19,18 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenAdminLogin,
   onOpenAppStore,
   onSelectTab,
+  currentTab,
 }) => {
+  const isEStore = currentTab === 'estore';
+
   return (
     <footer className="bg-white dark:bg-[#111217] text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-[#2D2F39]/60 mt-10 sm:mt-12 pt-8 sm:pt-9 pb-6 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 pb-6 sm:pb-7 border-b border-gray-200 dark:border-[#2D2F39]/50">
+        <div
+          className={`grid grid-cols-1 md:grid-cols-2 ${
+            isEStore ? 'lg:grid-cols-3' : 'lg:grid-cols-5'
+          } gap-6 pb-6 sm:pb-7 border-b border-gray-200 dark:border-[#2D2F39]/50`}
+        >
           {/* Brand Info */}
           <div className="lg:col-span-2 space-y-3">
             <div className="flex items-center gap-2.5">
@@ -75,51 +83,55 @@ export const Footer: React.FC<FooterProps> = ({
             )}
           </div>
 
-          {/* Popular Categories */}
-          <div>
-            <h4 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2.5">
-              Top Categories
-            </h4>
-            <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
-              {['Vehicles', 'Electronics', 'Property', 'Motorcycles', 'Home & Garden'].map((cat) => (
-                <li key={cat}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onSelectCategory(cat);
-                      window.scrollTo({ top: 400, behavior: 'smooth' });
-                    }}
-                    className="hover:text-[#FF5A36] transition-colors cursor-pointer"
-                  >
-                    {cat} in Sri Lanka
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Popular Categories (Hidden on E-Store page) */}
+          {!isEStore && (
+            <div>
+              <h4 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2.5">
+                Top Categories
+              </h4>
+              <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
+                {['Vehicles', 'Electronics', 'Property', 'Motorcycles', 'Home & Garden'].map((cat) => (
+                  <li key={cat}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSelectCategory(cat);
+                        window.scrollTo({ top: 400, behavior: 'smooth' });
+                      }}
+                      className="hover:text-[#FF5A36] transition-colors cursor-pointer"
+                    >
+                      {cat} in Sri Lanka
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-          {/* Top Districts */}
-          <div>
-            <h4 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2.5">
-              Key Locations
-            </h4>
-            <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
-              {['Colombo', 'Gampaha', 'Kandy', 'Galle', 'Kurunegala'].map((loc) => (
-                <li key={loc}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onSelectLocation(loc);
-                      window.scrollTo({ top: 400, behavior: 'smooth' });
-                    }}
-                    className="hover:text-[#FF5A36] transition-colors cursor-pointer"
-                  >
-                    Ads in {loc}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Top Districts (Hidden on E-Store page) */}
+          {!isEStore && (
+            <div>
+              <h4 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2.5">
+                Key Locations
+              </h4>
+              <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
+                {['Colombo', 'Gampaha', 'Kandy', 'Galle', 'Kurunegala'].map((loc) => (
+                  <li key={loc}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSelectLocation(loc);
+                        window.scrollTo({ top: 400, behavior: 'smooth' });
+                      }}
+                      className="hover:text-[#FF5A36] transition-colors cursor-pointer"
+                    >
+                      Ads in {loc}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Safety & Support */}
           <div>
