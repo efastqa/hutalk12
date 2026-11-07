@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
   Search,
@@ -84,6 +84,38 @@ const POPULAR_SEARCHES = [
   'Living Room Sofa',
 ];
 
+export interface LightBackgroundItem {
+  id: string;
+  name: string;
+  tag: string;
+  imageUrl: string;
+  badgeText: string;
+}
+
+export const DEFAULT_LIGHT_BACKGROUNDS: LightBackgroundItem[] = [
+  {
+    id: 'vehicles_motors',
+    name: 'Vehicles & Motors',
+    tag: 'Automotive & Motors',
+    imageUrl: '/assets/hero_light_bg.jpg',
+    badgeText: 'Vehicles & Motors 🚗',
+  },
+  {
+    id: 'electronics',
+    name: 'Electronics',
+    tag: 'Electronics & Tech',
+    imageUrl: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&w=1920&q=85',
+    badgeText: 'Electronics & Gadgets 💻',
+  },
+  {
+    id: 'marketplace_estores',
+    name: 'E-Stores & Retail',
+    tag: 'Lifestyle & Marketplace',
+    imageUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&q=85',
+    badgeText: 'E-Stores & Products 🛍️',
+  },
+];
+
 export const HeroSearch: React.FC<HeroSearchProps> = ({
   searchTerm,
   onSearchChange,
@@ -103,6 +135,30 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   isAdminLoggedIn,
   onAdminManage,
 }) => {
+  // 3 Changing Background Light Images state
+  const [activeBgIndex, setActiveBgIndex] = useState<number>(0);
+  const [isAutoRotatePaused, setIsAutoRotatePaused] = useState<boolean>(false);
+
+  // Auto-rotate backgrounds every 7 seconds
+  useEffect(() => {
+    if (isAutoRotatePaused) return;
+    const interval = setInterval(() => {
+      setActiveBgIndex((prev) => (prev + 1) % DEFAULT_LIGHT_BACKGROUNDS.length);
+    }, 7000);
+    return () => clearInterval(interval);
+  }, [isAutoRotatePaused]);
+
+  // Sync background theme with search category tab
+  useEffect(() => {
+    if (selectedCategory === 'Vehicles') {
+      setActiveBgIndex(0);
+    } else if (selectedCategory === 'Electronics') {
+      setActiveBgIndex(1);
+    } else if (selectedCategory === 'Property' || selectedCategory === 'Services') {
+      setActiveBgIndex(2);
+    }
+  }, [selectedCategory]);
+
   const handleTabClick = (catId: string) => {
     if (onSelectCategory) {
       onSelectCategory(catId);
@@ -119,57 +175,74 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   };
 
   return (
-    <section className="relative bg-gradient-to-b from-white via-white to-[#F8FAFC]/50 dark:from-[#0B0C10] dark:via-[#111217] dark:to-[#0B0C10] text-[#181920] dark:text-white py-8 sm:py-14 px-4 sm:px-6 lg:px-8 border-b border-gray-200/70 dark:border-white/10 overflow-hidden w-full max-w-full contain-paint transition-colors duration-200">
-      {/* Mobile Responsive Layout: Left flank (Vehicles & Tech) + Right flank (Villas & Palm Trees) */}
-      <div className="md:hidden absolute inset-0 pointer-events-none overflow-hidden select-none">
-        {/* Soft atmospheric base sky */}
-        <div className="absolute inset-0 opacity-40 dark:opacity-10">
-          <img
-            src="/assets/hero_light_bg.jpg"
-            alt=""
-            className="w-full h-full object-cover object-top"
-          />
-        </div>
+    <section
+      onMouseEnter={() => setIsAutoRotatePaused(true)}
+      onMouseLeave={() => setIsAutoRotatePaused(false)}
+      className="relative bg-gradient-to-b from-white via-white to-[#F8FAFC]/50 dark:from-[#0B0C10] dark:via-[#111217] dark:to-[#0B0C10] text-[#181920] dark:text-white py-8 sm:py-14 px-4 sm:px-6 lg:px-8 border-b border-gray-200/70 dark:border-white/10 overflow-hidden w-full max-w-full contain-paint transition-colors duration-200"
+    >
+      {/* 3 Changing Background Light Images with Smooth Cross-Fade Transitions */}
+      {DEFAULT_LIGHT_BACKGROUNDS.map((bg, index) => {
+        const isCurrent = index === activeBgIndex;
+        return (
+          <div
+            key={bg.id}
+            className={`absolute inset-0 pointer-events-none transition-opacity duration-1000 ease-in-out ${
+              isCurrent ? 'opacity-100 z-0' : 'opacity-0 -z-10'
+            }`}
+          >
+            {/* Mobile Responsive Layout: Left flank (Vehicles/Tech) + Right flank (Villas/Palm Trees) */}
+            <div className="md:hidden absolute inset-0 pointer-events-none overflow-hidden select-none">
+              {/* Soft atmospheric base sky */}
+              <div className="absolute inset-0 opacity-40 dark:opacity-10">
+                <img
+                  src={bg.imageUrl}
+                  alt=""
+                  className="w-full h-full object-cover object-top"
+                />
+              </div>
 
-        {/* Left Flank: Luxury Vehicle, Motors & Electronics */}
-        <div className="absolute -left-2 top-0 bottom-0 w-[62%] max-w-[280px] pointer-events-none overflow-hidden opacity-90 dark:opacity-30">
-          <img
-            src="/assets/hero_light_bg.jpg"
-            alt=""
-            className="w-full h-full object-cover object-left filter saturate-110 contrast-105"
-          />
-          {/* Smooth blend to center and bottom so text stays ultra-readable */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-white dark:via-[#0B0C10]/40 dark:to-[#0B0C10]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-white/10 dark:from-[#0B0C10]/90 dark:to-transparent" />
-        </div>
+              {/* Left Flank */}
+              <div className="absolute -left-2 top-0 bottom-0 w-[62%] max-w-[280px] pointer-events-none overflow-hidden opacity-90 dark:opacity-30">
+                <img
+                  src={bg.imageUrl}
+                  alt=""
+                  className="w-full h-full object-cover object-left filter saturate-110 contrast-105"
+                />
+                {/* Smooth blend to center and bottom so text stays ultra-readable */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-white dark:via-[#0B0C10]/40 dark:to-[#0B0C10]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-white/10 dark:from-[#0B0C10]/90 dark:to-transparent" />
+              </div>
 
-        {/* Right Flank: Modern Villa, Palm Trees & Real Estate */}
-        <div className="absolute -right-2 top-0 bottom-0 w-[62%] max-w-[280px] pointer-events-none overflow-hidden opacity-90 dark:opacity-30">
-          <img
-            src="/assets/hero_light_bg.jpg"
-            alt=""
-            className="w-full h-full object-cover object-right filter saturate-110 contrast-105"
-          />
-          {/* Smooth blend to center and bottom so text stays ultra-readable */}
-          <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/20 to-white dark:via-[#0B0C10]/40 dark:to-[#0B0C10]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-white/10 dark:from-[#0B0C10]/90 dark:to-transparent" />
-        </div>
+              {/* Right Flank */}
+              <div className="absolute -right-2 top-0 bottom-0 w-[62%] max-w-[280px] pointer-events-none overflow-hidden opacity-90 dark:opacity-30">
+                <img
+                  src={bg.imageUrl}
+                  alt=""
+                  className="w-full h-full object-cover object-right filter saturate-110 contrast-105"
+                />
+                {/* Smooth blend to center and bottom so text stays ultra-readable */}
+                <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/20 to-white dark:via-[#0B0C10]/40 dark:to-[#0B0C10]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-white/10 dark:from-[#0B0C10]/90 dark:to-transparent" />
+              </div>
 
-        {/* Center Text Readability Gradient Mask */}
-        <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/35 to-transparent dark:from-[#0B0C10] dark:via-[#0B0C10]/70 dark:to-transparent" />
-      </div>
+              {/* Center Text Readability Gradient Mask */}
+              <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/35 to-transparent dark:from-[#0B0C10] dark:via-[#0B0C10]/70 dark:to-transparent" />
+            </div>
 
-      {/* Desktop / Tablet Unified Wide Visual (Full 16:9 Panorama) */}
-      <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden select-none opacity-90 dark:opacity-20 transition-opacity duration-500">
-        <img
-          src="/assets/hero_light_bg.jpg"
-          alt="HUTA Sri Lanka Marketplace"
-          className="w-full h-full object-cover object-center filter saturate-105"
-        />
-        {/* Multi-directional soft gradients ensuring center text and search card remain 100% crisp & readable */}
-        <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/40 to-white/30 dark:from-[#0B0C10] dark:via-[#0B0C10]/85 dark:to-[#0B0C10]/70" />
-        <div className="absolute inset-0 bg-gradient-to-r from-white/15 via-white/50 to-white/15 dark:from-[#0B0C10]/30 dark:via-[#0B0C10]/75 dark:to-[#0B0C10]/30" />
-      </div>
+            {/* Desktop / Tablet Unified Wide Visual (Full 16:9 Panorama) */}
+            <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden select-none opacity-90 dark:opacity-20 transition-opacity duration-500">
+              <img
+                src={bg.imageUrl}
+                alt={bg.name}
+                className="w-full h-full object-cover object-center filter saturate-105"
+              />
+              {/* Multi-directional soft gradients ensuring center text and search card remain 100% crisp & readable */}
+              <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/40 to-white/30 dark:from-[#0B0C10] dark:via-[#0B0C10]/85 dark:to-[#0B0C10]/70" />
+              <div className="absolute inset-0 bg-gradient-to-r from-white/15 via-white/50 to-white/15 dark:from-[#0B0C10]/30 dark:via-[#0B0C10]/75 dark:to-[#0B0C10]/30" />
+            </div>
+          </div>
+        );
+      })}
 
       {/* Ambient background glows for luxurious depth */}
       <motion.div
