@@ -103,6 +103,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
   const [authSecurityQuestion, setAuthSecurityQuestion] = useState('pet');
   const [authSecurityAnswer, setAuthSecurityAnswer] = useState('');
   const [isAuthSubmitting, setIsAuthSubmitting] = useState(false);
+  const [showAuthPassword, setShowAuthPassword] = useState(false);
 
   // When targetListingForEdit changes, focus OTP on the ad's contact phone
   useEffect(() => {
@@ -429,31 +430,6 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
       onToast(err.message || 'Failed to resend 2FA code', 'error');
     } finally {
       setIsUserResending2FA(false);
-    }
-  };
-
-  const handleQuickDemoLogin = async () => {
-    setIsAuthSubmitting(true);
-    try {
-      const res = await api.userLogin('demo', 'password123');
-      if ('twoFactorRequired' in res && res.twoFactorRequired) {
-        setUser2FAChallenge(res);
-        setIsUser2FARequired(true);
-        setUser2FACode(res.devOtp || '');
-        return;
-      }
-      const user = res as User;
-      onUserAuthSuccess(user);
-      onCloseUserAuth();
-      if (targetListingForEdit && onTargetListingVerified) {
-        onTargetListingVerified(targetListingForEdit);
-      }
-      onToast(`Logged in as ${user.fullname || user.username}!`, 'success');
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Demo login failed';
-      onToast(msg, 'error');
-    } finally {
-      setIsAuthSubmitting(false);
     }
   };
 
@@ -1021,31 +997,29 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
             ) : (
               <>
                 {/* Login Mode Method Selector Tabs (Only in Login Mode) */}
-                {isLoginMode && (
-                  <div className="space-y-3 mt-4">
-                    {/* 1-Click Demo Testing Card */}
-                    {!targetListingForEdit && (
-                      <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/70 rounded-2xl flex items-center justify-between gap-2.5">
-                        <div>
-                          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-950">
-                            <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                            <span>Instant Demo Account</span>
-                          </div>
-                          <p className="text-[11px] text-amber-800 mt-0.5">
-                            User: <code className="font-mono font-bold bg-amber-100/80 px-1 py-0.5 rounded text-amber-900">demo</code> &bull; Pass: <code className="font-mono font-bold bg-amber-100/80 px-1 py-0.5 rounded text-amber-900">password123</code>
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          disabled={isAuthSubmitting}
-                          onClick={handleQuickDemoLogin}
-                          className="px-3 py-1.5 bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold rounded-xl text-xs shadow-xs transition-all shrink-0 cursor-pointer disabled:opacity-50"
-                        >
-                          {isAuthSubmitting ? <Loader2 className="w-3 h-3 animate-spin" /> : '1-Click Login'}
-                        </button>
+                {/* Customer Account Security & Privacy Guarantee */}
+                {isLoginMode && !targetListingForEdit && (
+                  <div className="mt-4 p-3 bg-gradient-to-r from-emerald-50/90 via-teal-50/70 to-emerald-50/90 border border-emerald-200/80 rounded-2xl flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <div className="text-left flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-emerald-950">Private Customer Account</span>
+                        <span className="text-[9px] bg-emerald-200/80 text-emerald-900 font-extrabold px-1.5 py-0.2 rounded-full uppercase tracking-wider">
+                          Protected
+                        </span>
                       </div>
-                    )}
+                      <p className="text-[11px] text-emerald-800 leading-tight mt-0.5">
+                        Each customer has a personal private account. Only you can manage or edit your advertisements.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
+                {/* Login Mode Method Selector Tabs (Only in Login Mode) */}
+                {isLoginMode && (
+                  <div className="mt-3">
                     <div className="grid grid-cols-2 p-1 bg-gray-100 rounded-xl">
                       <button
                         type="button"
@@ -1072,7 +1046,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                         }`}
                       >
                         <UserIcon className="w-3.5 h-3.5 text-blue-600" />
-                        <span>User ID / Pass</span>
+                        <span>User ID / Password</span>
                       </button>
                     </div>
                   </div>
@@ -1309,7 +1283,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      Password <span className="text-[#FF5A36]">*</span>
+                      {isLoginMode ? 'Your Private Password' : 'Password'} <span className="text-[#FF5A36]">*</span>
                     </label>
                     {isLoginMode && (
                       <button
@@ -1321,14 +1295,28 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                       </button>
                     )}
                   </div>
-                  <input
-                    type="password"
-                    required
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    placeholder="Minimum 6 characters"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showAuthPassword ? 'text' : 'password'}
+                      required
+                      value={authPassword}
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      placeholder={isLoginMode ? 'Enter your private password' : 'Minimum 6 characters'}
+                      className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAuthPassword(!showAuthPassword)}
+                      className="absolute right-3 top-2.5 p-0.5 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
+                      title={showAuthPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showAuthPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {/* If Register: Security Question */}

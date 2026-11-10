@@ -1217,32 +1217,7 @@ export const api = {
       if (e.message && (e.message.includes('2FA') || e.message.includes('Invalid'))) throw e;
     }
 
-    // 3. Fallback demo accounts for instant guaranteed testing
-    if (cleanId === 'demo' && (password === 'password123' || password === 'demo123')) {
-      const demoUser: User = {
-        id: 'user_demo',
-        username: 'demo',
-        fullname: 'Demo Member',
-        email: 'demo@huta.lk',
-        phone: '0771234567',
-        created: new Date().toISOString(),
-      };
-      localStorage.setItem('huta_user', JSON.stringify(demoUser));
-      return demoUser;
-    }
 
-    if (cleanId === 'seller' && (password === 'password123' || password === 'seller123')) {
-      const sellerUser: User = {
-        id: 'user_seller',
-        username: 'seller',
-        fullname: 'Kasun Fernando (Verified Seller)',
-        email: 'seller@huta.lk',
-        phone: '0719876543',
-        created: new Date().toISOString(),
-      };
-      localStorage.setItem('huta_user', JSON.stringify(sellerUser));
-      return sellerUser;
-    }
 
     if ((cleanId === 'efastqa' || cleanId === 'efastqa@gmail.com') && password === activeAdminPass) {
       const ownerUser: User = {

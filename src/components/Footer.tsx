@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShieldCheck, MapPin, PhoneCall, HelpCircle, Heart, Lock, Smartphone } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
+import { PolicyTab } from './LegalPoliciesModal';
 
 interface FooterProps {
   onSelectCategory: (cat: string) => void;
@@ -10,7 +11,7 @@ interface FooterProps {
   onOpenAppStore?: () => void;
   onSelectTab?: (tab: 'marketplace' | 'estore' | 'huta_in' | 'categories') => void;
   currentTab?: string;
-  onOpenPolicy?: (tab: 'terms' | 'privacy' | 'cookies') => void;
+  onOpenPolicy?: (tab: PolicyTab) => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -275,27 +276,42 @@ export const Footer: React.FC<FooterProps> = ({
 
         {/* Policy Links Row matching user screenshot (Terms & Conditions, Privacy Policy, Cookie Policy) */}
         <div className="pt-4 sm:pt-5 border-t border-gray-100 dark:border-[#2D2F39]/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-4 sm:gap-6 text-gray-500 dark:text-gray-400 font-medium flex-wrap justify-center sm:justify-start">
+          <div className="flex items-center gap-3 sm:gap-5 text-gray-500 dark:text-gray-400 font-medium flex-wrap justify-center sm:justify-start">
             <button
               type="button"
               onClick={() => onOpenPolicy?.('terms')}
-              className="hover:text-[#FF5A36] dark:hover:text-white transition-colors cursor-pointer text-xs sm:text-sm"
+              className="hover:text-[#FF5A36] dark:hover:text-white transition-colors cursor-pointer text-xs sm:text-sm font-semibold"
             >
               Terms & Conditions
             </button>
             <button
               type="button"
               onClick={() => onOpenPolicy?.('privacy')}
-              className="hover:text-[#FF5A36] dark:hover:text-white transition-colors cursor-pointer text-xs sm:text-sm"
+              className="hover:text-[#FF5A36] dark:hover:text-white transition-colors cursor-pointer text-xs sm:text-sm font-semibold"
             >
               Privacy Policy
             </button>
             <button
               type="button"
               onClick={() => onOpenPolicy?.('cookies')}
-              className="hover:text-[#FF5A36] dark:hover:text-white transition-colors cursor-pointer text-xs sm:text-sm"
+              className="hover:text-[#FF5A36] dark:hover:text-white transition-colors cursor-pointer text-xs sm:text-sm font-semibold"
             >
               Cookie Policy
+            </button>
+            <span className="hidden md:inline text-gray-300 dark:text-gray-600">•</span>
+            <button
+              type="button"
+              onClick={() => onOpenPolicy?.('compliance')}
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer text-xs sm:text-sm flex items-center gap-1"
+            >
+              <span>🇱🇰 Sri Lankan Acts & Compliance</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenPolicy?.('prohibited')}
+              className="hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer text-xs sm:text-sm"
+            >
+              Prohibited Items & Safety
             </button>
           </div>
 
