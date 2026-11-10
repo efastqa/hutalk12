@@ -99,6 +99,7 @@ export default function App() {
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('newest');
+  const [verifiedOnly, setVerifiedOnly] = useState<boolean>(false);
 
   // Modals
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
@@ -476,18 +477,26 @@ export default function App() {
       result.sort((a, b) => new Date(b.date || (b as any).createdAt || 0).getTime() - new Date(a.date || (a as any).createdAt || 0).getTime());
     }
 
+    // Verified Sellers Only filter
+    if (verifiedOnly) {
+      result = result.filter(
+        (item) => item.isVerifiedPro || item.isStoreVerified || item.verifiedPhone
+      );
+    }
+
     // Keep featured ads on top
     result.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
 
     return result;
-  }, [listings, currentTab, selectedCategory, selectedLocation, searchTerm, minPrice, maxPrice, sortBy]);
+  }, [listings, currentTab, selectedCategory, selectedLocation, searchTerm, minPrice, maxPrice, sortBy, verifiedOnly]);
 
   const hasActiveFilters = Boolean(
     searchTerm.trim() ||
     selectedCategory !== 'All' ||
     selectedLocation !== 'All Sri Lanka' ||
     minPrice ||
-    maxPrice
+    maxPrice ||
+    verifiedOnly
   );
 
   const handleResetFilters = () => {
@@ -496,6 +505,7 @@ export default function App() {
     setSelectedLocation('All Sri Lanka');
     setMinPrice('');
     setMaxPrice('');
+    setVerifiedOnly(false);
   };
 
   const handleSelectCategory = useCallback(
@@ -866,6 +876,10 @@ export default function App() {
               onOpenPostAd={handleOpenPostAd}
               isAdminLoggedIn={isAdminLoggedIn}
               onAdminManage={() => setCurrentTab('admin_dashboard')}
+              listings={listings}
+              onSelectListing={handleSelectListing}
+              verifiedOnly={verifiedOnly}
+              onToggleVerifiedOnly={() => setVerifiedOnly((prev) => !prev)}
             />
 
             {/* Category Browser ("Explore Our Popular Categories") */}
@@ -953,6 +967,17 @@ export default function App() {
               viewMode={listingsViewMode}
               onViewModeChange={setListingsViewMode}
               selectedDistrict={selectedLocation}
+              searchTerm={searchTerm}
+              onClearSearch={() => setSearchTerm('')}
+              minPrice={minPrice}
+              maxPrice={maxPrice}
+              onClearPrice={() => {
+                setMinPrice('');
+                setMaxPrice('');
+              }}
+              onClearLocation={() => setSelectedLocation('All Sri Lanka')}
+              verifiedOnly={verifiedOnly}
+              onToggleVerifiedOnly={() => setVerifiedOnly((prev) => !prev)}
             />
 
             {/* Video Stories / Short Walk-through Reels Bar (Moved Page Down) */}

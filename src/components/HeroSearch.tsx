@@ -11,9 +11,20 @@ import {
   Wrench,
   Briefcase,
   Layers,
+  ShieldCheck,
 } from 'lucide-react';
-import { HeroAd, HeroAdSettings } from '../types';
+import { HeroAd, HeroAdSettings, Listing } from '../types';
 import { HeroAdBanner } from './HeroAdBanner';
+import { SmartSearchTypeahead } from './SmartSearchTypeahead';
+
+export const PRICE_PRESETS = [
+  { label: 'All Prices', min: '', max: '' },
+  { label: 'Under 50K', min: '', max: '50000' },
+  { label: '50K - 250K', min: '50000', max: '250000' },
+  { label: '250K - 1M', min: '250000', max: '1000000' },
+  { label: '1M - 5M', min: '1000000', max: '5000000' },
+  { label: '5M+', min: '5000000', max: '' },
+];
 
 interface HeroSearchProps {
   searchTerm: string;
@@ -33,6 +44,10 @@ interface HeroSearchProps {
   onOpenPostAd?: () => void;
   isAdminLoggedIn?: boolean;
   onAdminManage?: () => void;
+  listings?: Listing[];
+  onSelectListing?: (listing: Listing) => void;
+  verifiedOnly?: boolean;
+  onToggleVerifiedOnly?: () => void;
 }
 
 const DISTRICTS = [
@@ -134,6 +149,10 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   onOpenPostAd,
   isAdminLoggedIn,
   onAdminManage,
+  listings = [],
+  onSelectListing,
+  verifiedOnly = false,
+  onToggleVerifiedOnly,
 }) => {
   // 3 Changing Background Light Images state
   const [activeBgIndex, setActiveBgIndex] = useState<number>(0);
@@ -314,26 +333,19 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
             transition={{ duration: 0.4, delay: 0.1 }}
             className="bg-white/90 dark:bg-[#151822]/90 backdrop-blur-xl border border-gray-200/80 dark:border-white/10 p-2.5 sm:p-3 rounded-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col md:flex-row items-stretch gap-2 text-left transition-colors"
           >
-            {/* Keyword Input */}
-            <div className="flex items-center gap-2.5 bg-gray-100/70 dark:bg-[#1E2230]/90 px-3.5 py-2.5 rounded-xl flex-1 border border-gray-200/80 dark:border-white/5 focus-within:border-[#FF5A36] focus-within:ring-2 focus-within:ring-[#FF5A36]/20 transition-all">
-              <Search className="w-5 h-5 text-gray-400 shrink-0" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="What are you looking for? (e.g. Land Cruiser, iPhone, Kandy House...)"
-                className="bg-transparent border-none outline-none text-gray-900 dark:text-white text-sm w-full placeholder:text-gray-400"
-              />
-              {searchTerm && (
-                <button
-                  type="button"
-                  onClick={() => onSearchChange('')}
-                  className="text-gray-400 hover:text-gray-700 dark:hover:text-white text-xs px-1"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
+            {/* Smart Typeahead & Autocomplete Input */}
+            <SmartSearchTypeahead
+              searchTerm={searchTerm}
+              onSearchChange={onSearchChange}
+              listings={listings}
+              onSelectListing={onSelectListing}
+              onSelectCategory={onSelectCategory}
+              onSelectLocation={onLocationChange}
+              onSubmitSearch={() => {
+                const el = document.getElementById('marketplace-listings');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+            />
 
             {/* Location Selector */}
             <div className="flex items-center gap-2 bg-gray-100/70 dark:bg-[#1E2230]/90 px-3.5 py-2.5 rounded-xl md:w-52 shrink-0 border border-gray-200/80 dark:border-white/5 focus-within:border-[#FF5A36] focus-within:ring-2 focus-within:ring-[#FF5A36]/20 transition-all">
@@ -399,6 +411,53 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
               </motion.button>
             )}
           </motion.div>
+
+          {/* 1-Tap Quick Budget Presets & Trust Toggle */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 px-1 text-xs">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1">
+              <span className="text-gray-500 dark:text-gray-400 font-bold shrink-0">Budget:</span>
+              {PRICE_PRESETS.map((p) => {
+                const isSelected = minPrice === p.min && maxPrice === p.max;
+                return (
+                  <button
+                    key={p.label}
+                    type="button"
+                    onClick={() => {
+                      if (isSelected) {
+                        onMinPriceChange('');
+                        onMaxPriceChange('');
+                      } else {
+                        onMinPriceChange(p.min);
+                        onMaxPriceChange(p.max);
+                      }
+                    }}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap border ${
+                      isSelected
+                        ? 'bg-[#FF5A36] text-white border-[#FF5A36] shadow-xs'
+                        : 'bg-white/80 dark:bg-[#151822]/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-[#2D303E] hover:border-[#FF5A36]'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {onToggleVerifiedOnly && (
+              <button
+                type="button"
+                onClick={onToggleVerifiedOnly}
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer border shrink-0 ${
+                  verifiedOnly
+                    ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
+                    : 'bg-white/80 dark:bg-[#151822]/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-[#2D303E] hover:border-purple-400'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Verified Sellers Only</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Popular Searches Pills (Qatar Living Style) */}

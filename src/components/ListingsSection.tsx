@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Listing } from '../types';
 import { DualToneHeading } from './DualToneHeading';
 import { InteractiveMapDiscovery } from './InteractiveMapDiscovery';
+import { ActiveFiltersBar } from './ActiveFiltersBar';
 import {
   Star,
   Zap,
@@ -52,6 +53,14 @@ interface ListingsSectionProps {
   viewMode?: 'grid' | 'map';
   onViewModeChange?: (mode: 'grid' | 'map') => void;
   selectedDistrict?: string;
+  searchTerm?: string;
+  onClearSearch?: () => void;
+  minPrice?: string;
+  maxPrice?: string;
+  onClearPrice?: () => void;
+  onClearLocation?: () => void;
+  verifiedOnly?: boolean;
+  onToggleVerifiedOnly?: () => void;
 }
 
 export function formatLKR(amount: number): string {
@@ -99,6 +108,14 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
   viewMode,
   onViewModeChange,
   selectedDistrict,
+  searchTerm,
+  onClearSearch,
+  minPrice,
+  maxPrice,
+  onClearPrice,
+  onClearLocation,
+  verifiedOnly = false,
+  onToggleVerifiedOnly,
 }) => {
   const [localViewMode, setLocalViewMode] = useState<'grid' | 'map'>(viewMode || 'grid');
   const currentViewMode = viewMode !== undefined ? viewMode : localViewMode;
@@ -253,6 +270,24 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
 
   return (
     <section id="marketplace-listings" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 scroll-mt-20">
+      {/* Smart Active Filters Bar with Results Counter & Dismissible Chips */}
+      <ActiveFiltersBar
+        totalCount={displayListings.length}
+        searchTerm={searchTerm}
+        onClearSearch={onClearSearch}
+        selectedCategory={currentCategory}
+        onClearCategory={onSelectCategory ? () => onSelectCategory('All') : undefined}
+        selectedLocation={selectedDistrict}
+        onClearLocation={onClearLocation}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        onClearPrice={onClearPrice}
+        verifiedOnly={verifiedOnly}
+        onToggleVerifiedOnly={onToggleVerifiedOnly}
+        onResetAll={onResetFilters}
+        hasActiveFilters={hasActiveFilters}
+      />
+
       {/* Qatar Living style Category Tabs */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-3 mb-5 scrollbar-none border-b border-gray-200 dark:border-[#2D303E]">
         {[
@@ -694,12 +729,40 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-md mx-auto">
                 We couldn't find any listings matching your active filters. Try adjusting your search keyword, category, or district.
               </p>
-              <div className="mt-5 flex items-center justify-center gap-2">
+              {/* Smart Suggestion Chips */}
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                {searchTerm && onClearSearch && (
+                  <button
+                    type="button"
+                    onClick={onClearSearch}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-orange-50 dark:bg-orange-950/40 text-[#FF5A36] border border-orange-200 dark:border-orange-500/30 font-bold rounded-xl text-xs hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-colors cursor-pointer shadow-xs"
+                  >
+                    <span>Clear Search "{searchTerm}"</span>
+                  </button>
+                )}
+                {(minPrice || maxPrice) && onClearPrice && (
+                  <button
+                    type="button"
+                    onClick={onClearPrice}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 font-bold rounded-xl text-xs hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors cursor-pointer shadow-xs"
+                  >
+                    <span>Remove Price Filter</span>
+                  </button>
+                )}
+                {selectedDistrict && selectedDistrict !== 'All Sri Lanka' && onClearLocation && (
+                  <button
+                    type="button"
+                    onClick={onClearLocation}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 font-bold rounded-xl text-xs hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors cursor-pointer shadow-xs"
+                  >
+                    <span>Search All Sri Lanka</span>
+                  </button>
+                )}
                 {hasCategoryFilters && (
                   <button
                     type="button"
                     onClick={resetCategoryFilters}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold rounded-xl text-xs transition-colors cursor-pointer shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold rounded-xl text-xs transition-colors cursor-pointer shadow-xs"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Clear {currentCategory} Filters</span>
@@ -712,7 +775,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       resetCategoryFilters();
                       onResetFilters();
                     }}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-[#1E2230] hover:bg-gray-200 dark:hover:bg-[#2A2E3D] text-gray-700 dark:text-gray-300 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gray-100 dark:bg-[#1E2230] hover:bg-gray-200 dark:hover:bg-[#2A2E3D] text-gray-700 dark:text-gray-300 font-bold rounded-xl text-xs transition-colors cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Reset All Filters</span>
