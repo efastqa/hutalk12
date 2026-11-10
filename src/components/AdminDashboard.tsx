@@ -45,6 +45,7 @@ import {
   CheckSquare,
   ExternalLink,
   Video,
+  Database,
 } from 'lucide-react';
 import { formatLKR } from './ListingsSection';
 import { api } from '../services/api';
@@ -54,6 +55,7 @@ import { AdminReportsManager } from './AdminReportsManager';
 import { AdminSmsGateway } from './AdminSmsGateway';
 import { AdminCustomDomain } from './AdminCustomDomain';
 import { AdminReelsManager } from './AdminReelsManager';
+import { AdminDataBackup } from './AdminDataBackup';
 
 const compressBannerImage = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -166,7 +168,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onToggleHeroAd,
   onDeleteHeroAd,
 }) => {
-  const [filterTab, setFilterTab] = useState<'all' | 'pending' | 'featured' | 'services' | 'spotlight' | 'hero_ads' | 'reels' | 'reach_analytics' | 'reports' | 'sms_gateway' | 'custom_domain'>('all');
+  const [filterTab, setFilterTab] = useState<'all' | 'pending' | 'featured' | 'services' | 'spotlight' | 'hero_ads' | 'reels' | 'reach_analytics' | 'reports' | 'sms_gateway' | 'custom_domain' | 'data_backup'>('all');
   const [localVideoReels, setLocalVideoReels] = useState<VideoReelItem[]>(videoReels || []);
 
   useEffect(() => {
@@ -1628,6 +1630,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <Globe className="w-3.5 h-3.5" />
               <span>Custom Domain (huta.lk)</span>
             </button>
+            <button
+              id="admin-filter-data-backup-tab"
+              type="button"
+              onClick={() => setFilterTab('data_backup')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                filterTab === 'data_backup'
+                  ? 'bg-purple-600 text-white shadow-sm'
+                  : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200/60'
+              }`}
+            >
+              <Database className="w-3.5 h-3.5" />
+              <span>Customer Data & Backup</span>
+            </button>
           </div>
 
           {filterTab === 'spotlight' && (
@@ -1642,7 +1657,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </button>
           )}
 
-          {filterTab !== 'hero_ads' && filterTab !== 'reels' && filterTab !== 'sms_gateway' && filterTab !== 'custom_domain' && (
+          {filterTab !== 'hero_ads' && filterTab !== 'reels' && filterTab !== 'sms_gateway' && filterTab !== 'custom_domain' && filterTab !== 'data_backup' && (
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
                 <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
@@ -1682,7 +1697,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
 
         {/* Content Section */}
-        {filterTab === 'reels' ? (
+        {filterTab === 'data_backup' ? (
+          <div className="p-4 sm:p-6">
+            <AdminDataBackup listings={listings} onToast={onToast} />
+          </div>
+        ) : filterTab === 'reels' ? (
           <div className="p-4 sm:p-6">
             <AdminReelsManager
               reels={localVideoReels}

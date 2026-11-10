@@ -1360,6 +1360,34 @@ export const api = {
     }
   },
 
+  async getAllUsers(): Promise<User[]> {
+    try {
+      const snap = await getDocs(collection(db, 'users'));
+      const list: User[] = [];
+      snap.forEach((d) => {
+        const u = d.data() as User;
+        list.push({
+          ...u,
+          id: d.id,
+          password: '[PROTECTED]',
+          securityAnswer: '[PROTECTED]',
+        });
+      });
+      list.sort((a, b) => new Date(b.created || 0).getTime() - new Date(a.created || 0).getTime());
+      return list;
+    } catch (err) {
+      console.warn('Could not fetch all users from Firestore, fallback:', err);
+      try {
+        const local = localStorage.getItem('huta_users');
+        if (local) {
+          const arr = JSON.parse(local);
+          if (Array.isArray(arr)) return arr;
+        }
+      } catch {}
+      return [];
+    }
+  },
+
   async getSecurityQuestion(username: string): Promise<{ question: string }> {
     const clean = String(username).trim().toLowerCase();
     try {
