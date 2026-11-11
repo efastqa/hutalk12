@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, MapPin, PhoneCall, HelpCircle, Heart, Lock, Smartphone } from 'lucide-react';
+import { ShieldCheck, MapPin, PhoneCall, HelpCircle, Heart, Smartphone } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { PolicyTab } from './LegalPoliciesModal';
 
@@ -7,7 +7,7 @@ interface FooterProps {
   onSelectCategory: (cat: string) => void;
   onSelectLocation: (loc: string) => void;
   onOpenPostAd: () => void;
-  onOpenAdminLogin: () => void;
+  onOpenAdminLogin?: () => void;
   onOpenAppStore?: () => void;
   onSelectTab?: (tab: 'marketplace' | 'estore' | 'huta_in' | 'categories') => void;
   currentTab?: string;
@@ -317,17 +317,6 @@ export const Footer: React.FC<FooterProps> = ({
 
           <div className="flex items-center gap-3 flex-wrap">
             <ThemeToggle variant="segmented" id="footer-theme-toggle" />
-            <span className="text-gray-300 dark:text-gray-600">•</span>
-            <button
-              type="button"
-              id="footer-staff-portal"
-              onClick={onOpenAdminLogin}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-opacity opacity-50 hover:opacity-100 p-0.5 cursor-pointer"
-              title="Staff Portal"
-              aria-label="Staff Portal"
-            >
-              <Lock className="w-3 h-3" />
-            </button>
           </div>
         </div>
 
