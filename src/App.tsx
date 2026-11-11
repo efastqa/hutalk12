@@ -11,7 +11,7 @@ import { ExploreMoreEStoresBanner } from './components/ExploreMoreEStoresBanner'
 import { EStorePage } from './components/EStorePage';
 import { AdDetailModal } from './components/AdDetailModal';
 import { PostAdModal } from './components/PostAdModal';
-import { AdminDashboard } from './components/AdminDashboard';
+import { DedicatedAdminPortal } from './components/DedicatedAdminPortal';
 import { UserDashboard } from './components/UserDashboard';
 import { AuthModals } from './components/AuthModals';
 import { ToastContainer, ToastMessage } from './components/Toast';
@@ -32,13 +32,35 @@ import { MapPin, Sparkles, PlusCircle, Calendar, ArrowRight, Star, Compass } fro
 
 function getInitialTab(): ViewTab {
   try {
+    const hostname = window.location.hostname.toLowerCase();
+    const pathname = window.location.pathname.toLowerCase();
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
+
+    // 1. Model A Subdomain detection: admin.huta.lk or admin.*
+    if (hostname.startsWith('admin.') || hostname === 'admin.huta.lk') {
+      return 'admin_dashboard';
+    }
+
+    // 2. Model A Dedicated Route detection: /admin or /admin/*
+    if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+      return 'admin_dashboard';
+    }
+
+    // 3. Fallback query / hash detection (?admin=true, #admin, ?tab=admin_dashboard, ?tab=admin)
+    if (
+      params.get('admin') === 'true' ||
+      window.location.hash === '#admin' ||
+      tab === 'admin_dashboard' ||
+      tab === 'admin'
+    ) {
+      return 'admin_dashboard';
+    }
+
     if (tab === 'estore') return 'estore';
     if (tab === 'huta_in') return 'huta_in';
     if (tab === 'categories') return 'categories';
     if (tab === 'user_dashboard') return 'user_dashboard';
-    if (tab === 'admin_dashboard') return 'admin_dashboard';
     if (tab === 'more') return 'more';
     if (window.location.hash === '#estore') return 'estore';
   } catch {}
@@ -157,14 +179,26 @@ export default function App() {
     }
   }, [compareIds]);
 
-  // Keep browser URL query in sync with currentTab (?tab=estore)
+  // Keep browser URL query and path in sync with currentTab (Model A dedicated routing)
   useEffect(() => {
     try {
       const url = new URL(window.location.href);
-      if (currentTab === 'marketplace') {
+      if (currentTab === 'admin_dashboard') {
         url.searchParams.delete('tab');
+        url.searchParams.delete('admin');
+        if (!url.pathname.startsWith('/admin') && !url.hostname.startsWith('admin.')) {
+          url.pathname = '/admin';
+        }
+      } else if (currentTab === 'marketplace') {
+        url.searchParams.delete('tab');
+        if (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) {
+          url.pathname = '/';
+        }
       } else {
         url.searchParams.set('tab', currentTab);
+        if (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) {
+          url.pathname = '/';
+        }
       }
       window.history.replaceState({}, '', url.toString());
     } catch {
@@ -176,7 +210,22 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       try {
+        const hostname = window.location.hostname.toLowerCase();
+        const pathname = window.location.pathname.toLowerCase();
         const params = new URLSearchParams(window.location.search);
+
+        if (
+          hostname.startsWith('admin.') ||
+          hostname === 'admin.huta.lk' ||
+          pathname === '/admin' ||
+          pathname.startsWith('/admin/') ||
+          params.get('admin') === 'true' ||
+          window.location.hash === '#admin'
+        ) {
+          setCurrentTab('admin_dashboard');
+          return;
+        }
+
         const tab = (params.get('tab') as ViewTab) || 'marketplace';
         setCurrentTab(tab);
       } catch {
@@ -793,12 +842,15 @@ export default function App() {
     showToast('Admin logged in successfully.', 'success');
   };
 
+  const handleOpenAdminPortal = () => {
+    setIsAdminLoginOpen(false);
+    setIsUserAuthOpen(false);
+    setCurrentTab('admin_dashboard');
+  };
+
   const handleLogoutAdmin = () => {
     api.adminLogout();
     setIsAdminLoggedIn(false);
-    if (currentTab === 'admin_dashboard') {
-      setCurrentTab('marketplace');
-    }
     showToast('Admin session ended.', 'info');
   };
 
@@ -834,24 +886,26 @@ export default function App() {
   }).length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-[#0B0C10] text-[#0F172A] dark:text-[#F8FAFC] pb-16 lg:pb-0 transition-colors duration-200 overflow-x-hidden w-full max-w-full">
+    <div className="min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-[#0B0C10] text-[#0F172A] dark:text-[#F8FAFC] pb-16 lg:pb-0 transition-colors duration-200 overflow-x-clip w-full max-w-full">
       {/* Toast Notification Layer */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
-      {/* Top Navigation */}
-      <Navbar
-        currentTab={currentTab}
-        onSelectTab={(tab) => setCurrentTab(tab)}
-        onSelectCategory={(category) => handleSelectCategory(category, undefined, true)}
-        onOpenPostAd={handleOpenPostAd}
-        onOpenUserAuth={() => setIsUserAuthOpen(true)}
-        currentUser={currentUser}
-        selectedLocation={selectedLocation}
-        onLocationChange={setSelectedLocation}
-        activeCategory={selectedCategory}
-        onOpenAppStore={() => setIsAppStoreOpen(true)}
-        myAdsCount={myAdsCount}
-      />
+      {/* Top Navigation (Public Marketplace Only - Model A isolates /admin & admin.huta.lk) */}
+      {currentTab !== 'admin_dashboard' && (
+        <Navbar
+          currentTab={currentTab}
+          onSelectTab={(tab) => setCurrentTab(tab)}
+          onSelectCategory={(category) => handleSelectCategory(category, undefined, true)}
+          onOpenPostAd={handleOpenPostAd}
+          onOpenUserAuth={() => setIsUserAuthOpen(true)}
+          currentUser={currentUser}
+          selectedLocation={selectedLocation}
+          onLocationChange={setSelectedLocation}
+          activeCategory={selectedCategory}
+          onOpenAppStore={() => setIsAppStoreOpen(true)}
+          myAdsCount={myAdsCount}
+        />
+      )}
 
       {/* Main Views Container */}
       <main className="flex-1">
@@ -1084,13 +1138,7 @@ export default function App() {
           <HutaInPage
             events={events}
             isAdminLoggedIn={isAdminLoggedIn}
-            onNavigateToAdminEvents={() => {
-              if (isAdminLoggedIn) {
-                setCurrentTab('admin_dashboard');
-              } else {
-                setIsAdminLoginOpen(true);
-              }
-            }}
+            onNavigateToAdminEvents={handleOpenAdminPortal}
             onBackToHome={() => setCurrentTab('marketplace')}
             onOpenPostAd={handleOpenPostAd}
             onSelectCategory={(cat, query) => {
@@ -1117,7 +1165,7 @@ export default function App() {
             favoritesCount={favorites.length}
             onSelectTab={(tab) => setCurrentTab(tab)}
             onOpenUserAuth={() => setIsUserAuthOpen(true)}
-            onOpenAdminLogin={() => setIsAdminLoginOpen(true)}
+            onOpenAdminLogin={handleOpenAdminPortal}
             onOpenPostAd={handleOpenPostAd}
             onOpenAppStore={() => setIsAppStoreOpen(true)}
             onOpenChat={() => {
@@ -1149,8 +1197,8 @@ export default function App() {
             onLogoutUser={handleLogoutUser}
             onBackToMarketplace={() => setCurrentTab('marketplace')}
             onOpenUserAuth={() => setIsUserAuthOpen(true)}
-            onOpenAdminLogin={() => setIsAdminLoginOpen(true)}
-            onOpenAdminDashboard={() => setCurrentTab('admin_dashboard')}
+            onOpenAdminLogin={handleOpenAdminPortal}
+            onOpenAdminDashboard={handleOpenAdminPortal}
             onOpenChat={() => {
               setChatTargetListing(null);
               setIsChatOpen(true);
@@ -1161,13 +1209,23 @@ export default function App() {
         )}
 
         {currentTab === 'admin_dashboard' && (
-          <AdminDashboard
+          <DedicatedAdminPortal
+            isAdminLoggedIn={isAdminLoggedIn}
+            onAdminLoginSuccess={() => {
+              setIsAdminLoggedIn(true);
+              showToast('Admin logged in successfully.', 'success');
+            }}
+            onLogoutAdmin={handleLogoutAdmin}
+            onBackToMarketplace={() => setCurrentTab('marketplace')}
+            onToast={showToast}
             listings={listings}
             events={events}
             heroAds={heroAds}
             heroSettings={heroSettings}
             videoReels={videoReels}
             onReelsChange={setVideoReels}
+            stores={eStores}
+            onStoresChange={setEStores}
             onUpdateHeroSettings={handleUpdateHeroSettings}
             onCreateHeroAd={handleCreateHeroAd}
             onUpdateHeroAd={handleUpdateHeroAd}
@@ -1179,11 +1237,8 @@ export default function App() {
             onToggleFeature={handleToggleFeatureListing}
             onToggleVerifyPro={handleToggleVerifyPro}
             onDelete={handleDeleteListing}
-            onBackToMarketplace={() => setCurrentTab('marketplace')}
-            onLogoutAdmin={handleLogoutAdmin}
             onSelectListing={handleSelectListing}
             onEditListing={handleEditListing}
-            onToast={showToast}
             onUpdateEvent={(updated) => {
               setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
             }}
@@ -1312,7 +1367,7 @@ export default function App() {
         isAdminLoginOpen={isAdminLoginOpen}
         onCloseAdminLogin={() => setIsAdminLoginOpen(false)}
         onAdminLoginSuccess={handleAdminLoginSuccess}
-        onOpenAdminLogin={() => setIsAdminLoginOpen(true)}
+        onOpenAdminLogin={handleOpenAdminPortal}
         isUserAuthOpen={isUserAuthOpen}
         onCloseUserAuth={() => {
           setIsUserAuthOpen(false);
@@ -1331,22 +1386,24 @@ export default function App() {
         onToast={showToast}
       />
 
-      {/* Footer */}
-      <Footer
-        currentTab={currentTab}
-        onSelectCategory={(cat) => {
-          handleSelectCategory(cat, undefined, true);
-        }}
-        onSelectLocation={(loc) => {
-          setSelectedLocation(loc);
-          setCurrentTab('marketplace');
-        }}
-        onOpenPostAd={handleOpenPostAd}
-        onOpenAdminLogin={() => setIsAdminLoginOpen(true)}
-        onOpenAppStore={() => setIsAppStoreOpen(true)}
-        onSelectTab={setCurrentTab}
-        onOpenPolicy={handleOpenPolicy}
-      />
+      {/* Footer (Only on consumer marketplace views, hidden in isolated Admin Portal) */}
+      {currentTab !== 'admin_dashboard' && (
+        <Footer
+          currentTab={currentTab}
+          onSelectCategory={(cat) => {
+            handleSelectCategory(cat, undefined, true);
+          }}
+          onSelectLocation={(loc) => {
+            setSelectedLocation(loc);
+            setCurrentTab('marketplace');
+          }}
+          onOpenPostAd={handleOpenPostAd}
+          onOpenAdminLogin={handleOpenAdminPortal}
+          onOpenAppStore={() => setIsAppStoreOpen(true)}
+          onSelectTab={setCurrentTab}
+          onOpenPolicy={handleOpenPolicy}
+        />
+      )}
 
       {/* Legal Policies Modal (Terms & Conditions, Privacy Policy, Cookie Policy) */}
       <LegalPoliciesModal
@@ -1363,18 +1420,22 @@ export default function App() {
       />
 
       {/* Floating Install Prompt Banner for Mobile / PWA */}
-      <PWAInstallBanner onOpenAppStore={() => setIsAppStoreOpen(true)} />
+      {currentTab !== 'admin_dashboard' && (
+        <PWAInstallBanner onOpenAppStore={() => setIsAppStoreOpen(true)} />
+      )}
 
-      {/* Sticky Bottom Navigation Bar (Image 1 style) */}
-      <BottomNav
-        currentTab={currentTab}
-        isAdminLoggedIn={isAdminLoggedIn}
-        onSelectTab={(tab) => {
-          setCurrentTab(tab);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
-        onOpenPostAd={handleOpenPostAd}
-      />
+      {/* Sticky Bottom Navigation Bar (Hidden in Admin Portal) */}
+      {currentTab !== 'admin_dashboard' && (
+        <BottomNav
+          currentTab={currentTab}
+          isAdminLoggedIn={isAdminLoggedIn}
+          onSelectTab={(tab) => {
+            setCurrentTab(tab);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onOpenPostAd={handleOpenPostAd}
+        />
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
   Plus,
@@ -54,6 +54,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeCategory = 'All',
   myAdsCount = 0,
 }) => {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleVerticalClick = (catName: string) => {
     if (onSelectCategory) {
       onSelectCategory(catName);
@@ -63,10 +73,15 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header
+      id="main-sticky-navbar"
       style={{
-        paddingTop: 'max(env(safe-area-inset-top, 0px), 10px)',
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 8px)',
       }}
-      className="sticky top-0 z-40 backdrop-blur-xl bg-white/95 dark:bg-[#0B0C10]/95 border-b border-gray-200/70 dark:border-white/10 text-gray-900 dark:text-white shadow-xs transition-all duration-300 supports-[backdrop-filter]:bg-white/90 supports-[backdrop-filter]:dark:bg-[#0B0C10]/90"
+      className={`sticky top-0 z-50 backdrop-blur-xl bg-white/95 dark:bg-[#0B0C10]/95 border-b text-gray-900 dark:text-white transition-all duration-200 supports-[backdrop-filter]:bg-white/90 supports-[backdrop-filter]:dark:bg-[#0B0C10]/90 ${
+        isScrolled
+          ? 'shadow-md border-gray-300/80 dark:border-white/15'
+          : 'shadow-xs border-gray-200/70 dark:border-white/10'
+      }`}
     >
       {/* Main Brand & Actions Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-4">

@@ -557,7 +557,8 @@ export const AdminCustomDomain: React.FC<AdminCustomDomainProps> = ({ onToast })
                 { type: 'A', host: '@', value: '216.239.34.21', label: 'A Record 2' },
                 { type: 'A', host: '@', value: '216.239.36.21', label: 'A Record 3' },
                 { type: 'A', host: '@', value: '216.239.38.21', label: 'A Record 4' },
-                { type: 'CNAME', host: 'www', value: 'ghs.googlehosted.com', label: 'CNAME Record' },
+                { type: 'CNAME', host: 'www', value: 'ghs.googlehosted.com', label: 'CNAME Record (www)' },
+                { type: 'CNAME', host: 'admin', value: 'ghs.googlehosted.com', label: 'Model A Subdomain (admin.huta.lk)' },
               ].map((rec) => (
                 <tr key={rec.value} className="hover:bg-gray-50/80 transition-colors">
                   <td className="py-2.5">
