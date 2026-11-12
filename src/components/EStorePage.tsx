@@ -1170,17 +1170,32 @@ export const EStorePage: React.FC<EStorePageProps> = ({
             />
 
             {/* Title & Description Vector Overlay: "Sri Lanka E-Stores and Online Merchant Marketplace" */}
-            <div className="absolute top-[25.2%] left-[8%] w-[47%] h-[44%] bg-[#0A111E] flex flex-col justify-start z-10 pointer-events-none">
-              <h1 className="text-white font-extrabold text-[1.4rem] sm:text-[2.2vw] md:text-[2.5vw] lg:text-[2.75vw] xl:text-[2.9vw] leading-[1.12] tracking-tight">
+            <div
+              className="absolute top-[24%] left-[6.5%] w-[51%] bottom-[26%] flex flex-col justify-center pl-[1.5%] pr-[4%] z-10 pointer-events-none overflow-hidden"
+              style={{
+                background:
+                  'linear-gradient(to right, #181b2b 0%, #151a29 90%, rgba(21, 26, 41, 0) 100%)',
+              }}
+            >
+              <h1 className="text-white font-extrabold text-[3.05vw] sm:text-[2.2vw] md:text-[2.5vw] lg:text-[2.75vw] xl:text-[2.9vw] leading-[1.12] tracking-tight">
                 Sri Lanka E-Stores and Online{' '}
                 <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400 bg-clip-text text-transparent">
                   Merchant Marketplace
                 </span>
               </h1>
-              <p className="text-gray-300 text-[0.62rem] sm:text-[0.85vw] md:text-[0.95vw] lg:text-[1.0vw] leading-relaxed mt-[2%] max-w-[95%] font-normal line-clamp-3">
+              <p className="text-gray-300 text-[1.9vw] sm:text-[0.85vw] md:text-[0.95vw] lg:text-[1.0vw] leading-[1.25] sm:leading-relaxed mt-[1.5%] sm:mt-[2%] max-w-[95%] font-normal line-clamp-2 sm:line-clamp-3">
                 Do you need trusted online stores & verified merchants in Sri Lanka? Shop online from registered local brands and get orders delivered across all 25 districts with ease.
               </p>
             </div>
+
+            {/* Cover mask over legacy baked buttons on bottom-left of banner image */}
+            <div
+              className="absolute top-[71%] left-[6.5%] w-[34%] bottom-[8%] pointer-events-none z-10"
+              style={{
+                background:
+                  'linear-gradient(to right, #1b1929 0%, #151928 90%, rgba(21, 25, 40, 0) 100%)',
+              }}
+            />
 
             {/* Live Interactive Overlays */}
             {/* 1. Back button hotspot (top left) */}
@@ -1188,7 +1203,7 @@ export const EStorePage: React.FC<EStorePageProps> = ({
               type="button"
               onClick={onBackToMarketplace}
               title="Back to HUTA Classifieds"
-              className="absolute top-[13.5%] left-[8%] w-[14%] h-[9%] rounded-xl hover:bg-white/10 active:scale-95 transition-all cursor-pointer focus:outline-none z-10"
+              className="absolute top-[13.5%] left-[8%] w-[14%] h-[9%] rounded-xl hover:bg-white/10 active:scale-95 transition-all cursor-pointer focus:outline-none z-20"
             />
 
             {/* 2. Register Store button hotspot (top right) */}
@@ -1196,40 +1211,10 @@ export const EStorePage: React.FC<EStorePageProps> = ({
               type="button"
               onClick={() => setIsRegisterModalOpen(true)}
               title="Register Your Store"
-              className="absolute top-[13.5%] left-[82.5%] w-[14.5%] h-[9.5%] rounded-full hover:brightness-110 active:scale-95 transition-all cursor-pointer focus:outline-none z-10"
+              className="absolute top-[13.5%] left-[82.5%] w-[14.5%] h-[9.5%] rounded-full hover:brightness-110 active:scale-95 transition-all cursor-pointer focus:outline-none z-20"
             />
 
-            {/* 3. Merchant Directory Tab */}
-            <button
-              type="button"
-              onClick={() => setActiveView('stores')}
-              title="View Merchant / Stores Directory"
-              className={`absolute top-[73.5%] left-[8.1%] w-[13.9%] h-[11%] rounded-xl flex items-center justify-center gap-1.5 font-bold text-[0.72vw] lg:text-[0.85vw] transition-all cursor-pointer focus:outline-none z-20 ${
-                activeView === 'stores'
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/30 ring-2 ring-emerald-400'
-                  : 'bg-[#121826] hover:bg-[#1A2234] text-gray-300 border border-white/10'
-              }`}
-            >
-              <Store className="w-[1vw] h-[1vw] shrink-0" />
-              <span className="truncate">Merchant Directory ({filteredStores.length})</span>
-            </button>
-
-            {/* 4. All Store Products Tab */}
-            <button
-              type="button"
-              onClick={() => setActiveView('products')}
-              title="View All Store Products"
-              className={`absolute top-[73.5%] left-[22.8%] w-[13.9%] h-[11%] rounded-xl flex items-center justify-center gap-1.5 font-bold text-[0.72vw] lg:text-[0.85vw] transition-all cursor-pointer focus:outline-none z-20 ${
-                activeView === 'products'
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/30 ring-2 ring-emerald-400'
-                  : 'bg-[#121826] hover:bg-[#1A2234] text-gray-300 border border-white/10'
-              }`}
-            >
-              <Package className="w-[1vw] h-[1vw] shrink-0" />
-              <span className="truncate">All Store Products ({allFilteredProducts.length})</span>
-            </button>
-
-            {/* 5. Live Search Input directly in the search bar */}
+            {/* 3. Live Search Input directly in the search bar */}
             <div className="absolute top-[74.5%] left-[57.2%] w-[35.2%] h-[10.2%] flex items-center pr-2 pl-6 sm:pl-11 z-20">
               <input
                 type="text"
@@ -1248,6 +1233,53 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                   ✕
                 </button>
               )}
+            </div>
+          </div>
+
+          {/* Desktop & Tablet View Switcher Bar (replaces the removed hero overlay buttons cleanly without truncation) */}
+          <div className="hidden sm:flex items-center justify-between gap-3 mt-3.5">
+            <div className="inline-flex items-center gap-1.5 p-1 rounded-xl bg-black/40 border border-white/10">
+              <button
+                type="button"
+                onClick={() => setActiveView('stores')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                  activeView === 'stores'
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm font-extrabold'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Store className="w-3.5 h-3.5 shrink-0" />
+                <span>Merchant Directory ({filteredStores.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveView('products')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                  activeView === 'products'
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm font-extrabold'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Package className="w-3.5 h-3.5 shrink-0" />
+                <span>All Store Products ({allFilteredProducts.length})</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsSmartCartOpen(true)}
+                className="relative inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs border border-white/15 active:scale-95 transition-all cursor-pointer"
+                title="Open Smart Shopping Cart"
+              >
+                <ShoppingBag className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Smart Cart</span>
+                {cartItems.length > 0 && (
+                  <span className="bg-[#FF5A36] text-white text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none">
+                    {cartItems.reduce((a, b) => a + b.quantity, 0)}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
 
@@ -1345,23 +1377,22 @@ export const EStorePage: React.FC<EStorePageProps> = ({
         {/* Category & District Showcase */}
         <div className="space-y-4 mb-8">
           {/* E-Store Category Showcase Header & Cards */}
-          <div className="bg-white dark:bg-[#151822] p-4 sm:p-5 rounded-2xl border border-gray-200/90 dark:border-[#252836] shadow-xs">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-gray-100 dark:border-[#202330]">
+          <div className="bg-white dark:bg-[#151822] p-3.5 sm:p-5 rounded-2xl border border-gray-200/90 dark:border-[#252836] shadow-xs">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-3 pb-3 border-b border-gray-100 dark:border-[#202330]">
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[11px] font-extrabold uppercase tracking-wide">
-                    <Store className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>9 Store Categories</span>
-                  </span>
-                  <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">
+                <div className="flex items-center gap-2 mb-0.5 sm:mb-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+                  <Store className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>9 Store Categories</span>
+                  <span aria-hidden="true" className="text-gray-300 dark:text-gray-600">·</span>
+                  <span className="text-gray-500 dark:text-gray-400 font-medium">
                     {stores.length} verified sellers
                   </span>
                 </div>
-                <h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-white tracking-tight">
+                <h2 className="text-sm sm:text-lg font-black text-gray-900 dark:text-white tracking-tight">
                   Explore Sri Lanka E-Stores by Category
                 </h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Click a category to filter stores and their direct-to-consumer product catalogs
+                <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  Click a category to filter stores and product catalogs
                 </p>
               </div>
 
@@ -1422,10 +1453,10 @@ export const EStorePage: React.FC<EStorePageProps> = ({
             {/* Category Cards Showcase with Matching Photography */}
             <div className="pt-3">
               {categoryDisplayMode === 'strip' ? (
-                /* Slider / Strip Rail */
+                /* Slider / Strip Rail (Compact cards) */
                 <div
                   ref={categoryScrollRef}
-                  className="flex items-stretch gap-3.5 overflow-x-auto pb-3 pt-1 scroll-smooth scrollbar-thin"
+                  className="flex items-stretch gap-2.5 sm:gap-3 overflow-x-auto pb-2.5 pt-1 scroll-smooth scrollbar-thin"
                 >
                   {ESTORE_CATEGORY_METAS.map((catMeta) => {
                     const isActive = selectedCategory === catMeta.id;
@@ -1437,14 +1468,14 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                         key={catMeta.id}
                         type="button"
                         onClick={() => setSelectedCategory(catMeta.id)}
-                        className={`min-w-[215px] sm:min-w-[240px] max-w-[250px] shrink-0 rounded-2xl border text-left flex flex-col justify-between transition-all duration-300 group cursor-pointer relative overflow-hidden ${
+                        className={`min-w-[155px] sm:min-w-[185px] max-w-[195px] shrink-0 rounded-xl border text-left flex flex-col justify-between transition-all duration-300 group cursor-pointer relative overflow-hidden ${
                           isActive
-                            ? 'bg-white dark:bg-[#151822] border-emerald-500 shadow-lg shadow-emerald-500/15 ring-2 ring-emerald-500/40 scale-[1.01]'
-                            : 'bg-white dark:bg-[#151822] hover:bg-gray-50/70 dark:hover:bg-[#181B26] border-gray-200/80 dark:border-[#252836] hover:border-emerald-300 dark:hover:border-emerald-700/70 hover:shadow-md'
+                            ? 'bg-white dark:bg-[#151822] border-emerald-500 shadow-md shadow-emerald-500/15 ring-2 ring-emerald-500/40'
+                            : 'bg-white dark:bg-[#151822] hover:bg-gray-50/70 dark:hover:bg-[#181B26] border-gray-200/80 dark:border-[#252836] hover:border-emerald-300 dark:hover:border-emerald-700/70 hover:shadow-sm'
                         }`}
                       >
                         {/* Image Window */}
-                        <div className="relative h-28 sm:h-32 w-full overflow-hidden bg-slate-900">
+                        <div className="relative h-20 sm:h-24 w-full overflow-hidden bg-slate-900">
                           <img
                             src={catMeta.image}
                             alt={catMeta.shortName}
@@ -1452,44 +1483,41 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                             referrerPolicy="no-referrer"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 select-none"
                             onError={(e) => {
-                              // Zero-broken-image fallback
                               (e.currentTarget as HTMLImageElement).style.opacity = '0';
                             }}
                           />
-                          {/* Measured contrast scrim */}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10 pointer-events-none" />
 
-                          {/* Top floating bar: Icon + Stores Count */}
-                          <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5 z-10 pointer-events-none">
-                            <div className="w-7 h-7 rounded-lg bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center shadow-xs">
-                              <IconComponent className="w-3.5 h-3.5 text-white" />
+                          {/* Top floating icon + count */}
+                          <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-1 z-10 pointer-events-none">
+                            <div className="w-6 h-6 rounded-md bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center shadow-xs">
+                              <IconComponent className="w-3 h-3 text-white" />
                             </div>
-                            <span className="px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[10px] font-extrabold text-white tracking-wide">
+                            <span className="px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md border border-white/20 text-[9px] font-extrabold text-white">
                               {count.stores} {count.stores === 1 ? 'Store' : 'Stores'}
                             </span>
                           </div>
 
-                          {/* Bottom title overlay on image */}
-                          <div className="absolute bottom-2 left-2.5 right-2.5 z-10 pointer-events-none">
-                            <h3 className="text-white font-black text-xs sm:text-sm tracking-tight drop-shadow-sm truncate">
+                          {/* Title on image */}
+                          <div className="absolute bottom-1.5 left-2 right-2 z-10 pointer-events-none">
+                            <h3 className="text-white font-bold text-[11px] sm:text-xs tracking-tight drop-shadow-sm truncate">
                               {catMeta.shortName}
                             </h3>
                           </div>
                         </div>
 
                         {/* Card Content Body */}
-                        <div className="p-3 flex flex-col justify-between flex-1 space-y-2">
-                          <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-1">
+                        <div className="p-2 sm:p-2.5 flex flex-col justify-between flex-1 space-y-1.5">
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 line-clamp-1">
                             {catMeta.tagline}
                           </p>
 
-                          {/* Card Footer: Products Count & Active State */}
-                          <div className="pt-2 border-t border-gray-100 dark:border-[#252836] flex items-center justify-between text-[10px] font-semibold">
+                          <div className="pt-1.5 border-t border-gray-100 dark:border-[#252836] flex items-center justify-between text-[10px] font-semibold">
                             <span className="text-gray-600 dark:text-gray-400">
-                              {count.products} Products
+                              {count.products} Items
                             </span>
                             {isActive ? (
-                              <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                              <span className="inline-flex items-center gap-0.5 font-bold text-emerald-600 dark:text-emerald-400">
                                 <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                                 <span>Active</span>
                               </span>
@@ -1506,8 +1534,8 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                   })}
                 </div>
               ) : (
-                /* Grid View (All Niches Grid with Matching Images) */
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 pt-1">
+                /* Compact Grid View (Smaller cards across mobile, tablet & desktop) */
+                <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2 pt-1">
                   {ESTORE_CATEGORY_METAS.map((catMeta) => {
                     const isActive = selectedCategory === catMeta.id;
                     const IconComponent = catMeta.icon;
@@ -1518,14 +1546,14 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                         key={catMeta.id}
                         type="button"
                         onClick={() => setSelectedCategory(catMeta.id)}
-                        className={`rounded-2xl border text-left flex flex-col justify-between transition-all duration-300 group cursor-pointer relative overflow-hidden ${
+                        className={`rounded-xl border text-left flex flex-col justify-between transition-all duration-200 group cursor-pointer relative overflow-hidden ${
                           isActive
-                            ? 'bg-white dark:bg-[#151822] border-emerald-500 shadow-lg shadow-emerald-500/15 ring-2 ring-emerald-500/40'
-                            : 'bg-white dark:bg-[#151822] hover:bg-gray-50/70 dark:hover:bg-[#181B26] border-gray-200/80 dark:border-[#252836] hover:border-emerald-300 dark:hover:border-emerald-700/70 hover:shadow-md'
+                            ? 'bg-white dark:bg-[#151822] border-emerald-500 shadow-md shadow-emerald-500/15 ring-2 ring-emerald-500/40'
+                            : 'bg-white dark:bg-[#151822] hover:bg-gray-50/70 dark:hover:bg-[#181B26] border-gray-200/80 dark:border-[#252836] hover:border-emerald-300 dark:hover:border-emerald-700/70 hover:shadow-sm'
                         }`}
                       >
-                        {/* Image Window */}
-                        <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-900">
+                        {/* Compact Image Window */}
+                        <div className="relative h-14 sm:h-16 w-full overflow-hidden bg-slate-900">
                           <img
                             src={catMeta.image}
                             alt={catMeta.shortName}
@@ -1539,42 +1567,33 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10 pointer-events-none" />
 
                           {/* Top Badges */}
-                          <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-1 z-10 pointer-events-none">
-                            <div className="w-6 h-6 rounded-md bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center">
-                              <IconComponent className="w-3 h-3 text-white" />
+                          <div className="absolute top-1.5 left-1.5 right-1.5 flex items-center justify-between gap-1 z-10 pointer-events-none">
+                            <div className="w-5 h-5 rounded bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center">
+                              <IconComponent className="w-2.5 h-2.5 text-white" />
                             </div>
-                            <span className="px-1.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[9px] font-extrabold text-white">
+                            <span className="px-1 py-0.2 rounded bg-black/60 backdrop-blur-md border border-white/20 text-[9px] font-bold text-white">
                               {count.stores}
                             </span>
                           </div>
 
                           {/* Title on image */}
-                          <div className="absolute bottom-1.5 left-2 right-2 z-10 pointer-events-none">
-                            <h3 className="text-white font-extrabold text-xs tracking-tight drop-shadow-sm truncate">
+                          <div className="absolute bottom-1 left-1.5 right-1.5 z-10 pointer-events-none">
+                            <h3 className="text-white font-bold text-[10px] sm:text-[11px] leading-tight tracking-tight drop-shadow-sm truncate">
                               {catMeta.shortName}
                             </h3>
                           </div>
                         </div>
 
-                        {/* Card Content Body */}
-                        <div className="p-2.5 flex flex-col justify-between flex-1 space-y-1.5">
-                          <p className="text-[10px] text-gray-500 dark:text-gray-400 line-clamp-1">
-                            {catMeta.tagline}
-                          </p>
-
-                          <div className="pt-1.5 border-t border-gray-100 dark:border-[#252836] flex items-center justify-between text-[10px]">
-                            <span className="text-gray-600 dark:text-gray-400 font-medium">
-                              {count.products} Items
-                            </span>
-                            {isActive ? (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 text-[10px]">
-                                <Check className="w-3 h-3" />
-                                <span>Active</span>
-                              </span>
-                            ) : (
-                              <ChevronRight className="w-3 h-3 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
-                            )}
-                          </div>
+                        {/* Compact Footer */}
+                        <div className="px-2 py-1.5 flex items-center justify-between text-[9px] sm:text-[10px]">
+                          <span className="text-gray-600 dark:text-gray-400 font-medium truncate">
+                            {count.products} Items
+                          </span>
+                          {isActive ? (
+                            <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          ) : (
+                            <ChevronRight className="w-3 h-3 text-gray-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                          )}
                         </div>
                       </button>
                     );
