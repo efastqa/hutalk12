@@ -350,6 +350,7 @@ export interface EStoreCategoryMeta {
   gradient: string;
   activeRing: string;
   badgeStyle: string;
+  image: string;
 }
 
 export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
@@ -362,6 +363,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-emerald-500/20 via-teal-500/10 to-transparent',
     activeRing: 'ring-2 ring-emerald-500 shadow-md shadow-emerald-500/20',
     badgeStyle: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
+    image: '/src/assets/images/all_estore_merchants_1794485763558.jpg',
   },
   {
     id: 'Groceries & Daily Essentials',
@@ -372,6 +374,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-emerald-500/20 via-emerald-500/10 to-transparent',
     activeRing: 'ring-2 ring-emerald-500 shadow-md shadow-emerald-500/20',
     badgeStyle: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
+    image: '/src/assets/images/groceries_pantry_estore_1794485763297.jpg',
   },
   {
     id: 'Ceylon Tea & Spices',
@@ -382,6 +385,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-amber-500/20 via-amber-500/10 to-transparent',
     activeRing: 'ring-2 ring-amber-500 shadow-md shadow-amber-500/20',
     badgeStyle: 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300',
+    image: '/src/assets/images/ceylon_tea_spices_estore_1794485764076.jpg',
   },
   {
     id: 'Fashion & Apparel',
@@ -392,6 +396,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-purple-500/20 via-purple-500/10 to-transparent',
     activeRing: 'ring-2 ring-purple-500 shadow-md shadow-purple-500/20',
     badgeStyle: 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300',
+    image: '/src/assets/images/fashion_apparel_estore_1794485765034.jpg',
   },
   {
     id: 'Tech & Gadgets',
@@ -402,6 +407,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-blue-500/20 via-blue-500/10 to-transparent',
     activeRing: 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20',
     badgeStyle: 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300',
+    image: '/src/assets/images/tech_gadgets_estore_1794485764173.jpg',
   },
   {
     id: 'Beauty & Cosmetics',
@@ -412,6 +418,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-rose-500/20 via-rose-500/10 to-transparent',
     activeRing: 'ring-2 ring-rose-500 shadow-md shadow-rose-500/20',
     badgeStyle: 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300',
+    image: '/src/assets/images/beauty_cosmetics_estore_1794485765211.jpg',
   },
   {
     id: 'Handmade & Crafts',
@@ -422,6 +429,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-orange-500/20 via-orange-500/10 to-transparent',
     activeRing: 'ring-2 ring-orange-500 shadow-md shadow-orange-500/20',
     badgeStyle: 'bg-orange-100 text-orange-800 dark:bg-orange-950/80 dark:text-orange-300',
+    image: '/src/assets/images/handmade_crafts_estore_1794485766859.jpg',
   },
   {
     id: 'Home & Living',
@@ -432,6 +440,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-teal-500/20 via-teal-500/10 to-transparent',
     activeRing: 'ring-2 ring-teal-500 shadow-md shadow-teal-500/20',
     badgeStyle: 'bg-teal-100 text-teal-800 dark:bg-teal-950/80 dark:text-teal-300',
+    image: '/src/assets/images/home_living_estore_1794485766782.jpg',
   },
   {
     id: 'Gourmet Foods',
@@ -442,6 +451,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-amber-600/20 via-amber-600/10 to-transparent',
     activeRing: 'ring-2 ring-amber-600 shadow-md shadow-amber-600/20',
     badgeStyle: 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300',
+    image: '/src/assets/images/gourmet_foods_estore_1794485766599.jpg',
   },
 ];
 
@@ -1409,13 +1419,13 @@ export const EStorePage: React.FC<EStorePageProps> = ({
               </div>
             </div>
 
-            {/* Category Cards Showcase */}
+            {/* Category Cards Showcase with Matching Photography */}
             <div className="pt-3">
               {categoryDisplayMode === 'strip' ? (
                 /* Slider / Strip Rail */
                 <div
                   ref={categoryScrollRef}
-                  className="flex items-stretch gap-3 overflow-x-auto pb-2 pt-1 scroll-smooth scrollbar-thin"
+                  className="flex items-stretch gap-3.5 overflow-x-auto pb-3 pt-1 scroll-smooth scrollbar-thin"
                 >
                   {ESTORE_CATEGORY_METAS.map((catMeta) => {
                     const isActive = selectedCategory === catMeta.id;
@@ -1427,87 +1437,77 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                         key={catMeta.id}
                         type="button"
                         onClick={() => setSelectedCategory(catMeta.id)}
-                        className={`min-w-[190px] sm:min-w-[215px] max-w-[230px] shrink-0 p-3.5 rounded-2xl border text-left flex flex-col justify-between transition-all duration-200 group cursor-pointer relative overflow-hidden ${
+                        className={`min-w-[215px] sm:min-w-[240px] max-w-[250px] shrink-0 rounded-2xl border text-left flex flex-col justify-between transition-all duration-300 group cursor-pointer relative overflow-hidden ${
                           isActive
-                            ? 'bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 text-white border-emerald-500 shadow-md shadow-emerald-700/25 ring-2 ring-emerald-400/60 scale-[1.01]'
-                            : 'bg-gray-50/70 dark:bg-[#181B26] hover:bg-white dark:hover:bg-[#1E2230] text-gray-800 dark:text-gray-200 border-gray-200/80 dark:border-[#252836] hover:border-emerald-300 dark:hover:border-emerald-600/70 hover:shadow-xs'
+                            ? 'bg-white dark:bg-[#151822] border-emerald-500 shadow-lg shadow-emerald-500/15 ring-2 ring-emerald-500/40 scale-[1.01]'
+                            : 'bg-white dark:bg-[#151822] hover:bg-gray-50/70 dark:hover:bg-[#181B26] border-gray-200/80 dark:border-[#252836] hover:border-emerald-300 dark:hover:border-emerald-700/70 hover:shadow-md'
                         }`}
                       >
-                        {/* Subtle Background Glow for Active Card */}
-                        {isActive && (
-                          <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full blur-xl pointer-events-none" />
-                        )}
+                        {/* Image Window */}
+                        <div className="relative h-28 sm:h-32 w-full overflow-hidden bg-slate-900">
+                          <img
+                            src={catMeta.image}
+                            alt={catMeta.shortName}
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 select-none"
+                            onError={(e) => {
+                              // Zero-broken-image fallback
+                              (e.currentTarget as HTMLImageElement).style.opacity = '0';
+                            }}
+                          />
+                          {/* Measured contrast scrim */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10 pointer-events-none" />
 
-                        <div>
-                          {/* Top row: Icon and Store Count Pill */}
-                          <div className="flex items-center justify-between gap-2 mb-2.5">
-                            <div
-                              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 shadow-2xs ${
-                                isActive
-                                  ? 'bg-white/20 text-white backdrop-blur-xs'
-                                  : `bg-gradient-to-br ${catMeta.gradient} ${catMeta.accentColor} border border-gray-100 dark:border-white/5`
-                              }`}
-                            >
-                              <IconComponent className="w-5 h-5" />
+                          {/* Top floating bar: Icon + Stores Count */}
+                          <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5 z-10 pointer-events-none">
+                            <div className="w-7 h-7 rounded-lg bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center shadow-xs">
+                              <IconComponent className="w-3.5 h-3.5 text-white" />
                             </div>
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${
-                                isActive
-                                  ? 'bg-white/20 text-white'
-                                  : 'bg-white dark:bg-[#202330] text-gray-600 dark:text-gray-400 border border-gray-200/60 dark:border-[#2D303E]'
-                              }`}
-                            >
+                            <span className="px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[10px] font-extrabold text-white tracking-wide">
                               {count.stores} {count.stores === 1 ? 'Store' : 'Stores'}
                             </span>
                           </div>
 
-                          {/* Category Title */}
-                          <div className="space-y-0.5">
-                            <h3
-                              className={`text-xs sm:text-sm font-extrabold tracking-tight line-clamp-1 ${
-                                isActive ? 'text-white' : 'text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors'
-                              }`}
-                            >
+                          {/* Bottom title overlay on image */}
+                          <div className="absolute bottom-2 left-2.5 right-2.5 z-10 pointer-events-none">
+                            <h3 className="text-white font-black text-xs sm:text-sm tracking-tight drop-shadow-sm truncate">
                               {catMeta.shortName}
                             </h3>
-                            <p
-                              className={`text-[11px] line-clamp-1 ${
-                                isActive ? 'text-emerald-100' : 'text-gray-500 dark:text-gray-400'
-                              }`}
-                            >
-                              {catMeta.tagline}
-                            </p>
                           </div>
                         </div>
 
-                        {/* Bottom Stats Footer */}
-                        <div
-                          className={`mt-3 pt-2 border-t flex items-center justify-between text-[10px] font-semibold ${
-                            isActive
-                              ? 'border-white/20 text-emerald-100'
-                              : 'border-gray-200/60 dark:border-[#252836] text-gray-500 dark:text-gray-400'
-                          }`}
-                        >
-                          <span>{count.products} Products</span>
-                          {isActive ? (
-                            <span className="flex items-center gap-1 font-bold text-white">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-200" />
-                              <span>Active</span>
+                        {/* Card Content Body */}
+                        <div className="p-3 flex flex-col justify-between flex-1 space-y-2">
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-1">
+                            {catMeta.tagline}
+                          </p>
+
+                          {/* Card Footer: Products Count & Active State */}
+                          <div className="pt-2 border-t border-gray-100 dark:border-[#252836] flex items-center justify-between text-[10px] font-semibold">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              {count.products} Products
                             </span>
-                          ) : (
-                            <span className="flex items-center gap-0.5 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                              <span>Explore</span>
-                              <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                            </span>
-                          )}
+                            {isActive ? (
+                              <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                                <span>Active</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-0.5 text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                <span>Explore</span>
+                                <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </button>
                     );
                   })}
                 </div>
               ) : (
-                /* Grid View (All Niches Grid) */
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
+                /* Grid View (All Niches Grid with Matching Images) */
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 pt-1">
                   {ESTORE_CATEGORY_METAS.map((catMeta) => {
                     const isActive = selectedCategory === catMeta.id;
                     const IconComponent = catMeta.icon;
@@ -1518,59 +1518,63 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                         key={catMeta.id}
                         type="button"
                         onClick={() => setSelectedCategory(catMeta.id)}
-                        className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between transition-all duration-200 group cursor-pointer relative overflow-hidden ${
+                        className={`rounded-2xl border text-left flex flex-col justify-between transition-all duration-300 group cursor-pointer relative overflow-hidden ${
                           isActive
-                            ? 'bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 text-white border-emerald-500 shadow-md shadow-emerald-700/25 ring-2 ring-emerald-400/60'
-                            : 'bg-gray-50/70 dark:bg-[#181B26] hover:bg-white dark:hover:bg-[#1E2230] text-gray-800 dark:text-gray-200 border-gray-200/80 dark:border-[#252836] hover:border-emerald-300 dark:hover:border-emerald-600/70 hover:shadow-xs'
+                            ? 'bg-white dark:bg-[#151822] border-emerald-500 shadow-lg shadow-emerald-500/15 ring-2 ring-emerald-500/40'
+                            : 'bg-white dark:bg-[#151822] hover:bg-gray-50/70 dark:hover:bg-[#181B26] border-gray-200/80 dark:border-[#252836] hover:border-emerald-300 dark:hover:border-emerald-700/70 hover:shadow-md'
                         }`}
                       >
-                        <div>
-                          <div className="flex items-center justify-between gap-2 mb-2">
-                            <div
-                              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 shadow-2xs ${
-                                isActive
-                                  ? 'bg-white/20 text-white'
-                                  : `bg-gradient-to-br ${catMeta.gradient} ${catMeta.accentColor} border border-gray-100 dark:border-white/5`
-                              }`}
-                            >
-                              <IconComponent className="w-4.5 h-4.5" />
+                        {/* Image Window */}
+                        <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-900">
+                          <img
+                            src={catMeta.image}
+                            alt={catMeta.shortName}
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 select-none"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).style.opacity = '0';
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10 pointer-events-none" />
+
+                          {/* Top Badges */}
+                          <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-1 z-10 pointer-events-none">
+                            <div className="w-6 h-6 rounded-md bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center">
+                              <IconComponent className="w-3 h-3 text-white" />
                             </div>
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                                isActive
-                                  ? 'bg-white/20 text-white'
-                                  : 'bg-white dark:bg-[#202330] text-gray-600 dark:text-gray-400 border border-gray-200/60 dark:border-[#2D303E]'
-                              }`}
-                            >
+                            <span className="px-1.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[9px] font-extrabold text-white">
                               {count.stores}
                             </span>
                           </div>
 
-                          <h3
-                            className={`text-xs font-extrabold tracking-tight line-clamp-1 ${
-                              isActive ? 'text-white' : 'text-gray-900 dark:text-white'
-                            }`}
-                          >
-                            {catMeta.shortName}
-                          </h3>
-                          <p
-                            className={`text-[10px] line-clamp-2 mt-0.5 ${
-                              isActive ? 'text-emerald-100' : 'text-gray-500 dark:text-gray-400'
-                            }`}
-                          >
-                            {catMeta.tagline}
-                          </p>
+                          {/* Title on image */}
+                          <div className="absolute bottom-1.5 left-2 right-2 z-10 pointer-events-none">
+                            <h3 className="text-white font-extrabold text-xs tracking-tight drop-shadow-sm truncate">
+                              {catMeta.shortName}
+                            </h3>
+                          </div>
                         </div>
 
-                        <div
-                          className={`mt-2.5 pt-1.5 border-t flex items-center justify-between text-[10px] ${
-                            isActive
-                              ? 'border-white/20 text-emerald-100 font-bold'
-                              : 'border-gray-200/60 dark:border-[#252836] text-gray-500 dark:text-gray-400 font-medium'
-                          }`}
-                        >
-                          <span>{count.products} Items</span>
-                          {isActive && <Check className="w-3.5 h-3.5 text-white" />}
+                        {/* Card Content Body */}
+                        <div className="p-2.5 flex flex-col justify-between flex-1 space-y-1.5">
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 line-clamp-1">
+                            {catMeta.tagline}
+                          </p>
+
+                          <div className="pt-1.5 border-t border-gray-100 dark:border-[#252836] flex items-center justify-between text-[10px]">
+                            <span className="text-gray-600 dark:text-gray-400 font-medium">
+                              {count.products} Items
+                            </span>
+                            {isActive ? (
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 text-[10px]">
+                                <Check className="w-3 h-3" />
+                                <span>Active</span>
+                              </span>
+                            ) : (
+                              <ChevronRight className="w-3 h-3 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+                            )}
+                          </div>
                         </div>
                       </button>
                     );
@@ -1583,7 +1587,7 @@ export const EStorePage: React.FC<EStorePageProps> = ({
             {selectedCategory !== 'All' && (
               <div className="mt-3.5 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 flex flex-wrap items-center justify-between gap-2.5">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <Tag className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <span className="text-xs text-emerald-950 dark:text-emerald-200">
                     Filtered by Category:{' '}
                     <strong className="font-extrabold text-emerald-800 dark:text-emerald-300">
