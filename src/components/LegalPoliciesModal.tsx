@@ -317,6 +317,15 @@ export const LegalPoliciesModal: React.FC<LegalPoliciesModalProps> = ({
                     These Terms & Conditions, and any dispute, controversy, or claim arising out of or in connection with the Platform, shall be governed by and construed in accordance with the substantive <strong>laws of the Democratic Socialist Republic of Sri Lanka</strong>. The parties submit to the <strong>exclusive jurisdiction of the competent Courts situated in Colombo, Western Province, Sri Lanka</strong>.
                   </p>
                 </section>
+
+                <section className="space-y-2">
+                  <h4 className="text-sm font-black text-gray-900 dark:text-white">
+                    8. Official Customer Support & Grievances
+                  </h4>
+                  <p>
+                    For user inquiries, account assistance, dispute escalations, or legal notices, you may reach our official help desk via email at <a href="mailto:support@huta.lk" className="text-blue-600 dark:text-blue-400 font-bold hover:underline">support@huta.lk</a> or via WhatsApp hotline at <strong>+94 77 526 0765</strong>.
+                  </p>
+                </section>
               </div>
             )}
 
@@ -329,7 +338,7 @@ export const LegalPoliciesModal: React.FC<LegalPoliciesModalProps> = ({
                   <Shield className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                   <div>
                     <p className="font-bold text-xs mb-0.5">
-                      Personal Data Protection Act (PDPA) No. 9 of 2022 Compliance
+                       Personal Data Protection Act (PDPA) No. 9 of 2022 Compliance
                     </p>
                     <p>
                       HUTA.LK processes personal data in strict compliance with the statutory principles of data minimization, lawful processing, and accountability established under Sri Lanka&apos;s PDPA No. 9 of 2022.
@@ -342,7 +351,7 @@ export const LegalPoliciesModal: React.FC<LegalPoliciesModalProps> = ({
                     1. Data Controller Identity & Designated Officer
                   </h4>
                   <p>
-                    The Data Controller responsible for personal information processed on this website is <strong>HUTA.LK</strong>. You may contact our Data Protection Liaison at <strong>privacy@huta.lk</strong> or via postal dispatch to our Colombo administrative office.
+                    The Data Controller responsible for personal information processed on this website is <strong>HUTA.LK</strong>. You may contact our Data Protection Liaison and Privacy Desk at <strong>support@huta.lk</strong> or via postal dispatch to our Colombo administrative office.
                   </p>
                 </section>
 
@@ -690,6 +699,7 @@ export const LegalPoliciesModal: React.FC<LegalPoliciesModalProps> = ({
                     <li><strong>Never Send Advance Bank Transfers:</strong> Do not wire advance token fees or courier fees via eZ Cash, mCash, or bank accounts to unknown sellers before physically seeing the product.</li>
                     <li><strong>Inspect Before Payment:</strong> Test smartphones, laptops, and electronics thoroughly. Check IMEI numbers with the Telecommunications Regulatory Commission of Sri Lanka (TRCSL).</li>
                     <li><strong>Verify Vehicle Identity:</strong> Confirm vehicle chassis and engine numbers match the physical vehicle and the DMT Certificate of Registration (CR).</li>
+                    <li><strong>Report Fraud or Suspicious Accounts:</strong> Contact our Trust & Safety unit immediately at <a href="mailto:support@huta.lk" className="font-bold underline text-emerald-950 dark:text-emerald-100">support@huta.lk</a> or via 24/7 WhatsApp support.</li>
                   </ul>
                 </section>
               </div>

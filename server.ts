@@ -12,8 +12,35 @@ import {
   getDoc,
   setDoc,
   deleteDoc,
+  setLogLevel,
 } from 'firebase/firestore';
 import firebaseConfig from './firebase-applet-config.json';
+
+try {
+  setLogLevel('silent');
+} catch {
+  // ignore
+}
+
+// Filter benign internal Firestore idle stream timeout notices in server logs
+const originalConsoleError = console.error;
+console.error = (...args: any[]) => {
+  const fullText = args
+    .map((a) => (typeof a === 'string' ? a : a?.message || String(a)))
+    .join(' ');
+
+  if (
+    fullText.includes('Disconnecting idle stream') ||
+    fullText.includes('Timed out waiting for new targets') ||
+    (fullText.includes('@firebase/firestore') && fullText.includes('CANCELLED')) ||
+    (fullText.includes('GrpcConnection') && fullText.includes('CANCELLED')) ||
+    fullText.includes('cancelling stream')
+  ) {
+    console.debug('[Firestore Stream Notice]', ...args);
+    return;
+  }
+  originalConsoleError.apply(console, args);
+};
 
 // Prevent process exits from benign Firestore stream cancellations or network interruptions
 process.on('uncaughtException', (err: any) => {
@@ -189,7 +216,12 @@ function resolvePort(): number {
     const val = parseInt(process.argv[portArgIndex + 1], 10);
     if (!isNaN(val) && val > 0) return val;
   }
-  return Number(process.env.PORT) || 3000;
+  // In development, the dev server must always run on port 3000
+  // (process.env.PORT is 8080 in the Cloud Run container environment, which would conflict with Cloud Run's ingress)
+  if (process.env.NODE_ENV !== 'production') {
+    return 3000;
+  }
+  return Number(process.env.PORT) || 8080;
 }
 const PORT = resolvePort();
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -2830,7 +2862,7 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
     const vite = await createViteServer({
       server: {
         middlewareMode: true,
-        hmr: isHmrDisabled ? false : undefined,
+        hmr: false,
       },
       appType: 'spa',
     });

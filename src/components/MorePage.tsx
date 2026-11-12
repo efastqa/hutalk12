@@ -26,6 +26,7 @@ import {
   Sun,
   Moon,
   Store,
+  Mail,
 } from 'lucide-react';
 import { DeviceSettingsPanel } from './DeviceSettingsPanel';
 import { ThemeToggle } from './ThemeToggle';
@@ -425,7 +426,7 @@ export const MorePage: React.FC<MorePageProps> = ({
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                      Sri Lanka E-Stores & Online Merchants
+                      Sri Lanka E-Stores and Online Merchant Marketplace
                     </p>
                     <span className="text-[10px] font-black bg-emerald-500 text-white px-1.5 py-0.2 rounded-full uppercase tracking-wider">
                       New ↗
@@ -637,6 +638,24 @@ export const MorePage: React.FC<MorePageProps> = ({
                     Direct Phone Hotline
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">+94 77 526 0765 • Tap to call</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+            </a>
+
+            <a
+              href="mailto:support@huta.lk"
+              className="px-5 py-4 flex items-center justify-between hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-[#FF5A36] flex items-center justify-center shadow-xs">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-[#FF5A36] transition-colors">
+                    Official Support Email
+                  </p>
+                  <p className="text-xs text-[#FF5A36] font-medium">support@huta.lk • Inquiries, Safety & Disputes</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />

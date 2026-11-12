@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, MapPin, PhoneCall, HelpCircle, Heart, Smartphone } from 'lucide-react';
+import { ShieldCheck, MapPin, PhoneCall, HelpCircle, Heart, Smartphone, Mail } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { PolicyTab } from './LegalPoliciesModal';
 
@@ -155,12 +155,21 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li>
                 <a
+                  href="mailto:support@huta.lk"
+                  className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-500 font-bold transition-colors"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Email: support@huta.lk</span>
+                </a>
+              </li>
+              <li>
+                <a
                   href="?tab=estore"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-emerald-500 transition-colors font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 cursor-pointer no-underline"
                 >
-                  <span>🛍️ Sri Lanka E-Stores Directory ↗</span>
+                  <span>🛍️ Sri Lanka E-Stores & Online Merchants ↗</span>
                 </a>
               </li>
               <li>
@@ -321,8 +330,15 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         {/* Copyright notice */}
-        <div className="pt-3 text-center sm:text-left text-[11px] text-gray-400 dark:text-gray-500">
+        <div className="pt-3 text-center sm:text-left text-[11px] text-gray-400 dark:text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p>© {new Date().getFullYear()} HUTA.LK — Sri Lanka. All prices in Sri Lankan Rupees (LKR).</p>
+          <p className="flex items-center gap-1.5">
+            <Mail className="w-3 h-3 text-emerald-500" />
+            <span>Support:</span>
+            <a href="mailto:support@huta.lk" className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">
+              support@huta.lk
+            </a>
+          </p>
         </div>
       </div>
     </footer>

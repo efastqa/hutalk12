@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, AlertTriangle, ShieldAlert, CheckCircle2, Send, Phone, User, FileText } from 'lucide-react';
+import { X, AlertTriangle, ShieldAlert, CheckCircle2, Send, Phone, User, FileText, Mail } from 'lucide-react';
 import { Listing, ListingReport } from '../types';
 import { api } from '../services/api';
 
@@ -133,12 +133,31 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               <p className="text-xs text-gray-600 max-w-sm mx-auto leading-relaxed">
                 Your report has been logged with our marketplace moderation team. If this listing violates community standards, it will be removed promptly.
               </p>
+              <p className="text-[11px] text-gray-500 max-w-sm mx-auto pt-1">
+                For evidence submissions or urgent dispute assistance, email{' '}
+                <a href="mailto:support@huta.lk" className="text-emerald-700 font-bold hover:underline">
+                  support@huta.lk
+                </a>.
+              </p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
               <p className="text-xs text-gray-500 leading-relaxed">
                 HUTA.lk is committed to safe, verified marketplace transactions across Sri Lanka. Select the reason you believe this listing requires review:
               </p>
+
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/80 text-[11px] text-amber-900 flex items-start gap-2">
+                <Mail className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold">Have payment receipts or fraud screenshots?</span>
+                  <p className="mt-0.5 text-amber-800">
+                    You can also email evidence directly to our Trust & Safety team at{' '}
+                    <a href="mailto:support@huta.lk" className="font-bold underline text-amber-950 hover:text-black">
+                      support@huta.lk
+                    </a>.
+                  </p>
+                </div>
+              </div>
 
               {/* Reasons Radio List */}
               <div className="space-y-2">

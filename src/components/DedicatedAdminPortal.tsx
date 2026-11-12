@@ -413,10 +413,16 @@ export const DedicatedAdminPortal: React.FC<DedicatedAdminPortalProps> = ({
             <span>
               &copy; {new Date().getFullYear()} HUTA.LK Operations & Backoffice Platform • Model A
             </span>
-            <span className="flex items-center gap-1 text-[11px] text-slate-400">
-              <Shield className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Compliant with Sri Lanka Personal Data Protection Act No. 9 of 2022</span>
-            </span>
+            <div className="flex items-center gap-3 text-[11px] text-slate-400">
+              <a href="mailto:support@huta.lk" className="hover:text-emerald-400 transition-colors">
+                Ops Support: support@huta.lk
+              </a>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                <span>PDPA Compliant (Act No. 9 of 2022)</span>
+              </span>
+            </div>
           </div>
         </footer>
       </div>

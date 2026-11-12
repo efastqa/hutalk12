@@ -79,7 +79,11 @@ export const api = {
           items.sort((a, b) => new Date(b.createdAt || b.date || 0).getTime() - new Date(a.createdAt || a.date || 0).getTime());
           callback(items);
         },
-        () => {
+        (err) => {
+          const msg = err?.message || String(err);
+          if (msg.includes('Disconnecting idle stream') || msg.includes('CANCELLED')) {
+            return;
+          }
           // Gracefully fall back to local REST API when Firestore stream disconnects or reaches quota
           if (!fallbackTimer) {
             api.getListings().then(callback).catch(() => {});
@@ -2227,7 +2231,11 @@ For quick inquiries, call or send a message via WhatsApp!`;
           }
           callback(items);
         },
-        () => {
+        (err) => {
+          const msg = err?.message || String(err);
+          if (msg.includes('Disconnecting idle stream') || msg.includes('CANCELLED')) {
+            return;
+          }
           // Gracefully fall back to cached reels or REST call
           api.getVideoReels().then(callback).catch(() => {});
         }

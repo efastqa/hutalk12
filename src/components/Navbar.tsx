@@ -127,7 +127,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onSelectTab('estore');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          title="Browse Sri Lanka E-Stores"
+          title="Browse Sri Lanka E-Stores and Online Merchant Marketplace"
           className={`inline-flex sm:hidden items-center gap-1 px-2 py-1 rounded-xl text-xs font-black transition-all cursor-pointer shadow-2xs border ${
             currentTab === 'estore'
               ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
@@ -247,7 +247,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             href="?tab=estore"
             target="_blank"
             rel="noopener noreferrer"
-            title="Open Sri Lanka E-Stores in a New Tab"
+            title="Open Sri Lanka E-Stores and Online Merchant Marketplace in a New Tab"
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer no-underline ${
               currentTab === 'estore'
                 ? 'bg-emerald-600 text-white shadow-xs'

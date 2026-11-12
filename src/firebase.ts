@@ -10,6 +10,27 @@ try {
   // ignore
 }
 
+if (typeof window !== 'undefined' && window.console) {
+  const originalError = window.console.error;
+  window.console.error = (...args: any[]) => {
+    const fullText = args
+      .map((a) => (typeof a === 'string' ? a : a?.message || String(a)))
+      .join(' ');
+
+    if (
+      fullText.includes('Disconnecting idle stream') ||
+      fullText.includes('Timed out waiting for new targets') ||
+      (fullText.includes('@firebase/firestore') && fullText.includes('CANCELLED')) ||
+      (fullText.includes('GrpcConnection') && fullText.includes('CANCELLED')) ||
+      fullText.includes('cancelling stream')
+    ) {
+      console.debug('[Firestore Stream Notice]', ...args);
+      return;
+    }
+    originalError.apply(window.console, args);
+  };
+}
+
 const app = initializeApp(firebaseConfig);
 export const db = initializeFirestore(
   app,
