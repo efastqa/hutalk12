@@ -299,7 +299,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 </button>
               )}
 
-              {isAdminLoggedIn ? (
+              {isAdminLoggedIn && (
                 <button
                   type="button"
                   id="dashboard-guest-admin-portal-btn"
@@ -308,16 +308,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 >
                   <ShieldCheck className="w-4 h-4" />
                   <span>Admin Moderation Portal</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  id="dashboard-guest-admin-login-btn"
-                  onClick={onOpenAdminLogin}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-400 hover:text-white transition-colors cursor-pointer ml-auto"
-                >
-                  <ShieldAlert className="w-3.5 h-3.5" />
-                  <span>Admin Login</span>
                 </button>
               )}
             </div>
