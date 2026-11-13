@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import {
   Plus,
@@ -55,13 +55,39 @@ export const Navbar: React.FC<NavbarProps> = ({
   myAdsCount = 0,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const headerRef = useRef<HTMLElement | null>(null);
+  const [headerHeight, setHeaderHeight] = useState<number>(68);
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+
+    const updateHeight = () => {
+      const nextHeight = Math.ceil(el.getBoundingClientRect().height);
+      if (nextHeight > 0) {
+        setHeaderHeight(nextHeight);
+      }
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(updateHeight);
+      observer.observe(el);
+      return () => observer.disconnect();
+    }
+
+    window.addEventListener('resize', updateHeight, { passive: true });
+    return () => window.removeEventListener('resize', updateHeight);
   }, []);
 
   const handleVerticalClick = (catName: string) => {
@@ -72,12 +98,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
+    <>
     <header
+      ref={headerRef}
       id="main-sticky-navbar"
       style={{
         paddingTop: 'max(env(safe-area-inset-top, 0px), 8px)',
       }}
-      className={`sticky top-0 z-50 backdrop-blur-xl bg-white/95 dark:bg-[#0B0C10]/95 border-b text-gray-900 dark:text-white transition-all duration-200 supports-[backdrop-filter]:bg-white/90 supports-[backdrop-filter]:dark:bg-[#0B0C10]/90 ${
+      className={`fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-white/95 dark:bg-[#0B0C10]/95 border-b text-gray-900 dark:text-white transition-all duration-200 supports-[backdrop-filter]:bg-white/90 supports-[backdrop-filter]:dark:bg-[#0B0C10]/90 ${
         isScrolled
           ? 'shadow-md border-gray-300/80 dark:border-white/15'
           : 'shadow-xs border-gray-200/70 dark:border-white/10'
@@ -355,6 +383,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
     </header>
+    <div style={{ height: `${headerHeight}px` }} aria-hidden="true" className="w-full shrink-0" />
+    </>
   );
 };
 

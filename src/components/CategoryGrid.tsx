@@ -301,7 +301,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
                 whileHover={{ y: -5 }}
                 whileTap={{ scale: 0.96 }}
                 onClick={() => handleCategoryClick(cat)}
-                className={`relative flex flex-col items-center justify-start text-center cursor-pointer select-none group p-2.5 rounded-2xl transition-all duration-300 ${
+                className={`relative flex flex-col items-center justify-start text-center cursor-pointer select-none group p-1.5 sm:p-2.5 rounded-2xl transition-all duration-300 ${
                   isActive
                     ? 'bg-gradient-to-b from-[#FF5A36]/12 to-transparent dark:from-[#FF5A36]/20 dark:to-transparent border border-[#FF5A36]/50 shadow-md shadow-[#FF5A36]/10'
                     : 'hover:bg-white dark:hover:bg-[#1A1E2B] hover:shadow-md hover:shadow-black/5 dark:hover:shadow-black/40 border border-transparent hover:border-gray-200/80 dark:hover:border-white/10'
@@ -334,7 +334,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
 
                 {/* Category Label */}
                 <span
-                  className={`text-xs sm:text-sm font-black tracking-tight transition-colors line-clamp-1 mt-1 ${
+                  className={`text-[11px] sm:text-sm font-black tracking-tight leading-tight text-center transition-colors mt-1 ${
                     isActive
                       ? 'text-[#FF5A36] dark:text-[#FF7A59]'
                       : 'text-gray-900 dark:text-gray-100 group-hover:text-[#FF5A36] dark:group-hover:text-[#FF5A36]'
