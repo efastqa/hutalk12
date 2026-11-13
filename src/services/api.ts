@@ -289,6 +289,21 @@ export const api = {
     if (data.serviceTrade) rawListing.serviceTrade = data.serviceTrade;
     if (data.serviceArea) rawListing.serviceArea = data.serviceArea;
     if (data.isEmergency247 !== undefined) rawListing.isEmergency247 = Boolean(data.isEmergency247);
+    if (data.propertyType) rawListing.propertyType = data.propertyType;
+    if (data.propertySize) rawListing.propertySize = data.propertySize;
+    if (data.bedrooms !== undefined && data.bedrooms !== '') rawListing.bedrooms = data.bedrooms;
+    if (data.bathrooms !== undefined && data.bathrooms !== '') rawListing.bathrooms = data.bathrooms;
+    if (data.maxGuests !== undefined && data.maxGuests !== '') rawListing.maxGuests = data.maxGuests;
+    if (Array.isArray(data.amenities) && data.amenities.length > 0) rawListing.amenities = data.amenities;
+    if (data.vehicleType) rawListing.vehicleType = data.vehicleType;
+    if (data.vehicleYear !== undefined && data.vehicleYear !== '') rawListing.vehicleYear = data.vehicleYear;
+    if (data.vehicleMileage !== undefined && data.vehicleMileage !== '') rawListing.vehicleMileage = data.vehicleMileage;
+    if (data.fuelType) rawListing.fuelType = data.fuelType;
+    if (data.transmission) rawListing.transmission = data.transmission;
+    if (data.electronicsSubcategory) rawListing.electronicsSubcategory = data.electronicsSubcategory;
+    if (data.storageCapacity) rawListing.storageCapacity = data.storageCapacity;
+    if (data.jobType) rawListing.jobType = data.jobType;
+    if (data.salaryPeriod) rawListing.salaryPeriod = data.salaryPeriod;
 
     if (data.videoUrl) {
       let finalVideoUrl = String(data.videoUrl).trim();

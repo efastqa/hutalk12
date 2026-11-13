@@ -34,6 +34,7 @@ import {
   Car,
   Home,
   Briefcase,
+  Users,
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -43,6 +44,7 @@ const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
   Vehicles: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80',
   Electronics: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80',
   Property: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80',
+  'Holiday Homes': 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&w=800&q=80',
   Motorcycles: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80',
   'Home & Garden': 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=800&q=80',
   Fashion: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=800&q=80',
@@ -154,6 +156,7 @@ const CATEGORIES = [
   'Electronics',
   'Vehicles',
   'Property',
+  'Holiday Homes',
   'Motorcycles',
   'Home & Garden',
   'Fashion',
@@ -265,6 +268,26 @@ const PROPERTY_TYPES = [
   'Room / Annex for Rent',
   'Villa / Holiday Home',
 ];
+const HOLIDAY_STAY_TYPES = [
+  'Villa / Holiday Home',
+  'Luxury Beach Villa',
+  'Tea Country Bungalow',
+  'Eco Cabana / Chalet',
+  'Boutique Homestay',
+  'Resort Suite',
+];
+const GUEST_CAPACITY_OPTIONS = ['2', '4', '6', '8', '10', '12+'];
+const HOLIDAY_AMENITIES = [
+  'Pool',
+  'AC',
+  'Wi-Fi',
+  'Beachfront',
+  'Breakfast',
+  'Private Chef',
+  'Mountain View',
+  'Parking',
+  'BBQ',
+];
 const BEDROOM_OPTIONS = ['1', '2', '3', '4', '5+'];
 const BATHROOM_OPTIONS = ['1', '2', '3', '4+'];
 
@@ -324,9 +347,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [uploadStatusText, setUploadStatusText] = useState('');
 
-  // Specialized Service Fields
+  // Specialized Service & Holiday Stay Fields
   const [serviceTrade, setServiceTrade] = useState('AC Repair & Servicing');
-  const [pricingType, setPricingType] = useState<'fixed' | 'starting_at' | 'hourly' | 'quote'>('starting_at');
+  const [pricingType, setPricingType] = useState<'fixed' | 'starting_at' | 'hourly' | 'quote' | 'per_night' | 'per_weekend'>('starting_at');
   const [serviceArea, setServiceArea] = useState('Colombo & Greater Suburbs');
   const [isEmergency247, setIsEmergency247] = useState(false);
 
@@ -343,6 +366,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
   const [propertySize, setPropertySize] = useState('');
   const [bedrooms, setBedrooms] = useState('3');
   const [bathrooms, setBathrooms] = useState('2');
+  const [maxGuests, setMaxGuests] = useState('4');
+  const [amenities, setAmenities] = useState<string[]>(['AC', 'Wi-Fi']);
 
   const [electronicsSubcategory, setElectronicsSubcategory] = useState('Mobile Phones & Smartphones');
   const [itemCondition, setItemCondition] = useState('Brand New');
@@ -392,7 +417,14 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       setVideoUrl(editingListing.videoUrl || '');
 
       setServiceTrade(editingListing.serviceTrade || 'AC Repair & Servicing');
-      setPricingType(editingListing.pricingType || (editingListing.category === 'Services' ? 'starting_at' : 'fixed'));
+      setPricingType(
+        editingListing.pricingType ||
+          (editingListing.category === 'Services'
+            ? 'starting_at'
+            : editingListing.category === 'Holiday Homes'
+            ? 'per_night'
+            : 'fixed')
+      );
       setServiceArea(editingListing.serviceArea || 'Colombo & Greater Suburbs');
       setIsEmergency247(Boolean(editingListing.isEmergency247));
 
@@ -409,6 +441,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       setPropertySize(editingListing.propertySize || '');
       setBedrooms(editingListing.bedrooms ? String(editingListing.bedrooms) : '3');
       setBathrooms(editingListing.bathrooms ? String(editingListing.bathrooms) : '2');
+      setMaxGuests(editingListing.maxGuests ? String(editingListing.maxGuests) : '4');
+      setAmenities(Array.isArray(editingListing.amenities) ? editingListing.amenities : ['AC', 'Wi-Fi']);
 
       setElectronicsSubcategory(editingListing.electronicsSubcategory || 'Mobile Phones & Smartphones');
       setItemCondition(editingListing.itemCondition || 'Brand New');
@@ -430,7 +464,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       setUrlInput('');
       setVideoUrl('');
       setServiceTrade('AC Repair & Servicing');
-      setPricingType('starting_at');
+      setPricingType(initialCategory === 'Holiday Homes' ? 'per_night' : 'starting_at');
       setServiceArea('Colombo & Greater Suburbs');
       setIsEmergency247(false);
 
@@ -443,10 +477,12 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       setFuelType('Petrol');
       setTransmission('Automatic');
 
-      setPropertyType('House for Sale');
+      setPropertyType(initialCategory === 'Holiday Homes' ? 'Villa / Holiday Home' : 'House for Sale');
       setPropertySize('');
       setBedrooms('3');
       setBathrooms('2');
+      setMaxGuests('4');
+      setAmenities(['AC', 'Wi-Fi']);
 
       setElectronicsSubcategory('Mobile Phones & Smartphones');
       setItemCondition('Brand New');
@@ -478,6 +514,11 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       formatted = `${(cleanNum / 100000).toFixed(1).replace(/\.0$/, '')} Lakhs (Rs ${cleanNum.toLocaleString('en-US')})`;
     } else {
       formatted = `Rs ${cleanNum.toLocaleString('en-US')}`;
+    }
+    if (category === 'Holiday Homes' && pricingType === 'per_night') {
+      formatted = `${formatted} / night`;
+    } else if (category === 'Holiday Homes' && pricingType === 'per_weekend') {
+      formatted = `${formatted} / wknd`;
     }
     return isNegotiable ? `${formatted} • Negotiable` : formatted;
   };
@@ -719,7 +760,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
         images: finalImages,
         videoUrl: videoUrl.trim() || undefined,
         userId: editingListing ? editingListing.userId : (currentUser ? currentUser.id : 'guest'),
-        pricingType: isService ? pricingType : (isNegotiable ? 'negotiable' : 'fixed'),
+        pricingType: (isService || category === 'Holiday Homes') ? pricingType : (isNegotiable ? 'negotiable' as any : 'fixed'),
         ...(isService && serviceTrade ? { serviceTrade } : {}),
         ...(isService && serviceArea ? { serviceArea } : {}),
         ...(isService ? { isEmergency247: Boolean(isEmergency247) } : {}),
@@ -733,11 +774,15 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
           transmission: transmission || undefined,
           itemCondition: itemCondition || undefined,
         } : {}),
-        ...(category === 'Property' ? {
+        ...(category === 'Property' || category === 'Holiday Homes' ? {
           propertyType: propertyType || undefined,
           propertySize: propertySize.trim() || undefined,
           bedrooms: bedrooms ? Number(bedrooms) || bedrooms : undefined,
           bathrooms: bathrooms ? Number(bathrooms) || bathrooms : undefined,
+          ...(category === 'Holiday Homes' ? {
+            maxGuests: maxGuests ? Number(maxGuests) || maxGuests : undefined,
+            amenities: amenities.length > 0 ? amenities : undefined,
+          } : {}),
         } : {}),
         ...(category === 'Electronics' || category === 'Home & Garden' || category === 'Fashion' ? {
           brand: brand.trim() || undefined,
@@ -1015,7 +1060,21 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                 </label>
                 <select
                   value={category}
-                  onChange={(e) => setCategory(e.target.value)}
+                  onChange={(e) => {
+                    const nextCategory = e.target.value;
+                    setCategory(nextCategory);
+                    if (nextCategory === 'Holiday Homes') {
+                      setPropertyType('Villa / Holiday Home');
+                      setPricingType('per_night');
+                    } else if (nextCategory === 'Services') {
+                      setPricingType('starting_at');
+                    } else if (nextCategory === 'Property' && propertyType === 'Villa / Holiday Home') {
+                      setPropertyType('House for Sale');
+                      setPricingType('fixed');
+                    } else if (pricingType === 'per_night' || pricingType === 'per_weekend') {
+                      setPricingType('fixed');
+                    }
+                  }}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm focus:border-[#FF5A36] outline-none bg-white cursor-pointer"
                 >
                   {CATEGORIES.map((c) => (
@@ -1259,31 +1318,77 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                 </div>
               )}
 
-              {/* Custom Category Fields: Property */}
-              {category === 'Property' && (
+              {/* Custom Category Fields: Property & Holiday Homes */}
+              {(category === 'Property' || category === 'Holiday Homes') && (
                 <div className="p-3.5 sm:p-4 bg-gradient-to-br from-emerald-50/70 to-teal-50/40 rounded-2xl border border-emerald-200/80 space-y-3.5 animate-in fade-in duration-200">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
                       <Home className="w-4 h-4 text-emerald-600" />
-                      <span>Property & Real Estate Specifications</span>
+                      <span>{category === 'Holiday Homes' ? 'Holiday Home & Stay Specifications' : 'Property & Real Estate Specifications'}</span>
                     </span>
                     <span className="text-[10px] text-emerald-800 bg-emerald-100 font-bold px-2 py-0.5 rounded-md">
-                      Property Specs
+                      {category === 'Holiday Homes' ? 'Stay Specs' : 'Property Specs'}
                     </span>
                   </div>
 
+                  {/* Rate Basis & Max Guests for Holiday Homes */}
+                  {category === 'Holiday Homes' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                          Rate Basis
+                        </label>
+                        <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-xl border border-gray-300">
+                          {[
+                            { id: 'per_night', label: 'Per Night' },
+                            { id: 'per_weekend', label: 'Weekend' },
+                            { id: 'fixed', label: 'Fixed' },
+                          ].map((opt) => (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => setPricingType(opt.id as any)}
+                              className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                                pricingType === opt.id
+                                  ? 'bg-emerald-600 text-white shadow-2xs'
+                                  : 'text-gray-600 hover:bg-gray-100'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                          Maximum Guests
+                        </label>
+                        <select
+                          value={maxGuests}
+                          onChange={(e) => setMaxGuests(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                        >
+                          {GUEST_CAPACITY_OPTIONS.map((g) => (
+                            <option key={g} value={g}>Up to {g} Guests</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {/* Property Type */}
+                    {/* Property / Stay Type */}
                     <div>
                       <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                        Property Type
+                        {category === 'Holiday Homes' ? 'Stay Type' : 'Property Type'}
                       </label>
                       <select
                         value={propertyType}
                         onChange={(e) => setPropertyType(e.target.value)}
                         className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
                       >
-                        {PROPERTY_TYPES.map((p) => (
+                        {(category === 'Holiday Homes' ? HOLIDAY_STAY_TYPES : PROPERTY_TYPES).map((p) => (
                           <option key={p} value={p}>{p}</option>
                         ))}
                       </select>
@@ -1292,13 +1397,13 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                     {/* Land / Floor Size */}
                     <div>
                       <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
-                        Land Size or Floor Area
+                        {category === 'Holiday Homes' ? 'Garden / Floor Size (Optional)' : 'Land Size or Floor Area'}
                       </label>
                       <input
                         type="text"
                         value={propertySize}
                         onChange={(e) => setPropertySize(e.target.value)}
-                        placeholder="e.g. 10.5 Perches or 1,800 sqft"
+                        placeholder={category === 'Holiday Homes' ? 'e.g. 2,500 sqft / Beachfront' : 'e.g. 10.5 Perches or 1,800 sqft'}
                         className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
                       />
                     </div>
@@ -1335,6 +1440,42 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                             <option key={b} value={b}>{b} Bathroom{b !== '1' ? 's' : ''}</option>
                           ))}
                         </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Amenities Checklist for Holiday Homes */}
+                  {category === 'Holiday Homes' && (
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                        <Users className="w-3 h-3 text-emerald-600" />
+                        <span>Included Amenities</span>
+                      </label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {HOLIDAY_AMENITIES.map((amenity) => {
+                          const isSelected = amenities.includes(amenity);
+                          return (
+                            <button
+                              key={amenity}
+                              type="button"
+                              onClick={() =>
+                                setAmenities((prev) =>
+                                  prev.includes(amenity)
+                                    ? prev.filter((item) => item !== amenity)
+                                    : [...prev, amenity]
+                                )
+                              }
+                              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer flex items-center gap-1 ${
+                                isSelected
+                                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                                  : 'bg-white text-gray-700 border-gray-300 hover:border-emerald-400'
+                              }`}
+                            >
+                              {isSelected && <Check className="w-3 h-3" />}
+                              <span>{amenity}</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -1542,6 +1683,10 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                         ? 'Starting Rate (LKR)'
                         : isService && pricingType === 'hourly'
                         ? 'Hourly Rate (LKR/hr)'
+                        : category === 'Holiday Homes' && pricingType === 'per_night'
+                        ? 'Nightly Rate (LKR / night)'
+                        : category === 'Holiday Homes' && pricingType === 'per_weekend'
+                        ? 'Weekend Rate (LKR / wknd)'
                         : 'Price (LKR)'}
                     </label>
                     {getPricePreview() && (

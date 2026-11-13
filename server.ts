@@ -96,7 +96,7 @@ interface Listing {
   whatsappClicks?: number;
   phoneClicks?: number;
   serviceTrade?: string;
-  pricingType?: 'fixed' | 'starting_at' | 'hourly' | 'quote';
+  pricingType?: 'fixed' | 'starting_at' | 'hourly' | 'quote' | 'per_night' | 'per_weekend';
   serviceArea?: string;
   isVerifiedPro?: boolean;
   isEmergency247?: boolean;
@@ -119,6 +119,8 @@ interface Listing {
   propertySize?: string;
   bedrooms?: number | string;
   bathrooms?: number | string;
+  maxGuests?: number | string;
+  amenities?: string[];
   electronicsSubcategory?: string;
   storageCapacity?: string;
   jobType?: string;
@@ -1061,6 +1063,24 @@ async function startServer() {
       isVerifiedPro: Boolean(isVerifiedPro),
       isEmergency247: Boolean(isEmergency247),
       ...(videoUrl ? { videoUrl: String(videoUrl).trim() } : {}),
+      ...(req.body.propertyType ? { propertyType: String(req.body.propertyType).trim() } : {}),
+      ...(req.body.propertySize ? { propertySize: String(req.body.propertySize).trim() } : {}),
+      ...(req.body.bedrooms !== undefined ? { bedrooms: req.body.bedrooms } : {}),
+      ...(req.body.bathrooms !== undefined ? { bathrooms: req.body.bathrooms } : {}),
+      ...(req.body.maxGuests !== undefined ? { maxGuests: req.body.maxGuests } : {}),
+      ...(Array.isArray(req.body.amenities) ? { amenities: req.body.amenities.map(String).filter(Boolean) } : {}),
+      ...(req.body.brand ? { brand: String(req.body.brand).trim() } : {}),
+      ...(req.body.model ? { model: String(req.body.model).trim() } : {}),
+      ...(req.body.itemCondition ? { itemCondition: String(req.body.itemCondition).trim() } : {}),
+      ...(req.body.vehicleType ? { vehicleType: String(req.body.vehicleType).trim() } : {}),
+      ...(req.body.vehicleYear !== undefined ? { vehicleYear: req.body.vehicleYear } : {}),
+      ...(req.body.vehicleMileage !== undefined ? { vehicleMileage: req.body.vehicleMileage } : {}),
+      ...(req.body.fuelType ? { fuelType: String(req.body.fuelType).trim() } : {}),
+      ...(req.body.transmission ? { transmission: String(req.body.transmission).trim() } : {}),
+      ...(req.body.electronicsSubcategory ? { electronicsSubcategory: String(req.body.electronicsSubcategory).trim() } : {}),
+      ...(req.body.storageCapacity ? { storageCapacity: String(req.body.storageCapacity).trim() } : {}),
+      ...(req.body.jobType ? { jobType: String(req.body.jobType).trim() } : {}),
+      ...(req.body.salaryPeriod ? { salaryPeriod: String(req.body.salaryPeriod).trim() } : {}),
     };
 
     if (existingIndex >= 0) {
@@ -1169,6 +1189,12 @@ async function startServer() {
       reviewCount: req.body.reviewCount !== undefined ? Number(req.body.reviewCount) : current.reviewCount,
       whatsappClicks: req.body.whatsappClicks !== undefined ? Number(req.body.whatsappClicks) : current.whatsappClicks,
       phoneClicks: req.body.phoneClicks !== undefined ? Number(req.body.phoneClicks) : current.phoneClicks,
+      propertyType: req.body.propertyType !== undefined ? String(req.body.propertyType).trim() : current.propertyType,
+      propertySize: req.body.propertySize !== undefined ? String(req.body.propertySize).trim() : current.propertySize,
+      bedrooms: req.body.bedrooms !== undefined ? req.body.bedrooms : current.bedrooms,
+      bathrooms: req.body.bathrooms !== undefined ? req.body.bathrooms : current.bathrooms,
+      maxGuests: req.body.maxGuests !== undefined ? req.body.maxGuests : current.maxGuests,
+      amenities: Array.isArray(req.body.amenities) ? req.body.amenities.map(String).filter(Boolean) : current.amenities,
     };
 
     saveStoredListings(listingsCache);

@@ -185,6 +185,7 @@ const CLASSIFIEDS_LIST = [
   { id: 'motorcycles', name: 'Motorcycles & Bikes', categoryFilter: 'Motorcycles', icon: Bike, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   { id: 'electronics', name: 'Electronics & Mobiles', categoryFilter: 'Electronics', icon: Smartphone, color: 'text-violet-600', bg: 'bg-violet-50' },
   { id: 'property', name: 'Property & Houses', categoryFilter: 'Property', icon: Home, color: 'text-amber-600', bg: 'bg-amber-50' },
+  { id: 'holiday-homes', name: 'Holiday Homes & Villas', categoryFilter: 'Holiday Homes', icon: Plane, color: 'text-cyan-600', bg: 'bg-cyan-50', isNew: true },
   { id: 'furniture', name: 'Home & Furniture', categoryFilter: 'Home & Garden', icon: Sofa, color: 'text-teal-600', bg: 'bg-teal-50' },
   { id: 'jobs', name: 'Jobs & Careers', categoryFilter: 'Jobs', icon: Briefcase, color: 'text-indigo-600', bg: 'bg-indigo-50' },
 ];
@@ -282,13 +283,18 @@ export const AllCategoriesPage: React.FC<AllCategoriesPageProps> = ({
                     whileHover={{ y: -3 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => handleCategoryClick(cat.categoryFilter)}
-                    className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md cursor-pointer transition-all flex items-center gap-3 group"
+                    className="relative bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md cursor-pointer transition-all flex items-center gap-3 group"
                   >
+                    {'isNew' in cat && cat.isNew && (
+                      <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-[#FF5A36] to-amber-500 text-white text-[9px] font-black uppercase tracking-wider shadow-xs">
+                        New
+                      </span>
+                    )}
                     <div className={`w-11 h-11 rounded-xl ${cat.bg} ${cat.color} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-gray-800 truncate group-hover:text-[#FF5A36] transition-colors">
+                      <p className="text-xs font-bold text-gray-800 truncate group-hover:text-[#FF5A36] transition-colors pr-8">
                         {cat.name}
                       </p>
                       <p className="text-[10px] text-gray-400 font-medium">

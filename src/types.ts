@@ -21,7 +21,7 @@ export interface Listing {
   whatsappClicks?: number;
   phoneClicks?: number;
   serviceTrade?: string;
-  pricingType?: 'fixed' | 'starting_at' | 'hourly' | 'quote';
+  pricingType?: 'fixed' | 'starting_at' | 'hourly' | 'quote' | 'per_night' | 'per_weekend';
   serviceArea?: string;
   isVerifiedPro?: boolean;
   isEmergency247?: boolean;
@@ -44,11 +44,13 @@ export interface Listing {
   fuelType?: 'Petrol' | 'Diesel' | 'Hybrid' | 'Electric' | string;
   transmission?: 'Automatic' | 'Manual' | 'Tiptronic' | string;
 
-  // Property
-  propertyType?: 'House' | 'Land' | 'Apartment' | 'Commercial' | 'Room / Annex' | string;
+  // Property & Holiday Homes
+  propertyType?: 'House' | 'Land' | 'Apartment' | 'Commercial' | 'Room / Annex' | 'Villa / Holiday Home' | string;
   propertySize?: string;
   bedrooms?: number | string;
   bathrooms?: number | string;
+  maxGuests?: number | string;
+  amenities?: string[];
 
   // Electronics
   electronicsSubcategory?: string;

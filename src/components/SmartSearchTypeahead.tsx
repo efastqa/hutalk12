@@ -110,7 +110,7 @@ export const SmartSearchTypeahead: React.FC<SmartSearchTypeaheadProps> = ({
   const matchingCategories = useMemo(() => {
     if (!searchTerm.trim()) return [];
     const query = searchTerm.toLowerCase().trim();
-    const categories = ['Vehicles', 'Property', 'Electronics', 'Home & Garden', 'Jobs', 'Services', 'E-Stores'];
+    const categories = ['Vehicles', 'Property', 'Holiday Homes', 'Electronics', 'Home & Garden', 'Jobs', 'Services', 'E-Stores'];
     return categories.filter((c) => c.toLowerCase().includes(query));
   }, [searchTerm]);
 

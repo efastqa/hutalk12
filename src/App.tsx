@@ -480,6 +480,20 @@ export default function App() {
         if (catLower === 'luxury') {
           return itemCat.includes('luxury') || itemTitle.includes('gem') || itemTitle.includes('sapphire') || itemTitle.includes('gold') || itemTitle.includes('jewelry');
         }
+        if (catLower === 'holiday homes') {
+          return (
+            itemCat.includes('holiday') ||
+            itemCat.includes('vacation') ||
+            (item.propertyType || '').toLowerCase().includes('holiday') ||
+            (item.propertyType || '').toLowerCase().includes('villa') ||
+            itemTitle.includes('holiday home') ||
+            itemTitle.includes('villa') ||
+            itemTitle.includes('bungalow') ||
+            itemTitle.includes('cabana') ||
+            itemTitle.includes('resort') ||
+            itemDesc.includes('holiday home')
+          );
+        }
         return itemCat.includes(catLower);
       });
     }

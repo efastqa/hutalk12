@@ -105,9 +105,16 @@ export const InteractiveMapDiscovery: React.FC<InteractiveMapDiscoveryProps> = (
   const [mapTarget, setMapTarget] = useState<GeoLocation | null>(null);
   const [zoomTarget, setZoomTarget] = useState<number | null>(null);
 
+  // Sync category/district props when switching views
+  useEffect(() => {
+    if (initialCategory) {
+      setSelectedCategory(initialCategory);
+    }
+  }, [initialCategory]);
+
   // Categories list
   const categories = useMemo(() => {
-    const set = new Set<string>();
+    const set = new Set<string>(['Holiday Homes']);
     listings.forEach((l) => {
       if (l.category) set.add(l.category);
     });
@@ -206,8 +213,18 @@ export const InteractiveMapDiscovery: React.FC<InteractiveMapDiscoveryProps> = (
         }
 
         // Category filter
-        if (selectedCategory !== 'All' && item.category !== selectedCategory) {
-          return false;
+        if (selectedCategory !== 'All') {
+          if (selectedCategory === 'Holiday Homes') {
+            const isHolidayMatch =
+              item.category === 'Holiday Homes' ||
+              item.pricingType === 'per_night' ||
+              item.pricingType === 'per_weekend' ||
+              (item.propertyType || '').toLowerCase().includes('holiday') ||
+              (item.propertyType || '').toLowerCase().includes('villa');
+            if (!isHolidayMatch) return false;
+          } else if (item.category !== selectedCategory) {
+            return false;
+          }
         }
 
         // District filter (only if no radius filter is actively bounding)
@@ -527,8 +544,21 @@ export const InteractiveMapDiscovery: React.FC<InteractiveMapDiscoveryProps> = (
                               {item.title}
                             </h4>
                             <p className="text-sm font-black text-[#FF5A36] mt-0.5">
-                              {item.pricingType === 'quote' ? 'Get Quote' : formatLKR(item.price)}
+                              {item.pricingType === 'quote'
+                                ? 'Get Quote'
+                                : item.category === 'Holiday Homes' || item.pricingType === 'per_night'
+                                ? `${formatLKR(item.price)}/nt`
+                                : item.pricingType === 'per_weekend'
+                                ? `${formatLKR(item.price)}/wknd`
+                                : formatLKR(item.price)}
                             </p>
+                            {(item.maxGuests || item.bedrooms) && (
+                              <p className="text-[10px] text-emerald-400 font-semibold mt-0.5 truncate">
+                                {item.maxGuests ? `Up to ${item.maxGuests} Guests` : ''}
+                                {item.maxGuests && item.bedrooms ? ' • ' : ''}
+                                {item.bedrooms ? `${item.bedrooms} Beds` : ''}
+                              </p>
+                            )}
                           </div>
 
                           <div className="flex items-center justify-between text-[10px] text-gray-400 pt-1 border-t border-gray-800/60">
@@ -590,8 +620,10 @@ export const InteractiveMapDiscovery: React.FC<InteractiveMapDiscoveryProps> = (
                 const isSelected = selectedListing?.id === item.id;
                 const isHovered = hoveredListingId === item.id;
 
+                const isHolidayStay = item.category === 'Holiday Homes' || item.pricingType === 'per_night' || item.pricingType === 'per_weekend';
+
                 // Price display badge
-                const displayPrice =
+                const baseDisplayPrice =
                   item.price > 10000000
                     ? `Rs ${(item.price / 10000000).toFixed(1)}Cr`
                     : item.price >= 1000000
@@ -599,6 +631,9 @@ export const InteractiveMapDiscovery: React.FC<InteractiveMapDiscoveryProps> = (
                     : item.price >= 1000
                     ? `Rs ${(item.price / 1000).toFixed(0)}K`
                     : `Rs ${item.price}`;
+                const displayPrice = isHolidayStay
+                  ? `${baseDisplayPrice}${item.pricingType === 'per_weekend' ? '/wknd' : '/nt'}`
+                  : baseDisplayPrice;
 
                 return (
                   <AdvancedMarker
@@ -618,12 +653,14 @@ export const InteractiveMapDiscovery: React.FC<InteractiveMapDiscoveryProps> = (
                             ? 'bg-[#FF5A36] text-white border-white ring-2 ring-[#FF5A36]/40 shadow-[#FF5A36]/30'
                             : isHovered
                             ? 'bg-gray-900 text-white border-[#FF5A36]'
+                            : isHolidayStay
+                            ? 'bg-emerald-600 text-white border-emerald-200 hover:bg-emerald-700'
                             : 'bg-white text-gray-900 border-gray-300 hover:border-[#FF5A36]'
                         }`}
                       >
                         <MapPin
                           className={`w-3.5 h-3.5 ${
-                            isSelected ? 'text-white' : 'text-[#FF5A36]'
+                            isSelected || isHolidayStay ? 'text-white' : 'text-[#FF5A36]'
                           }`}
                         />
                         <span>{displayPrice}</span>
@@ -658,8 +695,31 @@ export const InteractiveMapDiscovery: React.FC<InteractiveMapDiscoveryProps> = (
                       <p className="text-sm font-black text-[#FF5A36] mt-0.5">
                         {selectedListing.pricingType === 'quote'
                           ? 'Get Quote'
+                          : selectedListing.category === 'Holiday Homes' || selectedListing.pricingType === 'per_night'
+                          ? `${formatLKR(selectedListing.price)} / night`
+                          : selectedListing.pricingType === 'per_weekend'
+                          ? `${formatLKR(selectedListing.price)} / wknd`
                           : formatLKR(selectedListing.price)}
                       </p>
+                      {(selectedListing.maxGuests || selectedListing.bedrooms || (selectedListing.amenities && selectedListing.amenities.length > 0)) && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {selectedListing.maxGuests && (
+                            <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded">
+                              {selectedListing.maxGuests} Guests
+                            </span>
+                          )}
+                          {selectedListing.bedrooms && (
+                            <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">
+                              {selectedListing.bedrooms} Beds
+                            </span>
+                          )}
+                          {selectedListing.amenities?.slice(0, 2).map((am) => (
+                            <span key={am} className="text-[10px] font-semibold bg-cyan-50 text-cyan-700 px-1.5 py-0.5 rounded">
+                              {am}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between text-[11px] text-gray-600 bg-gray-50 p-1.5 rounded-lg border border-gray-100">

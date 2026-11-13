@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { LayoutGrid, Sparkles, RotateCcw } from 'lucide-react';
 import { Listing } from '../types';
 import { DualToneHeading } from './DualToneHeading';
+import holidayHomesImg from '../assets/images/holiday_homes_category_1794527575851.jpg';
 
 export interface CategoryGridProps {
   currentCategory: string;
@@ -17,9 +18,10 @@ export interface CategoryItem {
   image: string;
   searchQuery?: string;
   targetCategory?: string;
+  isNew?: boolean;
 }
 
-// Exactly matching the 10 3D categories from the attached screenshot
+// Curated 3D categories for Explore Our Categories
 export const CATEGORIES_ITEMS: CategoryItem[] = [
   {
     key: 'Vehicles',
@@ -87,6 +89,13 @@ export const CATEGORIES_ITEMS: CategoryItem[] = [
     targetCategory: 'Luxury',
     searchQuery: 'gem',
   },
+  {
+    key: 'Holiday Homes',
+    label: 'Holiday Homes',
+    image: holidayHomesImg,
+    targetCategory: 'Holiday Homes',
+    isNew: true,
+  },
 ];
 
 // Trending chips matching the top bar of the attached design
@@ -95,6 +104,7 @@ const TRENDING_CHIPS = [
   { label: 'Mobile Phones', category: 'Phones', query: 'phone' },
   { label: 'Dresses', category: "Women's", query: 'dress' },
   { label: 'Houses & Lands', category: 'Property', query: 'house' },
+  { label: 'Holiday Homes', category: 'Holiday Homes', query: '' },
   { label: 'Motorbikes', category: 'Vehicles', query: 'bike' },
   { label: 'Laptops', category: 'Computers', query: 'laptop' },
   { label: 'AC Services', category: 'Services', query: 'ac' },
@@ -165,6 +175,22 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
       // Luxury
       if (cat.includes('luxury') || title.includes('gem') || title.includes('gold') || title.includes('sapphire') || title.includes('jewelry') || title.includes('watch') || desc.includes('gem')) {
         map['Luxury'] = (map['Luxury'] || 0) + 1;
+      }
+      // Holiday Homes
+      if (
+        cat.includes('holiday') ||
+        cat.includes('vacation') ||
+        (item.propertyType || '').toLowerCase().includes('holiday') ||
+        (item.propertyType || '').toLowerCase().includes('villa') ||
+        title.includes('holiday home') ||
+        title.includes('holiday villa') ||
+        title.includes('bungalow') ||
+        title.includes('cabana') ||
+        title.includes('villa') ||
+        title.includes('resort') ||
+        desc.includes('holiday home')
+      ) {
+        map['Holiday Homes'] = (map['Holiday Homes'] || 0) + 1;
       }
     });
 
@@ -258,7 +284,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
         {/* Subtle top ambient glow */}
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-96 h-32 bg-[#FF5A36]/10 dark:bg-[#FF5A36]/15 blur-3xl pointer-events-none rounded-full" />
 
-        <div className="relative grid grid-cols-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5 gap-x-2 sm:gap-x-4 md:gap-x-6 gap-y-6 sm:gap-y-8">
+        <div className="relative grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-x-2 sm:gap-x-4 md:gap-x-5 gap-y-6 sm:gap-y-8">
           {CATEGORIES_ITEMS.map((cat, idx) => {
             const isActive =
               currentCategory.toLowerCase() === cat.key.toLowerCase() ||
@@ -282,12 +308,19 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
                 }`}
                 title={`Browse ${cat.label} (${count} ads)`}
               >
+                {/* "New" Badge */}
+                {cat.isNew && (
+                  <span className="absolute top-1.5 right-1.5 z-10 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-[#FF5A36] to-amber-500 text-white text-[9px] font-black uppercase tracking-wider shadow-xs">
+                    New
+                  </span>
+                )}
+
                 {/* 3D Icon Presentation with Ground Shadow */}
                 <div className="relative w-16 h-14 sm:w-20 sm:h-18 md:w-24 md:h-20 flex flex-col items-center justify-center mb-1">
                   <img
                     src={cat.image}
                     alt={cat.label}
-                    className="w-full h-full object-contain filter group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 ease-out select-none pointer-events-none drop-shadow-sm group-hover:drop-shadow-[0_10px_18px_rgba(255,90,54,0.25)]"
+                    className="w-full h-full object-contain rounded-2xl filter group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 ease-out select-none pointer-events-none drop-shadow-sm group-hover:drop-shadow-[0_10px_18px_rgba(255,90,54,0.25)]"
                     loading="lazy"
                   />
                   {/* 3D Ground Contact Shadow */}
@@ -295,7 +328,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
 
                   {/* Active Indicator Glow Dot */}
                   {isActive && (
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#FF5A36] rounded-full ring-2 ring-white dark:ring-[#12141D] shadow-sm animate-pulse" />
+                    <span className="absolute -top-1 -left-1 w-3 h-3 bg-[#FF5A36] rounded-full ring-2 ring-white dark:ring-[#12141D] shadow-sm animate-pulse" />
                   )}
                 </div>
 

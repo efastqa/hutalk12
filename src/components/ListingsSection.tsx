@@ -33,6 +33,10 @@ import {
   Tag,
   SlidersHorizontal,
   Check,
+  Users,
+  Waves,
+  Wifi,
+  Sun,
 } from 'lucide-react';
 
 interface ListingsSectionProps {
@@ -130,6 +134,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
 
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>('all');
   const [bedroomsFilter, setBedroomsFilter] = useState<string>('all');
+  const [guestFilter, setGuestFilter] = useState<string>('all');
+  const [amenityFilter, setAmenityFilter] = useState<string>('all');
 
   const [electronicsSubcategoryFilter, setElectronicsSubcategoryFilter] = useState<string>('all');
   const [conditionFilter, setConditionFilter] = useState<string>('all');
@@ -145,6 +151,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     setVehicleTypeFilter('all');
     setPropertyTypeFilter('all');
     setBedroomsFilter('all');
+    setGuestFilter('all');
+    setAmenityFilter('all');
     setElectronicsSubcategoryFilter('all');
     setConditionFilter('all');
     setJobTypeFilter('all');
@@ -159,6 +167,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
       vehicleTypeFilter !== 'all' ||
       propertyTypeFilter !== 'all' ||
       bedroomsFilter !== 'all' ||
+      guestFilter !== 'all' ||
+      amenityFilter !== 'all' ||
       electronicsSubcategoryFilter !== 'all' ||
       conditionFilter !== 'all' ||
       jobTypeFilter !== 'all' ||
@@ -171,6 +181,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     vehicleTypeFilter,
     propertyTypeFilter,
     bedroomsFilter,
+    guestFilter,
+    amenityFilter,
     electronicsSubcategoryFilter,
     conditionFilter,
     jobTypeFilter,
@@ -184,6 +196,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     setVehicleTypeFilter('all');
     setPropertyTypeFilter('all');
     setBedroomsFilter('all');
+    setGuestFilter('all');
+    setAmenityFilter('all');
     setElectronicsSubcategoryFilter('all');
     setConditionFilter('all');
     setJobTypeFilter('all');
@@ -204,13 +218,26 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
         return false;
       }
 
-      // Property
+      // Property & Holiday Homes
       if (propertyTypeFilter !== 'all' && item.propertyType && !item.propertyType.toLowerCase().includes(propertyTypeFilter.toLowerCase())) {
         return false;
       }
       if (bedroomsFilter !== 'all') {
         const b = Number(item.bedrooms) || 0;
         if (bedroomsFilter === '4+' ? b < 4 : b !== Number(bedroomsFilter)) {
+          return false;
+        }
+      }
+      if (guestFilter !== 'all') {
+        const g = parseInt(String(item.maxGuests || '0'), 10) || 0;
+        if (g < Number(guestFilter)) {
+          return false;
+        }
+      }
+      if (amenityFilter !== 'all') {
+        const itemAmenities = Array.isArray(item.amenities) ? item.amenities.map((a) => a.toLowerCase()) : [];
+        const hay = `${item.title || ''} ${item.description || ''}`.toLowerCase();
+        if (!itemAmenities.includes(amenityFilter.toLowerCase()) && !hay.includes(amenityFilter.toLowerCase())) {
           return false;
         }
       }
@@ -246,6 +273,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     vehicleTypeFilter,
     propertyTypeFilter,
     bedroomsFilter,
+    guestFilter,
+    amenityFilter,
     electronicsSubcategoryFilter,
     conditionFilter,
     jobTypeFilter,
@@ -295,6 +324,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
           { id: 'Vehicles', label: 'Vehicles' },
           { id: 'Motorcycles', label: 'Motorcycles' },
           { id: 'Property', label: 'Properties' },
+          { id: 'Holiday Homes', label: 'Holiday Homes', isNew: true },
           { id: 'Electronics', label: 'Electronics' },
           { id: 'Home & Garden', label: 'Home & Garden' },
           { id: 'Jobs', label: 'Jobs' },
@@ -306,13 +336,22 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
               key={cat.id}
               type="button"
               onClick={() => onSelectCategory && onSelectCategory(cat.id)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer inline-flex items-center gap-1.5 ${
                 isActive
                   ? 'bg-[#FF5A36] text-white shadow-sm'
                   : 'bg-white dark:bg-[#151822] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230] border border-gray-200 dark:border-[#2D303E]'
               }`}
             >
-              {cat.label}
+              <span>{cat.label}</span>
+              {'isNew' in cat && cat.isNew && (
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                    isActive ? 'bg-white text-[#FF5A36]' : 'bg-[#FF5A36] text-white'
+                  }`}
+                >
+                  New
+                </span>
+              )}
             </button>
           );
         })}
@@ -322,6 +361,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
       {(currentCategory === 'Vehicles' ||
         currentCategory === 'Motorcycles' ||
         currentCategory === 'Property' ||
+        currentCategory === 'Holiday Homes' ||
         currentCategory === 'Electronics' ||
         currentCategory === 'Jobs' ||
         currentCategory === 'Services') && (
@@ -418,35 +458,105 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
               </>
             )}
 
-            {/* Property filters */}
-            {currentCategory === 'Property' && (
+            {/* Property & Holiday Homes filters */}
+            {(currentCategory === 'Property' || currentCategory === 'Holiday Homes') && (
               <>
-                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
-                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
-                    <Home className="w-3 h-3 text-emerald-500" />
-                    <span>Property:</span>
-                  </span>
-                  {[
-                    { id: 'all', label: 'All' },
-                    { id: 'House', label: 'Houses' },
-                    { id: 'Land', label: 'Lands' },
-                    { id: 'Apartment', label: 'Apartments' },
-                    { id: 'Commercial', label: 'Commercial' },
-                  ].map((p) => (
+                {currentCategory === 'Property' && (
+                  <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
+                    <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
+                      <Home className="w-3 h-3 text-emerald-500" />
+                      <span>Property:</span>
+                    </span>
+                    {[
+                      { id: 'all', label: 'All' },
+                      { id: 'House', label: 'Houses' },
+                      { id: 'Land', label: 'Lands' },
+                      { id: 'Apartment', label: 'Apartments' },
+                      { id: 'Commercial', label: 'Commercial' },
+                    ].map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setPropertyTypeFilter(p.id)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                          propertyTypeFilter === p.id
+                            ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {currentCategory === 'Holiday Homes' && (
+                  <>
+                    {/* Guests Capacity Filter */}
+                    <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
+                      <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
+                        <Users className="w-3 h-3 text-emerald-500" />
+                        <span>Guests:</span>
+                      </span>
+                      {[
+                        { id: 'all', label: 'Any' },
+                        { id: '2', label: '2+' },
+                        { id: '4', label: '4+' },
+                        { id: '6', label: '6+' },
+                        { id: '8', label: '8+' },
+                      ].map((g) => (
+                        <button
+                          key={g.id}
+                          type="button"
+                          onClick={() => setGuestFilter(g.id)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                            guestFilter === g.id
+                              ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                          }`}
+                        >
+                          {g.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Amenities Filter */}
+                    <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836] overflow-x-auto scrollbar-none">
+                      <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1 shrink-0">
+                        <Waves className="w-3 h-3 text-cyan-500" />
+                        <span>Amenities:</span>
+                      </span>
+                      {['all', 'Pool', 'AC', 'Wi-Fi', 'Beachfront', 'Breakfast', 'Mountain View'].map((am) => (
+                        <button
+                          key={am}
+                          type="button"
+                          onClick={() => setAmenityFilter(am)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
+                            amenityFilter === am
+                              ? 'bg-emerald-600 text-white font-bold shadow-2xs'
+                              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                          }`}
+                        >
+                          {am === 'all' ? 'All Stays' : am}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Direct Map View for Holiday Homes */}
                     <button
-                      key={p.id}
                       type="button"
-                      onClick={() => setPropertyTypeFilter(p.id)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                        propertyTypeFilter === p.id
-                          ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
-                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                      onClick={() => handleSwitchView(currentViewMode === 'map' ? 'grid' : 'map')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
+                        currentViewMode === 'map'
+                          ? 'bg-[#FF5A36] text-white border-[#FF5A36] shadow-xs'
+                          : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
                       }`}
                     >
-                      {p.label}
+                      <Compass className="w-3.5 h-3.5" />
+                      <span>{currentViewMode === 'map' ? 'Back to Stay Grid' : 'Explore Stay Map'}</span>
                     </button>
-                  ))}
-                </div>
+                  </>
+                )}
 
                 {/* Bedrooms */}
                 <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
@@ -976,7 +1086,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                     </h3>
 
                     {/* Category Specific Specification Quick Highlights */}
-                    {(item.vehicleYear || item.fuelType || item.transmission || item.vehicleMileage || item.propertyType || item.bedrooms || item.propertySize || item.electronicsSubcategory || item.storageCapacity || item.itemCondition || item.jobType) && (
+                    {(item.vehicleYear || item.fuelType || item.transmission || item.vehicleMileage || item.propertyType || item.bedrooms || item.maxGuests || (item.amenities && item.amenities.length > 0) || item.propertySize || item.electronicsSubcategory || item.storageCapacity || item.itemCondition || item.jobType) && (
                       <div className="flex flex-wrap items-center gap-1 mt-1 text-[9px] sm:text-[10px] font-medium text-gray-500 dark:text-gray-400 line-clamp-1 overflow-hidden">
                         {item.vehicleYear && (
                           <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.2 rounded text-gray-700 dark:text-gray-300 font-semibold">{item.vehicleYear}</span>
@@ -987,9 +1097,26 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                         {item.propertyType && (
                           <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-500/30 px-1.5 py-0.2 rounded font-bold">{item.propertyType.split(' ')[0]}</span>
                         )}
+                        {item.maxGuests !== undefined && item.maxGuests !== '' && (
+                          <span className="inline-flex items-center gap-0.5 bg-cyan-50 dark:bg-cyan-950/40 text-cyan-800 dark:text-cyan-300 border border-cyan-200/60 dark:border-cyan-500/30 px-1.5 py-0.2 rounded font-bold">
+                            <Users className="w-2.5 h-2.5" />
+                            <span>{item.maxGuests} Guests</span>
+                          </span>
+                        )}
                         {item.bedrooms !== undefined && item.bedrooms !== '' && (
                           <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.2 rounded text-gray-700 dark:text-gray-300 font-semibold">{item.bedrooms} Beds</span>
                         )}
+                        {Array.isArray(item.amenities) && item.amenities.slice(0, 2).map((am) => (
+                          <span
+                            key={am}
+                            className="inline-flex items-center gap-0.5 bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 border border-teal-200/60 dark:border-teal-500/30 px-1.5 py-0.2 rounded font-semibold"
+                          >
+                            {am === 'Pool' && <Waves className="w-2.5 h-2.5" />}
+                            {am === 'Wi-Fi' && <Wifi className="w-2.5 h-2.5" />}
+                            {am === 'Beachfront' && <Sun className="w-2.5 h-2.5" />}
+                            <span>{am}</span>
+                          </span>
+                        ))}
                         {item.electronicsSubcategory && (
                           <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-500/30 px-1.5 py-0.2 rounded font-bold">{item.electronicsSubcategory.split(' ')[0]}</span>
                         )}
@@ -1003,13 +1130,25 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                         gridDensity === 'compact' ? 'text-xs sm:text-sm md:text-base mt-1' : 'text-base sm:text-lg font-extrabold mt-1.5'
                       }`}
                     >
-                      {item.category === 'Services' && item.pricingType === 'quote'
-                        ? 'Quote on Request'
-                        : item.category === 'Services' && item.pricingType === 'hourly'
-                        ? `${formatLKR(item.price)}/hr`
-                        : item.category === 'Services' && item.pricingType === 'starting_at'
-                        ? `From ${formatLKR(item.price)}`
-                        : formatLKR(item.price)}
+                      {item.category === 'Services' && item.pricingType === 'quote' ? (
+                        'Quote on Request'
+                      ) : item.category === 'Services' && item.pricingType === 'hourly' ? (
+                        `${formatLKR(item.price)}/hr`
+                      ) : item.category === 'Services' && item.pricingType === 'starting_at' ? (
+                        `From ${formatLKR(item.price)}`
+                      ) : item.pricingType === 'per_weekend' ? (
+                        <span>
+                          {formatLKR(item.price)}
+                          <span className="text-[10px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 ml-1">/ wknd</span>
+                        </span>
+                      ) : item.pricingType === 'per_night' || item.category === 'Holiday Homes' ? (
+                        <span>
+                          {formatLKR(item.price)}
+                          <span className="text-[10px] sm:text-xs font-semibold text-emerald-700 dark:text-emerald-400 ml-1">/ night</span>
+                        </span>
+                      ) : (
+                        formatLKR(item.price)
+                      )}
                     </div>
                   </div>
 

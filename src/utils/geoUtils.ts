@@ -79,6 +79,16 @@ export const SRI_LANKA_CITIES: Record<string, GeoLocation> = {
   Kuliyapitiya: { lat: 7.4688, lng: 80.0401 },
   Avissawella: { lat: 6.9536, lng: 80.2078 },
   Embilipitiya: { lat: 6.3387, lng: 80.8522 },
+  Mirissa: { lat: 5.9483, lng: 80.4716 },
+  Unawatuna: { lat: 6.0174, lng: 80.2489 },
+  Ahangama: { lat: 5.9736, lng: 80.3653 },
+  Dickwella: { lat: 5.9667, lng: 80.6928 },
+  'Arugam Bay': { lat: 6.8406, lng: 81.8364 },
+  Sigiriya: { lat: 7.957, lng: 80.7603 },
+  Haputale: { lat: 6.7689, lng: 80.9589 },
+  Hatton: { lat: 6.8916, lng: 80.5955 },
+  Kalpitiya: { lat: 8.2367, lng: 79.7667 },
+  Passikudah: { lat: 7.9258, lng: 81.5639 },
 };
 
 /**

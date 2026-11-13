@@ -37,6 +37,11 @@ import {
   Briefcase,
   Fuel,
   Gauge,
+  Calendar,
+  Users,
+  Waves,
+  Wifi,
+  Sun,
 } from 'lucide-react';
 import { formatLKR } from './ListingsSection';
 import { downloadImage } from '../utils/downloadHelper';
@@ -123,6 +128,17 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
   const [currentRating, setCurrentRating] = useState<number | undefined>(listing.sellerRating);
   const [currentReviewCount, setCurrentReviewCount] = useState<number | undefined>(listing.reviewCount);
 
+  // Holiday Home Check-In / Check-Out Inquiry State
+  const todayStr = new Date().toISOString().split('T')[0];
+  const getFutureDateStr = (daysAhead: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + daysAhead);
+    return d.toISOString().split('T')[0];
+  };
+  const [checkInDate, setCheckInDate] = useState<string>(() => getFutureDateStr(1));
+  const [checkOutDate, setCheckOutDate] = useState<string>(() => getFutureDateStr(3));
+  const [stayGuests, setStayGuests] = useState<number>(2);
+
   useEffect(() => {
     setActiveIdx(0);
     // If ad only has video or primary media is video, activate video mode
@@ -133,6 +149,9 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
     setCurrentAvailability(listing?.availabilityStatus || 'available');
     setCurrentRating(listing?.sellerRating);
     setCurrentReviewCount(listing?.reviewCount);
+    setCheckInDate(getFutureDateStr(1));
+    setCheckOutDate(getFutureDateStr(3));
+    setStayGuests(2);
   }, [listing?.id]);
 
   const handleUpdateAvailability = async (newStatus: 'available' | 'reserved' | 'sold') => {
@@ -173,14 +192,37 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
     : '94' + cleanPhone;
 
   const isService = listing.category === 'Services' || Boolean(listing.serviceTrade);
+  const isHolidayHome =
+    listing.category === 'Holiday Homes' ||
+    listing.pricingType === 'per_night' ||
+    listing.pricingType === 'per_weekend' ||
+    (listing.propertyType || '').toLowerCase().includes('holiday');
+
+  const stayNights = (() => {
+    const start = new Date(checkInDate);
+    const end = new Date(checkOutDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 2;
+    const diff = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? diff : 1;
+  })();
+
+  const maxGuestNum = parseInt(String(listing.maxGuests || '16'), 10) || 16;
+  const estimatedStayTotal = listing.price > 0 && listing.pricingType !== 'per_weekend'
+    ? listing.price * stayNights
+    : listing.price;
 
   const waServiceMessage = encodeURIComponent(
     `Hello! I saw your service listing on HUTA.lk: "${listing.title}" (${listing.serviceTrade || 'Professional Service'}). I would like to request an inspection / free quote for my location in ${listing.location}. Are you available?`
   );
+  const waHolidayMessage = encodeURIComponent(
+    `Hello! I would like to check availability on HUTA.lk for "${listing.title}" in ${listing.location}.\n• Check-In: ${checkInDate}\n• Check-Out: ${checkOutDate} (${stayNights} night${stayNights > 1 ? 's' : ''})\n• Guests: ${stayGuests}\n${listing.price > 0 ? `• Listed Rate: ${formatLKR(listing.price)}${listing.pricingType === 'per_weekend' ? '/weekend' : '/night'}` : ''}\nPlease let me know if these dates are available!`
+  );
   const waProductMessage = encodeURIComponent(
     `Hi! I saw your advertisement on HUTA.lk: "${listing.title}" (${formatLKR(listing.price)}). Is this still available?`
   );
-  const whatsappUrl = `https://wa.me/${waPhone}?text=${isService ? waServiceMessage : waProductMessage}`;
+  const whatsappUrl = `https://wa.me/${waPhone}?text=${
+    isHolidayHome ? waHolidayMessage : isService ? waServiceMessage : waProductMessage
+  }`;
 
   return (
     <motion.div
@@ -545,7 +587,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                 </div>
               </div>
 
-              {/* Price / Service Rate Display */}
+              {/* Price / Service Rate / Holiday Nightly Rate Display */}
               <div className="mt-2 mb-3">
                 {isService ? (
                   <div>
@@ -563,6 +605,21 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                         <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                         <span>Coverage Area: <strong className="text-gray-900 dark:text-white">{listing.serviceArea}</strong></span>
                       </p>
+                    )}
+                  </div>
+                ) : isHolidayHome ? (
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <div className="text-2xl font-black text-[#FF5A36]">
+                      {formatLKR(listing.price)}
+                      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400 ml-1">
+                        {listing.pricingType === 'per_weekend' ? '/ weekend' : '/ night'}
+                      </span>
+                    </div>
+                    {listing.maxGuests && (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/30">
+                        <Users className="w-3.5 h-3.5" />
+                        Up to {listing.maxGuests} Guests
+                      </span>
                     )}
                   </div>
                 ) : (
@@ -613,6 +670,8 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                 listing.propertyType ||
                 listing.bedrooms ||
                 listing.bathrooms ||
+                listing.maxGuests ||
+                (listing.amenities && listing.amenities.length > 0) ||
                 listing.propertySize ||
                 listing.electronicsSubcategory ||
                 listing.storageCapacity ||
@@ -671,11 +730,17 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                       </div>
                     )}
 
-                    {/* Property Specs */}
+                    {/* Property & Holiday Home Specs */}
                     {listing.propertyType && (
                       <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
-                        <span className="text-[10px] text-gray-400 block font-medium">Property Type</span>
+                        <span className="text-[10px] text-gray-400 block font-medium">{isHolidayHome ? 'Stay Type' : 'Property Type'}</span>
                         <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.propertyType}</span>
+                      </div>
+                    )}
+                    {listing.maxGuests !== undefined && listing.maxGuests !== '' && (
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Max Guests</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">Up to {listing.maxGuests} Guests</span>
                       </div>
                     )}
                     {listing.bedrooms !== undefined && listing.bedrooms !== '' && (
@@ -731,13 +796,145 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                       </div>
                     )}
                   </div>
+
+                  {/* Included Amenities Pills */}
+                  {Array.isArray(listing.amenities) && listing.amenities.length > 0 && (
+                    <div className="pt-2 border-t border-gray-200/70 dark:border-[#252836]">
+                      <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1.5">
+                        Stay Amenities
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {listing.amenities.map((amenity) => (
+                          <span
+                            key={amenity}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-500/30 text-[11px] font-bold"
+                          >
+                            {amenity === 'Pool' && <Waves className="w-3 h-3" />}
+                            {amenity === 'Wi-Fi' && <Wifi className="w-3 h-3" />}
+                            {amenity === 'Beachfront' && <Sun className="w-3 h-3" />}
+                            <span>{amenity}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Holiday Home Check-In / Check-Out Inquiry Picker */}
+              {isHolidayHome && (
+                <div className="my-3.5 p-4 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/50 to-white dark:from-emerald-950/40 dark:via-[#181B26] dark:to-[#181B26] border border-emerald-200/80 dark:border-emerald-500/30 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white">
+                        Stay Dates & Booking Inquiry
+                      </h4>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300">
+                      Instant WhatsApp Request
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">
+                        Check-In
+                      </label>
+                      <input
+                        type="date"
+                        min={todayStr}
+                        value={checkInDate}
+                        onChange={(e) => {
+                          const nextIn = e.target.value;
+                          setCheckInDate(nextIn);
+                          if (checkOutDate <= nextIn) {
+                            const d = new Date(nextIn);
+                            d.setDate(d.getDate() + 1);
+                            setCheckOutDate(d.toISOString().split('T')[0]);
+                          }
+                        }}
+                        className="w-full px-2.5 py-2 rounded-xl border border-gray-300 dark:border-[#2C3144] bg-white dark:bg-[#1E2230] text-xs font-semibold text-gray-900 dark:text-white outline-none focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">
+                        Check-Out
+                      </label>
+                      <input
+                        type="date"
+                        min={checkInDate || todayStr}
+                        value={checkOutDate}
+                        onChange={(e) => setCheckOutDate(e.target.value)}
+                        className="w-full px-2.5 py-2 rounded-xl border border-gray-300 dark:border-[#2C3144] bg-white dark:bg-[#1E2230] text-xs font-semibold text-gray-900 dark:text-white outline-none focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">
+                        Guests (Max {maxGuestNum})
+                      </label>
+                      <div className="flex items-center justify-between px-2 py-1.5 rounded-xl border border-gray-300 dark:border-[#2C3144] bg-white dark:bg-[#1E2230]">
+                        <button
+                          type="button"
+                          onClick={() => setStayGuests((g) => Math.max(1, g - 1))}
+                          className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-[#282C3D] text-gray-800 dark:text-white font-black text-xs hover:bg-gray-200 dark:hover:bg-[#32374C] cursor-pointer"
+                        >
+                          -
+                        </button>
+                        <span className="text-xs font-extrabold text-gray-900 dark:text-white">
+                          {stayGuests} Guest{stayGuests > 1 ? 's' : ''}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setStayGuests((g) => Math.min(maxGuestNum, g + 1))}
+                          className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-[#282C3D] text-gray-800 dark:text-white font-black text-xs hover:bg-gray-200 dark:hover:bg-[#32374C] cursor-pointer"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-emerald-200/70 dark:border-emerald-500/20">
+                    <div className="text-xs text-gray-700 dark:text-gray-300">
+                      {listing.price > 0 ? (
+                        listing.pricingType === 'per_weekend' ? (
+                          <span>
+                            Weekend Package: <strong className="text-gray-900 dark:text-white">{formatLKR(listing.price)}</strong>
+                          </span>
+                        ) : (
+                          <span>
+                            {stayNights} night{stayNights > 1 ? 's' : ''} × {formatLKR(listing.price)} ={' '}
+                            <strong className="text-emerald-700 dark:text-emerald-400 font-black">
+                              {formatLKR(estimatedStayTotal)} est.
+                            </strong>
+                          </span>
+                        )
+                      ) : (
+                        <span>Contact host for custom stay rates</span>
+                      )}
+                    </div>
+
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => onRecordAction?.('whatsapp')}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-xs transition-all cursor-pointer"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>Check Dates on WhatsApp</span>
+                    </a>
+                  </div>
                 </div>
               )}
 
               {/* Description */}
               <div className="border-t border-b border-gray-100 dark:border-[#252836] py-3.5 my-3">
                 <h4 className="text-xs font-bold uppercase text-gray-400 tracking-wider mb-1.5">
-                  Item Description
+                  {isHolidayHome ? 'Property & Stay Details' : 'Item Description'}
                 </h4>
                 <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed">
                   {listing.description}
@@ -749,7 +946,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
             <div className="pt-1 space-y-3">
               <div className="bg-gray-50 dark:bg-[#181B26] border border-gray-200 dark:border-[#252836] rounded-2xl p-4 text-center shadow-xs">
                 <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                  {isService ? 'Service Provider Contact' : 'Verified Seller Contact'}
+                  {isHolidayHome ? 'Holiday Home Host Contact' : isService ? 'Service Provider Contact' : 'Verified Seller Contact'}
                 </p>
                 <div className="text-xl font-bold text-gray-900 dark:text-white mt-1 tracking-wide flex items-center justify-center gap-2">
                   <Phone className="w-4 h-4 text-[#FF5A36]" />
