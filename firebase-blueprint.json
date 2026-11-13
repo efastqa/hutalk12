@@ -91,6 +91,25 @@
       },
       "required": ["id", "title", "isActive"]
     },
+    "PromoSlide": {
+      "title": "PromoSlide",
+      "description": "Admin-managed promo ad image slide displayed below Explore Categories.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "imageUrl": { "type": "string" },
+        "badge": { "type": "string", "maxLength": 100 },
+        "subtitle": { "type": "string", "maxLength": 300 },
+        "ctaText": { "type": "string", "maxLength": 100 },
+        "ctaAction": { "type": "string", "maxLength": 500 },
+        "showTextOverlay": { "type": "boolean" },
+        "isActive": { "type": "boolean" },
+        "order": { "type": "number" },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "title", "imageUrl", "isActive"]
+    },
     "AdminConfig": {
       "title": "AdminConfig",
       "description": "Platform settings including moderation and password security.",

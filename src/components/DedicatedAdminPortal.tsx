@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { AdminDashboard } from './AdminDashboard';
-import { Listing, EventItem, HeroAd, HeroAdSettings, VideoReelItem, EStore } from '../types';
+import { Listing, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, VideoReelItem, EStore } from '../types';
 
 interface DedicatedAdminPortalProps {
   isAdminLoggedIn: boolean;
@@ -43,6 +43,15 @@ interface DedicatedAdminPortalProps {
   onUpdateHeroAd: (ad: HeroAd) => Promise<void>;
   onToggleHeroAd: (id: string, active: boolean) => Promise<void>;
   onDeleteHeroAd: (id: string) => Promise<void>;
+  promoSlides?: PromoSlide[];
+  promoSlidesSettings?: PromoSlidesSettings;
+  onUpdatePromoSlidesSettings?: (settings: Partial<PromoSlidesSettings>) => Promise<void>;
+  onCreatePromoSlide?: (slide: Partial<PromoSlide>) => Promise<void>;
+  onUpdatePromoSlide?: (id: string, slide: Partial<PromoSlide>) => Promise<void>;
+  onTogglePromoSlide?: (id: string) => Promise<void>;
+  onDeletePromoSlide?: (id: string) => Promise<void>;
+  onReorderPromoSlides?: (slides: PromoSlide[]) => Promise<void>;
+  initialAdminTab?: string;
   onApprove: (id: string, notes?: string) => Promise<void>;
   onReject: (id: string, reason?: string) => Promise<void>;
   onVerifyCustomer?: (id: string, data: Partial<Listing>) => Promise<void>;
@@ -77,6 +86,15 @@ export const DedicatedAdminPortal: React.FC<DedicatedAdminPortalProps> = ({
   onUpdateHeroAd,
   onToggleHeroAd,
   onDeleteHeroAd,
+  promoSlides,
+  promoSlidesSettings,
+  onUpdatePromoSlidesSettings,
+  onCreatePromoSlide,
+  onUpdatePromoSlide,
+  onTogglePromoSlide,
+  onDeletePromoSlide,
+  onReorderPromoSlides,
+  initialAdminTab,
   onApprove,
   onReject,
   onVerifyCustomer,
@@ -507,6 +525,15 @@ export const DedicatedAdminPortal: React.FC<DedicatedAdminPortalProps> = ({
           onUpdateHeroAd={onUpdateHeroAd}
           onToggleHeroAd={onToggleHeroAd}
           onDeleteHeroAd={onDeleteHeroAd}
+          promoSlides={promoSlides}
+          promoSlidesSettings={promoSlidesSettings}
+          onUpdatePromoSlidesSettings={onUpdatePromoSlidesSettings}
+          onCreatePromoSlide={onCreatePromoSlide}
+          onUpdatePromoSlide={onUpdatePromoSlide}
+          onTogglePromoSlide={onTogglePromoSlide}
+          onDeletePromoSlide={onDeletePromoSlide}
+          onReorderPromoSlides={onReorderPromoSlides}
+          initialFilterTab={initialAdminTab}
           onApprove={onApprove}
           onReject={onReject}
           onVerifyCustomer={onVerifyCustomer}

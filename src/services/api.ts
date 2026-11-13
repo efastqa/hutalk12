@@ -9,7 +9,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Listing, User, EventItem, HeroAd, HeroAdSettings, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem, EStore, EStoreProduct } from '../types';
+import { Listing, User, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem, EStore, EStoreProduct } from '../types';
 
 const API_BASE = '/api';
 
@@ -2123,6 +2123,322 @@ For quick inquiries, call or send a message via WhatsApp!`;
     }
 
     return { success: true };
+  },
+
+  // -------------------------------------------------------------
+  // Category Promo Image Slides (Admin-Only Management, Public View)
+  // -------------------------------------------------------------
+
+  async getPromoSlides(): Promise<{ settings: PromoSlidesSettings; slides: PromoSlide[] }> {
+    const defaultData: { settings: PromoSlidesSettings; slides: PromoSlide[] } = {
+      settings: {
+        enabled: true,
+        rotationIntervalSeconds: 5,
+        aspectPreset: 'standard',
+      },
+      slides: [],
+    };
+
+    try {
+      const docRef = doc(db, 'hero_ads', 'promo_slides');
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data() as { settings?: PromoSlidesSettings; slides?: PromoSlide[] };
+        if (data && Array.isArray(data.slides)) {
+          const normalized = {
+            settings: data.settings || defaultData.settings,
+            slides: data.slides,
+          };
+          try {
+            localStorage.setItem('huta_promo_slides_cache', JSON.stringify(normalized));
+          } catch {
+            // ignore
+          }
+          return normalized;
+        }
+      }
+    } catch (err) {
+      console.warn('[PromoSlides] Firestore read warning, falling back:', err);
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/promo-slides`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.slides)) {
+          const normalized = {
+            settings: data.settings || defaultData.settings,
+            slides: data.slides,
+          };
+          try {
+            localStorage.setItem('huta_promo_slides_cache', JSON.stringify(normalized));
+          } catch {
+            // ignore
+          }
+          return normalized;
+        }
+      }
+    } catch {
+      // Standalone fallback
+    }
+
+    try {
+      const cached = localStorage.getItem('huta_promo_slides_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && Array.isArray(parsed.slides)) {
+          return {
+            settings: parsed.settings || defaultData.settings,
+            slides: parsed.slides,
+          };
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    return defaultData;
+  },
+
+  subscribeToPromoSlides(
+    callback: (data: { settings: PromoSlidesSettings; slides: PromoSlide[] }) => void
+  ): () => void {
+    try {
+      const docRef = doc(db, 'hero_ads', 'promo_slides');
+      return onSnapshot(
+        docRef,
+        (snap) => {
+          if (snap.exists()) {
+            const data = snap.data() as { settings?: PromoSlidesSettings; slides?: PromoSlide[] };
+            if (data && Array.isArray(data.slides)) {
+              const normalized = {
+                settings: data.settings || { enabled: true, rotationIntervalSeconds: 5, aspectPreset: 'standard' as const },
+                slides: data.slides,
+              };
+              try {
+                localStorage.setItem('huta_promo_slides_cache', JSON.stringify(normalized));
+              } catch {
+                // ignore
+              }
+              callback(normalized);
+            }
+          }
+        },
+        (error) => {
+          console.warn('[PromoSlides] Firestore listener warning:', error?.message || error);
+        }
+      );
+    } catch {
+      return () => {};
+    }
+  },
+
+  async updatePromoSlidesSettings(settings: Partial<PromoSlidesSettings>): Promise<PromoSlidesSettings> {
+    const current = await this.getPromoSlides();
+    const updated: PromoSlidesSettings = {
+      ...current.settings,
+      ...settings,
+    };
+
+    try {
+      localStorage.setItem(
+        'huta_promo_slides_cache',
+        JSON.stringify({ settings: updated, slides: current.slides })
+      );
+    } catch {
+      // ignore
+    }
+
+    try {
+      const cleanSettings = sanitizeForFirestore(updated);
+      await setDoc(
+        doc(db, 'hero_ads', 'promo_slides'),
+        { settings: cleanSettings, updatedAt: new Date().toISOString() },
+        { merge: true }
+      );
+    } catch (err) {
+      console.warn('[PromoSlides] Firestore settings update warning:', err);
+    }
+
+    try {
+      await fetch(`${API_BASE}/admin/promo-slides/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+    } catch {
+      // ignore
+    }
+
+    return updated;
+  },
+
+  async createPromoSlide(data: Partial<PromoSlide>): Promise<PromoSlide> {
+    const current = await this.getPromoSlides();
+    const newSlide: PromoSlide = {
+      id: `promo-slide-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      title: String(data.title || 'Promo Banner').trim(),
+      imageUrl: String(data.imageUrl || '').trim(),
+      badge: data.badge ? String(data.badge).trim() : undefined,
+      subtitle: data.subtitle ? String(data.subtitle).trim() : undefined,
+      ctaText: data.ctaText ? String(data.ctaText).trim() : undefined,
+      ctaAction: data.ctaAction ? String(data.ctaAction).trim() : undefined,
+      showTextOverlay: Boolean(data.showTextOverlay),
+      isActive: data.isActive !== undefined ? Boolean(data.isActive) : true,
+      order: current.slides.length,
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedSlides = [...current.slides, newSlide];
+
+    try {
+      localStorage.setItem(
+        'huta_promo_slides_cache',
+        JSON.stringify({ settings: current.settings, slides: updatedSlides })
+      );
+    } catch {
+      // ignore
+    }
+
+    try {
+      const cleanSlides = sanitizeForFirestore(updatedSlides);
+      await setDoc(
+        doc(db, 'hero_ads', 'promo_slides'),
+        { settings: sanitizeForFirestore(current.settings), slides: cleanSlides, updatedAt: new Date().toISOString() },
+        { merge: true }
+      );
+    } catch (err) {
+      console.warn('[PromoSlides] Firestore create warning:', err);
+    }
+
+    try {
+      await fetch(`${API_BASE}/admin/promo-slides`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSlide),
+      });
+    } catch {
+      // ignore
+    }
+
+    return newSlide;
+  },
+
+  async updatePromoSlide(id: string, data: Partial<PromoSlide>): Promise<PromoSlide> {
+    const current = await this.getPromoSlides();
+    const updatedSlides = current.slides.map((s) => (s.id === id ? { ...s, ...data } : s));
+    const targetSlide = updatedSlides.find((s) => s.id === id) || (data as PromoSlide);
+
+    try {
+      localStorage.setItem(
+        'huta_promo_slides_cache',
+        JSON.stringify({ settings: current.settings, slides: updatedSlides })
+      );
+    } catch {
+      // ignore
+    }
+
+    try {
+      const cleanSlides = sanitizeForFirestore(updatedSlides);
+      await setDoc(
+        doc(db, 'hero_ads', 'promo_slides'),
+        { slides: cleanSlides, updatedAt: new Date().toISOString() },
+        { merge: true }
+      );
+    } catch (err) {
+      console.warn('[PromoSlides] Firestore update warning:', err);
+    }
+
+    try {
+      await fetch(`${API_BASE}/admin/promo-slides/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+    } catch {
+      // ignore
+    }
+
+    return targetSlide;
+  },
+
+  async togglePromoSlide(id: string): Promise<PromoSlide> {
+    const current = await this.getPromoSlides();
+    const target = current.slides.find((s) => s.id === id);
+    const nextActive = target ? !target.isActive : true;
+    return this.updatePromoSlide(id, { isActive: nextActive });
+  },
+
+  async deletePromoSlide(id: string): Promise<{ success: boolean }> {
+    const current = await this.getPromoSlides();
+    const updatedSlides = current.slides.filter((s) => s.id !== id);
+
+    try {
+      localStorage.setItem(
+        'huta_promo_slides_cache',
+        JSON.stringify({ settings: current.settings, slides: updatedSlides })
+      );
+    } catch {
+      // ignore
+    }
+
+    try {
+      const cleanSlides = sanitizeForFirestore(updatedSlides);
+      await setDoc(
+        doc(db, 'hero_ads', 'promo_slides'),
+        { slides: cleanSlides, updatedAt: new Date().toISOString() },
+        { merge: true }
+      );
+    } catch (err) {
+      console.warn('[PromoSlides] Firestore delete warning:', err);
+    }
+
+    try {
+      await fetch(`${API_BASE}/admin/promo-slides/${id}`, {
+        method: 'DELETE',
+      });
+    } catch {
+      // ignore
+    }
+
+    return { success: true };
+  },
+
+  async reorderPromoSlides(slides: PromoSlide[]): Promise<PromoSlide[]> {
+    const current = await this.getPromoSlides();
+    const orderedSlides = slides.map((s, idx) => ({ ...s, order: idx }));
+
+    try {
+      localStorage.setItem(
+        'huta_promo_slides_cache',
+        JSON.stringify({ settings: current.settings, slides: orderedSlides })
+      );
+    } catch {
+      // ignore
+    }
+
+    try {
+      const cleanSlides = sanitizeForFirestore(orderedSlides);
+      await setDoc(
+        doc(db, 'hero_ads', 'promo_slides'),
+        { slides: cleanSlides, updatedAt: new Date().toISOString() },
+        { merge: true }
+      );
+    } catch (err) {
+      console.warn('[PromoSlides] Firestore reorder warning:', err);
+    }
+
+    try {
+      await fetch(`${API_BASE}/admin/promo-slides/reorder`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slides: orderedSlides }),
+      });
+    } catch {
+      // ignore
+    }
+
+    return orderedSlides;
   },
 
   // -------------------------------------------------------------

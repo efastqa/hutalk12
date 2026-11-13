@@ -222,6 +222,26 @@ export interface HeroAdSettings {
   rotationIntervalSeconds: number;
 }
 
+export interface PromoSlide {
+  id: string;
+  title: string;
+  imageUrl: string;
+  badge?: string;
+  subtitle?: string;
+  ctaText?: string;
+  ctaAction?: string; // '' | 'estore' | 'post_ad' | category name | 'https://...'
+  showTextOverlay?: boolean;
+  isActive: boolean;
+  order?: number;
+  createdAt: string;
+}
+
+export interface PromoSlidesSettings {
+  enabled: boolean;
+  rotationIntervalSeconds: number;
+  aspectPreset?: 'compact' | 'standard' | 'wide';
+}
+
 export interface VideoReelItem {
   id: string;
   title: string;

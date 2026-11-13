@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Listing, User, ViewTab, EventItem, HeroAd, HeroAdSettings, VideoReelItem, EStore } from './types';
+import { Listing, User, ViewTab, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, VideoReelItem, EStore } from './types';
 import { api } from './services/api';
 
 // Components
 import { Navbar } from './components/Navbar';
 import { HeroSearch } from './components/HeroSearch';
 import { CategoryGrid } from './components/CategoryGrid';
+import { PromoAdSlider } from './components/PromoAdSlider';
 import { ListingsSection } from './components/ListingsSection';
 import { ExploreMoreEStoresBanner } from './components/ExploreMoreEStoresBanner';
 import { EStorePage } from './components/EStorePage';
@@ -109,6 +110,35 @@ export default function App() {
   const [videoReels, setVideoReels] = useState<VideoReelItem[]>([]);
   const [eStores, setEStores] = useState<EStore[]>([]);
   const [targetEStoreForView, setTargetEStoreForView] = useState<EStore | null>(null);
+  const [promoSlides, setPromoSlides] = useState<PromoSlide[]>(() => {
+    try {
+      const cached = localStorage.getItem('huta_promo_slides_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed.slides)) return parsed.slides;
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  });
+  const [promoSlidesSettings, setPromoSlidesSettings] = useState<PromoSlidesSettings>(() => {
+    try {
+      const cached = localStorage.getItem('huta_promo_slides_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.settings) return parsed.settings;
+      }
+    } catch {
+      // ignore
+    }
+    return {
+      enabled: true,
+      rotationIntervalSeconds: 5,
+      aspectPreset: 'standard',
+    };
+  });
+  const [initialAdminTab, setInitialAdminTab] = useState<string | undefined>(undefined);
 
   // Real-time Chat State (Firebase Firestore)
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
@@ -292,16 +322,21 @@ export default function App() {
       // ignore
     }
 
-    // 3. Fetch listings, events & hero ads
+    // 3. Fetch listings, events, hero ads & promo slides
     fetchListings();
     fetchEvents();
     fetchHeroAds();
+    fetchPromoSlides();
     fetchVideoReels();
     fetchEStores();
 
-    // Subscribe to live video stories updates
+    // Subscribe to live video stories & promo slides updates
     const unsubReels = api.subscribeToVideoReels((reels) => {
       setVideoReels(reels);
+    });
+    const unsubPromoSlides = api.subscribeToPromoSlides((data) => {
+      if (data.settings) setPromoSlidesSettings(data.settings);
+      if (Array.isArray(data.slides)) setPromoSlides(data.slides);
     });
 
     // 4. Test Firebase Firestore connection
@@ -309,6 +344,7 @@ export default function App() {
 
     return () => {
       unsubReels();
+      unsubPromoSlides();
     };
   }, []);
 
@@ -407,6 +443,87 @@ export default function App() {
       showToast('Hero Ad deleted', 'info');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to delete hero ad';
+      showToast(msg, 'error');
+    }
+  };
+
+  const fetchPromoSlides = async () => {
+    try {
+      const data = await api.getPromoSlides();
+      if (data) {
+        if (data.settings) setPromoSlidesSettings(data.settings);
+        if (Array.isArray(data.slides)) setPromoSlides(data.slides);
+      }
+    } catch {
+      // Graceful fallback
+    }
+  };
+
+  const handleUpdatePromoSlidesSettings = async (newSettings: Partial<PromoSlidesSettings>) => {
+    try {
+      const updated = await api.updatePromoSlidesSettings(newSettings);
+      setPromoSlidesSettings(updated);
+      showToast('Promo slides display settings updated!', 'success');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to update promo slides settings';
+      showToast(msg, 'error');
+    }
+  };
+
+  const handleCreatePromoSlide = async (slide: Partial<PromoSlide>) => {
+    try {
+      const created = await api.createPromoSlide(slide);
+      setPromoSlides((prev) => [...prev, created]);
+      showToast('Promo image slide added below Explore Categories!', 'success');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to create promo slide';
+      showToast(msg, 'error');
+    }
+  };
+
+  const handleUpdatePromoSlide = async (id: string, slide: Partial<PromoSlide>) => {
+    try {
+      const updated = await api.updatePromoSlide(id, slide);
+      setPromoSlides((prev) => prev.map((s) => (s.id === id ? updated : s)));
+      showToast('Promo slide updated!', 'success');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to update promo slide';
+      showToast(msg, 'error');
+    }
+  };
+
+  const handleTogglePromoSlide = async (id: string) => {
+    try {
+      const updated = await api.togglePromoSlide(id);
+      setPromoSlides((prev) => prev.map((s) => (s.id === id ? updated : s)));
+      showToast(
+        updated.isActive ? 'Promo slide is now live!' : 'Promo slide paused',
+        'info'
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to toggle promo slide';
+      showToast(msg, 'error');
+    }
+  };
+
+  const handleDeletePromoSlide = async (id: string) => {
+    try {
+      await api.deletePromoSlide(id);
+      setPromoSlides((prev) => prev.filter((s) => s.id !== id));
+      showToast('Promo slide deleted', 'info');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete promo slide';
+      showToast(msg, 'error');
+    }
+  };
+
+  const handleReorderPromoSlides = async (ordered: PromoSlide[]) => {
+    try {
+      const saved = await api.reorderPromoSlides(ordered);
+      setPromoSlides(saved);
+      showToast('Promo slide order updated!', 'success');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to reorder promo slides';
       showToast(msg, 'error');
     }
   };
@@ -968,6 +1085,23 @@ export default function App() {
               onSelectSearchTerm={setSearchTerm}
             />
 
+            {/* Admin-Managed Promo Ad Image Slides Carousel (Below Explore Categories) */}
+            <PromoAdSlider
+              slides={promoSlides}
+              settings={promoSlidesSettings}
+              onSelectCategory={(category) => handleSelectCategory(category, undefined, true)}
+              onOpenPostAd={handleOpenPostAd}
+              onOpenEStore={() => {
+                setTargetEStoreForView(null);
+                setCurrentTab('estore');
+              }}
+              isAdminLoggedIn={isAdminLoggedIn}
+              onAdminManage={() => {
+                setInitialAdminTab('promo_slides');
+                setCurrentTab('admin_dashboard');
+              }}
+            />
+
             {/* Qatar Living style Browse Districts Bar - Frosted Glass with Seamless Contrast */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2">
               <div className="bg-white/90 dark:bg-[#151822]/90 backdrop-blur-xl border border-gray-200/80 dark:border-white/10 rounded-2xl p-3 shadow-md dark:shadow-[0_8px_24px_rgba(0,0,0,0.35)] flex items-center gap-2 overflow-x-auto scrollbar-none text-xs transition-colors">
@@ -1255,6 +1389,15 @@ export default function App() {
             onUpdateHeroAd={handleUpdateHeroAd}
             onToggleHeroAd={handleToggleHeroAd}
             onDeleteHeroAd={handleDeleteHeroAd}
+            promoSlides={promoSlides}
+            promoSlidesSettings={promoSlidesSettings}
+            onUpdatePromoSlidesSettings={handleUpdatePromoSlidesSettings}
+            onCreatePromoSlide={handleCreatePromoSlide}
+            onUpdatePromoSlide={handleUpdatePromoSlide}
+            onTogglePromoSlide={handleTogglePromoSlide}
+            onDeletePromoSlide={handleDeletePromoSlide}
+            onReorderPromoSlides={handleReorderPromoSlides}
+            initialAdminTab={initialAdminTab}
             onApprove={handleApproveListing}
             onReject={handleRejectListing}
             onVerifyCustomer={handleVerifyCustomer}

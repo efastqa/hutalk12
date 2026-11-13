@@ -212,6 +212,26 @@ interface HeroAdSettings {
   rotationIntervalSeconds: number;
 }
 
+interface PromoSlide {
+  id: string;
+  title: string;
+  imageUrl: string;
+  badge?: string;
+  subtitle?: string;
+  ctaText?: string;
+  ctaAction?: string;
+  showTextOverlay?: boolean;
+  isActive: boolean;
+  order?: number;
+  createdAt: string;
+}
+
+interface PromoSlidesSettings {
+  enabled: boolean;
+  rotationIntervalSeconds: number;
+  aspectPreset?: 'compact' | 'standard' | 'wide';
+}
+
 function resolvePort(): number {
   const portArgIndex = process.argv.indexOf('--port');
   if (portArgIndex !== -1 && process.argv[portArgIndex + 1]) {
@@ -232,6 +252,7 @@ const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const EVENTS_FILE = path.join(DATA_DIR, 'events.json');
 const ADMIN_CONFIG_FILE = path.join(DATA_DIR, 'admin.json');
 const HERO_ADS_FILE = path.join(DATA_DIR, 'hero-ads.json');
+const PROMO_SLIDES_FILE = path.join(DATA_DIR, 'promo-slides.json');
 const REVIEWS_FILE = path.join(DATA_DIR, 'reviews.json');
 const REPORTS_FILE = path.join(DATA_DIR, 'reports.json');
 
@@ -370,6 +391,17 @@ function persistHeroAdsToFirestore(data: { settings: HeroAdSettings; ads: HeroAd
     updatedAt: new Date().toISOString(),
   }, { merge: true }).catch((err) => {
     console.warn('[Firestore] persist hero ads error:', err);
+  });
+}
+
+function persistPromoSlidesToFirestore(data: { settings: PromoSlidesSettings; slides: PromoSlide[] }) {
+  if (!firestoreDb) return;
+  const clean = sanitizeForFirestoreServer(data);
+  setDoc(doc(firestoreDb, 'hero_ads', 'promo_slides'), {
+    ...clean,
+    updatedAt: new Date().toISOString(),
+  }, { merge: true }).catch((err) => {
+    console.warn('[Firestore] persist promo slides error:', err);
   });
 }
 
@@ -711,10 +743,47 @@ function saveStoredHeroAdsData(data: { settings: HeroAdSettings; ads: HeroAd[] }
   persistHeroAdsToFirestore(data);
 }
 
+const DEFAULT_PROMO_SLIDES_SETTINGS: PromoSlidesSettings = {
+  enabled: true,
+  rotationIntervalSeconds: 5,
+  aspectPreset: 'standard',
+};
+
+function getStoredPromoSlidesData(): { settings: PromoSlidesSettings; slides: PromoSlide[] } {
+  try {
+    if (fs.existsSync(PROMO_SLIDES_FILE)) {
+      const data = fs.readFileSync(PROMO_SLIDES_FILE, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (parsed && Array.isArray(parsed.slides)) {
+        return {
+          settings: parsed.settings || DEFAULT_PROMO_SLIDES_SETTINGS,
+          slides: parsed.slides,
+        };
+      }
+    }
+  } catch (err) {
+    console.error('Error reading promo slides file, fallback to empty list', err);
+  }
+  return {
+    settings: DEFAULT_PROMO_SLIDES_SETTINGS,
+    slides: [],
+  };
+}
+
+function saveStoredPromoSlidesData(data: { settings: PromoSlidesSettings; slides: PromoSlide[] }) {
+  try {
+    fs.writeFileSync(PROMO_SLIDES_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error saving promo slides file', err);
+  }
+  persistPromoSlidesToFirestore(data);
+}
+
 let listingsCache = getStoredListings();
 let usersCache = getStoredUsers();
 let eventsCache = getStoredEvents();
 let heroAdsDataCache = getStoredHeroAdsData();
+let promoSlidesDataCache = getStoredPromoSlidesData();
 let reviewsCache = getStoredReviews();
 let reportsCache = getStoredReports();
 
@@ -1875,6 +1944,139 @@ async function startServer() {
     res.json({ success: true, message: 'Hero ad deleted' });
   });
 
+  // -------------------------------------------------------------
+  // Category Promo Image Slides Routes (Admin-Only Write, Public View)
+  // -------------------------------------------------------------
+
+  // GET /api/promo-slides
+  app.get('/api/promo-slides', (req, res) => {
+    res.json(promoSlidesDataCache);
+  });
+
+  // PUT /api/admin/promo-slides/settings
+  app.put('/api/admin/promo-slides/settings', (req, res) => {
+    const { enabled, rotationIntervalSeconds, aspectPreset } = req.body;
+    if (enabled !== undefined) {
+      promoSlidesDataCache.settings.enabled = Boolean(enabled);
+    }
+    if (rotationIntervalSeconds && typeof rotationIntervalSeconds === 'number') {
+      promoSlidesDataCache.settings.rotationIntervalSeconds = Math.max(2, Math.min(30, rotationIntervalSeconds));
+    }
+    if (aspectPreset && ['compact', 'standard', 'wide'].includes(aspectPreset)) {
+      promoSlidesDataCache.settings.aspectPreset = aspectPreset;
+    }
+    saveStoredPromoSlidesData(promoSlidesDataCache);
+    res.json(promoSlidesDataCache.settings);
+  });
+
+  // POST /api/admin/promo-slides
+  app.post('/api/admin/promo-slides', (req, res) => {
+    const {
+      title,
+      imageUrl,
+      badge,
+      subtitle,
+      ctaText,
+      ctaAction,
+      showTextOverlay,
+      isActive,
+    } = req.body;
+
+    if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.trim()) {
+      return res.status(400).json({ error: 'Promo slide image is required' });
+    }
+
+    const newSlide: PromoSlide = {
+      id: `promo-slide-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      title: String(title || 'Promo Banner').trim(),
+      imageUrl: String(imageUrl).trim(),
+      badge: badge ? String(badge).trim() : undefined,
+      subtitle: subtitle ? String(subtitle).trim() : undefined,
+      ctaText: ctaText ? String(ctaText).trim() : undefined,
+      ctaAction: ctaAction ? String(ctaAction).trim() : undefined,
+      showTextOverlay: Boolean(showTextOverlay),
+      isActive: isActive !== undefined ? Boolean(isActive) : true,
+      order: promoSlidesDataCache.slides.length,
+      createdAt: new Date().toISOString(),
+    };
+
+    promoSlidesDataCache.slides.push(newSlide);
+    saveStoredPromoSlidesData(promoSlidesDataCache);
+    res.status(201).json(newSlide);
+  });
+
+  // PUT /api/admin/promo-slides/reorder
+  app.put('/api/admin/promo-slides/reorder', (req, res) => {
+    const { slides } = req.body;
+    if (Array.isArray(slides)) {
+      promoSlidesDataCache.slides = slides.map((s: PromoSlide, idx: number) => ({
+        ...s,
+        order: idx,
+      }));
+      saveStoredPromoSlidesData(promoSlidesDataCache);
+    }
+    res.json(promoSlidesDataCache.slides);
+  });
+
+  // PUT /api/admin/promo-slides/:id
+  app.put('/api/admin/promo-slides/:id', (req, res) => {
+    const index = promoSlidesDataCache.slides.findIndex((s) => s.id === req.params.id);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Promo slide not found' });
+    }
+
+    const existing = promoSlidesDataCache.slides[index];
+    const {
+      title,
+      imageUrl,
+      badge,
+      subtitle,
+      ctaText,
+      ctaAction,
+      showTextOverlay,
+      isActive,
+    } = req.body;
+
+    promoSlidesDataCache.slides[index] = {
+      ...existing,
+      title: title !== undefined ? String(title).trim() : existing.title,
+      imageUrl: imageUrl !== undefined ? String(imageUrl).trim() : existing.imageUrl,
+      badge: badge !== undefined ? (badge ? String(badge).trim() : undefined) : existing.badge,
+      subtitle: subtitle !== undefined ? (subtitle ? String(subtitle).trim() : undefined) : existing.subtitle,
+      ctaText: ctaText !== undefined ? (ctaText ? String(ctaText).trim() : undefined) : existing.ctaText,
+      ctaAction: ctaAction !== undefined ? (ctaAction ? String(ctaAction).trim() : undefined) : existing.ctaAction,
+      showTextOverlay: showTextOverlay !== undefined ? Boolean(showTextOverlay) : existing.showTextOverlay,
+      isActive: isActive !== undefined ? Boolean(isActive) : existing.isActive,
+    };
+
+    saveStoredPromoSlidesData(promoSlidesDataCache);
+    res.json(promoSlidesDataCache.slides[index]);
+  });
+
+  // PUT /api/admin/promo-slides/:id/toggle
+  app.put('/api/admin/promo-slides/:id/toggle', (req, res) => {
+    const index = promoSlidesDataCache.slides.findIndex((s) => s.id === req.params.id);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Promo slide not found' });
+    }
+
+    promoSlidesDataCache.slides[index].isActive = !promoSlidesDataCache.slides[index].isActive;
+    saveStoredPromoSlidesData(promoSlidesDataCache);
+    res.json(promoSlidesDataCache.slides[index]);
+  });
+
+  // DELETE /api/admin/promo-slides/:id
+  app.delete('/api/admin/promo-slides/:id', (req, res) => {
+    const index = promoSlidesDataCache.slides.findIndex((s) => s.id === req.params.id);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Promo slide not found' });
+    }
+
+    promoSlidesDataCache.slides.splice(index, 1);
+    saveStoredPromoSlidesData(promoSlidesDataCache);
+    res.json({ success: true, message: 'Promo slide deleted' });
+  });
+
   // Helper: Sri Lankan phone normalization (0771234567)
   function normalizeSriLankanPhone(raw: string): string {
     if (!raw) return '';
@@ -2949,6 +3151,23 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
         }
       } catch (e) {
         console.warn('[Firestore] Initial hero ads sync warning:', e);
+      }
+
+      try {
+        const promoSnap = await getDoc(doc(firestoreDb, 'hero_ads', 'promo_slides'));
+        if (promoSnap.exists()) {
+          const remotePromo = promoSnap.data() as { settings?: PromoSlidesSettings; slides?: PromoSlide[] };
+          if (remotePromo && Array.isArray(remotePromo.slides)) {
+            promoSlidesDataCache = {
+              settings: remotePromo.settings || DEFAULT_PROMO_SLIDES_SETTINGS,
+              slides: remotePromo.slides,
+            };
+            saveStoredPromoSlidesData(promoSlidesDataCache);
+            console.log(`[Firestore] Initialized server promo slides cache with ${promoSlidesDataCache.slides.length} slides`);
+          }
+        }
+      } catch (e) {
+        console.warn('[Firestore] Initial promo slides sync warning:', e);
       }
 
       try {

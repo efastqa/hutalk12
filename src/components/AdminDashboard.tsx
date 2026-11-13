@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Listing, EventItem, HeroAd, HeroAdSettings, VideoReelItem, EStore } from '../types';
+import { Listing, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, VideoReelItem, EStore } from '../types';
 import {
   ShieldCheck,
   Clock,
@@ -58,6 +58,7 @@ import { AdminCustomDomain } from './AdminCustomDomain';
 import { AdminReelsManager } from './AdminReelsManager';
 import { AdminDataBackup } from './AdminDataBackup';
 import { AdminEStoresManager } from './AdminEStoresManager';
+import { AdminPromoSlidesManager } from './AdminPromoSlidesManager';
 
 const compressBannerImage = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -139,6 +140,15 @@ interface AdminDashboardProps {
   onUpdateHeroAd?: (id: string, ad: Partial<HeroAd>) => Promise<void>;
   onToggleHeroAd?: (id: string) => Promise<void>;
   onDeleteHeroAd?: (id: string) => Promise<void>;
+  promoSlides?: PromoSlide[];
+  promoSlidesSettings?: PromoSlidesSettings;
+  onUpdatePromoSlidesSettings?: (settings: Partial<PromoSlidesSettings>) => Promise<void>;
+  onCreatePromoSlide?: (slide: Partial<PromoSlide>) => Promise<void>;
+  onUpdatePromoSlide?: (id: string, slide: Partial<PromoSlide>) => Promise<void>;
+  onTogglePromoSlide?: (id: string) => Promise<void>;
+  onDeletePromoSlide?: (id: string) => Promise<void>;
+  onReorderPromoSlides?: (slides: PromoSlide[]) => Promise<void>;
+  initialFilterTab?: string;
   stores?: EStore[];
   onStoresChange?: (stores: EStore[]) => void;
 }
@@ -173,8 +183,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onUpdateHeroAd,
   onToggleHeroAd,
   onDeleteHeroAd,
+  promoSlides = [],
+  promoSlidesSettings = { enabled: true, rotationIntervalSeconds: 5, aspectPreset: 'standard' },
+  onUpdatePromoSlidesSettings,
+  onCreatePromoSlide,
+  onUpdatePromoSlide,
+  onTogglePromoSlide,
+  onDeletePromoSlide,
+  onReorderPromoSlides,
+  initialFilterTab,
 }) => {
-  const [filterTab, setFilterTab] = useState<'all' | 'pending' | 'featured' | 'services' | 'spotlight' | 'hero_ads' | 'reels' | 'estores' | 'reach_analytics' | 'reports' | 'sms_gateway' | 'custom_domain' | 'data_backup'>('all');
+  type AdminTab = 'all' | 'pending' | 'featured' | 'services' | 'spotlight' | 'hero_ads' | 'promo_slides' | 'reels' | 'estores' | 'reach_analytics' | 'reports' | 'sms_gateway' | 'custom_domain' | 'data_backup';
+  const [filterTab, setFilterTab] = useState<AdminTab>(
+    (initialFilterTab as AdminTab) || 'all'
+  );
+  useEffect(() => {
+    if (initialFilterTab) {
+      setFilterTab(initialFilterTab as AdminTab);
+    }
+  }, [initialFilterTab]);
   const [localVideoReels, setLocalVideoReels] = useState<VideoReelItem[]>(videoReels || []);
   const [localStores, setLocalStores] = useState<EStore[]>(stores || []);
 
@@ -1383,6 +1410,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
 
         <div
+          id="admin-metric-promo-slides"
+          onClick={() => setFilterTab('promo_slides')}
+          className={`p-6 rounded-2xl border transition-all cursor-pointer ${
+            filterTab === 'promo_slides'
+              ? 'bg-white border-[#FF5A36] shadow-lg -translate-y-1 ring-2 ring-[#FF5A36]/20'
+              : 'bg-white border-gray-200 hover:border-gray-300'
+          }`}
+        >
+          <div className="flex items-center justify-between text-[#FF5A36] mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Category Promo Slides</span>
+            <ImageIcon className="w-5 h-5 text-[#FF5A36]" />
+          </div>
+          <div className="text-3xl font-extrabold text-[#FF5A36]">{promoSlides.length}</div>
+          <p className="text-xs text-gray-500 mt-1 font-medium">
+            {promoSlides.filter((s) => s.isActive).length} Active Live • Admin Only
+          </p>
+        </div>
+
+        <div
           id="admin-metric-video-reels"
           onClick={() => setFilterTab('reels')}
           className={`p-6 rounded-2xl border transition-all cursor-pointer ${
@@ -1581,6 +1627,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <span>Hero Ads & Banners ({heroAds.length})</span>
             </button>
             <button
+              id="admin-filter-promo-slides-tab"
+              type="button"
+              onClick={() => setFilterTab('promo_slides')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                filterTab === 'promo_slides'
+                  ? 'bg-[#FF5A36] text-white shadow-sm'
+                  : 'bg-orange-50 text-[#FF5A36] hover:bg-orange-100 border border-orange-200/60'
+              }`}
+            >
+              <ImageIcon className="w-3.5 h-3.5" />
+              <span>Promo Image Slides ({promoSlides.length})</span>
+            </button>
+            <button
               id="admin-filter-reels-tab"
               type="button"
               onClick={() => setFilterTab('reels')}
@@ -1685,7 +1744,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </button>
           )}
 
-          {filterTab !== 'hero_ads' && filterTab !== 'reels' && filterTab !== 'sms_gateway' && filterTab !== 'custom_domain' && filterTab !== 'data_backup' && filterTab !== 'estores' && (
+          {filterTab !== 'hero_ads' && filterTab !== 'promo_slides' && filterTab !== 'reels' && filterTab !== 'sms_gateway' && filterTab !== 'custom_domain' && filterTab !== 'data_backup' && filterTab !== 'estores' && (
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
                 <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
@@ -1786,6 +1845,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               onUpdateHeroAd={onUpdateHeroAd}
               onToggleHeroAd={onToggleHeroAd}
               onDeleteHeroAd={onDeleteHeroAd}
+              onToast={onToast}
+            />
+          </div>
+        ) : filterTab === 'promo_slides' ? (
+          <div className="p-4 sm:p-6">
+            <AdminPromoSlidesManager
+              slides={promoSlides}
+              settings={promoSlidesSettings}
+              onUpdateSettings={onUpdatePromoSlidesSettings}
+              onCreateSlide={onCreatePromoSlide}
+              onUpdateSlide={onUpdatePromoSlide}
+              onToggleSlide={onTogglePromoSlide}
+              onDeleteSlide={onDeletePromoSlide}
+              onReorderSlides={onReorderPromoSlides}
               onToast={onToast}
             />
           </div>
