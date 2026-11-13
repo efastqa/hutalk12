@@ -956,6 +956,9 @@ export default function App() {
               onSelectCategory={(category, query) => handleSelectCategory(category, query, true)}
               listings={listings}
               onViewAllCategories={() => setCurrentTab('categories')}
+              verifiedOnly={verifiedOnly}
+              onToggleVerifiedOnly={() => setVerifiedOnly((prev) => !prev)}
+              onSelectSearchTerm={setSearchTerm}
             />
 
             {/* Qatar Living style Browse Districts Bar - Frosted Glass with Seamless Contrast */}

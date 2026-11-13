@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
-import { LayoutGrid, Sparkles, RotateCcw } from 'lucide-react';
+import { LayoutGrid, Sparkles, RotateCcw, ShieldCheck } from 'lucide-react';
 import { Listing } from '../types';
 import { DualToneHeading } from './DualToneHeading';
 import holidayHomesImg from '../assets/images/holiday_homes_category_1794527575851.jpg';
@@ -10,6 +10,9 @@ export interface CategoryGridProps {
   onSelectCategory: (category: string, query?: string) => void;
   listings: Listing[];
   onViewAllCategories?: () => void;
+  verifiedOnly?: boolean;
+  onToggleVerifiedOnly?: () => void;
+  onSelectSearchTerm?: (query: string) => void;
 }
 
 export interface CategoryItem {
@@ -113,11 +116,25 @@ const TRENDING_CHIPS = [
   { label: 'Salons & Spas', category: 'Beauty', query: 'salon' },
 ];
 
+const POPULAR_SEARCHES = [
+  'Toyota Land Cruiser',
+  'iPhone 16 Pro',
+  'Colombo Apartment',
+  'Honda Vezel',
+  'Land in Kandy',
+  'Driver Wanted',
+  'MacBook',
+  'Living Room Sofa',
+];
+
 export const CategoryGrid: React.FC<CategoryGridProps> = ({
   currentCategory,
   onSelectCategory,
   listings,
   onViewAllCategories,
+  verifiedOnly = false,
+  onToggleVerifiedOnly,
+  onSelectSearchTerm,
 }) => {
   // Calculate live ads count per category accurately
   const counts = useMemo(() => {
@@ -217,32 +234,25 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
     }, 40);
   };
 
+  const handlePopularClick = (query: string) => {
+    if (onSelectSearchTerm) {
+      onSelectSearchTerm(query);
+    } else {
+      onSelectCategory('All', query);
+    }
+    setTimeout(() => {
+      const el = document.getElementById('marketplace-listings');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 40);
+  };
+
   const isAnyCategoryActive = currentCategory !== 'All';
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
-      {/* 1. TRENDING BAR (Matching attached format with frosted glass pills) */}
-      <div className="mb-6 flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none select-none">
-        <span className="text-[11px] sm:text-xs font-black tracking-wider text-gray-500 dark:text-gray-400 uppercase shrink-0 flex items-center gap-1.5 mr-1">
-          <Sparkles className="w-3.5 h-3.5 text-[#FF5A36]" />
-          <span>TRENDING:</span>
-        </span>
-
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
-          {TRENDING_CHIPS.map((chip) => (
-            <button
-              key={chip.label}
-              type="button"
-              onClick={() => handleTrendingClick(chip)}
-              className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/90 dark:bg-[#151822]/90 backdrop-blur-sm text-gray-700 dark:text-gray-300 border border-gray-200/80 dark:border-white/10 hover:border-[#FF5A36] dark:hover:border-[#FF5A36] hover:text-[#FF5A36] dark:hover:text-[#FF5A36] hover:bg-orange-50/50 dark:hover:bg-orange-950/20 transition-all whitespace-nowrap shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer"
-            >
-              {chip.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 2. Dual-Tone Heading */}
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
+      {/* 1. Dual-Tone Heading */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -372,6 +382,60 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
           </button>
         </div>
       )}
+
+      {/* 5. Below Explore Categories: Verified Sellers Only, Popular Searches & Trending Bar */}
+      <div className="mt-6 space-y-3.5">
+        {/* Verified Sellers Only + Popular Searches */}
+        <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+          {onToggleVerifiedOnly && (
+            <button
+              type="button"
+              onClick={onToggleVerifiedOnly}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border shrink-0 shadow-2xs ${
+                verifiedOnly
+                  ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                  : 'bg-white dark:bg-[#151822] text-gray-800 dark:text-gray-200 border-gray-200 dark:border-white/10 hover:border-purple-400'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Verified Sellers Only</span>
+            </button>
+          )}
+
+          <span className="text-gray-500 dark:text-gray-400 font-semibold ml-1">Popular:</span>
+          {POPULAR_SEARCHES.map((query) => (
+            <button
+              key={query}
+              type="button"
+              onClick={() => handlePopularClick(query)}
+              className="bg-white dark:bg-[#181920] hover:bg-gray-100 dark:hover:bg-[#22242F] hover:text-[#FF5A36] dark:hover:text-[#FF5A36] text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full border border-gray-200 dark:border-[#2D2F39] transition-all cursor-pointer shadow-2xs"
+            >
+              {query}
+            </button>
+          ))}
+        </div>
+
+        {/* TRENDING Bar */}
+        <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none select-none">
+          <span className="text-[11px] sm:text-xs font-black tracking-wider text-gray-500 dark:text-gray-400 uppercase shrink-0 flex items-center gap-1.5 mr-1">
+            <Sparkles className="w-3.5 h-3.5 text-[#FF5A36]" />
+            <span>TRENDING:</span>
+          </span>
+
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
+            {TRENDING_CHIPS.map((chip) => (
+              <button
+                key={chip.label}
+                type="button"
+                onClick={() => handleTrendingClick(chip)}
+                className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/90 dark:bg-[#151822]/90 backdrop-blur-sm text-gray-700 dark:text-gray-300 border border-gray-200/80 dark:border-white/10 hover:border-[#FF5A36] dark:hover:border-[#FF5A36] hover:text-[#FF5A36] dark:hover:text-[#FF5A36] hover:bg-orange-50/50 dark:hover:bg-orange-950/20 transition-all whitespace-nowrap shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer"
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   );
 };

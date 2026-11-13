@@ -11,7 +11,6 @@ import {
   Wrench,
   Briefcase,
   Layers,
-  ShieldCheck,
 } from 'lucide-react';
 import { HeroAd, HeroAdSettings, Listing } from '../types';
 import { HeroAdBanner } from './HeroAdBanner';
@@ -86,17 +85,6 @@ const SEARCH_TABS = [
   { id: 'Electronics', label: 'Classifieds', icon: ShoppingBag },
   { id: 'Services', label: 'Services', icon: Wrench },
   { id: 'Jobs', label: 'Jobs', icon: Briefcase },
-];
-
-const POPULAR_SEARCHES = [
-  'Toyota Land Cruiser',
-  'iPhone 16 Pro',
-  'Colombo Apartment',
-  'Honda Vezel',
-  'Land in Kandy',
-  'Driver Wanted',
-  'MacBook',
-  'Living Room Sofa',
 ];
 
 export interface LightBackgroundItem {
@@ -181,15 +169,6 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   const handleTabClick = (catId: string) => {
     if (onSelectCategory) {
       onSelectCategory(catId);
-    }
-  };
-
-  const handlePopularClick = (query: string) => {
-    onSearchChange(query);
-    // Smooth scroll down to listings section
-    const el = document.getElementById('marketplace-listings');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -412,8 +391,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
             )}
           </motion.div>
 
-          {/* 1-Tap Quick Budget Presets & Trust Toggle */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 px-1 text-xs">
+          {/* 1-Tap Quick Budget Presets */}
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-2 px-1 text-xs">
             <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1">
               <span className="text-gray-500 dark:text-gray-400 font-bold shrink-0">Budget:</span>
               {PRICE_PRESETS.map((p) => {
@@ -442,37 +421,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                 );
               })}
             </div>
-
-            {onToggleVerifiedOnly && (
-              <button
-                type="button"
-                onClick={onToggleVerifiedOnly}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer border shrink-0 ${
-                  verifiedOnly
-                    ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
-                    : 'bg-white/80 dark:bg-[#151822]/80 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-[#2D303E] hover:border-purple-400'
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Verified Sellers Only</span>
-              </button>
-            )}
           </div>
-        </div>
-
-        {/* Popular Searches Pills (Qatar Living Style) */}
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-1 text-xs">
-          <span className="text-gray-500 dark:text-gray-400 font-semibold">Popular:</span>
-          {POPULAR_SEARCHES.map((query) => (
-            <button
-              key={query}
-              type="button"
-              onClick={() => handlePopularClick(query)}
-              className="bg-white dark:bg-[#181920] hover:bg-gray-100 dark:hover:bg-[#22242F] hover:text-[#FF5A36] dark:hover:text-[#FF5A36] text-gray-700 dark:text-gray-300 px-2.5 py-1 rounded-full border border-gray-200 dark:border-[#2D2F39] transition-all cursor-pointer shadow-2xs"
-            >
-              {query}
-            </button>
-          ))}
         </div>
       </div>
     </section>
