@@ -1384,7 +1384,6 @@ export default function App() {
         isAdminLoginOpen={isAdminLoginOpen}
         onCloseAdminLogin={() => setIsAdminLoginOpen(false)}
         onAdminLoginSuccess={handleAdminLoginSuccess}
-        onOpenAdminLogin={handleOpenAdminPortal}
         isUserAuthOpen={isUserAuthOpen}
         onCloseUserAuth={() => {
           setIsUserAuthOpen(false);

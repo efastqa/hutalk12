@@ -26,7 +26,6 @@ interface AuthModalsProps {
   isAdminLoginOpen: boolean;
   onCloseAdminLogin: () => void;
   onAdminLoginSuccess: () => void;
-  onOpenAdminLogin?: () => void;
 
   isUserAuthOpen: boolean;
   onCloseUserAuth: () => void;
@@ -48,7 +47,6 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
   isAdminLoginOpen,
   onCloseAdminLogin,
   onAdminLoginSuccess,
-  onOpenAdminLogin,
   isUserAuthOpen,
   onCloseUserAuth,
   onUserAuthSuccess,
@@ -1399,22 +1397,6 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                     </span>
                   )}
                 </button>
-
-                {onOpenAdminLogin && (
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onCloseUserAuth();
-                        onOpenAdminLogin();
-                      }}
-                      className="text-[11px] text-gray-400 hover:text-gray-700 flex items-center justify-center gap-1 mx-auto font-medium cursor-pointer"
-                    >
-                      <Shield className="w-3 h-3 text-gray-400" />
-                      <span>Are you an administrator? <strong>Access Admin Portal</strong></span>
-                    </button>
-                  </div>
-                )}
               </div>
             )}
           </>
