@@ -206,6 +206,13 @@ export default function App() {
     }
   }, [currentTab]);
 
+  // Reset scroll cleanly to top whenever switching main view tabs so top banners are never tucked under the fixed navbar
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [currentTab]);
+
   // Handle browser back/forward buttons
   useEffect(() => {
     const handlePopState = () => {
@@ -1070,17 +1077,17 @@ export default function App() {
               onExploreEStores={() => {
                 setTargetEStoreForView(null);
                 setCurrentTab('estore');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
               }}
               onRegisterStore={() => {
                 setTargetEStoreForView(null);
                 setCurrentTab('estore');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
               }}
               onOpenStore={(store) => {
                 setTargetEStoreForView(store);
                 setCurrentTab('estore');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
               }}
             />
 

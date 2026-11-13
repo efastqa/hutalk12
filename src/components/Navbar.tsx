@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import {
   Plus,
@@ -56,7 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const headerRef = useRef<HTMLElement | null>(null);
-  const [headerHeight, setHeaderHeight] = useState<number>(68);
+  const [headerHeight, setHeaderHeight] = useState<number>(74);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -67,28 +67,55 @@ export const Navbar: React.FC<NavbarProps> = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = headerRef.current;
     if (!el) return;
 
     const updateHeight = () => {
-      const nextHeight = Math.ceil(el.getBoundingClientRect().height);
+      const rectHeight = el.getBoundingClientRect().height;
+      const nextHeight = Math.max(Math.ceil(rectHeight), Math.ceil(el.offsetHeight));
       if (nextHeight > 0) {
-        setHeaderHeight(nextHeight);
+        setHeaderHeight((prev) => (prev !== nextHeight ? nextHeight : prev));
       }
     };
 
     updateHeight();
+    const rafId = window.requestAnimationFrame(updateHeight);
+    const t1 = window.setTimeout(updateHeight, 80);
+    const t2 = window.setTimeout(updateHeight, 300);
 
+    let observer: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
-      const observer = new ResizeObserver(updateHeight);
-      observer.observe(el);
-      return () => observer.disconnect();
+      observer = new ResizeObserver(updateHeight);
+      try {
+        observer.observe(el, { box: 'border-box' });
+      } catch {
+        observer.observe(el);
+      }
     }
 
+    const vv = window.visualViewport;
     window.addEventListener('resize', updateHeight, { passive: true });
-    return () => window.removeEventListener('resize', updateHeight);
-  }, []);
+    window.addEventListener('orientationchange', updateHeight, { passive: true });
+    if (vv) {
+      vv.addEventListener('resize', updateHeight);
+    }
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(updateHeight).catch(() => {});
+    }
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      if (observer) observer.disconnect();
+      window.removeEventListener('resize', updateHeight);
+      window.removeEventListener('orientationchange', updateHeight);
+      if (vv) {
+        vv.removeEventListener('resize', updateHeight);
+      }
+    };
+  }, [currentTab, currentUser]);
 
   const handleVerticalClick = (catName: string) => {
     if (onSelectCategory) {
@@ -153,7 +180,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           type="button"
           onClick={() => {
             onSelectTab('estore');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
           }}
           title="Browse Sri Lanka E-Stores and Online Merchant Marketplace"
           className={`inline-flex sm:hidden items-center gap-1 px-2 py-1 rounded-xl text-xs font-black transition-all cursor-pointer shadow-2xs border ${
@@ -383,7 +410,14 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
     </header>
-    <div style={{ height: `${headerHeight}px` }} aria-hidden="true" className="w-full shrink-0" />
+    <div
+      style={{
+        height: `${headerHeight}px`,
+        minHeight: 'calc(max(env(safe-area-inset-top, 0px), 8px) + 60px)',
+      }}
+      aria-hidden="true"
+      className="w-full shrink-0"
+    />
     </>
   );
 };

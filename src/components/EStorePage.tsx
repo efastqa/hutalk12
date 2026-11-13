@@ -1160,7 +1160,7 @@ export const EStorePage: React.FC<EStorePageProps> = ({
     <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0B0C10] text-[#181920] dark:text-[#F8FAFC] pb-24 transition-colors">
       {/* Top Banner / Hero Featuring the User's Attached Sri Lanka Online Grocery Marketplace Design */}
       <div className="bg-[#0A111E] border-b border-emerald-500/20 shadow-xl relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 pb-4 sm:py-6">
           {/* Universal Banner Display (Clean & identical to PC layout on all devices with zero text clashing) */}
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-emerald-500/30 bg-[#0A111E] aspect-[2171/724]">
             <img
