@@ -114,7 +114,7 @@ export const InteractiveMapDiscovery: React.FC<InteractiveMapDiscoveryProps> = (
 
   // Categories list
   const categories = useMemo(() => {
-    const set = new Set<string>(['Holiday Homes']);
+    const set = new Set<string>(['Holiday Homes', 'Cars for Rent']);
     listings.forEach((l) => {
       if (l.category) set.add(l.category);
     });

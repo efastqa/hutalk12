@@ -21,7 +21,7 @@ export interface Listing {
   whatsappClicks?: number;
   phoneClicks?: number;
   serviceTrade?: string;
-  pricingType?: 'fixed' | 'starting_at' | 'hourly' | 'quote' | 'per_night' | 'per_weekend';
+  pricingType?: 'fixed' | 'starting_at' | 'hourly' | 'quote' | 'per_night' | 'per_weekend' | 'daily' | 'monthly';
   serviceArea?: string;
   isVerifiedPro?: boolean;
   isEmergency247?: boolean;
@@ -37,12 +37,13 @@ export interface Listing {
   reviewCount?: number;
 
   // Custom Category Fields
-  // Vehicles & Motorcycles
+  // Vehicles, Motorcycles & Cars for Rent
   vehicleType?: string;
   vehicleYear?: number | string;
   vehicleMileage?: number | string;
   fuelType?: 'Petrol' | 'Diesel' | 'Hybrid' | 'Electric' | string;
   transmission?: 'Automatic' | 'Manual' | 'Tiptronic' | string;
+  rentalDriverOption?: 'Self-Drive' | 'With Driver' | 'Self-Drive or With Driver' | string;
 
   // Property & Holiday Homes
   propertyType?: 'House' | 'Land' | 'Apartment' | 'Commercial' | 'Room / Annex' | 'Villa / Holiday Home' | string;
@@ -130,12 +131,31 @@ export type ViewTab =
   | 'marketplace'
   | 'estore'
   | 'huta_in'
+  | 'hot_news'
   | 'categories'
   | 'user_dashboard'
   | 'admin_dashboard'
   | 'more'
   | 'admin'
   | 'dashboard';
+
+export interface HotNewsArticle {
+  id: string;
+  title: string;
+  summary: string;
+  link: string;
+  source: string;
+  category: 'Breaking' | 'Business & Economy' | 'Sports' | 'Tech & Auto' | 'Sri Lanka';
+  imageUrl?: string;
+  publishedAt: string;
+}
+
+export interface HotNewsResponse {
+  articles: HotNewsArticle[];
+  sources: string[];
+  lastUpdated: string;
+  isLive: boolean;
+}
 
 export interface ChatConversation {
   id: string;

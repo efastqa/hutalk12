@@ -12,6 +12,7 @@ import {
   Wrench,
   ShoppingBag,
   Store,
+  Flame,
 } from 'lucide-react';
 import { ViewTab, User } from '../types';
 import { ThemeToggle } from './ThemeToggle';
@@ -333,8 +334,22 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <button
             type="button"
+            onClick={() => onSelectTab('hot_news')}
+            className={`px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
+              currentTab === 'hot_news'
+                ? 'bg-rose-600 text-white shadow-xs'
+                : 'text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+            }`}
+          >
+            <Flame className="w-3.5 h-3.5 shrink-0" />
+            <span>Hot News</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse shrink-0" />
+          </button>
+
+          <button
+            type="button"
             onClick={() => onSelectTab('categories')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'categories'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920]'

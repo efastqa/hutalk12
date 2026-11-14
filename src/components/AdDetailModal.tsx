@@ -622,6 +622,20 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                       </span>
                     )}
                   </div>
+                ) : listing.category === 'Cars for Rent' || listing.pricingType === 'daily' || listing.pricingType === 'monthly' ? (
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <div className="text-2xl font-black text-[#FF5A36]">
+                      {formatLKR(listing.price)}
+                      <span className="text-sm font-bold text-gray-600 dark:text-gray-300 ml-1">
+                        {listing.pricingType === 'monthly' ? '/ month' : listing.pricingType === 'fixed' ? '' : '/ day'}
+                      </span>
+                    </div>
+                    {listing.rentalDriverOption && (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold bg-orange-50 dark:bg-orange-950/40 text-[#FF5A36] px-2.5 py-0.5 rounded-full border border-orange-200 dark:border-orange-500/30">
+                        {listing.rentalDriverOption}
+                      </span>
+                    )}
+                  </div>
                 ) : (
                   <div className="text-2xl font-black text-[#FF5A36]">
                     {formatLKR(listing.price)}
@@ -667,6 +681,7 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                 listing.transmission ||
                 listing.vehicleMileage ||
                 listing.vehicleType ||
+                listing.rentalDriverOption ||
                 listing.propertyType ||
                 listing.bedrooms ||
                 listing.bathrooms ||
@@ -727,6 +742,12 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                       <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
                         <span className="text-[10px] text-gray-400 block font-medium">Vehicle Type</span>
                         <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.vehicleType}</span>
+                      </div>
+                    )}
+                    {listing.rentalDriverOption && (
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Driver Option</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.rentalDriverOption}</span>
                       </div>
                     )}
 

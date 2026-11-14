@@ -1,9 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { LayoutGrid, Sparkles, RotateCcw, ShieldCheck } from 'lucide-react';
-import { Listing } from '../types';
+import { LayoutGrid, Sparkles, RotateCcw, ShieldCheck, ArrowRight, Flame } from 'lucide-react';
+import { Listing, HotNewsArticle } from '../types';
 import { DualToneHeading } from './DualToneHeading';
 import holidayHomesImg from '../assets/images/holiday_homes_category_1794527575851.jpg';
+import carsForRentImg from '../assets/images/cars_for_rent_category_1794683403631.jpg';
+import hotNewsIconImg from '../assets/images/hot_news_sri_lanka_icon_1794684230454.jpg';
 
 export interface CategoryGridProps {
   currentCategory: string;
@@ -13,6 +15,9 @@ export interface CategoryGridProps {
   verifiedOnly?: boolean;
   onToggleVerifiedOnly?: () => void;
   onSelectSearchTerm?: (query: string) => void;
+  hotNewsArticles?: HotNewsArticle[];
+  isLoadingHotNews?: boolean;
+  onOpenHotNews?: () => void;
 }
 
 export interface CategoryItem {
@@ -99,11 +104,19 @@ export const CATEGORIES_ITEMS: CategoryItem[] = [
     targetCategory: 'Holiday Homes',
     isNew: true,
   },
+  {
+    key: 'Cars for Rent',
+    label: 'Cars for Rent',
+    image: carsForRentImg,
+    targetCategory: 'Cars for Rent',
+    isNew: true,
+  },
 ];
 
 // Trending chips matching the top bar of the attached design
 const TRENDING_CHIPS = [
   { label: 'Cars', category: 'Vehicles', query: 'car' },
+  { label: 'Cars for Rent', category: 'Cars for Rent', query: '' },
   { label: 'Mobile Phones', category: 'Phones', query: 'phone' },
   { label: 'Dresses', category: "Women's", query: 'dress' },
   { label: 'Houses & Lands', category: 'Property', query: 'house' },
@@ -135,7 +148,22 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
   verifiedOnly = false,
   onToggleVerifiedOnly,
   onSelectSearchTerm,
+  hotNewsArticles = [],
+  isLoadingHotNews = false,
+  onOpenHotNews,
 }) => {
+  const [liveNewsIndex, setLiveNewsIndex] = useState(0);
+  const liveSlides = useMemo(() => hotNewsArticles.slice(0, 8), [hotNewsArticles]);
+
+  useEffect(() => {
+    if (liveSlides.length <= 1) return;
+    const timer = window.setInterval(() => {
+      setLiveNewsIndex((prev) => (prev + 1) % liveSlides.length);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [liveSlides.length]);
+
+  const currentLiveHeadline = liveSlides[liveNewsIndex % Math.max(1, liveSlides.length)];
   // Calculate live ads count per category accurately
   const counts = useMemo(() => {
     const map: Record<string, number> = {};
@@ -208,6 +236,23 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
         desc.includes('holiday home')
       ) {
         map['Holiday Homes'] = (map['Holiday Homes'] || 0) + 1;
+      }
+      // Cars for Rent
+      if (
+        cat === 'cars for rent' ||
+        cat.includes('car rental') ||
+        cat.includes('rent a car') ||
+        ((cat.includes('vehicle') || cat.includes('car')) &&
+          (title.includes('for rent') ||
+            title.includes('rent a car') ||
+            title.includes('self drive') ||
+            title.includes('self-drive') ||
+            title.includes('per day') ||
+            desc.includes('rent a car') ||
+            item.pricingType === 'daily' ||
+            item.pricingType === 'monthly'))
+      ) {
+        map['Cars for Rent'] = (map['Cars for Rent'] || 0) + 1;
       }
     });
 
@@ -365,6 +410,83 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
             );
           })}
         </div>
+
+        {/* Sri Lanka Live "Hot News" Category-Style Icon & Integrated Live Ticker */}
+        {onOpenHotNews && (
+          <div className="mt-6 pt-5 border-t border-gray-100 dark:border-white/10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5">
+            <motion.button
+              type="button"
+              id="category-hot-news-icon-btn"
+              whileHover={{ y: -5 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={onOpenHotNews}
+              className="relative flex flex-col items-center justify-start text-center cursor-pointer select-none group p-2 rounded-2xl transition-all duration-300 hover:bg-white dark:hover:bg-[#1A1E2B] hover:shadow-md hover:shadow-black/5 dark:hover:shadow-black/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-500/30 shrink-0"
+              title="Open Sri Lanka Live Hot News"
+            >
+              {/* LIVE Pulse Badge */}
+              <span className="absolute top-1.5 right-1.5 z-10 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-rose-600 to-[#FF5A36] text-white text-[9px] font-black uppercase tracking-wider shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                <span>Live</span>
+              </span>
+
+              {/* 3D Category Icon Frame */}
+              <div className="relative w-16 h-14 sm:w-20 sm:h-18 md:w-24 md:h-20 flex flex-col items-center justify-center mb-1">
+                <img
+                  src={hotNewsIconImg}
+                  alt="Sri Lanka Hot News"
+                  className="w-full h-full object-contain rounded-2xl filter group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 ease-out select-none pointer-events-none drop-shadow-sm group-hover:drop-shadow-[0_10px_18px_rgba(244,63,94,0.28)]"
+                  loading="lazy"
+                />
+                {/* 3D Ground Contact Shadow */}
+                <div className="w-10 sm:w-14 h-1.5 bg-black/10 dark:bg-black/50 rounded-full blur-[2px] mt-0.5 group-hover:scale-90 group-hover:opacity-40 transition-all duration-300" />
+              </div>
+
+              {/* Label */}
+              <span className="text-xs sm:text-sm font-black tracking-tight leading-tight text-center text-gray-900 dark:text-gray-100 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors mt-1">
+                Hot News
+              </span>
+
+              {/* Live Count */}
+              <span className="text-[10px] sm:text-[11px] font-semibold mt-0.5 text-emerald-600 dark:text-emerald-400 tabular-nums">
+                {hotNewsArticles.length > 0
+                  ? `${hotNewsArticles.length} live`
+                  : isLoadingHotNews
+                  ? 'Updating...'
+                  : 'Sri Lanka'}
+              </span>
+            </motion.button>
+
+            {/* Live Integrated Sri Lanka Headline Pill beside the Icon */}
+            <button
+              type="button"
+              onClick={onOpenHotNews}
+              className="group w-full sm:w-auto sm:max-w-lg flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-gray-50/90 dark:bg-[#191C28] hover:bg-rose-50/70 dark:hover:bg-[#221A22] border border-gray-200/80 dark:border-white/10 hover:border-rose-300 dark:hover:border-rose-500/40 text-left transition-all cursor-pointer"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                  <Flame className="w-3 h-3 fill-current shrink-0" />
+                  <span>Sri Lanka Live</span>
+                  {currentLiveHeadline && (
+                    <>
+                      <span aria-hidden="true" className="text-gray-300 dark:text-gray-600">·</span>
+                      <span className="text-gray-500 dark:text-gray-400 truncate font-semibold normal-case tracking-normal">
+                        {currentLiveHeadline.source}
+                      </span>
+                    </>
+                  )}
+                </div>
+                <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors line-clamp-1 mt-0.5">
+                  {currentLiveHeadline
+                    ? currentLiveHeadline.title
+                    : isLoadingHotNews
+                    ? 'Connecting to live Sri Lanka news...'
+                    : 'Tap Hot News icon for breaking Sri Lanka updates'}
+                </p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-rose-500 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 4. Explore All Categories & Directory Button */}

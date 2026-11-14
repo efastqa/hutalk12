@@ -9,7 +9,7 @@ interface FooterProps {
   onOpenPostAd: () => void;
   onOpenAdminLogin?: () => void;
   onOpenAppStore?: () => void;
-  onSelectTab?: (tab: 'marketplace' | 'estore' | 'huta_in' | 'categories') => void;
+  onSelectTab?: (tab: 'marketplace' | 'estore' | 'huta_in' | 'categories' | 'hot_news') => void;
   currentTab?: string;
   onOpenPolicy?: (tab: PolicyTab) => void;
 }
@@ -93,7 +93,7 @@ export const Footer: React.FC<FooterProps> = ({
                 Top Categories
               </h4>
               <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
-                {['Vehicles', 'Electronics', 'Property', 'Holiday Homes', 'Home & Garden'].map((cat) => (
+                {['Vehicles', 'Cars for Rent', 'Electronics', 'Property', 'Holiday Homes', 'Home & Garden'].map((cat) => (
                   <li key={cat}>
                     <button
                       type="button"
@@ -172,6 +172,17 @@ export const Footer: React.FC<FooterProps> = ({
                   <span>🛍️ Sri Lanka E-Stores & Online Merchants ↗</span>
                 </a>
               </li>
+              {onSelectTab && (
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => onSelectTab('hot_news')}
+                    className="hover:text-rose-500 transition-colors font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>🔥 Sri Lanka Hot News (Live)</span>
+                  </button>
+                </li>
+              )}
               <li>
                 <button
                   type="button"

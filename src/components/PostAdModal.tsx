@@ -37,11 +37,13 @@ import {
   Users,
 } from 'lucide-react';
 import { api } from '../services/api';
+import carsForRentImg from '../assets/images/cars_for_rent_category_1794683403631.jpg';
 
 const MAX_IMAGES = 8;
 
 const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
   Vehicles: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80',
+  'Cars for Rent': carsForRentImg,
   Electronics: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80',
   Property: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80',
   'Holiday Homes': 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&w=800&q=80',
@@ -155,6 +157,7 @@ interface PostAdModalProps {
 const CATEGORIES = [
   'Electronics',
   'Vehicles',
+  'Cars for Rent',
   'Property',
   'Holiday Homes',
   'Motorcycles',
@@ -163,6 +166,8 @@ const CATEGORIES = [
   'Services',
   'Jobs',
 ];
+
+const RENTAL_DRIVER_OPTIONS = ['Self-Drive', 'With Driver', 'Self-Drive or With Driver'];
 
 const SERVICE_TRADES = [
   'AC Repair & Servicing',
@@ -349,7 +354,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
 
   // Specialized Service & Holiday Stay Fields
   const [serviceTrade, setServiceTrade] = useState('AC Repair & Servicing');
-  const [pricingType, setPricingType] = useState<'fixed' | 'starting_at' | 'hourly' | 'quote' | 'per_night' | 'per_weekend'>('starting_at');
+  const [pricingType, setPricingType] = useState<'fixed' | 'starting_at' | 'hourly' | 'quote' | 'per_night' | 'per_weekend' | 'daily' | 'monthly'>('starting_at');
   const [serviceArea, setServiceArea] = useState('Colombo & Greater Suburbs');
   const [isEmergency247, setIsEmergency247] = useState(false);
 
@@ -361,6 +366,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
   const [vehicleMileage, setVehicleMileage] = useState('');
   const [fuelType, setFuelType] = useState('Petrol');
   const [transmission, setTransmission] = useState('Automatic');
+  const [rentalDriverOption, setRentalDriverOption] = useState('Self-Drive or With Driver');
 
   const [propertyType, setPropertyType] = useState('House for Sale');
   const [propertySize, setPropertySize] = useState('');
@@ -423,6 +429,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
             ? 'starting_at'
             : editingListing.category === 'Holiday Homes'
             ? 'per_night'
+            : editingListing.category === 'Cars for Rent'
+            ? 'daily'
             : 'fixed')
       );
       setServiceArea(editingListing.serviceArea || 'Colombo & Greater Suburbs');
@@ -436,6 +444,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       setVehicleMileage(editingListing.vehicleMileage ? String(editingListing.vehicleMileage) : '');
       setFuelType((editingListing.fuelType as any) || 'Petrol');
       setTransmission((editingListing.transmission as any) || 'Automatic');
+      setRentalDriverOption(editingListing.rentalDriverOption || 'Self-Drive or With Driver');
 
       setPropertyType((editingListing.propertyType as any) || 'House for Sale');
       setPropertySize(editingListing.propertySize || '');
@@ -464,7 +473,13 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       setUrlInput('');
       setVideoUrl('');
       setServiceTrade('AC Repair & Servicing');
-      setPricingType(initialCategory === 'Holiday Homes' ? 'per_night' : 'starting_at');
+      setPricingType(
+        initialCategory === 'Holiday Homes'
+          ? 'per_night'
+          : initialCategory === 'Cars for Rent'
+          ? 'daily'
+          : 'starting_at'
+      );
       setServiceArea('Colombo & Greater Suburbs');
       setIsEmergency247(false);
 
@@ -476,6 +491,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       setVehicleMileage('');
       setFuelType('Petrol');
       setTransmission('Automatic');
+      setRentalDriverOption('Self-Drive or With Driver');
 
       setPropertyType(initialCategory === 'Holiday Homes' ? 'Villa / Holiday Home' : 'House for Sale');
       setPropertySize('');
@@ -519,6 +535,10 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       formatted = `${formatted} / night`;
     } else if (category === 'Holiday Homes' && pricingType === 'per_weekend') {
       formatted = `${formatted} / wknd`;
+    } else if (category === 'Cars for Rent' && pricingType === 'daily') {
+      formatted = `${formatted} / day`;
+    } else if (category === 'Cars for Rent' && pricingType === 'monthly') {
+      formatted = `${formatted} / month`;
     }
     return isNegotiable ? `${formatted} • Negotiable` : formatted;
   };
@@ -760,11 +780,11 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
         images: finalImages,
         videoUrl: videoUrl.trim() || undefined,
         userId: editingListing ? editingListing.userId : (currentUser ? currentUser.id : 'guest'),
-        pricingType: (isService || category === 'Holiday Homes') ? pricingType : (isNegotiable ? 'negotiable' as any : 'fixed'),
+        pricingType: (isService || category === 'Holiday Homes' || category === 'Cars for Rent') ? pricingType : (isNegotiable ? 'negotiable' as any : 'fixed'),
         ...(isService && serviceTrade ? { serviceTrade } : {}),
         ...(isService && serviceArea ? { serviceArea } : {}),
         ...(isService ? { isEmergency247: Boolean(isEmergency247) } : {}),
-        ...(category === 'Vehicles' || category === 'Motorcycles' ? {
+        ...(category === 'Vehicles' || category === 'Motorcycles' || category === 'Cars for Rent' ? {
           brand: brand.trim() || undefined,
           model: model.trim() || undefined,
           vehicleType: vehicleType || undefined,
@@ -773,6 +793,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
           fuelType: fuelType || undefined,
           transmission: transmission || undefined,
           itemCondition: itemCondition || undefined,
+          ...(category === 'Cars for Rent' ? { rentalDriverOption: rentalDriverOption || undefined } : {}),
         } : {}),
         ...(category === 'Property' || category === 'Holiday Homes' ? {
           propertyType: propertyType || undefined,
@@ -1066,12 +1087,15 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                     if (nextCategory === 'Holiday Homes') {
                       setPropertyType('Villa / Holiday Home');
                       setPricingType('per_night');
+                    } else if (nextCategory === 'Cars for Rent') {
+                      setVehicleType('Car');
+                      setPricingType('daily');
                     } else if (nextCategory === 'Services') {
                       setPricingType('starting_at');
                     } else if (nextCategory === 'Property' && propertyType === 'Villa / Holiday Home') {
                       setPropertyType('House for Sale');
                       setPricingType('fixed');
-                    } else if (pricingType === 'per_night' || pricingType === 'per_weekend') {
+                    } else if (pricingType === 'per_night' || pricingType === 'per_weekend' || pricingType === 'daily' || pricingType === 'monthly') {
                       setPricingType('fixed');
                     }
                   }}
@@ -1189,18 +1213,63 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                 </div>
               )}
 
-              {/* Custom Category Fields: Vehicles & Motorcycles */}
-              {(category === 'Vehicles' || category === 'Motorcycles') && (
+              {/* Custom Category Fields: Vehicles, Motorcycles & Cars for Rent */}
+              {(category === 'Vehicles' || category === 'Motorcycles' || category === 'Cars for Rent') && (
                 <div className="p-3.5 sm:p-4 bg-gradient-to-br from-amber-50/70 to-orange-50/40 rounded-2xl border border-amber-200/80 space-y-3.5 animate-in fade-in duration-200">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
                       <Car className="w-4 h-4 text-[#FF5A36]" />
-                      <span>Vehicle Specifications (Specific Buyer Search Filters)</span>
+                      <span>{category === 'Cars for Rent' ? 'Car Rental & Vehicle Specifications' : 'Vehicle Specifications (Specific Buyer Search Filters)'}</span>
                     </span>
                     <span className="text-[10px] text-amber-800 bg-amber-100 font-bold px-2 py-0.5 rounded-md">
-                      Auto Specs
+                      {category === 'Cars for Rent' ? 'Rental Specs' : 'Auto Specs'}
                     </span>
                   </div>
+
+                  {category === 'Cars for Rent' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                          Rental Rate Basis
+                        </label>
+                        <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-xl border border-gray-300">
+                          {[
+                            { id: 'daily', label: 'Per Day' },
+                            { id: 'monthly', label: 'Per Month' },
+                            { id: 'fixed', label: 'Fixed' },
+                          ].map((opt) => (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => setPricingType(opt.id as any)}
+                              className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                                pricingType === opt.id
+                                  ? 'bg-[#FF5A36] text-white shadow-2xs'
+                                  : 'text-gray-600 hover:bg-gray-100'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                          Driver Option
+                        </label>
+                        <select
+                          value={rentalDriverOption}
+                          onChange={(e) => setRentalDriverOption(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                        >
+                          {RENTAL_DRIVER_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     {/* Vehicle Body Type */}
@@ -1687,6 +1756,10 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                         ? 'Nightly Rate (LKR / night)'
                         : category === 'Holiday Homes' && pricingType === 'per_weekend'
                         ? 'Weekend Rate (LKR / wknd)'
+                        : category === 'Cars for Rent' && pricingType === 'daily'
+                        ? 'Daily Rate (LKR / day)'
+                        : category === 'Cars for Rent' && pricingType === 'monthly'
+                        ? 'Monthly Rate (LKR / month)'
                         : 'Price (LKR)'}
                     </label>
                     {getPricePreview() && (

@@ -639,6 +639,7 @@ export const AdminPromoSlidesManager: React.FC<AdminPromoSlidesManagerProps> = (
                   >
                     <option value="">No click action (Image display only)</option>
                     <option value="Holiday Homes">Open Holiday Homes Category</option>
+                    <option value="Cars for Rent">Open Cars for Rent Category</option>
                     <option value="Vehicles">Open Vehicles Category</option>
                     <option value="Property">Open Property Category</option>
                     <option value="Phones">Open Phones Category</option>

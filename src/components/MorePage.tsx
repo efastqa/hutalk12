@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { DeviceSettingsPanel } from './DeviceSettingsPanel';
 import { ThemeToggle } from './ThemeToggle';
+import hotNewsIconImg from '../assets/images/hot_news_sri_lanka_icon_1794684230454.jpg';
 
 interface MorePageProps {
   currentUser: User | null;
@@ -439,6 +440,39 @@ export const MorePage: React.FC<MorePageProps> = ({
               </div>
               <ChevronRight className="w-4 h-4 text-gray-400" />
             </a>
+
+            {/* Sri Lanka Hot News — Live Feed */}
+            <button
+              type="button"
+              id="more-menu-hot-news"
+              onClick={() => onSelectTab('hot_news')}
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-[#F8F9FA] dark:bg-[#1E2230] border border-gray-200 dark:border-white/10 overflow-hidden shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <img
+                    src={hotNewsIconImg}
+                    alt="Sri Lanka Hot News"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                      Sri Lanka Hot News — Live Feed
+                    </p>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                      Live
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    Real-time Sri Lankan breaking news, business, sports & tech headlines
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </button>
 
             {/* HUTA in Events Page */}
             <button

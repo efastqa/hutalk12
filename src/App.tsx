@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Listing, User, ViewTab, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, VideoReelItem, EStore } from './types';
+import { Listing, User, ViewTab, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, VideoReelItem, EStore, HotNewsArticle } from './types';
 import { api } from './services/api';
 
 // Components
 import { Navbar } from './components/Navbar';
 import { HeroSearch } from './components/HeroSearch';
+import { HotNewsPage } from './components/HotNewsPage';
 import { CategoryGrid } from './components/CategoryGrid';
 import { PromoAdSlider } from './components/PromoAdSlider';
 import { ListingsSection } from './components/ListingsSection';
@@ -60,6 +61,7 @@ function getInitialTab(): ViewTab {
 
     if (tab === 'estore') return 'estore';
     if (tab === 'huta_in') return 'huta_in';
+    if (tab === 'hot_news') return 'hot_news';
     if (tab === 'categories') return 'categories';
     if (tab === 'user_dashboard') return 'user_dashboard';
     if (tab === 'more') return 'more';
@@ -139,6 +141,31 @@ export default function App() {
     };
   });
   const [initialAdminTab, setInitialAdminTab] = useState<string | undefined>(undefined);
+  const [hotNewsArticles, setHotNewsArticles] = useState<HotNewsArticle[]>(() => {
+    try {
+      const cached = localStorage.getItem('huta_sri_lanka_news_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed.articles)) {
+          const ids = parsed.articles.map((a: HotNewsArticle) => a.id);
+          if (new Set(ids).size === parsed.articles.length) {
+            return parsed.articles;
+          }
+          localStorage.removeItem('huta_sri_lanka_news_cache');
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  });
+  const [hotNewsSources, setHotNewsSources] = useState<string[]>([
+    'Newswire Sri Lanka',
+    'EconomyNext',
+    'Google News Sri Lanka',
+  ]);
+  const [hotNewsLastUpdated, setHotNewsLastUpdated] = useState<string>('');
+  const [isLoadingHotNews, setIsLoadingHotNews] = useState<boolean>(false);
 
   // Real-time Chat State (Firebase Firestore)
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
@@ -329,6 +356,11 @@ export default function App() {
     fetchPromoSlides();
     fetchVideoReels();
     fetchEStores();
+    loadSriLankaNews();
+
+    const newsInterval = window.setInterval(() => {
+      loadSriLankaNews(false);
+    }, 5 * 60 * 1000);
 
     // Subscribe to live video stories & promo slides updates
     const unsubReels = api.subscribeToVideoReels((reels) => {
@@ -343,10 +375,27 @@ export default function App() {
     testConnection();
 
     return () => {
+      window.clearInterval(newsInterval);
       unsubReels();
       unsubPromoSlides();
     };
   }, []);
+
+  const loadSriLankaNews = async (forceRefresh = false) => {
+    setIsLoadingHotNews(true);
+    try {
+      const data = await api.getSriLankaNews(forceRefresh);
+      if (data) {
+        if (Array.isArray(data.articles)) setHotNewsArticles(data.articles);
+        if (Array.isArray(data.sources) && data.sources.length > 0) setHotNewsSources(data.sources);
+        if (data.lastUpdated) setHotNewsLastUpdated(data.lastUpdated);
+      }
+    } catch {
+      // Graceful fallback to cache
+    } finally {
+      setIsLoadingHotNews(false);
+    }
+  };
 
   const fetchEStores = async () => {
     try {
@@ -616,6 +665,22 @@ export default function App() {
             itemTitle.includes('cabana') ||
             itemTitle.includes('resort') ||
             itemDesc.includes('holiday home')
+          );
+        }
+        if (catLower === 'cars for rent') {
+          return (
+            itemCat === 'cars for rent' ||
+            itemCat.includes('car rental') ||
+            itemCat.includes('rent a car') ||
+            ((itemCat.includes('vehicle') || itemCat.includes('car')) &&
+              (itemTitle.includes('for rent') ||
+                itemTitle.includes('rent a car') ||
+                itemTitle.includes('self drive') ||
+                itemTitle.includes('self-drive') ||
+                itemTitle.includes('per day') ||
+                itemDesc.includes('rent a car') ||
+                item.pricingType === 'daily' ||
+                item.pricingType === 'monthly'))
           );
         }
         return itemCat.includes(catLower);
@@ -1074,7 +1139,7 @@ export default function App() {
               onToggleVerifiedOnly={() => setVerifiedOnly((prev) => !prev)}
             />
 
-            {/* Category Browser ("Explore Our Popular Categories") */}
+            {/* Category Browser ("Explore Our Categories" + Live Sri Lanka Hot News Icon) */}
             <CategoryGrid
               currentCategory={selectedCategory}
               onSelectCategory={(category, query) => handleSelectCategory(category, query, true)}
@@ -1083,6 +1148,9 @@ export default function App() {
               verifiedOnly={verifiedOnly}
               onToggleVerifiedOnly={() => setVerifiedOnly((prev) => !prev)}
               onSelectSearchTerm={setSearchTerm}
+              hotNewsArticles={hotNewsArticles}
+              isLoadingHotNews={isLoadingHotNews}
+              onOpenHotNews={() => setCurrentTab('hot_news')}
             />
 
             {/* Admin-Managed Promo Ad Image Slides Carousel (Below Explore Categories) */}
@@ -1302,6 +1370,18 @@ export default function App() {
             onSelectCategory={(cat, query) => {
               handleSelectCategory(cat, query, true);
             }}
+            onToast={showToast}
+          />
+        )}
+
+        {currentTab === 'hot_news' && (
+          <HotNewsPage
+            articles={hotNewsArticles}
+            sources={hotNewsSources}
+            lastUpdated={hotNewsLastUpdated}
+            isLoading={isLoadingHotNews}
+            onRefresh={() => loadSriLankaNews(true)}
+            onBackToHome={() => setCurrentTab('marketplace')}
             onToast={showToast}
           />
         )}

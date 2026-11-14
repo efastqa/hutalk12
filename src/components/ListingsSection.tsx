@@ -131,6 +131,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
   const [fuelFilter, setFuelFilter] = useState<string>('all');
   const [transmissionFilter, setTransmissionFilter] = useState<string>('all');
   const [vehicleTypeFilter, setVehicleTypeFilter] = useState<string>('all');
+  const [driverOptionFilter, setDriverOptionFilter] = useState<string>('all');
 
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>('all');
   const [bedroomsFilter, setBedroomsFilter] = useState<string>('all');
@@ -149,6 +150,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     setFuelFilter('all');
     setTransmissionFilter('all');
     setVehicleTypeFilter('all');
+    setDriverOptionFilter('all');
     setPropertyTypeFilter('all');
     setBedroomsFilter('all');
     setGuestFilter('all');
@@ -165,6 +167,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
       fuelFilter !== 'all' ||
       transmissionFilter !== 'all' ||
       vehicleTypeFilter !== 'all' ||
+      driverOptionFilter !== 'all' ||
       propertyTypeFilter !== 'all' ||
       bedroomsFilter !== 'all' ||
       guestFilter !== 'all' ||
@@ -179,6 +182,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     fuelFilter,
     transmissionFilter,
     vehicleTypeFilter,
+    driverOptionFilter,
     propertyTypeFilter,
     bedroomsFilter,
     guestFilter,
@@ -194,6 +198,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     setFuelFilter('all');
     setTransmissionFilter('all');
     setVehicleTypeFilter('all');
+    setDriverOptionFilter('all');
     setPropertyTypeFilter('all');
     setBedroomsFilter('all');
     setGuestFilter('all');
@@ -207,7 +212,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
 
   const displayListings = useMemo(() => {
     return listings.filter((item) => {
-      // Vehicles / Motorcycles
+      // Vehicles / Motorcycles / Cars for Rent
       if (fuelFilter !== 'all' && item.fuelType && item.fuelType.toLowerCase() !== fuelFilter.toLowerCase()) {
         return false;
       }
@@ -216,6 +221,12 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
       }
       if (vehicleTypeFilter !== 'all' && item.vehicleType && !item.vehicleType.toLowerCase().includes(vehicleTypeFilter.toLowerCase())) {
         return false;
+      }
+      if (driverOptionFilter !== 'all') {
+        const driverHay = `${item.rentalDriverOption || ''} ${item.title || ''} ${item.description || ''}`.toLowerCase();
+        if (!driverHay.includes(driverOptionFilter.toLowerCase())) {
+          return false;
+        }
       }
 
       // Property & Holiday Homes
@@ -271,6 +282,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     fuelFilter,
     transmissionFilter,
     vehicleTypeFilter,
+    driverOptionFilter,
     propertyTypeFilter,
     bedroomsFilter,
     guestFilter,
@@ -322,6 +334,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
         {[
           { id: 'All', label: 'All Ads' },
           { id: 'Vehicles', label: 'Vehicles' },
+          { id: 'Cars for Rent', label: 'Cars for Rent', isNew: true },
           { id: 'Motorcycles', label: 'Motorcycles' },
           { id: 'Property', label: 'Properties' },
           { id: 'Holiday Homes', label: 'Holiday Homes', isNew: true },
@@ -359,6 +372,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
 
       {/* Dynamic Category-Specific Filter Bar (Custom Category Fields) */}
       {(currentCategory === 'Vehicles' ||
+        currentCategory === 'Cars for Rent' ||
         currentCategory === 'Motorcycles' ||
         currentCategory === 'Property' ||
         currentCategory === 'Holiday Homes' ||
@@ -390,8 +404,8 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            {/* Vehicles / Motorcycles filters */}
-            {(currentCategory === 'Vehicles' || currentCategory === 'Motorcycles') && (
+            {/* Vehicles / Motorcycles / Cars for Rent filters */}
+            {(currentCategory === 'Vehicles' || currentCategory === 'Motorcycles' || currentCategory === 'Cars for Rent') && (
               <>
                 {/* Fuel Filter */}
                 <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
@@ -455,6 +469,26 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                     </button>
                   ))}
                 </div>
+
+                {currentCategory === 'Cars for Rent' && (
+                  <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
+                    <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2">Driver:</span>
+                    {['all', 'Self-Drive', 'With Driver'].map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setDriverOptionFilter(opt)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                          driverOptionFilter === opt
+                            ? 'bg-[#FF5A36] text-white font-bold shadow-2xs'
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                        }`}
+                      >
+                        {opt === 'all' ? 'All' : opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </>
             )}
 
@@ -1086,8 +1120,11 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                     </h3>
 
                     {/* Category Specific Specification Quick Highlights */}
-                    {(item.vehicleYear || item.fuelType || item.transmission || item.vehicleMileage || item.propertyType || item.bedrooms || item.maxGuests || (item.amenities && item.amenities.length > 0) || item.propertySize || item.electronicsSubcategory || item.storageCapacity || item.itemCondition || item.jobType) && (
+                    {(item.vehicleYear || item.fuelType || item.transmission || item.vehicleMileage || item.rentalDriverOption || item.propertyType || item.bedrooms || item.maxGuests || (item.amenities && item.amenities.length > 0) || item.propertySize || item.electronicsSubcategory || item.storageCapacity || item.itemCondition || item.jobType) && (
                       <div className="flex flex-wrap items-center gap-1 mt-1 text-[9px] sm:text-[10px] font-medium text-gray-500 dark:text-gray-400 line-clamp-1 overflow-hidden">
+                        {item.rentalDriverOption && (
+                          <span className="bg-orange-50 dark:bg-orange-950/40 text-[#FF5A36] border border-orange-200/60 dark:border-orange-500/30 px-1.5 py-0.2 rounded font-bold">{item.rentalDriverOption}</span>
+                        )}
                         {item.vehicleYear && (
                           <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.2 rounded text-gray-700 dark:text-gray-300 font-semibold">{item.vehicleYear}</span>
                         )}
@@ -1145,6 +1182,16 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                         <span>
                           {formatLKR(item.price)}
                           <span className="text-[10px] sm:text-xs font-semibold text-emerald-700 dark:text-emerald-400 ml-1">/ night</span>
+                        </span>
+                      ) : item.pricingType === 'monthly' ? (
+                        <span>
+                          {formatLKR(item.price)}
+                          <span className="text-[10px] sm:text-xs font-semibold text-[#FF5A36] ml-1">/ month</span>
+                        </span>
+                      ) : item.pricingType === 'daily' || item.category === 'Cars for Rent' ? (
+                        <span>
+                          {formatLKR(item.price)}
+                          <span className="text-[10px] sm:text-xs font-semibold text-[#FF5A36] ml-1">/ day</span>
                         </span>
                       ) : (
                         formatLKR(item.price)

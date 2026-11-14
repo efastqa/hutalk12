@@ -182,6 +182,7 @@ const SERVICES_LIST: ServiceItem[] = [
 const CLASSIFIEDS_LIST = [
   { id: 'preloved', name: 'Preloved & Fashion', categoryFilter: 'Fashion & Preloved', icon: PackageCheck, color: 'text-rose-600', bg: 'bg-rose-50' },
   { id: 'vehicles', name: 'Vehicles & Cars', categoryFilter: 'Vehicles', icon: Car, color: 'text-blue-600', bg: 'bg-blue-50' },
+  { id: 'cars-for-rent', name: 'Cars for Rent', categoryFilter: 'Cars for Rent', icon: Car, color: 'text-[#FF5A36]', bg: 'bg-orange-50', isNew: true },
   { id: 'motorcycles', name: 'Motorcycles & Bikes', categoryFilter: 'Motorcycles', icon: Bike, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   { id: 'electronics', name: 'Electronics & Mobiles', categoryFilter: 'Electronics', icon: Smartphone, color: 'text-violet-600', bg: 'bg-violet-50' },
   { id: 'property', name: 'Property & Houses', categoryFilter: 'Property', icon: Home, color: 'text-amber-600', bg: 'bg-amber-50' },

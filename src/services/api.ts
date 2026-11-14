@@ -9,7 +9,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Listing, User, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem, EStore, EStoreProduct } from '../types';
+import { Listing, User, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, HotNewsResponse, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem, EStore, EStoreProduct } from '../types';
 
 const API_BASE = '/api';
 
@@ -2881,6 +2881,53 @@ For quick inquiries, call or send a message via WhatsApp!`;
       throw new Error(err.error || 'Failed to upload image');
     }
     return res.json();
+  },
+
+  // -------------------------------------------------------------
+  // Live Sri Lanka "Hot News" Aggregator
+  // -------------------------------------------------------------
+  async getSriLankaNews(forceRefresh = false): Promise<HotNewsResponse> {
+    const CACHE_KEY = 'huta_sri_lanka_news_cache';
+    try {
+      const url = forceRefresh ? `${API_BASE}/sri-lanka-news?refresh=1` : `${API_BASE}/sri-lanka-news`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data: HotNewsResponse = await res.json();
+        try {
+          if (Array.isArray(data.articles) && data.articles.length > 0) {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+          }
+        } catch {
+          // ignore
+        }
+        return data;
+      }
+    } catch {
+      // Fallback to cached feed
+    }
+
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as HotNewsResponse;
+        if (parsed && Array.isArray(parsed.articles)) {
+          const ids = parsed.articles.map((a) => a.id);
+          if (new Set(ids).size === parsed.articles.length) {
+            return parsed;
+          }
+          localStorage.removeItem(CACHE_KEY);
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    return {
+      articles: [],
+      sources: [],
+      lastUpdated: new Date().toISOString(),
+      isLive: false,
+    };
   },
 };
 
