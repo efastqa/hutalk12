@@ -44,6 +44,20 @@ export const CATEGORIES_ITEMS: CategoryItem[] = [
     targetCategory: 'Property',
   },
   {
+    key: 'Cars for Rent',
+    label: 'Cars for Rent',
+    image: carsForRentImg,
+    targetCategory: 'Cars for Rent',
+    isNew: true,
+  },
+  {
+    key: 'Holiday Homes',
+    label: 'Holiday Homes',
+    image: holidayHomesImg,
+    targetCategory: 'Holiday Homes',
+    isNew: true,
+  },
+  {
     key: 'Phones',
     label: 'Phones',
     image: '/assets/categories/phones.png',
@@ -51,17 +65,16 @@ export const CATEGORIES_ITEMS: CategoryItem[] = [
     searchQuery: 'phone',
   },
   {
-    key: "Women's",
-    label: "Women's",
-    image: '/assets/categories/womens.png',
-    targetCategory: "Women's",
-    searchQuery: 'women',
-  },
-  {
     key: 'Services',
     label: 'Services',
     image: '/assets/categories/services.png',
     targetCategory: 'Services',
+  },
+  {
+    key: 'Jobs',
+    label: 'Jobs',
+    image: '/assets/categories/jobs.png',
+    targetCategory: 'Jobs',
   },
   {
     key: 'Computers',
@@ -71,10 +84,11 @@ export const CATEGORIES_ITEMS: CategoryItem[] = [
     searchQuery: 'computer',
   },
   {
-    key: 'Jobs',
-    label: 'Jobs',
-    image: '/assets/categories/jobs.png',
-    targetCategory: 'Jobs',
+    key: "Women's",
+    label: "Women's",
+    image: '/assets/categories/womens.png',
+    targetCategory: "Women's",
+    searchQuery: 'women',
   },
   {
     key: "Men's",
@@ -96,20 +110,6 @@ export const CATEGORIES_ITEMS: CategoryItem[] = [
     image: '/assets/categories/luxury.png',
     targetCategory: 'Luxury',
     searchQuery: 'gem',
-  },
-  {
-    key: 'Holiday Homes',
-    label: 'Holiday Homes',
-    image: holidayHomesImg,
-    targetCategory: 'Holiday Homes',
-    isNew: true,
-  },
-  {
-    key: 'Cars for Rent',
-    label: 'Cars for Rent',
-    image: carsForRentImg,
-    targetCategory: 'Cars for Rent',
-    isNew: true,
   },
 ];
 

@@ -13,6 +13,8 @@ import { ExploreMoreEStoresBanner } from './components/ExploreMoreEStoresBanner'
 import { EStorePage } from './components/EStorePage';
 import { AdDetailModal } from './components/AdDetailModal';
 import { PostAdModal } from './components/PostAdModal';
+import { QuickCreateMenu } from './components/QuickCreateMenu';
+import { AddStoryModal } from './components/AddStoryModal';
 import { DedicatedAdminPortal } from './components/DedicatedAdminPortal';
 import { UserDashboard } from './components/UserDashboard';
 import { AuthModals } from './components/AuthModals';
@@ -177,11 +179,14 @@ export default function App() {
   const [selectedLocation, setSelectedLocation] = useState<string>('All Sri Lanka');
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
-  const [sortBy, setSortBy] = useState<string>('newest');
+  const [sortBy, setSortBy] = useState<string>('recommended');
   const [verifiedOnly, setVerifiedOnly] = useState<boolean>(false);
 
   // Modals
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [isQuickCreateOpen, setIsQuickCreateOpen] = useState<boolean>(false);
+  const [quickCreateCategory, setQuickCreateCategory] = useState<string | undefined>(undefined);
+  const [isQuickStoryOpen, setIsQuickStoryOpen] = useState<boolean>(false);
   const [isPostAdOpen, setIsPostAdOpen] = useState<boolean>(false);
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [targetListingForEdit, setTargetListingForEdit] = useState<Listing | null>(null);
@@ -724,18 +729,6 @@ export default function App() {
       result = result.filter((item) => item.price <= max);
     }
 
-    // Sorting
-    if (sortBy === 'price-asc') {
-      result.sort((a, b) => a.price - b.price);
-    } else if (sortBy === 'price-desc') {
-      result.sort((a, b) => b.price - a.price);
-    } else if (sortBy === 'views') {
-      result.sort((a, b) => (b.views || 0) - (a.views || 0));
-    } else {
-      // default: newest first
-      result.sort((a, b) => new Date(b.date || (b as any).createdAt || 0).getTime() - new Date(a.date || (a as any).createdAt || 0).getTime());
-    }
-
     // Verified Sellers Only filter
     if (verifiedOnly) {
       result = result.filter(
@@ -743,8 +736,29 @@ export default function App() {
       );
     }
 
-    // Keep featured ads on top
-    result.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
+    // Helper: prefer exact ISO createdAt timestamp before date-only YYYY-MM-DD fallback
+    const getListingTs = (item: Listing): number => {
+      const ts = new Date((item as Listing & { createdAt?: string }).createdAt || item.date || 0).getTime();
+      return isNaN(ts) ? 0 : ts;
+    };
+
+    // Sorting (Recommended keeps Featured ads on top; Price/Views/Newest follow strict order)
+    if (sortBy === 'price-asc') {
+      result.sort((a, b) => a.price - b.price || getListingTs(b) - getListingTs(a));
+    } else if (sortBy === 'price-desc') {
+      result.sort((a, b) => b.price - a.price || getListingTs(b) - getListingTs(a));
+    } else if (sortBy === 'views') {
+      result.sort((a, b) => (b.views || 0) - (a.views || 0) || getListingTs(b) - getListingTs(a));
+    } else if (sortBy === 'newest') {
+      result.sort((a, b) => getListingTs(b) - getListingTs(a));
+    } else {
+      // default ('recommended'): Featured first, then exact newest timestamp
+      result.sort(
+        (a, b) =>
+          (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0) ||
+          getListingTs(b) - getListingTs(a)
+      );
+    }
 
     return result;
   }, [listings, currentTab, selectedCategory, selectedLocation, searchTerm, minPrice, maxPrice, sortBy, verifiedOnly]);
@@ -867,14 +881,35 @@ export default function App() {
     api.recordListingAction(targetId, actionType).catch(() => {});
   };
 
-  // Post / Edit Ad
+  // Post / Edit Ad (Opens Modern Quick Create Menu for new ads; opens Edit Modal directly for edits)
   const handleOpenPostAd = () => {
     setEditingListing(null);
+    setQuickCreateCategory(undefined);
+    setIsQuickCreateOpen(true);
+  };
+
+  const handleQuickCreateSelectCategory = (category?: string) => {
+    setIsQuickCreateOpen(false);
+    setEditingListing(null);
+    setQuickCreateCategory(category);
     setIsPostAdOpen(true);
+  };
+
+  const handleQuickCreateStory = () => {
+    setIsQuickCreateOpen(false);
+    setIsQuickStoryOpen(true);
+  };
+
+  const handleQuickCreateEStore = () => {
+    setIsQuickCreateOpen(false);
+    setTargetEStoreForView(null);
+    setCurrentTab('estore');
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   };
 
   const handleEditListing = (listing: Listing) => {
     setSelectedListing(null);
+    setQuickCreateCategory(undefined);
     setEditingListing(listing);
     setIsPostAdOpen(true);
   };
@@ -1160,24 +1195,7 @@ export default function App() {
               onOpenHotNews={() => setCurrentTab('hot_news')}
             />
 
-            {/* Admin-Managed Promo Ad Image Slides Carousel (Below Explore Categories) */}
-            <PromoAdSlider
-              slides={promoSlides}
-              settings={promoSlidesSettings}
-              onSelectCategory={(category) => handleSelectCategory(category, undefined, true)}
-              onOpenPostAd={handleOpenPostAd}
-              onOpenEStore={() => {
-                setTargetEStoreForView(null);
-                setCurrentTab('estore');
-              }}
-              isAdminLoggedIn={isAdminLoggedIn}
-              onAdminManage={() => {
-                setInitialAdminTab('promo_slides');
-                setCurrentTab('admin_dashboard');
-              }}
-            />
-
-            {/* Qatar Living style Browse Districts Bar - Frosted Glass with Seamless Contrast */}
+            {/* Popular Districts Bar - Right above listings for fast local filtering */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2">
               <div className="bg-white/90 dark:bg-[#151822]/90 backdrop-blur-xl border border-gray-200/80 dark:border-white/10 rounded-2xl p-3 shadow-md dark:shadow-[0_8px_24px_rgba(0,0,0,0.35)] flex items-center gap-2 overflow-x-auto scrollbar-none text-xs transition-colors">
                 <span className="flex items-center gap-1.5 text-gray-800 dark:text-gray-200 font-black whitespace-nowrap shrink-0 px-2">
@@ -1265,6 +1283,23 @@ export default function App() {
               onClearLocation={() => setSelectedLocation('All Sri Lanka')}
               verifiedOnly={verifiedOnly}
               onToggleVerifiedOnly={() => setVerifiedOnly((prev) => !prev)}
+            />
+
+            {/* Admin-Managed Promo Ad Image Slides Carousel (Below Listings for faster ad discovery) */}
+            <PromoAdSlider
+              slides={promoSlides}
+              settings={promoSlidesSettings}
+              onSelectCategory={(category) => handleSelectCategory(category, undefined, true)}
+              onOpenPostAd={handleOpenPostAd}
+              onOpenEStore={() => {
+                setTargetEStoreForView(null);
+                setCurrentTab('estore');
+              }}
+              isAdminLoggedIn={isAdminLoggedIn}
+              onAdminManage={() => {
+                setInitialAdminTab('promo_slides');
+                setCurrentTab('admin_dashboard');
+              }}
             />
 
             {/* Video Stories / Short Walk-through Reels Bar (Moved Page Down) */}
@@ -1597,11 +1632,32 @@ export default function App() {
         }}
       />
 
+      <QuickCreateMenu
+        isOpen={isQuickCreateOpen}
+        onClose={() => setIsQuickCreateOpen(false)}
+        onSelectCategory={handleQuickCreateSelectCategory}
+        onSelectVideoReel={handleQuickCreateStory}
+        onSelectEStore={handleQuickCreateEStore}
+      />
+
+      <AddStoryModal
+        isOpen={isQuickStoryOpen}
+        onClose={() => setIsQuickStoryOpen(false)}
+        onStoryCreated={(newReel) => {
+          setVideoReels((prev) => [newReel, ...prev]);
+          setIsQuickStoryOpen(false);
+          showToast('Video Story Reel published live!', 'success');
+        }}
+        currentUser={currentUser}
+        onToast={showToast}
+      />
+
       <PostAdModal
         isOpen={isPostAdOpen}
         onClose={() => {
           setIsPostAdOpen(false);
           setEditingListing(null);
+          setQuickCreateCategory(undefined);
         }}
         onSubmitAd={handleSubmitAd}
         editingListing={editingListing}
@@ -1612,9 +1668,12 @@ export default function App() {
           setSelectedListing(listing);
           setIsPostAdOpen(false);
           setEditingListing(null);
+          setQuickCreateCategory(undefined);
         }}
         onOpenMyAds={() => setCurrentTab('user_dashboard')}
-        initialCategory={selectedCategory !== 'All' ? selectedCategory : undefined}
+        initialCategory={
+          quickCreateCategory || (selectedCategory !== 'All' ? selectedCategory : undefined)
+        }
         initialDistrict={selectedLocation !== 'All Sri Lanka' ? selectedLocation : undefined}
       />
 

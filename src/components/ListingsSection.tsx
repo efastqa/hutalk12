@@ -146,7 +146,10 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
   const [serviceModeFilter, setServiceModeFilter] = useState<string>('all');
   const [emergencyOnlyFilter, setEmergencyOnlyFilter] = useState<boolean>(false);
 
-  // Reset category filters when switching main category
+  const INITIAL_VISIBLE_COUNT = 18;
+  const [visibleCount, setVisibleCount] = useState<number>(INITIAL_VISIBLE_COUNT);
+
+  // Reset category filters & pagination when switching main category
   useEffect(() => {
     setFuelFilter('all');
     setTransmissionFilter('all');
@@ -162,7 +165,13 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     setServiceTradeFilter('all');
     setServiceModeFilter('all');
     setEmergencyOnlyFilter(false);
+    setVisibleCount(INITIAL_VISIBLE_COUNT);
   }, [currentCategory]);
+
+  // Reset pagination when global filters or sort change
+  useEffect(() => {
+    setVisibleCount(INITIAL_VISIBLE_COUNT);
+  }, [selectedDistrict, searchTerm, minPrice, maxPrice, verifiedOnly, sortBy]);
 
   const hasCategoryFilters = useMemo(() => {
     return (
@@ -876,7 +885,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
           </div>
 
           <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">
-            Showing <strong className="text-gray-900 dark:text-white">{listings.length}</strong> ad(s)
+            Showing <strong className="text-gray-900 dark:text-white">{displayListings.length}</strong> ad(s)
           </span>
 
           <div className="flex items-center gap-1.5 bg-white/90 dark:bg-[#151822]/90 backdrop-blur-sm border border-gray-200/80 dark:border-white/10 rounded-xl px-2.5 py-1.5 shadow-xs text-xs sm:text-sm text-gray-700 dark:text-gray-200">
@@ -884,8 +893,10 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
             <select
               value={sortBy}
               onChange={(e) => onSortChange(e.target.value)}
+              aria-label="Sort listings"
               className="bg-transparent border-none outline-none font-medium text-gray-700 dark:text-gray-200 cursor-pointer"
             >
+              <option value="recommended" className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white">Recommended (Featured)</option>
               <option value="newest" className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white">Newest First</option>
               <option value="price-asc" className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white">Price: Low to High</option>
               <option value="price-desc" className="bg-white dark:bg-[#151822] text-gray-900 dark:text-white">Price: High to Low</option>
@@ -1017,7 +1028,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
           animate="visible"
           className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-2.5 md:gap-3.5"
         >
-          {displayListings.map((item) => {
+          {displayListings.slice(0, visibleCount).map((item) => {
             const isFav = favorites.includes(item.id);
             const isCompared = compareIds?.includes(item.id) || false;
             const isNew = isNewAd(item.date);
@@ -1300,6 +1311,26 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
             );
           })}
         </motion.div>
+      )}
+
+      {/* Clean Load More Pagination so lower homepage sections remain easily discoverable */}
+      {currentViewMode === 'grid' && !isLoading && displayListings.length > visibleCount && (
+        <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => setVisibleCount((prev) => prev + 18)}
+            className="px-6 py-2.5 rounded-xl bg-white dark:bg-[#151822] hover:bg-gray-50 dark:hover:bg-[#1E2230] text-gray-900 dark:text-white border border-gray-200 dark:border-white/15 text-xs sm:text-sm font-black shadow-xs transition-all cursor-pointer"
+          >
+            Load More Ads ({displayListings.length - visibleCount} remaining)
+          </button>
+          <button
+            type="button"
+            onClick={() => setVisibleCount(displayListings.length)}
+            className="px-4 py-2.5 rounded-xl bg-orange-50 dark:bg-orange-950/30 hover:bg-orange-100 dark:hover:bg-orange-950/50 text-[#FF5A36] border border-[#FF5A36]/25 text-xs font-bold transition-all cursor-pointer"
+          >
+            Show All ({displayListings.length})
+          </button>
+        </div>
       )}
     </section>
   );

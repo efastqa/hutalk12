@@ -426,11 +426,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               whileHover={{ scale: 1.03, y: -1 }}
               whileTap={{ scale: 0.97, y: 0 }}
               onClick={onOpenPostAd}
-              className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#FF5A36] via-[#FF623E] to-[#FF7A59] hover:from-[#E04826] hover:to-[#FF5A36] text-white font-black text-xs sm:text-sm shadow-md shadow-[#FF5A36]/30 hover:shadow-lg hover:shadow-[#FF5A36]/40 transition-all cursor-pointer whitespace-nowrap shrink-0"
+              className="hidden sm:inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#FF5A36] via-[#FF623E] to-[#FF7A59] hover:from-[#E04826] hover:to-[#FF5A36] text-white font-black text-xs sm:text-sm shadow-md shadow-[#FF5A36]/30 hover:shadow-lg hover:shadow-[#FF5A36]/40 transition-all cursor-pointer whitespace-nowrap shrink-0"
             >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
-              <span className="hidden sm:inline">Post an Ad</span>
-              <span className="sm:hidden">Post</span>
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span>Create Ad</span>
             </motion.button>
           )}
 
