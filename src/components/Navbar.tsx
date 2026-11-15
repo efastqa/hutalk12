@@ -197,6 +197,27 @@ export const Navbar: React.FC<NavbarProps> = ({
           </span>
         </button>
 
+        {/* Hot News Quick Button in Mobile & Tablet View (< lg) */}
+        <button
+          type="button"
+          id="nav-mobile-hot-news-btn"
+          onClick={() => {
+            onSelectTab('hot_news');
+            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+          }}
+          title="Open Sri Lanka Live Hot News"
+          className={`inline-flex lg:hidden items-center gap-1 px-2 py-1 rounded-xl text-xs font-black transition-all cursor-pointer shadow-2xs border whitespace-nowrap shrink-0 ${
+            currentTab === 'hot_news'
+              ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+              : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-500/25 hover:bg-rose-100 dark:hover:bg-rose-900/40 active:scale-95'
+          }`}
+        >
+          <Flame className="w-3.5 h-3.5 text-current shrink-0" />
+          <span className="hidden xs:inline font-black tracking-tight">Hot News</span>
+          <span className="xs:hidden font-black tracking-tight">News</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse shrink-0" />
+        </button>
+
         {/* Location Dropdown */}
         {onLocationChange && (
           <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100/80 dark:bg-white/5 border border-gray-200/70 dark:border-white/10 backdrop-blur-sm text-xs font-semibold text-gray-700 dark:text-gray-300 hover:border-[#FF5A36]/50 transition-colors">
@@ -413,11 +434,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             </motion.button>
           )}
 
-          {/* User Dashboard / More Quick Icon */}
+          {/* User Dashboard / More Quick Icon (visible on mobile & tablet below lg) */}
           <button
             type="button"
             onClick={() => onSelectTab('more')}
-            className="md:hidden p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920] transition-colors"
+            className="lg:hidden p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920] transition-colors cursor-pointer"
             aria-label="Open menu"
           >
             <LayoutGrid className="w-5 h-5" />

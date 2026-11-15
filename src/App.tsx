@@ -270,6 +270,13 @@ export default function App() {
     document.body.scrollTop = 0;
   }, [currentTab]);
 
+  // Ensure Hot News fetches live Sri Lanka feed immediately if navigated to with empty state
+  useEffect(() => {
+    if (currentTab === 'hot_news' && hotNewsArticles.length === 0 && !isLoadingHotNews) {
+      loadSriLankaNews(false);
+    }
+  }, [currentTab, hotNewsArticles.length, isLoadingHotNews]);
+
   // Handle browser back/forward buttons
   useEffect(() => {
     const handlePopState = () => {

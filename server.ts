@@ -2249,6 +2249,7 @@ async function startServer() {
     id: string;
     title: string;
     summary: string;
+    content?: string;
     link: string;
     source: string;
     category: 'Breaking' | 'Business & Economy' | 'Sports' | 'Tech & Auto' | 'Sri Lanka';
@@ -2361,7 +2362,7 @@ async function startServer() {
       for (const block of itemMatches.slice(0, maxItems)) {
         const rawTitle = stripHtmlTags(extractTag(block, 'title'));
         const link = decodeXmlEntities(extractTag(block, 'link')).trim();
-        if (!rawTitle || !link) continue;
+        if (!rawTitle || !link || !/^https?:\/\//i.test(link)) continue;
 
         const rawDesc = extractTag(block, 'description');
         const rawContent = extractTag(block, 'content:encoded');
@@ -2384,7 +2385,12 @@ async function startServer() {
         const plainSummary = stripHtmlTags(rawDesc || rawContent)
           .replace(/\s+/g, ' ')
           .trim()
-          .slice(0, 220);
+          .slice(0, 320);
+
+        const plainFullContent = stripHtmlTags(rawContent || rawDesc)
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 2800);
 
         const imageUrl = extractNewsImage(block, rawDesc, rawContent);
         const parsedDate = pubDateRaw ? new Date(pubDateRaw) : new Date();
@@ -2400,6 +2406,10 @@ async function startServer() {
             plainSummary && plainSummary.toLowerCase() !== title.toLowerCase()
               ? plainSummary
               : `Latest Sri Lanka update reported by ${source}.`,
+          content:
+            plainFullContent && plainFullContent.toLowerCase() !== title.toLowerCase()
+              ? plainFullContent
+              : undefined,
           link,
           source,
           category: classifySriLankaNews(title, rawCategory, source),
@@ -2417,6 +2427,7 @@ async function startServer() {
   };
 
   app.get('/api/sri-lanka-news', async (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
     const forceRefresh = req.query.refresh === '1' || req.query.refresh === 'true';
     const CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -2505,6 +2516,117 @@ async function startServer() {
         lastUpdated: new Date().toISOString(),
         isLive: false,
       });
+    }
+  });
+
+  // Safe In-App News Article Preview Extractor (helps users read full stories even when iframes block popups)
+  const newsArticlePreviewCache = new Map<
+    string,
+    { paragraphs: string[]; resolvedUrl: string; imageUrl?: string; fetchedAt: number }
+  >();
+
+  app.get('/api/sri-lanka-news/article', async (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    const rawUrl = typeof req.query.url === 'string' ? req.query.url.trim() : '';
+    if (!rawUrl || !/^https?:\/\//i.test(rawUrl)) {
+      return res.status(400).json({ error: 'Valid article URL is required' });
+    }
+
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(rawUrl);
+    } catch {
+      return res.status(400).json({ error: 'Invalid article URL' });
+    }
+
+    const host = parsedUrl.hostname.toLowerCase();
+    // SSRF protection: reject localhost, private network ranges, and raw IP hosts
+    if (
+      host === 'localhost' ||
+      host.endsWith('.local') ||
+      host.endsWith('.internal') ||
+      /^\d+\.\d+\.\d+\.\d+$/.test(host) ||
+      host.includes(':')
+    ) {
+      return res.status(400).json({ error: 'Disallowed host' });
+    }
+
+    const cached = newsArticlePreviewCache.get(rawUrl);
+    if (cached && Date.now() - cached.fetchedAt < 15 * 60 * 1000) {
+      return res.json({
+        paragraphs: cached.paragraphs,
+        resolvedUrl: cached.resolvedUrl,
+        imageUrl: cached.imageUrl,
+      });
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5500);
+    try {
+      const response = await fetch(parsedUrl.toString(), {
+        signal: controller.signal,
+        redirect: 'follow',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; HUTA.lk Reader/1.0)',
+          Accept: 'text/html,application/xhtml+xml,*/*',
+        },
+      });
+
+      const resolvedUrl =
+        response.url && /^https?:\/\//i.test(response.url) ? response.url : rawUrl;
+      if (!response.ok) {
+        return res.json({ paragraphs: [], resolvedUrl });
+      }
+
+      const html = (await response.text()).slice(0, 450_000);
+      const ogImgMatch = html.match(
+        /<meta[^>]+(?:property=["']og:image["']|name=["']twitter:image["'])[^>]+content=["']([^"']+)["']/i
+      );
+      const imageUrl =
+        ogImgMatch && ogImgMatch[1] && /^https?:\/\//i.test(ogImgMatch[1])
+          ? decodeXmlEntities(ogImgMatch[1])
+          : undefined;
+
+      const cleanedHtml = html
+        .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+        .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<nav[\s\S]*?<\/nav>/gi, ' ')
+        .replace(/<header[\s\S]*?<\/header>/gi, ' ')
+        .replace(/<footer[\s\S]*?<\/footer>/gi, ' ')
+        .replace(/<aside[\s\S]*?<\/aside>/gi, ' ');
+
+      const pMatches = cleanedHtml.match(/<p\b[^>]*>([\s\S]*?)<\/p>/gi) || [];
+      const seen = new Set<string>();
+      const paragraphs: string[] = [];
+
+      for (const pTag of pMatches) {
+        const text = stripHtmlTags(pTag);
+        if (text.length < 45) continue;
+        if (/^(advertisement|subscribe|sign up|cookie|all rights reserved|follow us)/i.test(text)) {
+          continue;
+        }
+        if (seen.has(text)) continue;
+        seen.add(text);
+        paragraphs.push(text);
+        if (paragraphs.length >= 14) break;
+      }
+
+      if (newsArticlePreviewCache.size >= 100) {
+        const oldestKey = newsArticlePreviewCache.keys().next().value;
+        if (oldestKey) newsArticlePreviewCache.delete(oldestKey);
+      }
+      newsArticlePreviewCache.set(rawUrl, {
+        paragraphs,
+        resolvedUrl,
+        imageUrl,
+        fetchedAt: Date.now(),
+      });
+
+      res.json({ paragraphs, resolvedUrl, imageUrl });
+    } catch {
+      res.json({ paragraphs: [], resolvedUrl: rawUrl });
+    } finally {
+      clearTimeout(timer);
     }
   });
 

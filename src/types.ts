@@ -148,6 +148,7 @@ export interface HotNewsArticle {
   id: string;
   title: string;
   summary: string;
+  content?: string;
   link: string;
   source: string;
   category: 'Breaking' | 'Business & Economy' | 'Sports' | 'Tech & Auto' | 'Sri Lanka';

@@ -3194,6 +3194,29 @@ For quick inquiries, call or send a message via WhatsApp!`;
       isLive: false,
     };
   },
+
+  async getSriLankaNewsArticlePreview(articleUrl: string): Promise<{
+    paragraphs: string[];
+    resolvedUrl: string;
+    imageUrl?: string;
+  }> {
+    try {
+      const res = await fetch(
+        `${API_BASE}/sri-lanka-news/article?url=${encodeURIComponent(articleUrl)}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        return {
+          paragraphs: Array.isArray(data.paragraphs) ? data.paragraphs : [],
+          resolvedUrl: typeof data.resolvedUrl === 'string' && data.resolvedUrl ? data.resolvedUrl : articleUrl,
+          imageUrl: typeof data.imageUrl === 'string' ? data.imageUrl : undefined,
+        };
+      }
+    } catch {
+      // Fallback to RSS summary
+    }
+    return { paragraphs: [], resolvedUrl: articleUrl };
+  },
 };
 
 export const apiService = api;

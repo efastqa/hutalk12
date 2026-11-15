@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   ArrowLeft,
   Flame,
@@ -10,8 +10,12 @@ import {
   Newspaper,
   Clock,
   X,
+  ChevronLeft,
+  ChevronRight,
+  BookOpen,
 } from 'lucide-react';
 import { HotNewsArticle } from '../types';
+import { api } from '../services/api';
 import { DualToneHeading } from './DualToneHeading';
 import hotNewsIconImg from '../assets/images/hot_news_sri_lanka_icon_1794684230454.jpg';
 
@@ -50,27 +54,45 @@ function formatTimeAgo(isoDate: string): string {
   }
 }
 
+function getSafeExternalUrl(url?: string): string {
+  if (typeof url === 'string' && /^https?:\/\//i.test(url.trim())) {
+    return url.trim();
+  }
+  return '#';
+}
+
 export const HotNewsPage: React.FC<HotNewsPageProps> = ({
-  articles,
-  sources,
+  articles = [],
+  sources = [],
   lastUpdated,
   isLoading,
   onRefresh,
   onBackToHome,
   onToast,
 }) => {
+  const safeArticles = Array.isArray(articles) ? articles : [];
+  const safeSources = Array.isArray(sources) ? sources : [];
+
   const [selectedTopic, setSelectedTopic] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
   const [savedIds, setSavedIds] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem('huta_saved_news_ids');
-      return raw ? JSON.parse(raw) : [];
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : [];
     } catch {
       return [];
     }
   });
   const [showSavedOnly, setShowSavedOnly] = useState<boolean>(false);
+
+  // In-app story reader modal state
+  const [activeArticle, setActiveArticle] = useState<HotNewsArticle | null>(null);
+  const [articleParagraphs, setArticleParagraphs] = useState<string[]>([]);
+  const [resolvedArticleUrl, setResolvedArticleUrl] = useState<string>('');
+  const [resolvedImageUrl, setResolvedImageUrl] = useState<string | undefined>(undefined);
+  const [isLoadingArticleBody, setIsLoadingArticleBody] = useState<boolean>(false);
 
   const toggleSaveArticle = (id: string) => {
     setSavedIds((prev) => {
@@ -86,13 +108,14 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
   };
 
   const handleShareArticle = async (article: HotNewsArticle) => {
-    const shareText = `${article.title} (${article.source}) — Sri Lanka Hot News on HUTA.lk`;
+    const shareUrl = getSafeExternalUrl(article.link);
+    const shareText = `${article.title || 'Sri Lanka News'} (${article.source || 'HUTA.lk'}) — Sri Lanka Hot News on HUTA.lk`;
     try {
       if (navigator.share) {
         await navigator.share({
           title: article.title,
           text: shareText,
-          url: article.link,
+          url: shareUrl !== '#' ? shareUrl : window.location.href,
         });
         return;
       }
@@ -102,7 +125,7 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
 
     try {
       if (navigator.clipboard) {
-        await navigator.clipboard.writeText(`${shareText}\n${article.link}`);
+        await navigator.clipboard.writeText(shareUrl !== '#' ? `${shareText}\n${shareUrl}` : shareText);
         onToast('News link copied to clipboard.', 'success');
       }
     } catch {
@@ -111,27 +134,83 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
   };
 
   const filteredArticles = useMemo(() => {
-    return articles.filter((item) => {
+    return safeArticles.filter((item) => {
+      if (!item) return false;
       if (showSavedOnly && !savedIds.includes(item.id)) return false;
       if (selectedTopic !== 'All' && item.category !== selectedTopic) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         return (
-          item.title.toLowerCase().includes(q) ||
-          item.summary.toLowerCase().includes(q) ||
-          item.source.toLowerCase().includes(q)
+          (item.title || '').toLowerCase().includes(q) ||
+          (item.summary || '').toLowerCase().includes(q) ||
+          (item.source || '').toLowerCase().includes(q)
         );
       }
       return true;
     });
-  }, [articles, selectedTopic, searchQuery, showSavedOnly, savedIds]);
+  }, [safeArticles, selectedTopic, searchQuery, showSavedOnly, savedIds]);
+
+  const openStoryReader = (article: HotNewsArticle) => {
+    setActiveArticle(article);
+    setArticleParagraphs([]);
+    setResolvedArticleUrl(getSafeExternalUrl(article.link));
+    setResolvedImageUrl(article.imageUrl);
+  };
+
+  useEffect(() => {
+    if (!activeArticle) return;
+    let cancelled = false;
+    const safeUrl = getSafeExternalUrl(activeArticle.link);
+    if (safeUrl === '#') {
+      setIsLoadingArticleBody(false);
+      return;
+    }
+
+    setIsLoadingArticleBody(true);
+    api
+      .getSriLankaNewsArticlePreview(safeUrl)
+      .then((res) => {
+        if (cancelled) return;
+        if (Array.isArray(res.paragraphs) && res.paragraphs.length > 0) {
+          setArticleParagraphs(res.paragraphs);
+        }
+        if (res.resolvedUrl && /^https?:\/\//i.test(res.resolvedUrl)) {
+          setResolvedArticleUrl(res.resolvedUrl);
+        }
+        if (res.imageUrl && !activeArticle.imageUrl) {
+          setResolvedImageUrl(res.imageUrl);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingArticleBody(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeArticle]);
+
+  useEffect(() => {
+    if (!activeArticle) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveArticle(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeArticle]);
+
+  const activeArticleIndex = activeArticle
+    ? filteredArticles.findIndex((item) => item.id === activeArticle.id)
+    : -1;
 
   const leadArticle = filteredArticles[0];
   const secondaryArticles = filteredArticles.slice(1);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0C10] text-gray-900 dark:text-white pb-24 transition-colors">
-      {/* Sticky Top Header */}
+      {/* Top Header */}
       <div className="bg-white dark:bg-[#12141D] border-b border-gray-200 dark:border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -251,7 +330,12 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
 
           {/* Sources Metadata Line */}
           <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-gray-500 dark:text-gray-400">
-            <span>Sources: {sources.length > 0 ? sources.slice(0, 5).join(' · ') : 'Newswire.lk · EconomyNext · Sri Lanka News'}</span>
+            <span>
+              Sources:{' '}
+              {safeSources.length > 0
+                ? safeSources.slice(0, 5).join(' · ')
+                : 'Newswire.lk · EconomyNext · Sri Lanka News'}
+            </span>
             <span aria-hidden="true">·</span>
             <span className="inline-flex items-center gap-1 tabular-nums">
               <Clock className="w-3 h-3" />
@@ -263,7 +347,7 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
 
       {/* Main News Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-8">
-        {isLoading && articles.length === 0 ? (
+        {isLoading && safeArticles.length === 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[1, 2, 3, 4, 5, 6].map((n) => (
               <div
@@ -313,7 +397,18 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
           <>
             {/* Lead Story Split Card */}
             {leadArticle && (
-              <article className="bg-white dark:bg-[#151822] rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch">
+              <article
+                onClick={() => openStoryReader(leadArticle)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openStoryReader(leadArticle);
+                  }
+                }}
+                className="bg-white dark:bg-[#151822] rounded-3xl border border-gray-200 dark:border-white/10 hover:border-[#FF5A36]/50 shadow-sm hover:shadow-md overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch cursor-pointer transition-all group"
+              >
                 <div className="lg:col-span-6 relative min-h-[220px] sm:min-h-[280px] bg-gradient-to-br from-[#0A2540] via-[#133B63] to-[#FF5A36]/80">
                   {leadArticle.imageUrl && !failedImages[leadArticle.id] ? (
                     <img
@@ -323,7 +418,7 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                       onError={() =>
                         setFailedImages((prev) => ({ ...prev, [leadArticle.id]: true }))
                       }
-                      className="w-full h-full object-cover lg:absolute lg:inset-0"
+                      className="w-full h-full object-cover lg:absolute lg:inset-0 group-hover:scale-[1.02] transition-transform duration-300"
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center p-8 text-white text-center gap-3">
@@ -351,7 +446,7 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                       <span className="tabular-nums">{formatTimeAgo(leadArticle.publishedAt)}</span>
                     </div>
 
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight leading-snug text-gray-900 dark:text-white [text-wrap:balance]">
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight leading-snug text-gray-900 dark:text-white group-hover:text-[#FF5A36] transition-colors [text-wrap:balance]">
                       {leadArticle.title}
                     </h2>
 
@@ -361,20 +456,39 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                   </div>
 
                   <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-gray-100 dark:border-white/10">
-                    <a
-                      href={leadArticle.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF5A36] hover:bg-[#E04826] text-white text-xs font-black transition-all no-underline whitespace-nowrap"
-                    >
-                      <span>Read Full Story</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openStoryReader(leadArticle);
+                        }}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF5A36] hover:bg-[#E04826] text-white text-xs font-black transition-all whitespace-nowrap cursor-pointer"
+                      >
+                        <BookOpen className="w-3.5 h-3.5" />
+                        <span>Read Story</span>
+                      </button>
+
+                      <a
+                        href={getSafeExternalUrl(leadArticle.link)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 text-xs font-bold transition-colors no-underline whitespace-nowrap"
+                        title={`Open original source on ${leadArticle.source}`}
+                      >
+                        <span>Source</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
 
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => toggleSaveArticle(leadArticle.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSaveArticle(leadArticle.id);
+                        }}
                         className={`p-2.5 rounded-xl border transition-colors cursor-pointer ${
                           savedIds.includes(leadArticle.id)
                             ? 'bg-orange-50 dark:bg-orange-950/40 text-[#FF5A36] border-[#FF5A36]/40'
@@ -386,7 +500,10 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleShareArticle(leadArticle)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleShareArticle(leadArticle);
+                        }}
                         className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10 hover:text-[#FF5A36] transition-colors cursor-pointer"
                         aria-label="Share story"
                       >
@@ -408,7 +525,16 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                   return (
                     <article
                       key={`${article.id}-${index}`}
-                      className="bg-white dark:bg-[#151822] rounded-2xl border border-gray-200 dark:border-white/10 shadow-xs overflow-hidden flex flex-col justify-between hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
+                      onClick={() => openStoryReader(article)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          openStoryReader(article);
+                        }
+                      }}
+                      className="bg-white dark:bg-[#151822] rounded-2xl border border-gray-200 dark:border-white/10 hover:border-[#FF5A36]/40 shadow-xs overflow-hidden flex flex-col justify-between hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-pointer group"
                     >
                       <div>
                         {/* Visual Slot with Zero-Broken-Image CSS Fallback */}
@@ -422,7 +548,7 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                               onError={() =>
                                 setFailedImages((prev) => ({ ...prev, [imgKey]: true }))
                               }
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                           ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center p-5 text-center gap-2 bg-gradient-to-br from-[#0A2540]/90 to-[#1D3E5E]/90 text-white">
@@ -443,7 +569,7 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                             <span className="tabular-nums">{formatTimeAgo(article.publishedAt)}</span>
                           </div>
 
-                          <h3 className="text-sm sm:text-base font-extrabold text-gray-900 dark:text-white leading-snug line-clamp-2">
+                          <h3 className="text-sm sm:text-base font-extrabold text-gray-900 dark:text-white group-hover:text-[#FF5A36] transition-colors leading-snug line-clamp-2">
                             {article.title}
                           </h3>
 
@@ -454,20 +580,36 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                       </div>
 
                       <div className="px-4 py-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-between gap-2">
-                        <a
-                          href={article.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs font-black text-[#FF5A36] hover:underline no-underline whitespace-nowrap"
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openStoryReader(article);
+                          }}
+                          className="inline-flex items-center gap-1.5 text-xs font-black text-[#FF5A36] hover:underline whitespace-nowrap cursor-pointer"
                         >
+                          <BookOpen className="w-3.5 h-3.5" />
                           <span>Read Story</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
+                        </button>
 
                         <div className="flex items-center gap-1.5">
+                          <a
+                            href={getSafeExternalUrl(article.link)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label={`Open original article on ${article.source}`}
+                            title={`Open on ${article.source}`}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-[#FF5A36] transition-colors"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
                           <button
                             type="button"
-                            onClick={() => toggleSaveArticle(article.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSaveArticle(article.id);
+                            }}
                             aria-label="Bookmark news article"
                             className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                               isSaved
@@ -479,7 +621,10 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleShareArticle(article)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShareArticle(article);
+                            }}
                             aria-label="Share news article"
                             className="p-1.5 rounded-lg text-gray-400 hover:text-[#FF5A36] transition-colors cursor-pointer"
                           >
@@ -495,6 +640,160 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
           </>
         )}
       </div>
+
+      {/* In-App Sri Lanka News Reader Modal */}
+      {activeArticle && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+          onClick={() => setActiveArticle(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="news-reader-title"
+        >
+          <div
+            className="w-full max-w-3xl bg-white dark:bg-[#141722] border border-gray-200 dark:border-white/10 rounded-3xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Top Bar */}
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-white/10 flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2 min-w-0 text-xs">
+                <span className="px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-950/50 text-[#FF5A36] font-black uppercase tracking-wider shrink-0">
+                  {activeArticle.category}
+                </span>
+                <span className="font-bold text-gray-800 dark:text-gray-200 truncate">
+                  {activeArticle.source}
+                </span>
+                <span aria-hidden="true" className="text-gray-300 dark:text-gray-600">·</span>
+                <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap tabular-nums">
+                  {formatTimeAgo(activeArticle.publishedAt)}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setActiveArticle(null)}
+                aria-label="Close news reader"
+                className="p-2 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white cursor-pointer shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Scrollable Article Content */}
+            <div className="overflow-y-auto flex-1">
+              {(resolvedImageUrl || activeArticle.imageUrl) && !failedImages[activeArticle.id] && (
+                <div className="w-full max-h-72 sm:max-h-80 overflow-hidden bg-gray-100 dark:bg-[#0D1018]">
+                  <img
+                    src={resolvedImageUrl || activeArticle.imageUrl}
+                    alt={activeArticle.title}
+                    referrerPolicy="no-referrer"
+                    onError={() =>
+                      setFailedImages((prev) => ({ ...prev, [activeArticle.id]: true }))
+                    }
+                    className="w-full h-full max-h-80 object-cover"
+                  />
+                </div>
+              )}
+
+              <div className="p-5 sm:p-7 space-y-4">
+                <h2
+                  id="news-reader-title"
+                  className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white leading-snug"
+                >
+                  {activeArticle.title}
+                </h2>
+
+                {isLoadingArticleBody && articleParagraphs.length === 0 ? (
+                  <div className="space-y-3 py-2">
+                    <p className="text-sm sm:text-base text-gray-700 dark:text-gray-200 leading-relaxed font-medium">
+                      {activeArticle.content || activeArticle.summary}
+                    </p>
+                    <div className="space-y-2 animate-pulse pt-2">
+                      <div className="h-3.5 bg-gray-200 dark:bg-white/10 rounded w-full" />
+                      <div className="h-3.5 bg-gray-200 dark:bg-white/10 rounded w-11/12" />
+                      <div className="h-3.5 bg-gray-200 dark:bg-white/10 rounded w-4/5" />
+                    </div>
+                  </div>
+                ) : articleParagraphs.length > 0 ? (
+                  <div className="space-y-3.5 text-sm sm:text-base text-gray-700 dark:text-gray-200 leading-relaxed">
+                    {articleParagraphs.map((para, idx) => (
+                      <p key={idx}>{para}</p>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-3 text-sm sm:text-base text-gray-700 dark:text-gray-200 leading-relaxed">
+                    <p>{activeArticle.content || activeArticle.summary}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="px-5 py-4 border-t border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-[#10121B] flex flex-wrap items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={activeArticleIndex <= 0}
+                  onClick={() => {
+                    if (activeArticleIndex > 0) {
+                      openStoryReader(filteredArticles[activeArticleIndex - 1]);
+                    }
+                  }}
+                  className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs font-bold text-gray-700 dark:text-gray-200 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span>Prev</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={activeArticleIndex < 0 || activeArticleIndex >= filteredArticles.length - 1}
+                  onClick={() => {
+                    if (activeArticleIndex >= 0 && activeArticleIndex < filteredArticles.length - 1) {
+                      openStoryReader(filteredArticles[activeArticleIndex + 1]);
+                    }
+                  }}
+                  className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs font-bold text-gray-700 dark:text-gray-200 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+                >
+                  <span>Next</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => toggleSaveArticle(activeArticle.id)}
+                  className={`p-2.5 rounded-xl border transition-colors cursor-pointer ${
+                    savedIds.includes(activeArticle.id)
+                      ? 'bg-orange-50 dark:bg-orange-950/40 text-[#FF5A36] border-[#FF5A36]/40'
+                      : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-white/10'
+                  }`}
+                  aria-label="Bookmark story"
+                >
+                  <Bookmark className={`w-4 h-4 ${savedIds.includes(activeArticle.id) ? 'fill-current' : ''}`} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleShareArticle(activeArticle)}
+                  className="p-2.5 rounded-xl bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10 cursor-pointer"
+                  aria-label="Share story"
+                >
+                  <Share2 className="w-4 h-4" />
+                </button>
+                <a
+                  href={resolvedArticleUrl || getSafeExternalUrl(activeArticle.link)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#FF5A36] hover:bg-[#E04826] text-white text-xs font-black transition-colors no-underline whitespace-nowrap"
+                >
+                  <span>Open on {activeArticle.source}</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
