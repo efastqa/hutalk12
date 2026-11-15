@@ -695,6 +695,81 @@ export default function App() {
                 item.pricingType === 'monthly'))
           );
         }
+        if (catLower === 'auto parts') {
+          return (
+            itemCat.includes('auto part') ||
+            itemCat.includes('spare part') ||
+            itemTitle.includes('spare part') ||
+            itemTitle.includes('alloy wheel') ||
+            itemTitle.includes('tyre') ||
+            itemTitle.includes('headlight') ||
+            itemTitle.includes('battery')
+          );
+        }
+        if (catLower === 'boardings & annexes') {
+          return (
+            itemCat.includes('boarding') ||
+            itemCat.includes('annex') ||
+            itemCat.includes('hostel') ||
+            (item.propertyType || '').toLowerCase().includes('annex') ||
+            itemTitle.includes('boarding') ||
+            itemTitle.includes('annex') ||
+            itemTitle.includes('hostel') ||
+            itemTitle.includes('single room') ||
+            itemDesc.includes('boarding')
+          );
+        }
+        if (catLower === 'agriculture & farming') {
+          return (
+            itemCat.includes('agriculture') ||
+            itemCat.includes('farming') ||
+            itemTitle.includes('tea') ||
+            itemTitle.includes('cinnamon') ||
+            itemTitle.includes('pepper') ||
+            itemTitle.includes('coconut') ||
+            itemTitle.includes('fertilizer') ||
+            itemTitle.includes('water pump') ||
+            itemTitle.includes('tractor')
+          );
+        }
+        if (catLower === 'weddings & events') {
+          return (
+            itemCat.includes('wedding') ||
+            itemCat.includes('bridal') ||
+            itemTitle.includes('wedding') ||
+            itemTitle.includes('bridal') ||
+            itemTitle.includes('poruwa') ||
+            itemTitle.includes('nilame') ||
+            itemTitle.includes('catering')
+          );
+        }
+        if (catLower === 'education & tuition') {
+          return (
+            itemCat.includes('education') ||
+            itemCat.includes('tuition') ||
+            itemTitle.includes('tuition') ||
+            itemTitle.includes('class') ||
+            itemTitle.includes('a/l') ||
+            itemTitle.includes('o/l') ||
+            itemTitle.includes('ielts') ||
+            itemTitle.includes('course') ||
+            itemTitle.includes('japanese') ||
+            itemTitle.includes('korean')
+          );
+        }
+        if (catLower === 'pets & animals') {
+          return (
+            itemCat.includes('pet') ||
+            itemCat.includes('animal') ||
+            itemCat.includes('aquarium') ||
+            itemTitle.includes('puppy') ||
+            itemTitle.includes('puppies') ||
+            itemTitle.includes('kitten') ||
+            itemTitle.includes('aquarium') ||
+            itemTitle.includes('fish tank') ||
+            itemTitle.includes('bird')
+          );
+        }
         return itemCat.includes(catLower);
       });
     }

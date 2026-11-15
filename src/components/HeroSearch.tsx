@@ -15,6 +15,10 @@ import {
 import { HeroAd, HeroAdSettings, Listing } from '../types';
 import { HeroAdBanner } from './HeroAdBanner';
 import { SmartSearchTypeahead } from './SmartSearchTypeahead';
+import heroLightVehiclesImg from '../assets/images/hero_light_vehicles_1794777151964.jpg';
+import heroLightPropertyImg from '../assets/images/hero_light_property_1794777152485.jpg';
+import heroLightElectronicsImg from '../assets/images/hero_light_electronics_1794777153011.jpg';
+import heroLightLifestyleImg from '../assets/images/hero_light_lifestyle_1794777153777.jpg';
 
 export const PRICE_PRESETS = [
   { label: 'All Prices', min: '', max: '' },
@@ -97,25 +101,39 @@ export interface LightBackgroundItem {
 
 export const DEFAULT_LIGHT_BACKGROUNDS: LightBackgroundItem[] = [
   {
+    id: 'all_marketplace',
+    name: 'Sri Lanka Marketplace',
+    tag: 'All Sri Lanka Marketplace',
+    imageUrl: '/assets/hero_light_bg.jpg',
+    badgeText: 'All Sri Lanka Marketplace',
+  },
+  {
     id: 'vehicles_motors',
     name: 'Vehicles & Motors',
     tag: 'Automotive & Motors',
-    imageUrl: '/assets/hero_light_bg.jpg',
-    badgeText: 'Vehicles & Motors 🚗',
+    imageUrl: heroLightVehiclesImg,
+    badgeText: 'Vehicles & Motors',
+  },
+  {
+    id: 'property_villas',
+    name: 'Property & Holiday Homes',
+    tag: 'Properties & Villas',
+    imageUrl: heroLightPropertyImg,
+    badgeText: 'Property & Holiday Homes',
   },
   {
     id: 'electronics',
-    name: 'Electronics',
+    name: 'Electronics & Tech',
     tag: 'Electronics & Tech',
-    imageUrl: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&w=1920&q=85',
-    badgeText: 'Electronics & Gadgets 💻',
+    imageUrl: heroLightElectronicsImg,
+    badgeText: 'Electronics & Tech',
   },
   {
-    id: 'marketplace_estores',
-    name: 'E-Stores & Retail',
-    tag: 'Lifestyle & Marketplace',
-    imageUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1920&q=85',
-    badgeText: 'E-Stores & Products 🛍️',
+    id: 'marketplace_lifestyle',
+    name: 'Services, Lifestyle & E-Stores',
+    tag: 'Lifestyle & E-Stores',
+    imageUrl: heroLightLifestyleImg,
+    badgeText: 'Lifestyle & E-Stores',
   },
 ];
 
@@ -142,7 +160,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   verifiedOnly = false,
   onToggleVerifiedOnly,
 }) => {
-  // 3 Changing Background Light Images state
+  // 5 Changing Background Light Images state
   const [activeBgIndex, setActiveBgIndex] = useState<number>(0);
   const [isAutoRotatePaused, setIsAutoRotatePaused] = useState<boolean>(false);
 
@@ -155,14 +173,31 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
     return () => clearInterval(interval);
   }, [isAutoRotatePaused]);
 
-  // Sync background theme with search category tab
+  // Sync background theme with selected category tab
   useEffect(() => {
-    if (selectedCategory === 'Vehicles') {
+    if (selectedCategory === 'All') {
       setActiveBgIndex(0);
-    } else if (selectedCategory === 'Electronics') {
+    } else if (
+      selectedCategory === 'Vehicles' ||
+      selectedCategory === 'Auto Parts' ||
+      selectedCategory === 'Cars for Rent' ||
+      selectedCategory === 'Motorcycles'
+    ) {
       setActiveBgIndex(1);
-    } else if (selectedCategory === 'Property' || selectedCategory === 'Services') {
+    } else if (
+      selectedCategory === 'Property' ||
+      selectedCategory === 'Boardings & Annexes' ||
+      selectedCategory === 'Holiday Homes'
+    ) {
       setActiveBgIndex(2);
+    } else if (
+      selectedCategory === 'Electronics' ||
+      selectedCategory === 'Phones' ||
+      selectedCategory === 'Computers'
+    ) {
+      setActiveBgIndex(3);
+    } else {
+      setActiveBgIndex(4);
     }
   }, [selectedCategory]);
 

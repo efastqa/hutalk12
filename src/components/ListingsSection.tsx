@@ -358,11 +358,17 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
         {[
           { id: 'All', label: 'All Ads' },
           { id: 'Vehicles', label: 'Vehicles' },
+          { id: 'Auto Parts', label: 'Auto Parts', isNew: true },
           { id: 'Cars for Rent', label: 'Cars for Rent', isNew: true },
           { id: 'Motorcycles', label: 'Motorcycles' },
           { id: 'Property', label: 'Properties' },
+          { id: 'Boardings & Annexes', label: 'Boardings & Annexes', isNew: true },
           { id: 'Holiday Homes', label: 'Holiday Homes', isNew: true },
           { id: 'Electronics', label: 'Electronics' },
+          { id: 'Agriculture & Farming', label: 'Agriculture', isNew: true },
+          { id: 'Weddings & Events', label: 'Weddings', isNew: true },
+          { id: 'Education & Tuition', label: 'Education', isNew: true },
+          { id: 'Pets & Animals', label: 'Pets & Aquarium', isNew: true },
           { id: 'Home & Garden', label: 'Home & Garden' },
           { id: 'Jobs', label: 'Jobs' },
           { id: 'Services', label: 'Services' },
@@ -1257,7 +1263,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                           {formatLKR(item.price)}
                           <span className="text-[10px] sm:text-xs font-semibold text-emerald-700 dark:text-emerald-400 ml-1">/ night</span>
                         </span>
-                      ) : item.pricingType === 'monthly' ? (
+                      ) : item.pricingType === 'monthly' || item.category === 'Boardings & Annexes' ? (
                         <span>
                           {formatLKR(item.price)}
                           <span className="text-[10px] sm:text-xs font-semibold text-[#FF5A36] ml-1">/ month</span>

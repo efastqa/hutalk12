@@ -110,7 +110,23 @@ export const SmartSearchTypeahead: React.FC<SmartSearchTypeaheadProps> = ({
   const matchingCategories = useMemo(() => {
     if (!searchTerm.trim()) return [];
     const query = searchTerm.toLowerCase().trim();
-    const categories = ['Vehicles', 'Cars for Rent', 'Property', 'Holiday Homes', 'Electronics', 'Home & Garden', 'Jobs', 'Services', 'E-Stores'];
+    const categories = [
+      'Vehicles',
+      'Auto Parts',
+      'Cars for Rent',
+      'Property',
+      'Boardings & Annexes',
+      'Holiday Homes',
+      'Electronics',
+      'Agriculture & Farming',
+      'Weddings & Events',
+      'Education & Tuition',
+      'Pets & Animals',
+      'Home & Garden',
+      'Jobs',
+      'Services',
+      'E-Stores',
+    ];
     return categories.filter((c) => c.toLowerCase().includes(query));
   }, [searchTerm]);
 

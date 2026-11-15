@@ -93,7 +93,7 @@ export const Footer: React.FC<FooterProps> = ({
                 Top Categories
               </h4>
               <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
-                {['Vehicles', 'Cars for Rent', 'Electronics', 'Property', 'Holiday Homes', 'Home & Garden'].map((cat) => (
+                {['Vehicles', 'Auto Parts', 'Cars for Rent', 'Property', 'Boardings & Annexes', 'Holiday Homes', 'Agriculture & Farming', 'Weddings & Events'].map((cat) => (
                   <li key={cat}>
                     <button
                       type="button"

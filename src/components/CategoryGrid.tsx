@@ -6,6 +6,12 @@ import { DualToneHeading } from './DualToneHeading';
 import holidayHomesImg from '../assets/images/holiday_homes_category_1794527575851.jpg';
 import carsForRentImg from '../assets/images/cars_for_rent_category_1794683403631.jpg';
 import hotNewsIconImg from '../assets/images/hot_news_sri_lanka_icon_1794684230454.jpg';
+import catAutoPartsImg from '../assets/images/cat_auto_parts_1794777622668.jpg';
+import catBoardingsImg from '../assets/images/cat_boardings_1794777622750.jpg';
+import catAgricultureImg from '../assets/images/cat_agriculture_1794777623729.jpg';
+import catWeddingsImg from '../assets/images/cat_weddings_1794777623764.jpg';
+import catEducationImg from '../assets/images/cat_education_1794777624140.jpg';
+import catPetsImg from '../assets/images/cat_pets_1794777624936.jpg';
 
 export interface CategoryGridProps {
   currentCategory: string;
@@ -105,6 +111,48 @@ export const CATEGORIES_ITEMS: CategoryItem[] = [
     searchQuery: 'beauty',
   },
   {
+    key: 'Auto Parts',
+    label: 'Auto Parts',
+    image: catAutoPartsImg,
+    targetCategory: 'Auto Parts',
+    isNew: true,
+  },
+  {
+    key: 'Boardings & Annexes',
+    label: 'Boardings & Annexes',
+    image: catBoardingsImg,
+    targetCategory: 'Boardings & Annexes',
+    isNew: true,
+  },
+  {
+    key: 'Agriculture & Farming',
+    label: 'Agriculture',
+    image: catAgricultureImg,
+    targetCategory: 'Agriculture & Farming',
+    isNew: true,
+  },
+  {
+    key: 'Weddings & Events',
+    label: 'Weddings',
+    image: catWeddingsImg,
+    targetCategory: 'Weddings & Events',
+    isNew: true,
+  },
+  {
+    key: 'Education & Tuition',
+    label: 'Education',
+    image: catEducationImg,
+    targetCategory: 'Education & Tuition',
+    isNew: true,
+  },
+  {
+    key: 'Pets & Animals',
+    label: 'Pets & Aquarium',
+    image: catPetsImg,
+    targetCategory: 'Pets & Animals',
+    isNew: true,
+  },
+  {
     key: 'Luxury',
     label: 'Luxury',
     image: '/assets/categories/luxury.png',
@@ -117,16 +165,18 @@ export const CATEGORIES_ITEMS: CategoryItem[] = [
 const TRENDING_CHIPS = [
   { label: 'Cars', category: 'Vehicles', query: 'car' },
   { label: 'Cars for Rent', category: 'Cars for Rent', query: '' },
+  { label: 'Auto Parts', category: 'Auto Parts', query: '' },
+  { label: 'Boardings & Annexes', category: 'Boardings & Annexes', query: '' },
   { label: 'Mobile Phones', category: 'Phones', query: 'phone' },
-  { label: 'Dresses', category: "Women's", query: 'dress' },
   { label: 'Houses & Lands', category: 'Property', query: 'house' },
   { label: 'Holiday Homes', category: 'Holiday Homes', query: '' },
-  { label: 'Motorbikes', category: 'Vehicles', query: 'bike' },
-  { label: 'Laptops', category: 'Computers', query: 'laptop' },
+  { label: 'Agriculture & Tea', category: 'Agriculture & Farming', query: '' },
+  { label: 'Weddings & Bridal', category: 'Weddings & Events', query: '' },
+  { label: 'A/L Tuition', category: 'Education & Tuition', query: '' },
+  { label: 'Pets & Aquarium', category: 'Pets & Animals', query: '' },
   { label: 'AC Services', category: 'Services', query: 'ac' },
   { label: 'Jobs', category: 'Jobs', query: 'job' },
   { label: 'Ceylon Gems', category: 'Luxury', query: 'gem' },
-  { label: 'Salons & Spas', category: 'Beauty', query: 'salon' },
 ];
 
 const POPULAR_SEARCHES = [

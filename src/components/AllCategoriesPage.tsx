@@ -35,6 +35,8 @@ import {
   Video,
   Package,
   Flame,
+  Sprout,
+  BedDouble,
 } from 'lucide-react';
 import { Listing } from '../types';
 
@@ -253,14 +255,20 @@ const SERVICES_LIST: ServiceItem[] = [
 ];
 
 const CLASSIFIEDS_LIST = [
-  { id: 'preloved', name: 'Preloved & Fashion', categoryFilter: 'Fashion & Preloved', icon: PackageCheck, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/50' },
   { id: 'vehicles', name: 'Vehicles & Cars', categoryFilter: 'Vehicles', icon: Car, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/50' },
+  { id: 'auto-parts', name: 'Auto Parts & Spare Parts', categoryFilter: 'Auto Parts', icon: Wrench, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-950/50', isNew: true },
   { id: 'cars-for-rent', name: 'Cars for Rent', categoryFilter: 'Cars for Rent', icon: Car, color: 'text-[#FF5A36]', bg: 'bg-orange-50 dark:bg-orange-950/50', isNew: true },
   { id: 'motorcycles', name: 'Motorcycles & Bikes', categoryFilter: 'Motorcycles', icon: Bike, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/50' },
-  { id: 'electronics', name: 'Electronics & Mobiles', categoryFilter: 'Electronics', icon: Smartphone, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50 dark:bg-violet-950/50' },
   { id: 'property', name: 'Property & Houses', categoryFilter: 'Property', icon: Home, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/50' },
+  { id: 'boardings', name: 'Boardings, Annexes & Hostels', categoryFilter: 'Boardings & Annexes', icon: BedDouble, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-50 dark:bg-sky-950/50', isNew: true },
   { id: 'holiday-homes', name: 'Holiday Homes & Villas', categoryFilter: 'Holiday Homes', icon: Plane, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-50 dark:bg-cyan-950/50', isNew: true },
+  { id: 'electronics', name: 'Electronics & Mobiles', categoryFilter: 'Electronics', icon: Smartphone, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50 dark:bg-violet-950/50' },
+  { id: 'agriculture', name: 'Agriculture, Tea & Spices', categoryFilter: 'Agriculture & Farming', icon: Sprout, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-950/50', isNew: true },
+  { id: 'weddings', name: 'Weddings, Bridal & Events', categoryFilter: 'Weddings & Events', icon: PartyPopper, color: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-50 dark:bg-pink-950/50', isNew: true },
+  { id: 'education', name: 'Education, Tuition & Courses', categoryFilter: 'Education & Tuition', icon: GraduationCap, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/50', isNew: true },
+  { id: 'pets', name: 'Pets & Aquarium', categoryFilter: 'Pets & Animals', icon: Dog, color: 'text-amber-700 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/50', isNew: true },
   { id: 'furniture', name: 'Home & Furniture', categoryFilter: 'Home & Garden', icon: Sofa, color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-50 dark:bg-teal-950/50' },
+  { id: 'preloved', name: 'Preloved & Fashion', categoryFilter: 'Fashion & Preloved', icon: PackageCheck, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/50' },
   { id: 'jobs', name: 'Jobs & Careers', categoryFilter: 'Jobs', icon: Briefcase, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/50' },
 ];
 

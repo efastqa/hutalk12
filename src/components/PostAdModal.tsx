@@ -38,20 +38,33 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import carsForRentImg from '../assets/images/cars_for_rent_category_1794683403631.jpg';
+import holidayHomesImg from '../assets/images/holiday_homes_category_1794527575851.jpg';
+import catAutoPartsImg from '../assets/images/cat_auto_parts_1794777622668.jpg';
+import catBoardingsImg from '../assets/images/cat_boardings_1794777622750.jpg';
+import catAgricultureImg from '../assets/images/cat_agriculture_1794777623729.jpg';
+import catWeddingsImg from '../assets/images/cat_weddings_1794777623764.jpg';
+import catEducationImg from '../assets/images/cat_education_1794777624140.jpg';
+import catPetsImg from '../assets/images/cat_pets_1794777624936.jpg';
 
 const MAX_IMAGES = 8;
 
 const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
   Vehicles: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80',
+  'Auto Parts': catAutoPartsImg,
   'Cars for Rent': carsForRentImg,
   Electronics: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80',
   Property: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80',
-  'Holiday Homes': 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&w=800&q=80',
+  'Boardings & Annexes': catBoardingsImg,
+  'Holiday Homes': holidayHomesImg,
   Motorcycles: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80',
   'Home & Garden': 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=800&q=80',
   Fashion: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=800&q=80',
   Services: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80',
   Jobs: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80',
+  'Agriculture & Farming': catAgricultureImg,
+  'Weddings & Events': catWeddingsImg,
+  'Education & Tuition': catEducationImg,
+  'Pets & Animals': catPetsImg,
 };
 
 const compressImage = async (file: File): Promise<string> => {
@@ -157,10 +170,16 @@ interface PostAdModalProps {
 const CATEGORIES = [
   'Electronics',
   'Vehicles',
+  'Auto Parts',
   'Cars for Rent',
   'Property',
+  'Boardings & Annexes',
   'Holiday Homes',
   'Motorcycles',
+  'Agriculture & Farming',
+  'Weddings & Events',
+  'Education & Tuition',
+  'Pets & Animals',
   'Home & Garden',
   'Fashion',
   'Services',
@@ -695,6 +714,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
           ? 'per_night'
           : initialCategory === 'Cars for Rent'
           ? 'daily'
+          : initialCategory === 'Boardings & Annexes'
+          ? 'monthly'
           : 'starting_at'
       );
       setServiceArea('Colombo & Greater Suburbs');
@@ -760,7 +781,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       formatted = `${formatted} / wknd`;
     } else if (category === 'Cars for Rent' && pricingType === 'daily') {
       formatted = `${formatted} / day`;
-    } else if (category === 'Cars for Rent' && pricingType === 'monthly') {
+    } else if ((category === 'Cars for Rent' || category === 'Boardings & Annexes') && pricingType === 'monthly') {
       formatted = `${formatted} / month`;
     }
     return isNegotiable ? `${formatted} • Negotiable` : formatted;
@@ -1332,6 +1353,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                     if (nextCategory === 'Holiday Homes') {
                       setPropertyType('Villa / Holiday Home');
                       setPricingType('per_night');
+                    } else if (nextCategory === 'Boardings & Annexes') {
+                      setPropertyType('Room / Annex for Rent');
+                      setPricingType('monthly');
                     } else if (nextCategory === 'Cars for Rent') {
                       setVehicleType('Car');
                       setPricingType('daily');
@@ -2167,7 +2191,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                         ? 'Weekend Rate (LKR / wknd)'
                         : category === 'Cars for Rent' && pricingType === 'daily'
                         ? 'Daily Rate (LKR / day)'
-                        : category === 'Cars for Rent' && pricingType === 'monthly'
+                        : (category === 'Cars for Rent' || category === 'Boardings & Annexes') && pricingType === 'monthly'
                         ? 'Monthly Rate (LKR / month)'
                         : 'Price (LKR)'}
                     </label>
