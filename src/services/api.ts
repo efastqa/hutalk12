@@ -3193,9 +3193,27 @@ For quick inquiries, call or send a message via WhatsApp!`;
         return 'Sri Lanka' as const;
       };
 
+      const extractImgFromHtml = (html: string): string | undefined => {
+        if (!html) return undefined;
+        const match = html.match(/<img[^>]+(?:src|data-src|data-lazy-src)=["']([^"']+)["']/i);
+        if (!match || !match[1]) return undefined;
+        const url = match[1].replace(/&amp;/g, '&').trim();
+        if (
+          !url ||
+          url.includes('favicon') ||
+          url.includes('1x1') ||
+          url.includes('pixel') ||
+          !/^https?:\/\//i.test(url)
+        ) {
+          return undefined;
+        }
+        return url;
+      };
+
       const feeds = [
         { rss: 'https://www.newswire.lk/feed/', source: 'Newswire.lk' },
         { rss: 'https://economynext.com/feed/', source: 'EconomyNext' },
+        { rss: 'https://www.adaderana.lk/rss.php', source: 'Ada Derana' },
         { rss: 'https://news.google.com/rss/search?q=Sri+Lanka+when:2d&hl=en-US&gl=LK&ceid=LK:en', source: 'Google News LK' },
       ];
 
@@ -3222,7 +3240,24 @@ For quick inquiries, call or send a message via WhatsApp!`;
           if (!key || seenTitles.has(key)) continue;
           seenTitles.add(key);
 
-          const fullText = stripHtml(item.content || item.description || '');
+          const rawDesc = typeof item.description === 'string' ? item.description : '';
+          const rawContent = typeof item.content === 'string' ? item.content : '';
+          const fullText = stripHtml(rawContent || rawDesc);
+          const thumb = typeof item.thumbnail === 'string' && /^https?:\/\//i.test(item.thumbnail) ? item.thumbnail : undefined;
+          const encLink = typeof item.enclosure?.link === 'string' && /^https?:\/\//i.test(item.enclosure.link) ? item.enclosure.link : undefined;
+          const encThumb = typeof item.enclosure?.thumbnail === 'string' && /^https?:\/\//i.test(item.enclosure.thumbnail) ? item.enclosure.thumbnail : undefined;
+          const imageUrl =
+            thumb ||
+            encLink ||
+            encThumb ||
+            extractImgFromHtml(rawDesc) ||
+            extractImgFromHtml(rawContent);
+
+          const pubDateIso = item.pubDate
+            ? new Date(String(item.pubDate).replace(' ', 'T') + (String(item.pubDate).includes('Z') || String(item.pubDate).includes('+') ? '' : 'Z'))
+            : new Date();
+          const publishedAt = isNaN(pubDateIso.getTime()) ? new Date().toISOString() : pubDateIso.toISOString();
+
           collected.push({
             id: `lk-news-${btoa(unescape(encodeURIComponent(link))).replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`,
             title,
@@ -3231,13 +3266,14 @@ For quick inquiries, call or send a message via WhatsApp!`;
             link,
             source,
             category: classify(title, source),
-            imageUrl: item.thumbnail || item.enclosure?.link || undefined,
-            publishedAt: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
+            imageUrl,
+            publishedAt,
           });
         }
       }
 
       if (collected.length > 0) {
+        collected.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
         const result: HotNewsResponse = {
           articles: collected.slice(0, 30),
           sources: Array.from(new Set(collected.map((a) => a.source))),

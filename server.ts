@@ -2352,7 +2352,7 @@ async function startServer() {
         headers: {
           'User-Agent':
             'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-          Accept: 'application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         },
       });
       if (!response.ok) return [];
@@ -2477,6 +2477,48 @@ async function startServer() {
         .slice(0, 30);
 
       const articles = deduped.map(({ _ts, ...rest }) => rest);
+
+      // Enrich missing thumbnails from publisher og:image tags in parallel (fast 2.5s timeout)
+      const candidatesForImg = articles
+        .filter(
+          (a) =>
+            !a.imageUrl &&
+            /^https?:\/\//i.test(a.link) &&
+            !a.link.includes('news.google.com')
+        )
+        .slice(0, 10);
+
+      if (candidatesForImg.length > 0) {
+        await Promise.allSettled(
+          candidatesForImg.map(async (article) => {
+            const c = new AbortController();
+            const t = setTimeout(() => c.abort(), 2500);
+            try {
+              const pageRes = await fetch(article.link, {
+                signal: c.signal,
+                headers: {
+                  'User-Agent':
+                    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+                  Accept: 'text/html,*/*',
+                },
+              });
+              if (!pageRes.ok) return;
+              const headHtml = (await pageRes.text()).slice(0, 80_000);
+              const og = headHtml.match(
+                /<meta[^>]+(?:property=["']og:image["']|name=["']twitter:image["'])[^>]+content=["']([^"']+)["']/i
+              );
+              if (og && og[1] && /^https?:\/\//i.test(og[1])) {
+                article.imageUrl = decodeXmlEntities(og[1]);
+              }
+            } catch {
+              // ignore timeout/errors
+            } finally {
+              clearTimeout(t);
+            }
+          })
+        );
+      }
+
       const sources = Array.from(new Set(articles.map((a) => a.source)));
       const lastUpdated = new Date().toISOString();
 

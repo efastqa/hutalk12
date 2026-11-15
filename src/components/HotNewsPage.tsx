@@ -205,8 +205,10 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
     ? filteredArticles.findIndex((item) => item.id === activeArticle.id)
     : -1;
 
-  const leadArticle = filteredArticles[0];
-  const secondaryArticles = filteredArticles.slice(1);
+  const leadArticle =
+    filteredArticles.find((a) => Boolean(a.imageUrl) && !failedImages[a.id]) ||
+    filteredArticles[0];
+  const secondaryArticles = filteredArticles.filter((a) => a !== leadArticle);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0C10] text-gray-900 dark:text-white pb-24 transition-colors">
