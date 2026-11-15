@@ -56,6 +56,34 @@ export function sanitizeForFirestore<T extends Record<string, any>>(obj: T): Rec
   return clean;
 }
 
+// Prevent repeated Firestore hits during daily free-tier quota exhaustion (10-min cooldown)
+let firestoreQuotaCooldownUntil = 0;
+
+function isQuotaError(err: any): boolean {
+  const msg = `${err?.code || ''} ${err?.message || String(err || '')}`.toLowerCase();
+  return (
+    msg.includes('resource-exhausted') ||
+    msg.includes('quota exceeded') ||
+    msg.includes('free daily read')
+  );
+}
+
+function isFirestoreQuotaActive(): boolean {
+  return Date.now() < firestoreQuotaCooldownUntil;
+}
+
+function recordFirestoreError(err: any): boolean {
+  if (isQuotaError(err)) {
+    const firstTrigger = !isFirestoreQuotaActive();
+    firestoreQuotaCooldownUntil = Date.now() + 10 * 60 * 1000;
+    if (firstTrigger) {
+      console.warn('[Firestore] Daily quota exceeded — switching to backend REST API & local cache for 10 minutes.');
+    }
+    return true;
+  }
+  return false;
+}
+
 export const api = {
   // -------------------------------------------------------------
   // Real-Time Marketplace Listings (backed by Cloud Firestore)
@@ -66,6 +94,38 @@ export const api = {
    */
   subscribeToListings(callback: (listings: Listing[]) => void): () => void {
     let fallbackTimer: ReturnType<typeof setInterval> | null = null;
+    const fetchRestListings = async (): Promise<Listing[]> => {
+      try {
+        const res = await fetch(`${API_BASE}/listings`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            return [...data].sort(
+              (a, b) => new Date(b.createdAt || b.date || 0).getTime() - new Date(a.createdAt || a.date || 0).getTime()
+            );
+          }
+        }
+      } catch {
+        // ignore network error
+      }
+      return [];
+    };
+
+    const startRestFallback = () => {
+      if (fallbackTimer) return;
+      fetchRestListings().then(callback).catch(() => {});
+      fallbackTimer = setInterval(() => {
+        fetchRestListings().then(callback).catch(() => {});
+      }, 30000);
+    };
+
+    if (isFirestoreQuotaActive()) {
+      startRestFallback();
+      return () => {
+        if (fallbackTimer) clearInterval(fallbackTimer);
+      };
+    }
+
     try {
       const colRef = collection(db, 'listings');
       const unsub = onSnapshot(
@@ -84,13 +144,9 @@ export const api = {
           if (msg.includes('Disconnecting idle stream') || msg.includes('CANCELLED')) {
             return;
           }
-          // Gracefully fall back to local REST API when Firestore stream disconnects or reaches quota
-          if (!fallbackTimer) {
-            api.getListings().then(callback).catch(() => {});
-            fallbackTimer = setInterval(() => {
-              api.getListings().then(callback).catch(() => {});
-            }, 30000);
-          }
+          recordFirestoreError(err);
+          // Gracefully fall back to REST API without hammering Firestore
+          startRestFallback();
         }
       );
       return () => {
@@ -101,9 +157,12 @@ export const api = {
         }
         if (fallbackTimer) clearInterval(fallbackTimer);
       };
-    } catch {
-      api.getListings().then(callback).catch(() => {});
-      return () => {};
+    } catch (err) {
+      recordFirestoreError(err);
+      startRestFallback();
+      return () => {
+        if (fallbackTimer) clearInterval(fallbackTimer);
+      };
     }
   },
 
@@ -120,16 +179,20 @@ export const api = {
     let listings: Listing[] = [];
 
     // 1. Primary Source: Cloud Firestore (shared across Vercel and Cloud Run)
-    try {
-      const colRef = collection(db, 'listings');
-      const snap = await getDocs(colRef);
-      if (!snap.empty) {
-        snap.forEach((d) => {
-          listings.push(d.data() as Listing);
-        });
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const colRef = collection(db, 'listings');
+        const snap = await getDocs(colRef);
+        if (!snap.empty) {
+          snap.forEach((d) => {
+            listings.push(d.data() as Listing);
+          });
+        }
+      } catch (firestoreErr) {
+        if (!recordFirestoreError(firestoreErr)) {
+          console.warn('Direct Firestore fetch error, trying backend API:', firestoreErr);
+        }
       }
-    } catch (firestoreErr) {
-      console.warn('Direct Firestore fetch error, trying backend API:', firestoreErr);
     }
 
     // 2. Also fetch and merge from backend API to ensure no ads are missed
@@ -221,15 +284,17 @@ export const api = {
   },
 
   async getListingById(id: string): Promise<Listing> {
-    // Check Firestore directly
-    try {
-      const docRef = doc(db, 'listings', id);
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        return snap.data() as Listing;
+    // Check Firestore directly unless in quota cooldown
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const docRef = doc(db, 'listings', id);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          return snap.data() as Listing;
+        }
+      } catch (err) {
+        recordFirestoreError(err);
       }
-    } catch {
-      // ignore and try fallback
     }
 
     const res = await fetch(`${API_BASE}/listings/${id}`);
@@ -607,19 +672,23 @@ export const api = {
   // -------------------------------------------------------------
 
   async getListingReviews(listingId: string): Promise<ListingReview[]> {
-    try {
-      const snap = await getDocs(collection(db, 'reviews'));
-      const list: ListingReview[] = [];
-      snap.forEach((d) => {
-        const rev = d.data() as ListingReview;
-        if (rev.listingId === listingId) {
-          list.push(rev);
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const snap = await getDocs(collection(db, 'reviews'));
+        const list: ListingReview[] = [];
+        snap.forEach((d) => {
+          const rev = d.data() as ListingReview;
+          if (rev.listingId === listingId) {
+            list.push(rev);
+          }
+        });
+        list.sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
+        if (list.length > 0) return list;
+      } catch (e) {
+        if (!recordFirestoreError(e)) {
+          console.warn('Firestore getReviews error:', e);
         }
-      });
-      list.sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
-      if (list.length > 0) return list;
-    } catch (e) {
-      console.warn('Firestore getReviews error:', e);
+      }
     }
 
     try {
@@ -725,14 +794,18 @@ export const api = {
   },
 
   async getAdminReports(): Promise<ListingReport[]> {
-    try {
-      const snap = await getDocs(collection(db, 'reports'));
-      const list: ListingReport[] = [];
-      snap.forEach((d) => list.push(d.data() as ListingReport));
-      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      if (list.length > 0) return list;
-    } catch (e) {
-      console.warn('Firestore get reports error:', e);
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const snap = await getDocs(collection(db, 'reports'));
+        const list: ListingReport[] = [];
+        snap.forEach((d) => list.push(d.data() as ListingReport));
+        list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        if (list.length > 0) return list;
+      } catch (e) {
+        if (!recordFirestoreError(e)) {
+          console.warn('Firestore get reports error:', e);
+        }
+      }
     }
 
     try {
@@ -789,49 +862,54 @@ export const api = {
   // -------------------------------------------------------------
 
   async getAdminConfig(): Promise<AdminConfig> {
-    try {
-      const docRef = doc(db, 'admin_config', 'main');
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        const data = snap.data();
-        return {
-          autoApprove: data.autoApprove !== undefined ? Boolean(data.autoApprove) : false,
-          password: data.password || '520765',
-          twoFactorEnabled: data.twoFactorEnabled !== undefined ? Boolean(data.twoFactorEnabled) : false,
-          twoFactorPhone: data.twoFactorPhone || '0777000111',
-          twoFactorMethod: data.twoFactorMethod || 'sms',
-        };
-      } else {
-        // Initialize default in Firestore
-        const defaultCfg: AdminConfig = {
-          autoApprove: false,
-          password: '520765',
-          twoFactorEnabled: false,
-          twoFactorPhone: '0777000111',
-          twoFactorMethod: 'sms',
-          updatedAt: new Date().toISOString(),
-        };
-        await setDoc(docRef, defaultCfg);
-        return defaultCfg;
-      }
-    } catch {
-      // Fallback to server API
+    if (!isFirestoreQuotaActive()) {
       try {
-        const res = await fetch(`${API_BASE}/admin/config`);
-        if (res.ok) {
-          const data = await res.json();
+        const docRef = doc(db, 'admin_config', 'main');
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data();
           return {
-            autoApprove: Boolean(data.autoApprove),
+            autoApprove: data.autoApprove !== undefined ? Boolean(data.autoApprove) : false,
             password: data.password || '520765',
-            twoFactorEnabled: Boolean(data.twoFactorEnabled),
+            twoFactorEnabled: data.twoFactorEnabled !== undefined ? Boolean(data.twoFactorEnabled) : false,
             twoFactorPhone: data.twoFactorPhone || '0777000111',
             twoFactorMethod: data.twoFactorMethod || 'sms',
           };
+        } else {
+          // Initialize default in Firestore
+          const defaultCfg: AdminConfig = {
+            autoApprove: false,
+            password: '520765',
+            twoFactorEnabled: false,
+            twoFactorPhone: '0777000111',
+            twoFactorMethod: 'sms',
+            updatedAt: new Date().toISOString(),
+          };
+          await setDoc(docRef, defaultCfg);
+          return defaultCfg;
         }
-      } catch {
-        // ignore
+      } catch (err) {
+        recordFirestoreError(err);
       }
     }
+
+    // Fallback to server API
+    try {
+      const res = await fetch(`${API_BASE}/admin/config`);
+      if (res.ok) {
+        const data = await res.json();
+        return {
+          autoApprove: Boolean(data.autoApprove),
+          password: data.password || '520765',
+          twoFactorEnabled: Boolean(data.twoFactorEnabled),
+          twoFactorPhone: data.twoFactorPhone || '0777000111',
+          twoFactorMethod: data.twoFactorMethod || 'sms',
+        };
+      }
+    } catch {
+      // ignore
+    }
+
     return {
       autoApprove: false,
       password: '520765',
@@ -1674,18 +1752,20 @@ For quick inquiries, call or send a message via WhatsApp!`;
 
     const hasInitialized = localStorage.getItem('huta_events_initialized') === 'true';
 
-    try {
-      const snap = await getDocs(collection(db, 'events'));
-      if (!snap.empty) {
-        snap.forEach((d) => {
-          const item = d.data() as EventItem;
-          if (!deletedIds.includes(item.id)) {
-            events.push(item);
-          }
-        });
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const snap = await getDocs(collection(db, 'events'));
+        if (!snap.empty) {
+          snap.forEach((d) => {
+            const item = d.data() as EventItem;
+            if (!deletedIds.includes(item.id)) {
+              events.push(item);
+            }
+          });
+        }
+      } catch (err) {
+        recordFirestoreError(err);
       }
-    } catch {
-      // fallback
     }
 
     if (events.length === 0) {
@@ -1849,23 +1929,27 @@ For quick inquiries, call or send a message via WhatsApp!`;
   // -------------------------------------------------------------
 
   async getHeroAds(): Promise<{ settings: HeroAdSettings; ads: HeroAd[] }> {
-    // 1. Try Cloud Firestore first
-    try {
-      const docRef = doc(db, 'hero_ads', 'main');
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        const data = snap.data() as { settings: HeroAdSettings; ads: HeroAd[] };
-        if (data && Array.isArray(data.ads) && data.ads.length > 0) {
-          try {
-            localStorage.setItem('huta_hero_ads_cache', JSON.stringify(data));
-          } catch {
-            // ignore
+    // 1. Try Cloud Firestore first unless in quota cooldown
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const docRef = doc(db, 'hero_ads', 'main');
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data() as { settings: HeroAdSettings; ads: HeroAd[] };
+          if (data && Array.isArray(data.ads) && data.ads.length > 0) {
+            try {
+              localStorage.setItem('huta_hero_ads_cache', JSON.stringify(data));
+            } catch {
+              // ignore
+            }
+            return data;
           }
-          return data;
+        }
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          console.warn('[HeroAds] Firestore read warning, falling back:', err);
         }
       }
-    } catch (err) {
-      console.warn('[HeroAds] Firestore read warning, falling back:', err);
     }
 
     // 2. Try Server API fallback
@@ -2139,26 +2223,30 @@ For quick inquiries, call or send a message via WhatsApp!`;
       slides: [],
     };
 
-    try {
-      const docRef = doc(db, 'hero_ads', 'promo_slides');
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        const data = snap.data() as { settings?: PromoSlidesSettings; slides?: PromoSlide[] };
-        if (data && Array.isArray(data.slides)) {
-          const normalized = {
-            settings: data.settings || defaultData.settings,
-            slides: data.slides,
-          };
-          try {
-            localStorage.setItem('huta_promo_slides_cache', JSON.stringify(normalized));
-          } catch {
-            // ignore
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const docRef = doc(db, 'hero_ads', 'promo_slides');
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data() as { settings?: PromoSlidesSettings; slides?: PromoSlide[] };
+          if (data && Array.isArray(data.slides)) {
+            const normalized = {
+              settings: data.settings || defaultData.settings,
+              slides: data.slides,
+            };
+            try {
+              localStorage.setItem('huta_promo_slides_cache', JSON.stringify(normalized));
+            } catch {
+              // ignore
+            }
+            return normalized;
           }
-          return normalized;
+        }
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          console.warn('[PromoSlides] Firestore read warning, falling back:', err);
         }
       }
-    } catch (err) {
-      console.warn('[PromoSlides] Firestore read warning, falling back:', err);
     }
 
     try {
@@ -2203,6 +2291,10 @@ For quick inquiries, call or send a message via WhatsApp!`;
   subscribeToPromoSlides(
     callback: (data: { settings: PromoSlidesSettings; slides: PromoSlide[] }) => void
   ): () => void {
+    if (isFirestoreQuotaActive()) {
+      this.getPromoSlides().then(callback).catch(() => {});
+      return () => {};
+    }
     try {
       const docRef = doc(db, 'hero_ads', 'promo_slides');
       return onSnapshot(
@@ -2225,10 +2317,12 @@ For quick inquiries, call or send a message via WhatsApp!`;
           }
         },
         (error) => {
-          console.warn('[PromoSlides] Firestore listener warning:', error?.message || error);
+          recordFirestoreError(error);
+          this.getPromoSlides().then(callback).catch(() => {});
         }
       );
     } catch {
+      this.getPromoSlides().then(callback).catch(() => {});
       return () => {};
     }
   },
@@ -2503,33 +2597,54 @@ For quick inquiries, call or send a message via WhatsApp!`;
   },
 
   // -------------------------------------------------------------
-  // Video Stories & Inspection Reels (Firestore + LocalStorage)
+  // Video Stories & Inspection Reels (Firestore + Server API + LocalStorage)
   // -------------------------------------------------------------
 
   async getVideoReels(): Promise<VideoReelItem[]> {
-    // 1. Try Cloud Firestore first
-    try {
-      const colRef = collection(db, 'video_reels');
-      const snap = await getDocs(colRef);
-      const items: VideoReelItem[] = [];
-      snap.forEach((d) => {
-        items.push(d.data() as VideoReelItem);
-      });
-      if (items.length > 0) {
-        // Sort newest first
-        items.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-        try {
-          localStorage.setItem('huta_video_reels_cache', JSON.stringify(items));
-        } catch {
-          // ignore
+    // 1. Try Cloud Firestore first unless quota cooldown is active
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const colRef = collection(db, 'video_reels');
+        const snap = await getDocs(colRef);
+        const items: VideoReelItem[] = [];
+        snap.forEach((d) => {
+          items.push(d.data() as VideoReelItem);
+        });
+        if (items.length > 0) {
+          items.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+          try {
+            localStorage.setItem('huta_video_reels_cache', JSON.stringify(items));
+          } catch {
+            // ignore
+          }
+          return items;
         }
-        return items;
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          console.warn('[VideoReels] Firestore get error, checking server/cache:', err);
+        }
       }
-    } catch (err) {
-      console.warn('[VideoReels] Firestore get error, checking cache:', err);
     }
 
-    // 2. Check local storage cache
+    // 2. Try Express server API
+    try {
+      const res = await fetch(`${API_BASE}/video-reels`);
+      if (res.ok) {
+        const remote = await res.json();
+        if (Array.isArray(remote) && remote.length > 0) {
+          try {
+            localStorage.setItem('huta_video_reels_cache', JSON.stringify(remote));
+          } catch {
+            // ignore
+          }
+          return remote;
+        }
+      }
+    } catch {
+      // Standalone fallback
+    }
+
+    // 3. Check local storage cache
     try {
       const cached = localStorage.getItem('huta_video_reels_cache');
       if (cached) {
@@ -2540,11 +2655,43 @@ For quick inquiries, call or send a message via WhatsApp!`;
       // ignore
     }
 
-    // By default, return empty list (per user request: no default dummy reels)
     return [];
   },
 
   subscribeToVideoReels(callback: (reels: VideoReelItem[]) => void): () => void {
+    const loadFallbackReels = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/video-reels`);
+        if (res.ok) {
+          const remote = await res.json();
+          if (Array.isArray(remote) && remote.length > 0) {
+            try {
+              localStorage.setItem('huta_video_reels_cache', JSON.stringify(remote));
+            } catch {}
+            callback(remote);
+            return;
+          }
+        }
+      } catch {}
+
+      try {
+        const cached = localStorage.getItem('huta_video_reels_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) {
+            callback(parsed);
+            return;
+          }
+        }
+      } catch {}
+      callback([]);
+    };
+
+    if (isFirestoreQuotaActive()) {
+      loadFallbackReels();
+      return () => {};
+    }
+
     try {
       const colRef = collection(db, 'video_reels');
       const unsub = onSnapshot(
@@ -2567,8 +2714,9 @@ For quick inquiries, call or send a message via WhatsApp!`;
           if (msg.includes('Disconnecting idle stream') || msg.includes('CANCELLED')) {
             return;
           }
-          // Gracefully fall back to cached reels or REST call
-          api.getVideoReels().then(callback).catch(() => {});
+          recordFirestoreError(err);
+          // Gracefully fall back to server REST + localStorage without re-hitting Firestore
+          loadFallbackReels();
         }
       );
       return () => {
@@ -2578,8 +2726,9 @@ For quick inquiries, call or send a message via WhatsApp!`;
           // ignore
         }
       };
-    } catch {
-      api.getVideoReels().then(callback).catch(() => {});
+    } catch (err) {
+      recordFirestoreError(err);
+      loadFallbackReels();
       return () => {};
     }
   },
@@ -2605,11 +2754,25 @@ For quick inquiries, call or send a message via WhatsApp!`;
       listingId: data.listingId,
     };
 
-    // Save to Firestore
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await setDoc(doc(db, 'video_reels', id), sanitizeForFirestore(newReel));
+      } catch (fsErr) {
+        if (!recordFirestoreError(fsErr)) {
+          console.warn('[VideoReels] Firestore set error:', fsErr);
+        }
+      }
+    }
+
+    // Sync to Express server API
     try {
-      await setDoc(doc(db, 'video_reels', id), sanitizeForFirestore(newReel));
-    } catch (fsErr) {
-      console.warn('[VideoReels] Firestore set error:', fsErr);
+      await fetch(`${API_BASE}/video-reels`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newReel),
+      });
+    } catch {
+      // Standalone
     }
 
     // Update local cache
@@ -2626,10 +2789,24 @@ For quick inquiries, call or send a message via WhatsApp!`;
   },
 
   async updateVideoReel(id: string, data: Partial<VideoReelItem>): Promise<VideoReelItem> {
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await setDoc(doc(db, 'video_reels', id), sanitizeForFirestore(data), { merge: true });
+      } catch (fsErr) {
+        if (!recordFirestoreError(fsErr)) {
+          console.warn('[VideoReels] Firestore update error:', fsErr);
+        }
+      }
+    }
+
     try {
-      await setDoc(doc(db, 'video_reels', id), sanitizeForFirestore(data), { merge: true });
-    } catch (fsErr) {
-      console.warn('[VideoReels] Firestore update error:', fsErr);
+      await fetch(`${API_BASE}/video-reels/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+    } catch {
+      // Standalone
     }
 
     try {
@@ -2655,10 +2832,20 @@ For quick inquiries, call or send a message via WhatsApp!`;
   },
 
   async deleteVideoReel(id: string): Promise<{ success: boolean }> {
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await deleteDoc(doc(db, 'video_reels', id));
+      } catch (fsErr) {
+        if (!recordFirestoreError(fsErr)) {
+          console.warn('[VideoReels] Firestore delete error:', fsErr);
+        }
+      }
+    }
+
     try {
-      await deleteDoc(doc(db, 'video_reels', id));
-    } catch (fsErr) {
-      console.warn('[VideoReels] Firestore delete error:', fsErr);
+      await fetch(`${API_BASE}/video-reels/${id}`, { method: 'DELETE' });
+    } catch {
+      // Standalone
     }
 
     try {
@@ -2694,36 +2881,63 @@ For quick inquiries, call or send a message via WhatsApp!`;
     for (const sId of sampleIdsToRemove) {
       if (!deletedIds.includes(sId)) {
         deletedIds.push(sId);
-        try {
-          deleteDoc(doc(db, 'estores', sId)).catch(() => {});
-        } catch {}
+        if (!isFirestoreQuotaActive()) {
+          try {
+            deleteDoc(doc(db, 'estores', sId)).catch(() => {});
+          } catch {}
+        }
       }
     }
     try {
       localStorage.setItem('huta_deleted_estores', JSON.stringify(deletedIds));
     } catch {}
 
-    // 1. Try Cloud Firestore first (returns genuine registered stores)
-    try {
-      const snap = await getDocs(collection(db, 'estores'));
-      if (!snap.empty) {
-        const list: EStore[] = [];
-        snap.forEach((d) => {
-          const item = d.data() as EStore;
-          if (!deletedIds.includes(item.id) && !sampleIdsToRemove.includes(item.id)) {
-            list.push({ ...item, id: d.id, products: Array.isArray(item.products) ? item.products : [] });
-          }
-        });
-        try {
-          localStorage.setItem('huta_estores_cache', JSON.stringify(list));
-        } catch {}
-        return list;
+    // 1. Try Cloud Firestore first unless quota cooldown is active
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const snap = await getDocs(collection(db, 'estores'));
+        if (!snap.empty) {
+          const list: EStore[] = [];
+          snap.forEach((d) => {
+            const item = d.data() as EStore;
+            if (!deletedIds.includes(item.id) && !sampleIdsToRemove.includes(item.id)) {
+              list.push({ ...item, id: d.id, products: Array.isArray(item.products) ? item.products : [] });
+            }
+          });
+          try {
+            localStorage.setItem('huta_estores_cache', JSON.stringify(list));
+          } catch {}
+          return list;
+        }
+      } catch (fsErr) {
+        if (!recordFirestoreError(fsErr)) {
+          console.warn('[EStores] Firestore fetch error:', fsErr);
+        }
       }
-    } catch (fsErr) {
-      console.warn('[EStores] Firestore fetch error:', fsErr);
     }
 
-    // 2. Try localStorage cache (excluding deleted and sample stores)
+    // 2. Try Express server API fallback
+    try {
+      const res = await fetch(`${API_BASE}/estores`);
+      if (res.ok) {
+        const remote: EStore[] = await res.json();
+        if (Array.isArray(remote)) {
+          const filtered = remote
+            .filter((s) => !deletedIds.includes(s.id) && !sampleIdsToRemove.includes(s.id))
+            .map((s) => ({ ...s, products: Array.isArray(s.products) ? s.products : [] }));
+          if (filtered.length > 0) {
+            try {
+              localStorage.setItem('huta_estores_cache', JSON.stringify(filtered));
+            } catch {}
+            return filtered;
+          }
+        }
+      }
+    } catch {
+      // Standalone fallback
+    }
+
+    // 3. Try localStorage cache (excluding deleted and sample stores)
     try {
       const cached = localStorage.getItem('huta_estores_cache');
       if (cached) {
@@ -2733,18 +2947,31 @@ For quick inquiries, call or send a message via WhatsApp!`;
       }
     } catch {}
 
-    // No default sample ads or stores; ready for users to add their own stores
     return [];
   },
 
   async getEStoreById(id: string): Promise<EStore | null> {
-    try {
-      const snap = await getDoc(doc(db, 'estores', id));
-      if (snap.exists()) {
-        const item = snap.data() as EStore;
-        return { ...item, id: snap.id, products: Array.isArray(item.products) ? item.products : [] };
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const snap = await getDoc(doc(db, 'estores', id));
+        if (snap.exists()) {
+          const item = snap.data() as EStore;
+          return { ...item, id: snap.id, products: Array.isArray(item.products) ? item.products : [] };
+        }
+      } catch (err) {
+        recordFirestoreError(err);
       }
-    } catch {}
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/estores/${id}`);
+      if (res.ok) {
+        const item = (await res.json()) as EStore;
+        return { ...item, products: Array.isArray(item.products) ? item.products : [] };
+      }
+    } catch {
+      // ignore
+    }
 
     const all = await this.getEStores();
     return all.find((s) => s.id === id) || null;
@@ -2776,11 +3003,25 @@ For quick inquiries, call or send a message via WhatsApp!`;
       createdAt: new Date().toISOString(),
     };
 
-    // Save to Firestore
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await setDoc(doc(db, 'estores', id), sanitizeForFirestore(newStore));
+      } catch (fsErr) {
+        if (!recordFirestoreError(fsErr)) {
+          console.warn('[EStores] Firestore set error:', fsErr);
+        }
+      }
+    }
+
+    // Save to Express backend API
     try {
-      await setDoc(doc(db, 'estores', id), sanitizeForFirestore(newStore));
-    } catch (fsErr) {
-      console.warn('[EStores] Firestore set error:', fsErr);
+      await fetch(`${API_BASE}/estores`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newStore),
+      });
+    } catch {
+      // Standalone
     }
 
     // Update cache
@@ -2795,10 +3036,24 @@ For quick inquiries, call or send a message via WhatsApp!`;
   },
 
   async updateEStore(id: string, data: Partial<EStore>): Promise<EStore> {
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await setDoc(doc(db, 'estores', id), sanitizeForFirestore(data), { merge: true });
+      } catch (fsErr) {
+        if (!recordFirestoreError(fsErr)) {
+          console.warn('[EStores] Firestore update error:', fsErr);
+        }
+      }
+    }
+
     try {
-      await setDoc(doc(db, 'estores', id), sanitizeForFirestore(data), { merge: true });
-    } catch (fsErr) {
-      console.warn('[EStores] Firestore update error:', fsErr);
+      await fetch(`${API_BASE}/estores/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+    } catch {
+      // Standalone
     }
 
     try {
@@ -2815,10 +3070,20 @@ For quick inquiries, call or send a message via WhatsApp!`;
   },
 
   async deleteEStore(id: string): Promise<{ success: boolean }> {
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await deleteDoc(doc(db, 'estores', id));
+      } catch (fsErr) {
+        if (!recordFirestoreError(fsErr)) {
+          console.warn('[EStores] Firestore delete error:', fsErr);
+        }
+      }
+    }
+
     try {
-      await deleteDoc(doc(db, 'estores', id));
-    } catch (fsErr) {
-      console.warn('[EStores] Firestore delete error:', fsErr);
+      await fetch(`${API_BASE}/estores/${id}`, { method: 'DELETE' });
+    } catch {
+      // Standalone
     }
 
     try {

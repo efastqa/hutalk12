@@ -87,6 +87,45 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
   onApproveListing,
   onRecordAction,
 }) => {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [isVideoActive, setIsVideoActive] = useState(false);
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const [isFacebookFlyerOpen, setIsFacebookFlyerOpen] = useState(false);
+  const [isDownloadingPhoto, setIsDownloadingPhoto] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [currentAvailability, setCurrentAvailability] = useState<'available' | 'reserved' | 'sold'>(
+    listing?.availabilityStatus || 'available'
+  );
+  const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
+  const [currentRating, setCurrentRating] = useState<number | undefined>(listing?.sellerRating);
+  const [currentReviewCount, setCurrentReviewCount] = useState<number | undefined>(listing?.reviewCount);
+
+  // Holiday Home Check-In / Check-Out Inquiry State
+  const todayStr = new Date().toISOString().split('T')[0];
+  const getFutureDateStr = (daysAhead: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + daysAhead);
+    return d.toISOString().split('T')[0];
+  };
+  const [checkInDate, setCheckInDate] = useState<string>(() => getFutureDateStr(1));
+  const [checkOutDate, setCheckOutDate] = useState<string>(() => getFutureDateStr(3));
+  const [stayGuests, setStayGuests] = useState<number>(2);
+
+  useEffect(() => {
+    setActiveIdx(0);
+    // If ad only has video or primary media is video, activate video mode
+    setIsVideoActive(Boolean(listing?.videoUrl && (!listing.images || listing.images.length === 0)));
+    setIsZoomOpen(false);
+    setIsFacebookFlyerOpen(false);
+    setIsReportModalOpen(false);
+    setCurrentAvailability(listing?.availabilityStatus || 'available');
+    setCurrentRating(listing?.sellerRating);
+    setCurrentReviewCount(listing?.reviewCount);
+    setCheckInDate(getFutureDateStr(1));
+    setCheckOutDate(getFutureDateStr(3));
+    setStayGuests(2);
+  }, [listing?.id]);
+
   if (!listing) return null;
 
   // Normalize phone for comparison
@@ -114,45 +153,6 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
     ))
   );
   const canManage = isOwner || isAdminLoggedIn;
-
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [isVideoActive, setIsVideoActive] = useState(false);
-  const [isZoomOpen, setIsZoomOpen] = useState(false);
-  const [isFacebookFlyerOpen, setIsFacebookFlyerOpen] = useState(false);
-  const [isDownloadingPhoto, setIsDownloadingPhoto] = useState(false);
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [currentAvailability, setCurrentAvailability] = useState<'available' | 'reserved' | 'sold'>(
-    listing.availabilityStatus || 'available'
-  );
-  const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
-  const [currentRating, setCurrentRating] = useState<number | undefined>(listing.sellerRating);
-  const [currentReviewCount, setCurrentReviewCount] = useState<number | undefined>(listing.reviewCount);
-
-  // Holiday Home Check-In / Check-Out Inquiry State
-  const todayStr = new Date().toISOString().split('T')[0];
-  const getFutureDateStr = (daysAhead: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() + daysAhead);
-    return d.toISOString().split('T')[0];
-  };
-  const [checkInDate, setCheckInDate] = useState<string>(() => getFutureDateStr(1));
-  const [checkOutDate, setCheckOutDate] = useState<string>(() => getFutureDateStr(3));
-  const [stayGuests, setStayGuests] = useState<number>(2);
-
-  useEffect(() => {
-    setActiveIdx(0);
-    // If ad only has video or primary media is video, activate video mode
-    setIsVideoActive(Boolean(listing?.videoUrl && (!listing.images || listing.images.length === 0)));
-    setIsZoomOpen(false);
-    setIsFacebookFlyerOpen(false);
-    setIsReportModalOpen(false);
-    setCurrentAvailability(listing?.availabilityStatus || 'available');
-    setCurrentRating(listing?.sellerRating);
-    setCurrentReviewCount(listing?.reviewCount);
-    setCheckInDate(getFutureDateStr(1));
-    setCheckOutDate(getFutureDateStr(3));
-    setStayGuests(2);
-  }, [listing?.id]);
 
   const handleUpdateAvailability = async (newStatus: 'available' | 'reserved' | 'sold') => {
     if (!listing || isUpdatingAvailability) return;

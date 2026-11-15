@@ -34,13 +34,6 @@ export const FacebookFlyerModal: React.FC<FacebookFlyerModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  if (!isOpen || !listing) return null;
-
-  const gallery =
-    listing.images && listing.images.length > 0
-      ? listing.images
-      : [listing.image || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80'];
-
   const [selectedPhotoIdx, setSelectedPhotoIdx] = useState(0);
   const [aspectRatio, setAspectRatio] = useState<'square' | 'landscape'>('square');
   const [theme, setTheme] = useState<'orange' | 'dark' | 'navy'>('orange');
@@ -54,6 +47,14 @@ export const FacebookFlyerModal: React.FC<FacebookFlyerModalProps> = ({
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  if (!isOpen || !listing) return null;
+
+  const gallery =
+    listing.images && listing.images.length > 0
+      ? listing.images
+      : [listing.image || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80'];
+
   const currentPhoto = gallery[selectedPhotoIdx] || gallery[0];
 
   const handleCopyCaption = async () => {

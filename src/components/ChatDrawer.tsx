@@ -53,8 +53,17 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [isGuestSigningIn, setIsGuestSigningIn] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [chatError, setChatError] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const formatChatError = (err: unknown): string => {
+    const raw = err instanceof Error ? err.message : String(err || '');
+    if (raw.toLowerCase().includes('quota') || raw.toLowerCase().includes('resource-exhausted')) {
+      return 'Live chat database quota is temporarily reached for today. Please contact the seller directly via Phone or WhatsApp.';
+    }
+    return 'Could not connect to live chat right now. Please try again or contact the seller via WhatsApp.';
+  };
 
   // Monitor Firebase auth state
   useEffect(() => {
@@ -70,14 +79,16 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       setConversations([]);
       return;
     }
+    setChatError(null);
 
     const unsub = subscribeUserConversations(
       currentUser.uid,
       (convList) => {
+        setChatError(null);
         setConversations(convList);
       },
       (err) => {
-        console.error('Error listening to conversations:', err);
+        setChatError(formatChatError(err));
       }
     );
 
@@ -94,10 +105,13 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       name: currentUser.displayName || currentUser.email || 'Buyer',
     })
       .then((id) => {
-        if (isMounted) setActiveConvId(id);
+        if (isMounted) {
+          setChatError(null);
+          setActiveConvId(id);
+        }
       })
       .catch((err) => {
-        console.error('Could not start conversation:', err);
+        if (isMounted) setChatError(formatChatError(err));
       });
 
     return () => {
@@ -121,7 +135,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         }, 80);
       },
       (err) => {
-        console.error('Error fetching messages:', err);
+        setChatError(formatChatError(err));
       }
     );
 
@@ -135,6 +149,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     if (!text.trim() || !activeConvId || !currentUser || isSending) return;
 
     setIsSending(true);
+    setChatError(null);
     try {
       await sendChatMessage(
         activeConvId,
@@ -146,7 +161,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
       );
       setInputText('');
     } catch (err) {
-      console.error('Failed to send chat message:', err);
+      setChatError(formatChatError(err));
     } finally {
       setIsSending(false);
     }
@@ -234,6 +249,12 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            {chatError && (
+              <div className="mx-4 mt-3 px-3.5 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium">
+                {chatError}
+              </div>
+            )}
 
             {/* Main Content Area */}
             {!currentUser ? (

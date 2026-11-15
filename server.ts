@@ -239,6 +239,64 @@ interface PromoSlidesSettings {
   aspectPreset?: 'compact' | 'standard' | 'wide';
 }
 
+interface EStoreProduct {
+  id: string;
+  storeId: string;
+  name: string;
+  price: number;
+  originalPrice?: number;
+  image: string;
+  productUrl: string;
+  description: string;
+  category: string;
+  inStock: boolean;
+  featured?: boolean;
+}
+
+interface EStore {
+  id: string;
+  storeName: string;
+  tagline: string;
+  description: string;
+  category: string;
+  district: string;
+  websiteUrl: string;
+  whatsapp: string;
+  phone?: string;
+  email?: string;
+  logo: string;
+  bannerImage?: string;
+  rating: number;
+  reviewCount: number;
+  isVerifiedMerchant: boolean;
+  deliveryInfo: string;
+  returnPolicy?: string;
+  foundedYear?: string;
+  ownerId?: string;
+  products: EStoreProduct[];
+  createdAt: string;
+}
+
+interface VideoReelItem {
+  id: string;
+  title: string;
+  videoUrl: string;
+  posterImage?: string;
+  category?: string;
+  price?: number;
+  location?: string;
+  district?: string;
+  sellerName?: string;
+  phone?: string;
+  isVerified?: boolean;
+  specsSummary?: string;
+  listingId?: string;
+  listing?: Listing;
+  isActive?: boolean;
+  createdAt?: string;
+  views?: number;
+}
+
 function resolvePort(): number {
   const portArgIndex = process.argv.indexOf('--port');
   if (portArgIndex !== -1 && process.argv[portArgIndex + 1]) {
@@ -262,6 +320,8 @@ const HERO_ADS_FILE = path.join(DATA_DIR, 'hero-ads.json');
 const PROMO_SLIDES_FILE = path.join(DATA_DIR, 'promo-slides.json');
 const REVIEWS_FILE = path.join(DATA_DIR, 'reviews.json');
 const REPORTS_FILE = path.join(DATA_DIR, 'reports.json');
+const ESTORES_FILE = path.join(DATA_DIR, 'estores.json');
+const VIDEO_REELS_FILE = path.join(DATA_DIR, 'video-reels.json');
 
 interface AdminConfig {
   password?: string;
@@ -433,6 +493,36 @@ function persistUserToFirestore(user: User) {
   const clean = sanitizeForFirestoreServer(user);
   setDoc(doc(firestoreDb, 'users', user.id), clean, { merge: true }).catch((err) => {
     console.warn('[Firestore] persist user error:', err);
+  });
+}
+
+function persistEStoreToFirestore(store: EStore) {
+  if (!firestoreDb) return;
+  const clean = sanitizeForFirestoreServer(store);
+  setDoc(doc(firestoreDb, 'estores', store.id), clean, { merge: true }).catch((err) => {
+    console.warn('[Firestore] persist e-store error:', err);
+  });
+}
+
+function deleteEStoreFromFirestore(id: string) {
+  if (!firestoreDb) return;
+  deleteDoc(doc(firestoreDb, 'estores', id)).catch((err) => {
+    console.warn('[Firestore] delete e-store error:', err);
+  });
+}
+
+function persistVideoReelToFirestore(reel: VideoReelItem) {
+  if (!firestoreDb) return;
+  const clean = sanitizeForFirestoreServer(reel);
+  setDoc(doc(firestoreDb, 'video_reels', reel.id), clean, { merge: true }).catch((err) => {
+    console.warn('[Firestore] persist video reel error:', err);
+  });
+}
+
+function deleteVideoReelFromFirestore(id: string) {
+  if (!firestoreDb) return;
+  deleteDoc(doc(firestoreDb, 'video_reels', id)).catch((err) => {
+    console.warn('[Firestore] delete video reel error:', err);
   });
 }
 
@@ -786,6 +876,48 @@ function saveStoredPromoSlidesData(data: { settings: PromoSlidesSettings; slides
   persistPromoSlidesToFirestore(data);
 }
 
+function getStoredEStores(): EStore[] {
+  try {
+    if (fs.existsSync(ESTORES_FILE)) {
+      const data = fs.readFileSync(ESTORES_FILE, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (err) {
+    console.error('Error reading estores file', err);
+  }
+  return [];
+}
+
+function saveStoredEStores(stores: EStore[]) {
+  try {
+    fs.writeFileSync(ESTORES_FILE, JSON.stringify(stores, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error saving estores file', err);
+  }
+}
+
+function getStoredVideoReels(): VideoReelItem[] {
+  try {
+    if (fs.existsSync(VIDEO_REELS_FILE)) {
+      const data = fs.readFileSync(VIDEO_REELS_FILE, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (err) {
+    console.error('Error reading video reels file', err);
+  }
+  return [];
+}
+
+function saveStoredVideoReels(reels: VideoReelItem[]) {
+  try {
+    fs.writeFileSync(VIDEO_REELS_FILE, JSON.stringify(reels, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error saving video reels file', err);
+  }
+}
+
 let listingsCache = getStoredListings();
 let usersCache = getStoredUsers();
 let eventsCache = getStoredEvents();
@@ -793,6 +925,8 @@ let heroAdsDataCache = getStoredHeroAdsData();
 let promoSlidesDataCache = getStoredPromoSlidesData();
 let reviewsCache = getStoredReviews();
 let reportsCache = getStoredReports();
+let eStoresCache = getStoredEStores();
+let videoReelsCache = getStoredVideoReels();
 
 // Lazy initialize Gemini client
 let genAIClient: GoogleGenAI | null = null;
@@ -3373,6 +3507,172 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
     res.send(xml);
   });
 
+  // -------------------------------------------------------------
+  // Sri Lanka E-Stores & Video Reels API (Server Cache + Firestore Sync)
+  // -------------------------------------------------------------
+
+  app.get('/api/estores', (req, res) => {
+    const sorted = [...eStoresCache].sort(
+      (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    );
+    res.json(sorted);
+  });
+
+  app.get('/api/estores/:id', (req, res) => {
+    const store = eStoresCache.find((s) => s.id === req.params.id);
+    if (!store) {
+      return res.status(404).json({ error: 'E-Store not found' });
+    }
+    res.json(store);
+  });
+
+  app.post('/api/estores', (req, res) => {
+    const data = req.body || {};
+    const id = data.id || `estore_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const newStore: EStore = {
+      id,
+      storeName: String(data.storeName || 'My Sri Lanka Online Store').trim(),
+      tagline: String(data.tagline || 'Authentic Sri Lankan products & online shopping').trim(),
+      description: String(data.description || '').trim(),
+      category: data.category || 'Fashion & Apparel',
+      district: data.district || 'Colombo',
+      websiteUrl: data.websiteUrl ? String(data.websiteUrl).trim() : 'https://huta.lk',
+      whatsapp: data.whatsapp ? String(data.whatsapp).trim() : '0775260765',
+      phone: data.phone ? String(data.phone).trim() : '',
+      email: data.email ? String(data.email).trim() : '',
+      logo: data.logo || 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=400&q=80',
+      bannerImage: data.bannerImage || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80',
+      rating: typeof data.rating === 'number' ? data.rating : 5.0,
+      reviewCount: typeof data.reviewCount === 'number' ? data.reviewCount : 1,
+      isVerifiedMerchant: data.isVerifiedMerchant !== undefined ? Boolean(data.isVerifiedMerchant) : true,
+      deliveryInfo: data.deliveryInfo || 'Islandwide Cash on Delivery (COD) Available • Fast 2-3 Days Delivery',
+      returnPolicy: data.returnPolicy || '7-Day Easy Exchange & Return Policy',
+      foundedYear: data.foundedYear || new Date().getFullYear().toString(),
+      ownerId: data.ownerId || '',
+      products: Array.isArray(data.products) ? data.products : [],
+      createdAt: data.createdAt || new Date().toISOString(),
+    };
+
+    const existingIdx = eStoresCache.findIndex((s) => s.id === id);
+    if (existingIdx !== -1) {
+      eStoresCache[existingIdx] = newStore;
+    } else {
+      eStoresCache.unshift(newStore);
+    }
+    saveStoredEStores(eStoresCache);
+    persistEStoreToFirestore(newStore);
+    res.status(201).json(newStore);
+  });
+
+  app.put('/api/estores/:id', (req, res) => {
+    const idx = eStoresCache.findIndex((s) => s.id === req.params.id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'E-Store not found' });
+    }
+    const updated: EStore = {
+      ...eStoresCache[idx],
+      ...req.body,
+      id: req.params.id,
+      products: Array.isArray(req.body?.products) ? req.body.products : eStoresCache[idx].products,
+    };
+    eStoresCache[idx] = updated;
+    saveStoredEStores(eStoresCache);
+    persistEStoreToFirestore(updated);
+    res.json(updated);
+  });
+
+  app.delete('/api/estores/:id', (req, res) => {
+    const idx = eStoresCache.findIndex((s) => s.id === req.params.id);
+    if (idx !== -1) {
+      eStoresCache.splice(idx, 1);
+      saveStoredEStores(eStoresCache);
+    }
+    deleteEStoreFromFirestore(req.params.id);
+    res.json({ success: true });
+  });
+
+  app.get('/api/video-reels', (req, res) => {
+    const sorted = [...videoReelsCache].sort(
+      (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    );
+    res.json(sorted);
+  });
+
+  app.post('/api/video-reels', (req, res) => {
+    const data = req.body || {};
+    const id = data.id || `reel_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const newReel: VideoReelItem = {
+      id,
+      title: data.title ? String(data.title).trim() : 'Video Story',
+      videoUrl: data.videoUrl || '',
+      posterImage: data.posterImage || '',
+      category: data.category || 'General',
+      price: typeof data.price === 'number' ? data.price : Number(data.price) || 0,
+      location: data.location || 'Colombo',
+      district: data.district || 'Colombo',
+      sellerName: data.sellerName || 'HUTA Seller',
+      phone: data.phone || '',
+      isVerified: Boolean(data.isVerified),
+      specsSummary: data.specsSummary || (data.category ? `${data.category} • ${data.location || 'Sri Lanka'}` : ''),
+      isActive: data.isActive !== undefined ? Boolean(data.isActive) : true,
+      createdAt: data.createdAt || new Date().toISOString(),
+      views: typeof data.views === 'number' ? data.views : 0,
+      listingId: data.listingId,
+    };
+
+    const existingIdx = videoReelsCache.findIndex((r) => r.id === id);
+    if (existingIdx !== -1) {
+      videoReelsCache[existingIdx] = newReel;
+    } else {
+      videoReelsCache.unshift(newReel);
+    }
+    saveStoredVideoReels(videoReelsCache);
+    persistVideoReelToFirestore(newReel);
+    res.status(201).json(newReel);
+  });
+
+  app.put('/api/video-reels/:id', (req, res) => {
+    const idx = videoReelsCache.findIndex((r) => r.id === req.params.id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'Video reel not found' });
+    }
+    const updated: VideoReelItem = {
+      ...videoReelsCache[idx],
+      ...req.body,
+      id: req.params.id,
+    };
+    videoReelsCache[idx] = updated;
+    saveStoredVideoReels(videoReelsCache);
+    persistVideoReelToFirestore(updated);
+    res.json(updated);
+  });
+
+  app.put('/api/video-reels/:id/toggle', (req, res) => {
+    const idx = videoReelsCache.findIndex((r) => r.id === req.params.id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'Video reel not found' });
+    }
+    const current = videoReelsCache[idx];
+    const updated: VideoReelItem = {
+      ...current,
+      isActive: current.isActive === false ? true : false,
+    };
+    videoReelsCache[idx] = updated;
+    saveStoredVideoReels(videoReelsCache);
+    persistVideoReelToFirestore(updated);
+    res.json(updated);
+  });
+
+  app.delete('/api/video-reels/:id', (req, res) => {
+    const idx = videoReelsCache.findIndex((r) => r.id === req.params.id);
+    if (idx !== -1) {
+      videoReelsCache.splice(idx, 1);
+      saveStoredVideoReels(videoReelsCache);
+    }
+    deleteVideoReelFromFirestore(req.params.id);
+    res.json({ success: true });
+  });
+
   // Catch-all for undefined API routes
   app.all('/api/*', (req, res) => {
     res.status(404).json({ error: 'API endpoint not found' });
@@ -3422,9 +3722,14 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
   });
 
   // -------------------------------------------------------------
-  // Sync with Cloud Firestore in background (non-blocking)
+  // Sync with Cloud Firestore in background (non-blocking & quota-aware)
   // -------------------------------------------------------------
   if (firestoreDb) {
+    const isQuotaExceededError = (err: any): boolean => {
+      const msg = `${err?.code || ''} ${err?.message || String(err)}`.toLowerCase();
+      return msg.includes('resource-exhausted') || msg.includes('quota exceeded') || msg.includes('free daily read');
+    };
+
     (async () => {
       try {
         const snap = await getDocs(collection(firestoreDb, 'listings'));
@@ -3436,6 +3741,10 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
           console.log(`[Firestore] Initialized server cache with ${listingsCache.length} shared listings`);
         }
       } catch (e) {
+        if (isQuotaExceededError(e)) {
+          console.warn('[Firestore] Daily read quota exhausted — skipping remaining background boot scans and serving local cache.');
+          return;
+        }
         console.warn('[Firestore] Initial sync warning:', e);
       }
 
@@ -3453,6 +3762,7 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
           }
         }
       } catch (e) {
+        if (isQuotaExceededError(e)) return;
         console.warn('[Firestore] Initial hero ads sync warning:', e);
       }
 
@@ -3470,6 +3780,7 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
           }
         }
       } catch (e) {
+        if (isQuotaExceededError(e)) return;
         console.warn('[Firestore] Initial promo slides sync warning:', e);
       }
 
@@ -3483,6 +3794,7 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
           console.log(`[Firestore] Initialized server reviews cache with ${reviewsCache.length} customer reviews`);
         }
       } catch (e) {
+        if (isQuotaExceededError(e)) return;
         console.warn('[Firestore] Initial reviews sync warning:', e);
       }
 
@@ -3496,7 +3808,39 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
           console.log(`[Firestore] Initialized server reports cache with ${reportsCache.length} trust reports`);
         }
       } catch (e) {
+        if (isQuotaExceededError(e)) return;
         console.warn('[Firestore] Initial reports sync warning:', e);
+      }
+
+      try {
+        const storeSnap = await getDocs(collection(firestoreDb, 'estores'));
+        if (!storeSnap.empty) {
+          const remoteStores: EStore[] = [];
+          storeSnap.forEach((d) => {
+            const item = d.data() as EStore;
+            remoteStores.push({ ...item, id: d.id, products: Array.isArray(item.products) ? item.products : [] });
+          });
+          eStoresCache = remoteStores;
+          saveStoredEStores(eStoresCache);
+          console.log(`[Firestore] Initialized server estores cache with ${eStoresCache.length} stores`);
+        }
+      } catch (e) {
+        if (isQuotaExceededError(e)) return;
+        console.warn('[Firestore] Initial estores sync warning:', e);
+      }
+
+      try {
+        const reelSnap = await getDocs(collection(firestoreDb, 'video_reels'));
+        if (!reelSnap.empty) {
+          const remoteReels: VideoReelItem[] = [];
+          reelSnap.forEach((d) => remoteReels.push(d.data() as VideoReelItem));
+          videoReelsCache = remoteReels;
+          saveStoredVideoReels(videoReelsCache);
+          console.log(`[Firestore] Initialized server video reels cache with ${videoReelsCache.length} reels`);
+        }
+      } catch (e) {
+        if (isQuotaExceededError(e)) return;
+        console.warn('[Firestore] Initial video reels sync warning:', e);
       }
 
       try {
@@ -3519,6 +3863,7 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
           console.log(`[Firestore] Seeded initial ${usersCache.length} users to Firestore`);
         }
       } catch (e) {
+        if (isQuotaExceededError(e)) return;
         console.warn('[Firestore] Initial users sync warning:', e);
       }
     })().catch((err) => {
