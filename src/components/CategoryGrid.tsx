@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { LayoutGrid, Sparkles, RotateCcw, ShieldCheck, ArrowRight, Flame } from 'lucide-react';
+import { RotateCcw, ArrowRight, Flame } from 'lucide-react';
 import { Listing, HotNewsArticle } from '../types';
 import { DualToneHeading } from './DualToneHeading';
 import holidayHomesImg from '../assets/images/holiday_homes_category_1794527575851.jpg';
@@ -18,9 +18,6 @@ export interface CategoryGridProps {
   onSelectCategory: (category: string, query?: string) => void;
   listings: Listing[];
   onViewAllCategories?: () => void;
-  verifiedOnly?: boolean;
-  onToggleVerifiedOnly?: () => void;
-  onSelectSearchTerm?: (query: string) => void;
   hotNewsArticles?: HotNewsArticle[];
   isLoadingHotNews?: boolean;
   onOpenHotNews?: () => void;
@@ -161,43 +158,11 @@ export const CATEGORIES_ITEMS: CategoryItem[] = [
   },
 ];
 
-// Trending chips matching the top bar of the attached design
-const TRENDING_CHIPS = [
-  { label: 'Cars', category: 'Vehicles', query: 'car' },
-  { label: 'Cars for Rent', category: 'Cars for Rent', query: '' },
-  { label: 'Auto Parts', category: 'Auto Parts', query: '' },
-  { label: 'Boardings & Annexes', category: 'Boardings & Annexes', query: '' },
-  { label: 'Mobile Phones', category: 'Phones', query: 'phone' },
-  { label: 'Houses & Lands', category: 'Property', query: 'house' },
-  { label: 'Holiday Homes', category: 'Holiday Homes', query: '' },
-  { label: 'Agriculture & Tea', category: 'Agriculture & Farming', query: '' },
-  { label: 'Weddings & Bridal', category: 'Weddings & Events', query: '' },
-  { label: 'A/L Tuition', category: 'Education & Tuition', query: '' },
-  { label: 'Pets & Aquarium', category: 'Pets & Animals', query: '' },
-  { label: 'AC Services', category: 'Services', query: 'ac' },
-  { label: 'Jobs', category: 'Jobs', query: 'job' },
-  { label: 'Ceylon Gems', category: 'Luxury', query: 'gem' },
-];
-
-const POPULAR_SEARCHES = [
-  'Toyota Land Cruiser',
-  'iPhone 16 Pro',
-  'Colombo Apartment',
-  'Honda Vezel',
-  'Land in Kandy',
-  'Driver Wanted',
-  'MacBook',
-  'Living Room Sofa',
-];
-
 export const CategoryGrid: React.FC<CategoryGridProps> = ({
   currentCategory,
   onSelectCategory,
   listings,
   onViewAllCategories,
-  verifiedOnly = false,
-  onToggleVerifiedOnly,
-  onSelectSearchTerm,
   hotNewsArticles = [],
   isLoadingHotNews = false,
   onOpenHotNews,
@@ -304,6 +269,89 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
       ) {
         map['Cars for Rent'] = (map['Cars for Rent'] || 0) + 1;
       }
+      // Auto Parts
+      if (
+        cat.includes('auto part') ||
+        cat.includes('spare part') ||
+        title.includes('alloy wheel') ||
+        title.includes('tyre') ||
+        title.includes('tire') ||
+        title.includes('dashcam') ||
+        title.includes('car battery') ||
+        title.includes('headlight') ||
+        title.includes('body kit') ||
+        title.includes('spare part')
+      ) {
+        map['Auto Parts'] = (map['Auto Parts'] || 0) + 1;
+      }
+      // Boardings & Annexes
+      if (
+        cat.includes('boarding') ||
+        cat.includes('annex') ||
+        title.includes('boarding') ||
+        title.includes('annex') ||
+        title.includes('hostel') ||
+        title.includes('shared room') ||
+        desc.includes('boarding') ||
+        desc.includes('annex')
+      ) {
+        map['Boardings & Annexes'] = (map['Boardings & Annexes'] || 0) + 1;
+      }
+      // Agriculture & Farming
+      if (
+        cat.includes('agriculture') ||
+        cat.includes('farming') ||
+        title.includes('tractor') ||
+        title.includes('tea estate') ||
+        title.includes('coconut') ||
+        title.includes('paddy') ||
+        title.includes('spice') ||
+        title.includes('nursery') ||
+        title.includes('fertilizer')
+      ) {
+        map['Agriculture & Farming'] = (map['Agriculture & Farming'] || 0) + 1;
+      }
+      // Weddings & Events
+      if (
+        cat.includes('wedding') ||
+        cat.includes('event') ||
+        title.includes('wedding') ||
+        title.includes('bridal') ||
+        title.includes('kandyan') ||
+        title.includes('poruwa') ||
+        title.includes('photography') ||
+        title.includes('catering') ||
+        title.includes('dj')
+      ) {
+        map['Weddings & Events'] = (map['Weddings & Events'] || 0) + 1;
+      }
+      // Education & Tuition
+      if (
+        cat.includes('education') ||
+        cat.includes('tuition') ||
+        title.includes('tuition') ||
+        title.includes('a/l') ||
+        title.includes('o/l') ||
+        title.includes('ielts') ||
+        title.includes('spoken english') ||
+        title.includes('textbook')
+      ) {
+        map['Education & Tuition'] = (map['Education & Tuition'] || 0) + 1;
+      }
+      // Pets & Animals
+      if (
+        cat.includes('pet') ||
+        cat.includes('animal') ||
+        cat.includes('aquarium') ||
+        title.includes('puppy') ||
+        title.includes('kitten') ||
+        title.includes('aquarium') ||
+        title.includes('bird cage') ||
+        title.includes('labrador') ||
+        title.includes('persian cat')
+      ) {
+        map['Pets & Animals'] = (map['Pets & Animals'] || 0) + 1;
+      }
     });
 
     return map;
@@ -311,30 +359,6 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
 
   const handleCategoryClick = (cat: CategoryItem) => {
     onSelectCategory(cat.targetCategory || cat.key, cat.searchQuery);
-    setTimeout(() => {
-      const el = document.getElementById('marketplace-listings');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 40);
-  };
-
-  const handleTrendingClick = (chip: typeof TRENDING_CHIPS[number]) => {
-    onSelectCategory(chip.category, chip.query);
-    setTimeout(() => {
-      const el = document.getElementById('marketplace-listings');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 40);
-  };
-
-  const handlePopularClick = (query: string) => {
-    if (onSelectSearchTerm) {
-      onSelectSearchTerm(query);
-    } else {
-      onSelectCategory('All', query);
-    }
     setTimeout(() => {
       const el = document.getElementById('marketplace-listings');
       if (el) {
@@ -367,6 +391,20 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
           subtitle="Everything Sri Lanka needs to buy, sell, and discover — all in one place."
           id="categories-dual-tone-heading"
         />
+
+        {onViewAllCategories && (
+          <div className="mt-2 flex items-center justify-center">
+            <button
+              type="button"
+              id="view-all-categories-banner-btn"
+              onClick={onViewAllCategories}
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#FF5A36] hover:text-[#E04826] transition-colors cursor-pointer group"
+            >
+              <span>Browse All Categories & Services</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        )}
 
         {isAnyCategoryActive && (
           <div className="mt-2.5 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-50/90 dark:bg-orange-950/60 border border-[#FF5A36]/40 backdrop-blur-xs text-xs text-[#FF5A36] font-bold shadow-xs">
@@ -537,76 +575,6 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
             </button>
           </div>
         )}
-      </div>
-
-      {/* 4. Explore All Categories & Directory Button */}
-      {onViewAllCategories && (
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <button
-            type="button"
-            id="view-all-categories-banner-btn"
-            onClick={onViewAllCategories}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white dark:bg-[#151822] hover:bg-gray-50 dark:hover:bg-[#1E2230] text-[#0A2540] dark:text-white hover:text-[#FF5A36] dark:hover:text-[#FF5A36] text-xs sm:text-sm font-bold border border-gray-200 dark:border-[#252836] shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
-          >
-            <LayoutGrid className="w-4 h-4 text-[#FF5A36] group-hover:scale-110 transition-transform" />
-            <span>Explore All Categories & Professional Services Directory</span>
-            <span className="text-[#FF5A36] font-extrabold ml-1">→</span>
-          </button>
-        </div>
-      )}
-
-      {/* 5. Below Explore Categories: Verified Sellers Only, Popular Searches & Trending Bar */}
-      <div className="mt-6 space-y-3.5">
-        {/* Verified Sellers Only + Popular Searches */}
-        <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
-          {onToggleVerifiedOnly && (
-            <button
-              type="button"
-              onClick={onToggleVerifiedOnly}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border shrink-0 shadow-2xs ${
-                verifiedOnly
-                  ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                  : 'bg-white dark:bg-[#151822] text-gray-800 dark:text-gray-200 border-gray-200 dark:border-white/10 hover:border-purple-400'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Verified Sellers Only</span>
-            </button>
-          )}
-
-          <span className="text-gray-500 dark:text-gray-400 font-semibold ml-1">Popular:</span>
-          {POPULAR_SEARCHES.map((query) => (
-            <button
-              key={query}
-              type="button"
-              onClick={() => handlePopularClick(query)}
-              className="bg-white dark:bg-[#181920] hover:bg-gray-100 dark:hover:bg-[#22242F] hover:text-[#FF5A36] dark:hover:text-[#FF5A36] text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full border border-gray-200 dark:border-[#2D2F39] transition-all cursor-pointer shadow-2xs"
-            >
-              {query}
-            </button>
-          ))}
-        </div>
-
-        {/* TRENDING Bar */}
-        <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none select-none">
-          <span className="text-[11px] sm:text-xs font-black tracking-wider text-gray-500 dark:text-gray-400 uppercase shrink-0 flex items-center gap-1.5 mr-1">
-            <Sparkles className="w-3.5 h-3.5 text-[#FF5A36]" />
-            <span>TRENDING:</span>
-          </span>
-
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
-            {TRENDING_CHIPS.map((chip) => (
-              <button
-                key={chip.label}
-                type="button"
-                onClick={() => handleTrendingClick(chip)}
-                className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/90 dark:bg-[#151822]/90 backdrop-blur-sm text-gray-700 dark:text-gray-300 border border-gray-200/80 dark:border-white/10 hover:border-[#FF5A36] dark:hover:border-[#FF5A36] hover:text-[#FF5A36] dark:hover:text-[#FF5A36] hover:bg-orange-50/50 dark:hover:bg-orange-950/20 transition-all whitespace-nowrap shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer"
-              >
-                {chip.label}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   );

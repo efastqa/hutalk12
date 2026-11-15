@@ -1262,20 +1262,17 @@ export default function App() {
               onSelectCategory={(category, query) => handleSelectCategory(category, query, true)}
               listings={listings}
               onViewAllCategories={() => setCurrentTab('categories')}
-              verifiedOnly={verifiedOnly}
-              onToggleVerifiedOnly={() => setVerifiedOnly((prev) => !prev)}
-              onSelectSearchTerm={setSearchTerm}
               hotNewsArticles={hotNewsArticles}
               isLoadingHotNews={isLoadingHotNews}
               onOpenHotNews={() => setCurrentTab('hot_news')}
             />
 
             {/* Popular Districts Bar - Right above listings for fast local filtering */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2">
-              <div className="bg-white/90 dark:bg-[#151822]/90 backdrop-blur-xl border border-gray-200/80 dark:border-white/10 rounded-2xl p-3 shadow-md dark:shadow-[0_8px_24px_rgba(0,0,0,0.35)] flex items-center gap-2 overflow-x-auto scrollbar-none text-xs transition-colors">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-1 pb-1">
+              <div className="bg-white/90 dark:bg-[#151822]/90 backdrop-blur-xl border border-gray-200/80 dark:border-white/10 rounded-2xl p-2.5 sm:p-3 shadow-sm dark:shadow-[0_8px_24px_rgba(0,0,0,0.35)] flex items-center gap-2 overflow-x-auto scrollbar-none text-xs transition-colors">
                 <span className="flex items-center gap-1.5 text-gray-800 dark:text-gray-200 font-black whitespace-nowrap shrink-0 px-2">
                   <MapPin className="w-3.5 h-3.5 text-[#FF5A36]" />
-                  <span>Popular Districts:</span>
+                  <span>Districts:</span>
                 </span>
                 {[
                   'All Sri Lanka',
@@ -1306,25 +1303,6 @@ export default function App() {
                     </button>
                   );
                 })}
-
-                {/* Direct Map View Toggle Button */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setListingsViewMode('map');
-                    const el = document.getElementById('marketplace-listings');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className={`px-3 py-1.5 rounded-xl whitespace-nowrap font-bold transition-all cursor-pointer flex items-center gap-1.5 ml-auto shrink-0 shadow-2xs ${
-                    listingsViewMode === 'map'
-                      ? 'bg-gradient-to-r from-[#FF5A36] to-[#FF7A59] text-white shadow-xs'
-                      : 'bg-orange-50/80 dark:bg-orange-950/40 text-[#FF5A36] hover:bg-orange-100 dark:hover:bg-orange-900/40 border border-orange-200 dark:border-orange-500/30'
-                  }`}
-                  title="Explore all listings on interactive map"
-                >
-                  <Compass className="w-3.5 h-3.5" />
-                  <span>Map & Near Me</span>
-                </button>
               </div>
             </div>
 

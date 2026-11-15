@@ -37,6 +37,11 @@ import {
   Waves,
   Wifi,
   Sun,
+  BedDouble,
+  Sprout,
+  GraduationCap,
+  PawPrint,
+  HeartHandshake,
 } from 'lucide-react';
 
 interface ListingsSectionProps {
@@ -146,6 +151,16 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
   const [serviceModeFilter, setServiceModeFilter] = useState<string>('all');
   const [emergencyOnlyFilter, setEmergencyOnlyFilter] = useState<boolean>(false);
 
+  // Filters for 6 new Sri Lanka marketplace categories
+  const [boardingAudienceFilter, setBoardingAudienceFilter] = useState<string>('all');
+  const [boardingFeatureFilter, setBoardingFeatureFilter] = useState<string>('all');
+  const [autoPartTypeFilter, setAutoPartTypeFilter] = useState<string>('all');
+  const [autoPartConditionFilter, setAutoPartConditionFilter] = useState<string>('all');
+  const [agricultureTypeFilter, setAgricultureTypeFilter] = useState<string>('all');
+  const [weddingServiceFilter, setWeddingServiceFilter] = useState<string>('all');
+  const [educationLevelFilter, setEducationLevelFilter] = useState<string>('all');
+  const [petCategoryFilter, setPetCategoryFilter] = useState<string>('all');
+
   const INITIAL_VISIBLE_COUNT = 18;
   const [visibleCount, setVisibleCount] = useState<number>(INITIAL_VISIBLE_COUNT);
 
@@ -165,6 +180,14 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     setServiceTradeFilter('all');
     setServiceModeFilter('all');
     setEmergencyOnlyFilter(false);
+    setBoardingAudienceFilter('all');
+    setBoardingFeatureFilter('all');
+    setAutoPartTypeFilter('all');
+    setAutoPartConditionFilter('all');
+    setAgricultureTypeFilter('all');
+    setWeddingServiceFilter('all');
+    setEducationLevelFilter('all');
+    setPetCategoryFilter('all');
     setVisibleCount(INITIAL_VISIBLE_COUNT);
   }, [currentCategory]);
 
@@ -188,7 +211,15 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
       jobTypeFilter !== 'all' ||
       serviceTradeFilter !== 'all' ||
       serviceModeFilter !== 'all' ||
-      emergencyOnlyFilter
+      emergencyOnlyFilter ||
+      boardingAudienceFilter !== 'all' ||
+      boardingFeatureFilter !== 'all' ||
+      autoPartTypeFilter !== 'all' ||
+      autoPartConditionFilter !== 'all' ||
+      agricultureTypeFilter !== 'all' ||
+      weddingServiceFilter !== 'all' ||
+      educationLevelFilter !== 'all' ||
+      petCategoryFilter !== 'all'
     );
   }, [
     fuelFilter,
@@ -205,6 +236,14 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     serviceTradeFilter,
     serviceModeFilter,
     emergencyOnlyFilter,
+    boardingAudienceFilter,
+    boardingFeatureFilter,
+    autoPartTypeFilter,
+    autoPartConditionFilter,
+    agricultureTypeFilter,
+    weddingServiceFilter,
+    educationLevelFilter,
+    petCategoryFilter,
   ]);
 
   const resetCategoryFilters = () => {
@@ -222,6 +261,14 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     setServiceTradeFilter('all');
     setServiceModeFilter('all');
     setEmergencyOnlyFilter(false);
+    setBoardingAudienceFilter('all');
+    setBoardingFeatureFilter('all');
+    setAutoPartTypeFilter('all');
+    setAutoPartConditionFilter('all');
+    setAgricultureTypeFilter('all');
+    setWeddingServiceFilter('all');
+    setEducationLevelFilter('all');
+    setPetCategoryFilter('all');
   };
 
   const displayListings = useMemo(() => {
@@ -298,6 +345,73 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
         return false;
       }
 
+      // Boardings & Annexes
+      if (boardingAudienceFilter !== 'all') {
+        const bHay = `${item.title || ''} ${item.description || ''} ${item.propertyType || ''}`.toLowerCase();
+        if (boardingAudienceFilter === 'boys' && !/(boy|gent|male|men|bachelor)/.test(bHay)) return false;
+        if (boardingAudienceFilter === 'girls' && !/(girl|ladi|female|women|working girl)/.test(bHay)) return false;
+        if (boardingAudienceFilter === 'family' && !/(family|couple|married)/.test(bHay)) return false;
+        if (boardingAudienceFilter === 'annex' && !/(annex|separate|studio|house)/.test(bHay)) return false;
+      }
+      if (boardingFeatureFilter !== 'all') {
+        const bfHay = `${item.title || ''} ${item.description || ''} ${(item.amenities || []).join(' ')}`.toLowerCase();
+        if (!bfHay.includes(boardingFeatureFilter.toLowerCase())) return false;
+      }
+
+      // Auto Parts
+      if (autoPartTypeFilter !== 'all') {
+        const apHay = `${item.title || ''} ${item.description || ''}`.toLowerCase();
+        if (autoPartTypeFilter === 'wheels' && !/(alloy|wheel|rim|tyre|tire)/.test(apHay)) return false;
+        if (autoPartTypeFilter === 'body' && !/(headlight|lamp|bumper|mirror|body kit|spoiler|grille)/.test(apHay)) return false;
+        if (autoPartTypeFilter === 'engine' && !/(engine|battery|hybrid|abs|brake|filter|plug|radiator|suspension)/.test(apHay)) return false;
+        if (autoPartTypeFilter === 'audio' && !/(dashcam|android|player|subwoofer|speaker|reverse camera|gps)/.test(apHay)) return false;
+      }
+      if (autoPartConditionFilter !== 'all') {
+        const condHay = `${item.itemCondition || ''} ${item.title || ''} ${item.description || ''}`.toLowerCase();
+        if (autoPartConditionFilter === 'reconditioned' && !/(recond|japan|imported|used|original)/.test(condHay)) return false;
+        if (autoPartConditionFilter === 'brand new' && !/(brand new|new|sealed)/.test(condHay)) return false;
+        if (autoPartConditionFilter === 'used' && !/(used|second|original)/.test(condHay)) return false;
+      }
+
+      // Agriculture & Farming
+      if (agricultureTypeFilter !== 'all') {
+        const agHay = `${item.title || ''} ${item.description || ''}`.toLowerCase();
+        if (agricultureTypeFilter === 'machinery' && !/(tractor|harvester|pump|mower|machine|sprayer)/.test(agHay)) return false;
+        if (agricultureTypeFilter === 'estate' && !/(tea|coconut|paddy|rubber|land|estate|acre)/.test(agHay)) return false;
+        if (agricultureTypeFilter === 'produce' && !/(spice|cinnamon|pepper|rice|harvest|vegetable|fruit|seed)/.test(agHay)) return false;
+        if (agricultureTypeFilter === 'nursery' && !/(plant|nursery|fertilizer|compost|pot|grafted)/.test(agHay)) return false;
+      }
+
+      // Weddings & Events
+      if (weddingServiceFilter !== 'all') {
+        const wHay = `${item.title || ''} ${item.description || ''}`.toLowerCase();
+        if (weddingServiceFilter === 'bridal' && !/(bridal|kandyan|nilame|saree|dress|makeup|salon)/.test(wHay)) return false;
+        if (weddingServiceFilter === 'photo' && !/(photo|video|album|drone|cinemat|shoot)/.test(wHay)) return false;
+        if (weddingServiceFilter === 'decor' && !/(poruwa|decor|flower|floral|stage|marquee|tent)/.test(wHay)) return false;
+        if (weddingServiceFilter === 'catering' && !/(cater|cake|menu|food|buffet|sweet)/.test(wHay)) return false;
+        if (weddingServiceFilter === 'music' && !/(dj|band|music|sound|light|ashtaka)/.test(wHay)) return false;
+      }
+
+      // Education & Tuition
+      if (educationLevelFilter !== 'all') {
+        const eHay = `${item.title || ''} ${item.description || ''}`.toLowerCase();
+        if (educationLevelFilter === 'al' && !/(a\/l|a-level|advanced level|combined math|physics|chemistry|bio|commerce)/.test(eHay)) return false;
+        if (educationLevelFilter === 'ol' && !/(o\/l|o-level|ordinary level|grade )/.test(eHay)) return false;
+        if (educationLevelFilter === 'english' && !/(ielts|english|spoken|pte|toefl|language|korean|japanese)/.test(eHay)) return false;
+        if (educationLevelFilter === 'it' && !/(it|coding|python|web|degree|diploma|university|accounting|cima)/.test(eHay)) return false;
+        if (educationLevelFilter === 'online' && !/(online|zoom|home visit|individual)/.test(eHay)) return false;
+      }
+
+      // Pets & Animals
+      if (petCategoryFilter !== 'all') {
+        const pHay = `${item.title || ''} ${item.description || ''}`.toLowerCase();
+        if (petCategoryFilter === 'dogs' && !/(dog|puppy|puppies|labrador|rottweiler|german shepherd|pomeranian|retriever)/.test(pHay)) return false;
+        if (petCategoryFilter === 'cats' && !/(cat|kitten|persian|siamese)/.test(pHay)) return false;
+        if (petCategoryFilter === 'fish' && !/(fish|aquarium|tank|koi|arowana|guppy|betta)/.test(pHay)) return false;
+        if (petCategoryFilter === 'birds' && !/(bird|parrot|lovebird|cockatiel|macaw|pigeon)/.test(pHay)) return false;
+        if (petCategoryFilter === 'supplies' && !/(food|cage|leash|collar|kennel|accessory|accessories)/.test(pHay)) return false;
+      }
+
       return true;
     });
   }, [
@@ -316,6 +430,14 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     serviceTradeFilter,
     serviceModeFilter,
     emergencyOnlyFilter,
+    boardingAudienceFilter,
+    boardingFeatureFilter,
+    autoPartTypeFilter,
+    autoPartConditionFilter,
+    agricultureTypeFilter,
+    weddingServiceFilter,
+    educationLevelFilter,
+    petCategoryFilter,
   ]);
 
   const handleSwitchView = (mode: 'grid' | 'map') => {
@@ -334,7 +456,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
   };
 
   return (
-    <section id="marketplace-listings" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 scroll-mt-20">
+    <section id="marketplace-listings" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8 scroll-mt-20">
       {/* Smart Active Filters Bar with Results Counter & Dismissible Chips */}
       <ActiveFiltersBar
         totalCount={displayListings.length}
@@ -353,22 +475,22 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
         hasActiveFilters={hasActiveFilters}
       />
 
-      {/* Qatar Living style Category Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-3 mb-5 scrollbar-none border-b border-gray-200 dark:border-[#2D303E]">
+      {/* Streamlined Segmented Category Strip */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 mb-4 scrollbar-none border-b border-gray-200/80 dark:border-[#2D303E]">
         {[
           { id: 'All', label: 'All Ads' },
           { id: 'Vehicles', label: 'Vehicles' },
-          { id: 'Auto Parts', label: 'Auto Parts', isNew: true },
-          { id: 'Cars for Rent', label: 'Cars for Rent', isNew: true },
+          { id: 'Auto Parts', label: 'Auto Parts' },
+          { id: 'Cars for Rent', label: 'Cars for Rent' },
           { id: 'Motorcycles', label: 'Motorcycles' },
           { id: 'Property', label: 'Properties' },
-          { id: 'Boardings & Annexes', label: 'Boardings & Annexes', isNew: true },
-          { id: 'Holiday Homes', label: 'Holiday Homes', isNew: true },
+          { id: 'Boardings & Annexes', label: 'Boardings & Annexes' },
+          { id: 'Holiday Homes', label: 'Holiday Homes' },
           { id: 'Electronics', label: 'Electronics' },
-          { id: 'Agriculture & Farming', label: 'Agriculture', isNew: true },
-          { id: 'Weddings & Events', label: 'Weddings', isNew: true },
-          { id: 'Education & Tuition', label: 'Education', isNew: true },
-          { id: 'Pets & Animals', label: 'Pets & Aquarium', isNew: true },
+          { id: 'Agriculture & Farming', label: 'Agriculture' },
+          { id: 'Weddings & Events', label: 'Weddings' },
+          { id: 'Education & Tuition', label: 'Education' },
+          { id: 'Pets & Animals', label: 'Pets & Aquarium' },
           { id: 'Home & Garden', label: 'Home & Garden' },
           { id: 'Jobs', label: 'Jobs' },
           { id: 'Services', label: 'Services' },
@@ -379,22 +501,13 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
               key={cat.id}
               type="button"
               onClick={() => onSelectCategory && onSelectCategory(cat.id)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer inline-flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 isActive
-                  ? 'bg-[#FF5A36] text-white shadow-sm'
-                  : 'bg-white dark:bg-[#151822] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230] border border-gray-200 dark:border-[#2D303E]'
+                  ? 'bg-[#FF5A36] text-white shadow-xs'
+                  : 'bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230] hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              <span>{cat.label}</span>
-              {'isNew' in cat && cat.isNew && (
-                <span
-                  className={`px-1.5 py-0.2 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                    isActive ? 'bg-white text-[#FF5A36]' : 'bg-[#FF5A36] text-white'
-                  }`}
-                >
-                  New
-                </span>
-              )}
+              {cat.label}
             </button>
           );
         })}
@@ -408,7 +521,13 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
         currentCategory === 'Holiday Homes' ||
         currentCategory === 'Electronics' ||
         currentCategory === 'Jobs' ||
-        currentCategory === 'Services') && (
+        currentCategory === 'Services' ||
+        currentCategory === 'Boardings & Annexes' ||
+        currentCategory === 'Auto Parts' ||
+        currentCategory === 'Agriculture & Farming' ||
+        currentCategory === 'Weddings & Events' ||
+        currentCategory === 'Education & Tuition' ||
+        currentCategory === 'Pets & Animals') && (
         <div className="mb-6 p-3.5 bg-gray-50/90 dark:bg-[#151822]/90 rounded-2xl border border-gray-200/90 dark:border-[#252836] space-y-2.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs font-bold text-gray-800 dark:text-white flex items-center gap-1.5">
@@ -810,6 +929,234 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                 </button>
               </>
             )}
+
+            {/* Boardings & Annexes filters */}
+            {currentCategory === 'Boardings & Annexes' && (
+              <>
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836] flex-wrap">
+                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
+                    <BedDouble className="w-3 h-3 text-sky-500" />
+                    <span>For:</span>
+                  </span>
+                  {[
+                    { id: 'all', label: 'All' },
+                    { id: 'boys', label: 'Boys / Gents' },
+                    { id: 'girls', label: 'Girls / Ladies' },
+                    { id: 'family', label: 'Family / Couples' },
+                    { id: 'annex', label: 'Separate Annex' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setBoardingAudienceFilter(opt.id)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                        boardingAudienceFilter === opt.id
+                          ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836] flex-wrap">
+                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2">Features:</span>
+                  {['all', 'Furnished', 'AC', 'Attached', 'Wi-Fi', 'Parking'].map((feat) => (
+                    <button
+                      key={feat}
+                      type="button"
+                      onClick={() => setBoardingFeatureFilter(feat)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                        boardingFeatureFilter === feat
+                          ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                      }`}
+                    >
+                      {feat === 'all' ? 'Any' : feat === 'Attached' ? 'Attached Bath' : feat}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Auto Parts filters */}
+            {currentCategory === 'Auto Parts' && (
+              <>
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836] flex-wrap">
+                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
+                    <Wrench className="w-3 h-3 text-amber-500" />
+                    <span>Part Type:</span>
+                  </span>
+                  {[
+                    { id: 'all', label: 'All Parts' },
+                    { id: 'wheels', label: 'Alloys & Tyres' },
+                    { id: 'body', label: 'Body & Lights' },
+                    { id: 'engine', label: 'Engine & Battery' },
+                    { id: 'audio', label: 'Dashcam & Audio' },
+                  ].map((pt) => (
+                    <button
+                      key={pt.id}
+                      type="button"
+                      onClick={() => setAutoPartTypeFilter(pt.id)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                        autoPartTypeFilter === pt.id
+                          ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                      }`}
+                    >
+                      {pt.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836] flex-wrap">
+                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2">Condition:</span>
+                  {[
+                    { id: 'all', label: 'All' },
+                    { id: 'reconditioned', label: 'Reconditioned' },
+                    { id: 'brand new', label: 'Brand New' },
+                    { id: 'used', label: 'Used' },
+                  ].map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setAutoPartConditionFilter(c.id)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                        autoPartConditionFilter === c.id
+                          ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                      }`}
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Agriculture & Farming filters */}
+            {currentCategory === 'Agriculture & Farming' && (
+              <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836] flex-wrap">
+                <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
+                  <Sprout className="w-3 h-3 text-emerald-500" />
+                  <span>Focus:</span>
+                </span>
+                {[
+                  { id: 'all', label: 'All Farming' },
+                  { id: 'machinery', label: 'Tractors & Machinery' },
+                  { id: 'estate', label: 'Tea & Coconut Estates' },
+                  { id: 'produce', label: 'Spices & Harvest' },
+                  { id: 'nursery', label: 'Plants & Fertilizer' },
+                ].map((ag) => (
+                  <button
+                    key={ag.id}
+                    type="button"
+                    onClick={() => setAgricultureTypeFilter(ag.id)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                      agricultureTypeFilter === ag.id
+                        ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                    }`}
+                  >
+                    {ag.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Weddings & Events filters */}
+            {currentCategory === 'Weddings & Events' && (
+              <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836] flex-wrap">
+                <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
+                  <HeartHandshake className="w-3 h-3 text-rose-500" />
+                  <span>Wedding Service:</span>
+                </span>
+                {[
+                  { id: 'all', label: 'All Services' },
+                  { id: 'bridal', label: 'Bridal & Kandyan' },
+                  { id: 'photo', label: 'Photo & Video' },
+                  { id: 'decor', label: 'Poruwa & Decor' },
+                  { id: 'catering', label: 'Catering & Cake' },
+                  { id: 'music', label: 'DJ & Live Band' },
+                ].map((wd) => (
+                  <button
+                    key={wd.id}
+                    type="button"
+                    onClick={() => setWeddingServiceFilter(wd.id)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                      weddingServiceFilter === wd.id
+                        ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                    }`}
+                  >
+                    {wd.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Education & Tuition filters */}
+            {currentCategory === 'Education & Tuition' && (
+              <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836] flex-wrap">
+                <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
+                  <GraduationCap className="w-3 h-3 text-indigo-500" />
+                  <span>Level / Mode:</span>
+                </span>
+                {[
+                  { id: 'all', label: 'All Classes' },
+                  { id: 'al', label: 'GCE A/L' },
+                  { id: 'ol', label: 'GCE O/L' },
+                  { id: 'english', label: 'IELTS & Languages' },
+                  { id: 'it', label: 'IT & Degrees' },
+                  { id: 'online', label: 'Online / Home Visit' },
+                ].map((ed) => (
+                  <button
+                    key={ed.id}
+                    type="button"
+                    onClick={() => setEducationLevelFilter(ed.id)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                      educationLevelFilter === ed.id
+                        ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                    }`}
+                  >
+                    {ed.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Pets & Animals filters */}
+            {currentCategory === 'Pets & Animals' && (
+              <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836] flex-wrap">
+                <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
+                  <PawPrint className="w-3 h-3 text-teal-500" />
+                  <span>Pet / Category:</span>
+                </span>
+                {[
+                  { id: 'all', label: 'All Pets' },
+                  { id: 'dogs', label: 'Dogs & Puppies' },
+                  { id: 'cats', label: 'Cats & Kittens' },
+                  { id: 'fish', label: 'Aquarium & Fish' },
+                  { id: 'birds', label: 'Birds & Exotic' },
+                  { id: 'supplies', label: 'Food & Cages' },
+                ].map((pt) => (
+                  <button
+                    key={pt.id}
+                    type="button"
+                    onClick={() => setPetCategoryFilter(pt.id)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                      petCategoryFilter === pt.id
+                        ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                    }`}
+                  >
+                    {pt.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -889,6 +1236,24 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
               </span>
             </button>
           </div>
+
+          {/* Verified Sellers Toolbar Toggle */}
+          {onToggleVerifiedOnly && (
+            <button
+              type="button"
+              onClick={onToggleVerifiedOnly}
+              aria-pressed={verifiedOnly}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border shadow-xs ${
+                verifiedOnly
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-emerald-600/20'
+                  : 'bg-white/90 dark:bg-[#151822]/90 text-gray-700 dark:text-gray-200 border-gray-200/80 dark:border-white/10 hover:border-emerald-500/50 hover:text-emerald-700 dark:hover:text-emerald-400'
+              }`}
+              title="Show ads from verified sellers only"
+            >
+              <ShieldCheck className={`w-3.5 h-3.5 ${verifiedOnly ? 'text-white' : 'text-emerald-500'}`} />
+              <span>Verified</span>
+            </button>
+          )}
 
           <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">
             Showing <strong className="text-gray-900 dark:text-white">{displayListings.length}</strong> ad(s)
