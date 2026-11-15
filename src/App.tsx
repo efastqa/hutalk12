@@ -1392,6 +1392,7 @@ export default function App() {
             onSelectCategory={(cat, query) => {
               handleSelectCategory(cat, query, true);
             }}
+            onOpenHotNews={() => setCurrentTab('hot_news')}
             listings={listings}
           />
         )}

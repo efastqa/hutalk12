@@ -27,12 +27,21 @@ import {
   ChevronRight,
   Landmark,
   Gem,
+  Droplets,
+  Zap,
+  Hammer,
+  Camera,
+  Sun,
+  Video,
+  Package,
+  Flame,
 } from 'lucide-react';
 import { Listing } from '../types';
 
 interface AllCategoriesPageProps {
   onBack: () => void;
   onSelectCategory: (category: string, query?: string) => void;
+  onOpenHotNews?: () => void;
   listings: Listing[];
 }
 
@@ -177,23 +186,88 @@ const SERVICES_LIST: ServiceItem[] = [
     iconColor: 'text-blue-600',
     badge: 'Popular',
   },
+  {
+    id: 'plumbing',
+    name: 'Plumbing Services',
+    categoryFilter: 'Services',
+    icon: Droplets,
+    gradient: 'from-cyan-50 to-sky-50 border-cyan-200/60',
+    iconColor: 'text-cyan-600',
+  },
+  {
+    id: 'electrical',
+    name: 'Electrical & Wiring',
+    categoryFilter: 'Services',
+    icon: Zap,
+    gradient: 'from-yellow-50 to-amber-50 border-yellow-200/60',
+    iconColor: 'text-amber-600',
+  },
+  {
+    id: 'carpentry',
+    name: 'Carpentry & Woodwork',
+    categoryFilter: 'Services',
+    icon: Hammer,
+    gradient: 'from-orange-50 to-amber-50 border-orange-200/60',
+    iconColor: 'text-orange-700',
+  },
+  {
+    id: 'cctv',
+    name: 'CCTV & Security',
+    categoryFilter: 'Services',
+    icon: Camera,
+    gradient: 'from-slate-50 to-gray-100 border-slate-200/60',
+    iconColor: 'text-slate-700',
+  },
+  {
+    id: 'solar',
+    name: 'Solar & Power',
+    categoryFilter: 'Services',
+    icon: Sun,
+    gradient: 'from-amber-50 to-yellow-50 border-amber-200/60',
+    iconColor: 'text-amber-500',
+  },
+  {
+    id: 'photography',
+    name: 'Photography & Video',
+    categoryFilter: 'Services',
+    icon: Video,
+    gradient: 'from-purple-50 to-pink-50 border-purple-200/60',
+    iconColor: 'text-purple-600',
+  },
+  {
+    id: 'delivery',
+    name: 'Delivery & Courier',
+    categoryFilter: 'Services',
+    icon: Package,
+    gradient: 'from-emerald-50 to-teal-50 border-emerald-200/60',
+    iconColor: 'text-emerald-600',
+  },
+  {
+    id: 'beauty_bridal',
+    name: 'Beauty & Bridal',
+    categoryFilter: 'Services',
+    icon: Wrench,
+    gradient: 'from-rose-50 to-pink-50 border-rose-200/60',
+    iconColor: 'text-rose-600',
+  },
 ];
 
 const CLASSIFIEDS_LIST = [
-  { id: 'preloved', name: 'Preloved & Fashion', categoryFilter: 'Fashion & Preloved', icon: PackageCheck, color: 'text-rose-600', bg: 'bg-rose-50' },
-  { id: 'vehicles', name: 'Vehicles & Cars', categoryFilter: 'Vehicles', icon: Car, color: 'text-blue-600', bg: 'bg-blue-50' },
-  { id: 'cars-for-rent', name: 'Cars for Rent', categoryFilter: 'Cars for Rent', icon: Car, color: 'text-[#FF5A36]', bg: 'bg-orange-50', isNew: true },
-  { id: 'motorcycles', name: 'Motorcycles & Bikes', categoryFilter: 'Motorcycles', icon: Bike, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  { id: 'electronics', name: 'Electronics & Mobiles', categoryFilter: 'Electronics', icon: Smartphone, color: 'text-violet-600', bg: 'bg-violet-50' },
-  { id: 'property', name: 'Property & Houses', categoryFilter: 'Property', icon: Home, color: 'text-amber-600', bg: 'bg-amber-50' },
-  { id: 'holiday-homes', name: 'Holiday Homes & Villas', categoryFilter: 'Holiday Homes', icon: Plane, color: 'text-cyan-600', bg: 'bg-cyan-50', isNew: true },
-  { id: 'furniture', name: 'Home & Furniture', categoryFilter: 'Home & Garden', icon: Sofa, color: 'text-teal-600', bg: 'bg-teal-50' },
-  { id: 'jobs', name: 'Jobs & Careers', categoryFilter: 'Jobs', icon: Briefcase, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  { id: 'preloved', name: 'Preloved & Fashion', categoryFilter: 'Fashion & Preloved', icon: PackageCheck, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/50' },
+  { id: 'vehicles', name: 'Vehicles & Cars', categoryFilter: 'Vehicles', icon: Car, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/50' },
+  { id: 'cars-for-rent', name: 'Cars for Rent', categoryFilter: 'Cars for Rent', icon: Car, color: 'text-[#FF5A36]', bg: 'bg-orange-50 dark:bg-orange-950/50', isNew: true },
+  { id: 'motorcycles', name: 'Motorcycles & Bikes', categoryFilter: 'Motorcycles', icon: Bike, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/50' },
+  { id: 'electronics', name: 'Electronics & Mobiles', categoryFilter: 'Electronics', icon: Smartphone, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50 dark:bg-violet-950/50' },
+  { id: 'property', name: 'Property & Houses', categoryFilter: 'Property', icon: Home, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/50' },
+  { id: 'holiday-homes', name: 'Holiday Homes & Villas', categoryFilter: 'Holiday Homes', icon: Plane, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-50 dark:bg-cyan-950/50', isNew: true },
+  { id: 'furniture', name: 'Home & Furniture', categoryFilter: 'Home & Garden', icon: Sofa, color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-50 dark:bg-teal-950/50' },
+  { id: 'jobs', name: 'Jobs & Careers', categoryFilter: 'Jobs', icon: Briefcase, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/50' },
 ];
 
 export const AllCategoriesPage: React.FC<AllCategoriesPageProps> = ({
   onBack,
   onSelectCategory,
+  onOpenHotNews,
   listings,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -251,13 +325,13 @@ export const AllCategoriesPage: React.FC<AllCategoriesPageProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search categories & services..."
-            className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white border border-gray-200 shadow-sm text-sm focus:border-[#0A2540] focus:ring-2 focus:ring-[#0A2540]/10 outline-none transition-all"
+            className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white dark:bg-[#151822] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 border border-gray-200 dark:border-[#252836] shadow-sm text-sm focus:border-[#0A2540] dark:focus:border-[#FF5A36] focus:ring-2 focus:ring-[#0A2540]/10 dark:focus:ring-[#FF5A36]/20 outline-none transition-all"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-3.5 top-3 text-xs text-gray-400 hover:text-gray-600 bg-gray-100 rounded-full px-2 py-1"
+              className="absolute right-3.5 top-3 text-xs text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white bg-gray-100 dark:bg-white/10 rounded-full px-2 py-1 cursor-pointer"
             >
               Clear
             </button>
@@ -268,10 +342,10 @@ export const AllCategoriesPage: React.FC<AllCategoriesPageProps> = ({
         {filteredClassifieds.length > 0 && (
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-base sm:text-lg font-bold text-[#0A2540]">
+              <h2 className="text-base sm:text-lg font-bold text-[#0A2540] dark:text-white">
                 Classifieds & Preloved
               </h2>
-              <span className="text-xs text-gray-400">Sri Lanka</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">Sri Lanka</span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -284,7 +358,7 @@ export const AllCategoriesPage: React.FC<AllCategoriesPageProps> = ({
                     whileHover={{ y: -3 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => handleCategoryClick(cat.categoryFilter)}
-                    className="relative bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md cursor-pointer transition-all flex items-center gap-3 group"
+                    className="relative bg-white dark:bg-[#151822] rounded-2xl p-4 border border-gray-100 dark:border-[#252836] shadow-sm hover:shadow-md dark:hover:border-[#FF5A36]/40 cursor-pointer transition-all flex items-center gap-3 group"
                   >
                     {'isNew' in cat && cat.isNew && (
                       <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-[#FF5A36] to-amber-500 text-white text-[9px] font-black uppercase tracking-wider shadow-xs">
@@ -295,31 +369,55 @@ export const AllCategoriesPage: React.FC<AllCategoriesPageProps> = ({
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-gray-800 truncate group-hover:text-[#FF5A36] transition-colors pr-8">
+                      <p className="text-xs font-bold text-gray-800 dark:text-gray-100 truncate group-hover:text-[#FF5A36] transition-colors pr-8">
                         {cat.name}
                       </p>
-                      <p className="text-[10px] text-gray-400 font-medium">
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
                         {count} {count === 1 ? 'Ad' : 'Ads'}
                       </p>
                     </div>
                   </motion.div>
                 );
               })}
+
+              {onOpenHotNews && !searchQuery.trim() && (
+                <motion.div
+                  whileHover={{ y: -3 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={onOpenHotNews}
+                  className="relative bg-white dark:bg-[#151822] rounded-2xl p-4 border border-rose-200/70 dark:border-rose-500/30 shadow-sm hover:shadow-md cursor-pointer transition-all flex items-center gap-3 group"
+                >
+                  <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-rose-600 to-[#FF5A36] text-white text-[9px] font-black uppercase tracking-wider shadow-xs">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    <span>Live</span>
+                  </span>
+                  <div className="w-11 h-11 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <Flame className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-gray-800 dark:text-gray-100 truncate group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors pr-10">
+                      Hot News
+                    </p>
+                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                      Sri Lanka Live
+                    </p>
+                  </div>
+                </motion.div>
+              )}
             </div>
           </section>
         )}
 
-        {/* 3. Services Grid Section (Matching Image 2 IMG_5248.png exactly) */}
+        {/* 3. Services Grid Section */}
         {filteredServices.length > 0 && (
           <section className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
-              <h2 className="text-base sm:text-lg font-bold text-[#0A2540]">
+              <h2 className="text-base sm:text-lg font-bold text-[#0A2540] dark:text-white">
                 Services
               </h2>
-              <span className="text-xs text-gray-400">Professional Directory</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">Professional Directory</span>
             </div>
 
-            {/* Exact 4-column layout as seen in Image 2 */}
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 gap-3 sm:gap-4">
               {filteredServices.map((service) => {
                 const Icon = service.icon;
@@ -340,11 +438,11 @@ export const AllCategoriesPage: React.FC<AllCategoriesPageProps> = ({
                     onClick={() => handleCategoryClick('Services', service.name)}
                     className="flex flex-col items-center text-center cursor-pointer group relative"
                   >
-                    {/* White squircle container with soft drop shadow */}
+                    {/* Squircle container with dark mode support */}
                     <div
-                      className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl bg-white border border-gray-100 shadow-[0_4px_16px_rgba(0,0,0,0.06)] flex items-center justify-center p-3 relative group-hover:shadow-lg transition-all group-hover:border-blue-100 bg-gradient-to-b ${service.gradient}`}
+                      className={`w-20 h-20 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl bg-white dark:bg-[#151822] border border-gray-100 dark:border-[#252836] shadow-[0_4px_16px_rgba(0,0,0,0.06)] flex items-center justify-center p-3 relative group-hover:shadow-lg transition-all group-hover:border-blue-100 dark:group-hover:border-[#FF5A36]/40 bg-gradient-to-b ${service.gradient} dark:from-[#181C28] dark:to-[#12151E]`}
                     >
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/85 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
                         <Icon className={`w-7 h-7 sm:w-8 sm:h-8 ${service.iconColor} stroke-[1.75]`} />
                       </div>
 
@@ -356,10 +454,10 @@ export const AllCategoriesPage: React.FC<AllCategoriesPageProps> = ({
                     </div>
 
                     {/* Category Label underneath */}
-                    <span className="text-[11px] sm:text-xs font-semibold text-gray-700 group-hover:text-[#0A2540] mt-2 max-w-[100px] sm:max-w-[110px] leading-tight line-clamp-2 transition-colors">
+                    <span className="text-[11px] sm:text-xs font-semibold text-gray-700 dark:text-gray-200 group-hover:text-[#0A2540] dark:group-hover:text-[#FF5A36] mt-2 max-w-[100px] sm:max-w-[110px] leading-tight line-clamp-2 transition-colors">
                       {service.name}
                     </span>
-                    <span className="text-[10px] text-gray-400 group-hover:text-[#FF5A36] mt-0.5 transition-colors">
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 group-hover:text-[#FF5A36] mt-0.5 transition-colors">
                       {matchCount > 0 ? `${matchCount} Available` : 'Browse & Quote'}
                     </span>
                   </motion.div>

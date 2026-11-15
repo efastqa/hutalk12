@@ -3134,10 +3134,16 @@ Rules:
 3. Mention whether price is negotiable and inspection location.
 4. Keep the tone authentic, direct, and high-trust. Avoid exaggeration. Only return the plain text description.`;
 
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
+        const aiPromise = ai.models.generateContent({
+          model: 'gemini-4-hydrogen',
           contents: prompt,
         });
+
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Gemini API timeout after 10s')), 10000)
+        );
+
+        const response = await Promise.race([aiPromise, timeoutPromise]);
 
         const descriptionText = response.text?.trim();
         if (descriptionText) {
