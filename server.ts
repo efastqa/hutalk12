@@ -2350,8 +2350,9 @@ async function startServer() {
       const response = await fetch(url, {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; HUTA.lk News Aggregator/1.0)',
-          Accept: 'application/rss+xml, application/xml, text/xml, */*',
+          'User-Agent':
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+          Accept: 'application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8',
         },
       });
       if (!response.ok) return [];
@@ -2444,6 +2445,7 @@ async function startServer() {
       const feedConfigs = [
         { url: 'https://www.newswire.lk/feed/', source: 'Newswire.lk', limit: 14 },
         { url: 'https://economynext.com/feed/', source: 'EconomyNext', limit: 10 },
+        { url: 'https://www.adaderana.lk/rss.php', source: 'Ada Derana', limit: 10 },
         {
           url: 'https://news.google.com/rss/search?q=Sri+Lanka+when:2d&hl=en-US&gl=LK&ceid=LK:en',
           source: 'Google News LK',
@@ -3822,8 +3824,22 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    app.use(
+      express.static(distPath, {
+        setHeaders: (res, filePath) => {
+          if (
+            filePath.endsWith('index.html') ||
+            filePath.endsWith('sw.js') ||
+            filePath.endsWith('registerSW.js') ||
+            filePath.endsWith('manifest.webmanifest')
+          ) {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+          }
+        },
+      })
+    );
     app.get('*', (req, res) => {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

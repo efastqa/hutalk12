@@ -3155,20 +3155,104 @@ For quick inquiries, call or send a message via WhatsApp!`;
     const CACHE_KEY = 'huta_sri_lanka_news_cache';
     try {
       const url = forceRefresh ? `${API_BASE}/sri-lanka-news?refresh=1` : `${API_BASE}/sri-lanka-news`;
-      const res = await fetch(url);
-      if (res.ok) {
+      const res = await fetch(url, { cache: 'no-store' });
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
         const data: HotNewsResponse = await res.json();
-        try {
-          if (Array.isArray(data.articles) && data.articles.length > 0) {
+        if (Array.isArray(data.articles) && data.articles.length > 0) {
+          try {
             localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+          } catch {
+            // ignore
           }
+          return data;
+        }
+      }
+    } catch {
+      // Fall through to client-side RSS fallback for static deploys
+    }
+
+    // Fallback for static/serverless deploys (e.g. Vercel static build without Express server)
+    try {
+      const stripHtml = (raw: string) =>
+        (raw || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      const classify = (title: string, source: string) => {
+        const hay = `${title} ${source}`.toLowerCase();
+        if (source === 'EconomyNext' || /\b(rupee|lkr|cbsl|imf|economy|export|tax|stock|bank|gdp|budget)\b/.test(hay)) {
+          return 'Business & Economy' as const;
+        }
+        if (/\b(cricket|rugby|football|sports|match|tournament|cup|slc|athlete)\b/.test(hay)) {
+          return 'Sports' as const;
+        }
+        if (/\b(ev|vehicle|car|ai|tech|digital|telecom|dialog|slt|cyber|app|startup|port)\b/.test(hay)) {
+          return 'Tech & Auto' as const;
+        }
+        if (/\b(breaking|alert|urgent|police|weather|cyclone|flood|cabinet|parliament|president|minister)\b/.test(hay)) {
+          return 'Breaking' as const;
+        }
+        return 'Sri Lanka' as const;
+      };
+
+      const feeds = [
+        { rss: 'https://www.newswire.lk/feed/', source: 'Newswire.lk' },
+        { rss: 'https://economynext.com/feed/', source: 'EconomyNext' },
+        { rss: 'https://news.google.com/rss/search?q=Sri+Lanka+when:2d&hl=en-US&gl=LK&ceid=LK:en', source: 'Google News LK' },
+      ];
+
+      const responses = await Promise.allSettled(
+        feeds.map((f) =>
+          fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f.rss)}`).then(async (r) => {
+            if (!r.ok) return null;
+            const json = await r.json();
+            return { source: f.source, json };
+          })
+        )
+      );
+
+      const collected: HotNewsResponse['articles'] = [];
+      const seenTitles = new Set<string>();
+      for (const r of responses) {
+        if (r.status !== 'fulfilled' || !r.value?.json?.items) continue;
+        const { source, json } = r.value;
+        for (const item of json.items.slice(0, 12)) {
+          const title = stripHtml(item.title || '');
+          const link = typeof item.link === 'string' ? item.link.trim() : '';
+          if (!title || !/^https?:\/\//i.test(link)) continue;
+          const key = title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 48);
+          if (!key || seenTitles.has(key)) continue;
+          seenTitles.add(key);
+
+          const fullText = stripHtml(item.content || item.description || '');
+          collected.push({
+            id: `lk-news-${btoa(unescape(encodeURIComponent(link))).replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`,
+            title,
+            summary: fullText ? fullText.slice(0, 300) : `Latest Sri Lanka update reported by ${source}.`,
+            content: fullText ? fullText.slice(0, 2600) : undefined,
+            link,
+            source,
+            category: classify(title, source),
+            imageUrl: item.thumbnail || item.enclosure?.link || undefined,
+            publishedAt: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
+          });
+        }
+      }
+
+      if (collected.length > 0) {
+        const result: HotNewsResponse = {
+          articles: collected.slice(0, 30),
+          sources: Array.from(new Set(collected.map((a) => a.source))),
+          lastUpdated: new Date().toISOString(),
+          isLive: true,
+        };
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(result));
         } catch {
           // ignore
         }
-        return data;
+        return result;
       }
     } catch {
-      // Fallback to cached feed
+      // Fallback to localStorage cache
     }
 
     try {
@@ -3204,7 +3288,8 @@ For quick inquiries, call or send a message via WhatsApp!`;
       const res = await fetch(
         `${API_BASE}/sri-lanka-news/article?url=${encodeURIComponent(articleUrl)}`
       );
-      if (res.ok) {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
         const data = await res.json();
         return {
           paragraphs: Array.isArray(data.paragraphs) ? data.paragraphs : [],

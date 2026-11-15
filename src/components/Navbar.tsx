@@ -213,8 +213,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           }`}
         >
           <Flame className="w-3.5 h-3.5 text-current shrink-0" />
-          <span className="hidden xs:inline font-black tracking-tight">Hot News</span>
-          <span className="xs:hidden font-black tracking-tight">News</span>
+          <span className="hidden sm:inline font-black tracking-tight">Hot News</span>
+          <span className="sm:hidden font-black tracking-tight">News</span>
           <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse shrink-0" />
         </button>
 

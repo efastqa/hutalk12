@@ -1,0 +1,8 @@
+{
+  "settings": {
+    "aspectPreset": "standard",
+    "rotationIntervalSeconds": 5,
+    "enabled": true
+  },
+  "slides": []
+}

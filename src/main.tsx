@@ -83,3 +83,29 @@ createRoot(document.getElementById('root')!).render(
     </RootErrorBoundary>
   </StrictMode>,
 );
+
+// Ensure returning visitors automatically pick up newly published builds when SW updates
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    const reloadFlag = 'huta_sw_reloaded_at';
+    try {
+      const last = Number(sessionStorage.getItem(reloadFlag) || '0');
+      if (Date.now() - last < 15000) return;
+      sessionStorage.setItem(reloadFlag, String(Date.now()));
+    } catch {
+      // ignore
+    }
+    refreshing = true;
+    window.location.reload();
+  });
+
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      regs.forEach((reg) => {
+        reg.update().catch(() => {});
+      });
+    }).catch(() => {});
+  });
+}

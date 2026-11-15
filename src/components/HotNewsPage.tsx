@@ -644,7 +644,7 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
       {/* In-App Sri Lanka News Reader Modal */}
       {activeArticle && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+          className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
           onClick={() => setActiveArticle(null)}
           role="dialog"
           aria-modal="true"
