@@ -23,6 +23,11 @@ export interface Listing {
   serviceTrade?: string;
   pricingType?: 'fixed' | 'starting_at' | 'hourly' | 'quote' | 'per_night' | 'per_weekend' | 'daily' | 'monthly';
   serviceArea?: string;
+  serviceMode?: string;
+  serviceExperience?: string;
+  serviceAvailability?: string;
+  serviceWarranty?: string;
+  serviceFeatures?: string[];
   isVerifiedPro?: boolean;
   isEmergency247?: boolean;
   videoUrl?: string; // Optional animation video or video walkthrough (MP4/WebM/YouTube link)

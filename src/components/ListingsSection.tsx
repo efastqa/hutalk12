@@ -143,6 +143,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
 
   const [jobTypeFilter, setJobTypeFilter] = useState<string>('all');
   const [serviceTradeFilter, setServiceTradeFilter] = useState<string>('all');
+  const [serviceModeFilter, setServiceModeFilter] = useState<string>('all');
   const [emergencyOnlyFilter, setEmergencyOnlyFilter] = useState<boolean>(false);
 
   // Reset category filters when switching main category
@@ -159,6 +160,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     setConditionFilter('all');
     setJobTypeFilter('all');
     setServiceTradeFilter('all');
+    setServiceModeFilter('all');
     setEmergencyOnlyFilter(false);
   }, [currentCategory]);
 
@@ -176,6 +178,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
       conditionFilter !== 'all' ||
       jobTypeFilter !== 'all' ||
       serviceTradeFilter !== 'all' ||
+      serviceModeFilter !== 'all' ||
       emergencyOnlyFilter
     );
   }, [
@@ -191,6 +194,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     conditionFilter,
     jobTypeFilter,
     serviceTradeFilter,
+    serviceModeFilter,
     emergencyOnlyFilter,
   ]);
 
@@ -207,6 +211,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     setConditionFilter('all');
     setJobTypeFilter('all');
     setServiceTradeFilter('all');
+    setServiceModeFilter('all');
     setEmergencyOnlyFilter(false);
   };
 
@@ -258,8 +263,11 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
         return false;
       }
       if (conditionFilter !== 'all') {
-        if (conditionFilter === 'Brand New' && item.itemCondition !== 'Brand New') return false;
-        if (conditionFilter === 'Used' && item.itemCondition && item.itemCondition === 'Brand New') return false;
+        if (conditionFilter === 'Used') {
+          if (item.itemCondition && item.itemCondition === 'Brand New') return false;
+        } else {
+          if ((item.itemCondition || '').toLowerCase() !== conditionFilter.toLowerCase()) return false;
+        }
       }
 
       // Jobs
@@ -270,6 +278,12 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
       // Services
       if (serviceTradeFilter !== 'all' && item.serviceTrade && !item.serviceTrade.toLowerCase().includes(serviceTradeFilter.toLowerCase())) {
         return false;
+      }
+      if (serviceModeFilter !== 'all') {
+        const modeHay = `${item.serviceMode || ''} ${(item.serviceFeatures || []).join(' ')} ${item.title || ''} ${item.description || ''}`.toLowerCase();
+        if (!modeHay.includes(serviceModeFilter.toLowerCase())) {
+          return false;
+        }
       }
       if (emergencyOnlyFilter && !item.isEmergency247) {
         return false;
@@ -291,6 +305,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     conditionFilter,
     jobTypeFilter,
     serviceTradeFilter,
+    serviceModeFilter,
     emergencyOnlyFilter,
   ]);
 
@@ -449,12 +464,12 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                 </div>
 
                 {/* Vehicle Body Type */}
-                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836] flex-wrap">
                   <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
                     <Car className="w-3 h-3 text-blue-500" />
                     <span>Type:</span>
                   </span>
-                  {['all', 'Car', 'SUV', 'Van', 'Three-Wheeler'].map((vtype) => (
+                  {['all', 'Car', 'SUV', 'Van', 'Three-Wheeler', 'Antique'].map((vtype) => (
                     <button
                       key={vtype}
                       type="button"
@@ -466,6 +481,25 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       }`}
                     >
                       {vtype === 'all' ? 'All' : vtype}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Vehicle Condition */}
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836] flex-wrap">
+                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2">Condition:</span>
+                  {['all', 'Any', 'Antique', 'Brand New', 'Registered', 'Unregistered'].map((cond) => (
+                    <button
+                      key={cond}
+                      type="button"
+                      onClick={() => setConditionFilter(cond)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                        conditionFilter === cond
+                          ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                      }`}
+                    >
+                      {cond === 'all' ? 'All' : cond}
                     </button>
                   ))}
                 </div>
@@ -720,6 +754,29 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       }`}
                     >
                       {tr.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836] flex-wrap">
+                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2">Visit Mode:</span>
+                  {[
+                    { id: 'all', label: 'All' },
+                    { id: 'Home Visit', label: 'Home Visit' },
+                    { id: 'Workshop', label: 'Workshop' },
+                    { id: 'Remote', label: 'Remote / Online' },
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setServiceModeFilter(m.id)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                        serviceModeFilter === m.id
+                          ? 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                      }`}
+                    >
+                      {m.label}
                     </button>
                   ))}
                 </div>
@@ -1120,8 +1177,14 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                     </h3>
 
                     {/* Category Specific Specification Quick Highlights */}
-                    {(item.vehicleYear || item.fuelType || item.transmission || item.vehicleMileage || item.rentalDriverOption || item.propertyType || item.bedrooms || item.maxGuests || (item.amenities && item.amenities.length > 0) || item.propertySize || item.electronicsSubcategory || item.storageCapacity || item.itemCondition || item.jobType) && (
+                    {(item.vehicleYear || item.fuelType || item.transmission || item.vehicleMileage || item.rentalDriverOption || item.propertyType || item.bedrooms || item.maxGuests || (item.amenities && item.amenities.length > 0) || item.propertySize || item.electronicsSubcategory || item.storageCapacity || item.itemCondition || item.jobType || item.serviceMode || item.serviceExperience) && (
                       <div className="flex flex-wrap items-center gap-1 mt-1 text-[9px] sm:text-[10px] font-medium text-gray-500 dark:text-gray-400 line-clamp-1 overflow-hidden">
+                        {item.serviceExperience && (
+                          <span className="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-500/30 px-1.5 py-0.2 rounded font-bold">{item.serviceExperience}</span>
+                        )}
+                        {item.serviceMode && (
+                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.2 rounded text-gray-700 dark:text-gray-300 font-semibold">{item.serviceMode.split('/')[0].trim()}</span>
+                        )}
                         {item.rentalDriverOption && (
                           <span className="bg-orange-50 dark:bg-orange-950/40 text-[#FF5A36] border border-orange-200/60 dark:border-orange-500/30 px-1.5 py-0.2 rounded font-bold">{item.rentalDriverOption}</span>
                         )}

@@ -187,6 +187,10 @@ const SERVICE_TRADES = [
   'Painting & Waterproofing',
   'Carpentry & Masonry',
   'IT, Laptop & Phone Repair',
+  'Appliance Repair (Washing Machine, Fridge, TV)',
+  'Solar Power & CCTV Installation',
+  'Landscaping & Gardening',
+  'Courier, Delivery & Logistics',
   'Home & Land Services (Plans, Surveying & Deeds)',
   'Gemstones & Jewelry (Testing, Valuation & Lapidary)',
   'Other Professional Services',
@@ -199,6 +203,49 @@ const SERVICE_AREAS = [
   'Galle & Southern Coastal District',
   'Islandwide (All 25 Districts)',
   'Local District Only',
+];
+
+const SERVICE_MODES = [
+  'On-Site / Home & Office Visit',
+  'At Service Center / Workshop',
+  'Both (Visit or Drop-Off)',
+  'Online / Remote',
+];
+
+const SERVICE_EXPERIENCE_LEVELS = [
+  'Less than 1 Year',
+  '1 - 3 Years',
+  '3 - 5 Years',
+  '5 - 10 Years',
+  '10+ Years (Master Pro)',
+];
+
+const SERVICE_AVAILABILITY_OPTIONS = [
+  'Daily (Mon - Sun)',
+  'Weekdays Only (Mon - Fri)',
+  'Weekends & Holidays',
+  '24/7 Round the Clock',
+  'By Appointment',
+];
+
+const SERVICE_WARRANTY_OPTIONS = [
+  'Service Guarantee Included',
+  'Parts & Labor Warranty',
+  '30-Day Guarantee',
+  '90-Day Warranty',
+  'Free Initial Inspection',
+  'No Separate Warranty',
+];
+
+const SERVICE_FEATURES_LIST = [
+  'Home Visit Available',
+  'Licensed / Certified',
+  'Free Quotation',
+  'Same-Day Service',
+  'Tools & Equipment Included',
+  'Weekend Available',
+  'Sinhala / Tamil / English',
+  'Invoice / Receipt Provided',
 ];
 
 const DISTRICTS = [
@@ -235,9 +282,12 @@ const POPULAR_VEHICLE_BRANDS = [
   'Nissan',
   'Suzuki',
   'Mitsubishi',
+  'Perodua',
+  'Micro',
   'Bajaj',
   'Yamaha',
   'TVS',
+  'Isuzu',
   'Hyundai',
   'Kia',
   'Mercedes-Benz',
@@ -247,6 +297,141 @@ const POPULAR_VEHICLE_BRANDS = [
   'Mazda',
   'Land Rover',
   'Other Brand',
+];
+
+const VEHICLE_MODELS_BY_BRAND: Record<string, string[]> = {
+  Toyota: [
+    'Axio',
+    'Prius',
+    'Aqua',
+    'Premio',
+    'Allion',
+    'Vitz',
+    'Yaris',
+    'Corolla',
+    'Raize',
+    'C-HR',
+    'Land Cruiser',
+    'Prado',
+    'Hilux',
+    'HiAce / KDH',
+    'Rush',
+    'Fortuner',
+    'Roomy / Tank',
+    'Passo / Pixis',
+    'Camry',
+    'Crown',
+  ],
+  Honda: [
+    'Vezel',
+    'Civic',
+    'Fit',
+    'Grace',
+    'Insight',
+    'CR-V',
+    'HR-V',
+    'N-Box / N-WGN',
+    'Dio',
+    'PCX',
+    'CB Hornet',
+    'CBR',
+    'XR',
+    'CD 125',
+  ],
+  Nissan: [
+    'Leaf',
+    'X-Trail',
+    'Dayz',
+    'March',
+    'Sunny',
+    'Note',
+    'Juke',
+    'Navara',
+    'Caravan',
+    'Clipper',
+    'Tiida',
+    'Patrol',
+  ],
+  Suzuki: [
+    'Alto',
+    'Wagon R',
+    'Spacia',
+    'Swift',
+    'Every',
+    'Hustler',
+    'Baleno',
+    'Celerio',
+    'Jimny',
+    'Vitara',
+    'Carry',
+    'Gixxer',
+    'GN 125',
+    'Burgman',
+  ],
+  Mitsubishi: [
+    'Lancer',
+    'Outlander',
+    'Montero',
+    'Pajero',
+    'L200',
+    'Eclipse Cross',
+    'Mirage',
+    'Delica',
+    'Xpander',
+    'Canter',
+  ],
+  Perodua: ['Axia', 'Bezza', 'Myvi', 'Aruz', 'Alza', 'Viva Elite'],
+  Micro: ['Panda', 'Panda Cross', 'Kyron', 'Rexton', 'Tivoli', 'Actyon', 'BAIC X25'],
+  Bajaj: [
+    'RE Three-Wheeler',
+    'Pulsar 150',
+    'Pulsar NS160 / NS200',
+    'Discover 125',
+    'CT 100',
+    'Platina',
+    'Dominar',
+    'Avenger',
+    'Qute',
+  ],
+  Yamaha: ['FZ-S / FZ V3', 'MT-15', 'R15', 'Ray ZR', 'Fascino', 'NMAX', 'XTZ', 'TW 200'],
+  TVS: ['NTorq 125', 'Apache RTR', 'Scooty Pep+', 'Jupiter', 'Metro', 'iQube', 'King Three-Wheeler'],
+  Isuzu: ['ELF / NPR Truck', 'D-Max', 'MU-X', 'Journey Bus', 'NKR'],
+  Hyundai: ['Grand i10', 'i20', 'Tucson', 'Santa Fe', 'Kona', 'Elantra', 'Accent', 'Ioniq'],
+  Kia: ['Picanto', 'Sportage', 'Sorento', 'Rio', 'Stonic', 'Seltos', 'Niro', 'Cerato'],
+  'Mercedes-Benz': ['C-Class', 'E-Class', 'A-Class', 'CLA', 'GLA', 'GLC', 'GLE', 'S-Class', 'Vito'],
+  BMW: ['3 Series', '5 Series', '7 Series', 'X1', 'X3', 'X5', 'i3', 'i8', 'iX1'],
+  Tata: ['Nano', 'Indica', 'Nexon', 'Tiago', 'Xenon', 'Ace', 'Ultra'],
+  Mahindra: ['KUV100', 'XUV300', 'Scorpio', 'Bolero', 'Thar', 'Alfa'],
+  Mazda: ['Mazda2 (Demio)', 'Mazda3 (Axela)', 'Mazda6 (Atenza)', 'CX-3', 'CX-5', 'BT-50', 'Flair', 'Bongo'],
+  'Land Rover': ['Defender', 'Discovery', 'Discovery Sport', 'Range Rover', 'Range Rover Evoque', 'Range Rover Sport', 'Freelander'],
+};
+
+const GENERAL_POPULAR_MODELS = [
+  'Alto',
+  'Wagon R',
+  'Aqua',
+  'Axio',
+  'Prius',
+  'Premio',
+  'Vitz',
+  'Vezel',
+  'Fit',
+  'Swift',
+  'Every',
+  'Dio',
+  'Pulsar 150',
+  'RE Three-Wheeler',
+  'Land Cruiser',
+  'Prado',
+  'Hilux',
+  'HiAce / KDH',
+  'Morris Minor',
+  'Volkswagen Beetle',
+];
+
+const VEHICLE_YEARS = [
+  ...Array.from({ length: 2027 - 1950 + 1 }, (_, idx) => String(2027 - idx)),
+  'Before 1950',
 ];
 
 const FUEL_TYPES = ['Petrol', 'Diesel', 'Hybrid', 'Electric'];
@@ -260,8 +445,10 @@ const VEHICLE_BODY_TYPES = [
   'Three-Wheeler',
   'Lorry / Truck',
   'Bus',
+  'Antique',
   'Other',
 ];
+const VEHICLE_CONDITIONS = ['Any', 'Antique', 'Brand New', 'Registered', 'Unregistered'];
 
 const PROPERTY_TYPES = [
   'House for Sale',
@@ -356,11 +543,17 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
   const [serviceTrade, setServiceTrade] = useState('AC Repair & Servicing');
   const [pricingType, setPricingType] = useState<'fixed' | 'starting_at' | 'hourly' | 'quote' | 'per_night' | 'per_weekend' | 'daily' | 'monthly'>('starting_at');
   const [serviceArea, setServiceArea] = useState('Colombo & Greater Suburbs');
+  const [serviceMode, setServiceMode] = useState('On-Site / Home & Office Visit');
+  const [serviceExperience, setServiceExperience] = useState('3 - 5 Years');
+  const [serviceAvailability, setServiceAvailability] = useState('Daily (Mon - Sun)');
+  const [serviceWarranty, setServiceWarranty] = useState('Service Guarantee Included');
+  const [serviceFeatures, setServiceFeatures] = useState<string[]>(['Home Visit Available', 'Free Quotation']);
   const [isEmergency247, setIsEmergency247] = useState(false);
 
   // Custom Category Fields State
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
+  const [isCustomVehicleModel, setIsCustomVehicleModel] = useState(false);
   const [vehicleType, setVehicleType] = useState('Car');
   const [vehicleYear, setVehicleYear] = useState('');
   const [vehicleMileage, setVehicleMileage] = useState('');
@@ -434,11 +627,26 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
             : 'fixed')
       );
       setServiceArea(editingListing.serviceArea || 'Colombo & Greater Suburbs');
+      setServiceMode(editingListing.serviceMode || 'On-Site / Home & Office Visit');
+      setServiceExperience(editingListing.serviceExperience || '3 - 5 Years');
+      setServiceAvailability(editingListing.serviceAvailability || 'Daily (Mon - Sun)');
+      setServiceWarranty(editingListing.serviceWarranty || 'Service Guarantee Included');
+      setServiceFeatures(
+        Array.isArray(editingListing.serviceFeatures)
+          ? editingListing.serviceFeatures
+          : ['Home Visit Available', 'Free Quotation']
+      );
       setIsEmergency247(Boolean(editingListing.isEmergency247));
 
       // Custom Category Fields initialization
-      setBrand(editingListing.brand || '');
-      setModel(editingListing.model || '');
+      const initBrand = editingListing.brand || '';
+      const initModel = editingListing.model || '';
+      const brandModelList = initBrand && VEHICLE_MODELS_BY_BRAND[initBrand]
+        ? VEHICLE_MODELS_BY_BRAND[initBrand]
+        : GENERAL_POPULAR_MODELS;
+      setBrand(initBrand);
+      setModel(initModel);
+      setIsCustomVehicleModel(Boolean(initModel && !brandModelList.includes(initModel)));
       setVehicleType(editingListing.vehicleType || (editingListing.category === 'Motorcycles' ? 'Motorcycle' : 'Car'));
       setVehicleYear(editingListing.vehicleYear ? String(editingListing.vehicleYear) : '');
       setVehicleMileage(editingListing.vehicleMileage ? String(editingListing.vehicleMileage) : '');
@@ -454,15 +662,24 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       setAmenities(Array.isArray(editingListing.amenities) ? editingListing.amenities : ['AC', 'Wi-Fi']);
 
       setElectronicsSubcategory(editingListing.electronicsSubcategory || 'Mobile Phones & Smartphones');
-      setItemCondition(editingListing.itemCondition || 'Brand New');
+      const isEditingVehicle =
+        editingListing.category === 'Vehicles' ||
+        editingListing.category === 'Motorcycles' ||
+        editingListing.category === 'Cars for Rent';
+      setItemCondition(editingListing.itemCondition || (isEditingVehicle ? 'Any' : 'Brand New'));
       setStorageCapacity(editingListing.storageCapacity || '128GB');
 
       setJobType((editingListing.jobType as any) || 'Full-time');
       setSalaryPeriod(editingListing.salaryPeriod || 'Monthly');
     } else {
       // New Ad Defaults
+      const defaultCategory = initialCategory && CATEGORIES.includes(initialCategory) ? initialCategory : 'Electronics';
+      const isDefaultVehicle =
+        defaultCategory === 'Vehicles' ||
+        defaultCategory === 'Motorcycles' ||
+        defaultCategory === 'Cars for Rent';
       setTitle('');
-      setCategory(initialCategory && CATEGORIES.includes(initialCategory) ? initialCategory : 'Electronics');
+      setCategory(defaultCategory);
       setLocation(initialDistrict && DISTRICTS.includes(initialDistrict) ? initialDistrict : 'Colombo');
       setPrice('');
       setIsNegotiable(false);
@@ -481,11 +698,17 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
           : 'starting_at'
       );
       setServiceArea('Colombo & Greater Suburbs');
+      setServiceMode('On-Site / Home & Office Visit');
+      setServiceExperience('3 - 5 Years');
+      setServiceAvailability('Daily (Mon - Sun)');
+      setServiceWarranty('Service Guarantee Included');
+      setServiceFeatures(['Home Visit Available', 'Free Quotation']);
       setIsEmergency247(false);
 
       // Custom Category Fields reset
       setBrand('');
       setModel('');
+      setIsCustomVehicleModel(false);
       setVehicleType('Car');
       setVehicleYear('');
       setVehicleMileage('');
@@ -501,7 +724,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       setAmenities(['AC', 'Wi-Fi']);
 
       setElectronicsSubcategory('Mobile Phones & Smartphones');
-      setItemCondition('Brand New');
+      setItemCondition(isDefaultVehicle ? 'Any' : 'Brand New');
       setStorageCapacity('128GB');
 
       setJobType('Full-time');
@@ -783,6 +1006,11 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
         pricingType: (isService || category === 'Holiday Homes' || category === 'Cars for Rent') ? pricingType : (isNegotiable ? 'negotiable' as any : 'fixed'),
         ...(isService && serviceTrade ? { serviceTrade } : {}),
         ...(isService && serviceArea ? { serviceArea } : {}),
+        ...(isService && serviceMode ? { serviceMode } : {}),
+        ...(isService && serviceExperience ? { serviceExperience } : {}),
+        ...(isService && serviceAvailability ? { serviceAvailability } : {}),
+        ...(isService && serviceWarranty ? { serviceWarranty } : {}),
+        ...(isService && serviceFeatures.length > 0 ? { serviceFeatures } : {}),
         ...(isService ? { isEmergency247: Boolean(isEmergency247) } : {}),
         ...(category === 'Vehicles' || category === 'Motorcycles' || category === 'Cars for Rent' ? {
           brand: brand.trim() || undefined,
@@ -1084,6 +1312,23 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                   onChange={(e) => {
                     const nextCategory = e.target.value;
                     setCategory(nextCategory);
+                    if (
+                      nextCategory === 'Vehicles' ||
+                      nextCategory === 'Motorcycles' ||
+                      nextCategory === 'Cars for Rent'
+                    ) {
+                      if (!VEHICLE_CONDITIONS.includes(itemCondition)) {
+                        setItemCondition('Any');
+                      }
+                    } else if (
+                      nextCategory === 'Electronics' ||
+                      nextCategory === 'Home & Garden' ||
+                      nextCategory === 'Fashion'
+                    ) {
+                      if (!ITEM_CONDITIONS.includes(itemCondition)) {
+                        setItemCondition('Brand New');
+                      }
+                    }
                     if (nextCategory === 'Holiday Homes') {
                       setPropertyType('Villa / Holiday Home');
                       setPricingType('per_night');
@@ -1155,6 +1400,99 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                           </option>
                         ))}
                       </select>
+                    </div>
+                  </div>
+
+                  {/* Additional Service Specs (Mode, Experience, Availability, Warranty) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                        Service Mode / Visit Type
+                      </label>
+                      <select
+                        value={serviceMode}
+                        onChange={(e) => setServiceMode(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white cursor-pointer font-medium"
+                      >
+                        {SERVICE_MODES.map((m) => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                        Experience Level
+                      </label>
+                      <select
+                        value={serviceExperience}
+                        onChange={(e) => setServiceExperience(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white cursor-pointer font-medium"
+                      >
+                        {SERVICE_EXPERIENCE_LEVELS.map((exp) => (
+                          <option key={exp} value={exp}>{exp}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                        Working Days / Availability
+                      </label>
+                      <select
+                        value={serviceAvailability}
+                        onChange={(e) => setServiceAvailability(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white cursor-pointer font-medium"
+                      >
+                        {SERVICE_AVAILABILITY_OPTIONS.map((av) => (
+                          <option key={av} value={av}>{av}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                        Warranty / Service Guarantee
+                      </label>
+                      <select
+                        value={serviceWarranty}
+                        onChange={(e) => setServiceWarranty(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white cursor-pointer font-medium"
+                      >
+                        {SERVICE_WARRANTY_OPTIONS.map((w) => (
+                          <option key={w} value={w}>{w}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Service Highlights & Included Perks */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                      Service Highlights & What&apos;s Included
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {SERVICE_FEATURES_LIST.map((feat) => {
+                        const isSelected = serviceFeatures.includes(feat);
+                        return (
+                          <button
+                            key={feat}
+                            type="button"
+                            onClick={() => {
+                              setServiceFeatures((prev) =>
+                                prev.includes(feat) ? prev.filter((item) => item !== feat) : [...prev, feat]
+                              );
+                            }}
+                            className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer border ${
+                              isSelected
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                            }`}
+                          >
+                            {isSelected ? `✓ ${feat}` : `+ ${feat}`}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -1271,7 +1609,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                     {/* Vehicle Body Type */}
                     <div>
                       <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
@@ -1288,6 +1626,22 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                       </select>
                     </div>
 
+                    {/* Vehicle Condition */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                        Condition
+                      </label>
+                      <select
+                        value={VEHICLE_CONDITIONS.includes(itemCondition) ? itemCondition : 'Any'}
+                        onChange={(e) => setItemCondition(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                      >
+                        {VEHICLE_CONDITIONS.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+
                     {/* Brand / Make */}
                     <div>
                       <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
@@ -1295,7 +1649,17 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                       </label>
                       <select
                         value={brand}
-                        onChange={(e) => setBrand(e.target.value)}
+                        onChange={(e) => {
+                          const nextBrand = e.target.value;
+                          setBrand(nextBrand);
+                          const nextModels = nextBrand && VEHICLE_MODELS_BY_BRAND[nextBrand]
+                            ? VEHICLE_MODELS_BY_BRAND[nextBrand]
+                            : GENERAL_POPULAR_MODELS;
+                          if (model && !nextModels.includes(model)) {
+                            setModel('');
+                            setIsCustomVehicleModel(false);
+                          }
+                        }}
                         className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
                       >
                         <option value="">-- Select Brand --</option>
@@ -1305,36 +1669,81 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                       </select>
                     </div>
 
-                    {/* Model */}
+                    {/* Model (Dropdown by Brand + Custom Option) */}
                     <div>
                       <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
                         Model
                       </label>
-                      <input
-                        type="text"
-                        value={model}
-                        onChange={(e) => setModel(e.target.value)}
-                        placeholder="e.g. Prius, Axio, Pulsar, Alto"
-                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
-                      />
+                      {(() => {
+                        const availableModels =
+                          brand && VEHICLE_MODELS_BY_BRAND[brand]
+                            ? VEHICLE_MODELS_BY_BRAND[brand]
+                            : GENERAL_POPULAR_MODELS;
+                        const selectValue = isCustomVehicleModel
+                          ? '__custom__'
+                          : availableModels.includes(model)
+                          ? model
+                          : model
+                          ? '__custom__'
+                          : '';
+                        return (
+                          <div className="space-y-1.5">
+                            <select
+                              value={selectValue}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === '__custom__') {
+                                  setIsCustomVehicleModel(true);
+                                  if (availableModels.includes(model)) {
+                                    setModel('');
+                                  }
+                                } else {
+                                  setIsCustomVehicleModel(false);
+                                  setModel(val);
+                                }
+                              }}
+                              className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                            >
+                              <option value="">-- Select Model --</option>
+                              {availableModels.map((m) => (
+                                <option key={m} value={m}>{m}</option>
+                              ))}
+                              <option value="__custom__">Other / Enter Custom Model...</option>
+                            </select>
+                            {(isCustomVehicleModel || (model && !availableModels.includes(model))) && (
+                              <input
+                                type="text"
+                                value={model}
+                                onChange={(e) => setModel(e.target.value)}
+                                placeholder="Type vehicle model name..."
+                                className="w-full px-3 py-1.5 rounded-xl border border-[#FF5A36]/50 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
+                              />
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    {/* Manufactured Year */}
+                    {/* Manufactured Year Dropdown */}
                     <div>
                       <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
                         Year
                       </label>
-                      <input
-                        type="number"
-                        min="1970"
-                        max="2027"
+                      <select
                         value={vehicleYear}
                         onChange={(e) => setVehicleYear(e.target.value)}
-                        placeholder="e.g. 2020"
                         className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:border-[#FF5A36] outline-none bg-white font-medium"
-                      />
+                      >
+                        <option value="">-- Select Year --</option>
+                        {vehicleYear && !VEHICLE_YEARS.includes(vehicleYear) && (
+                          <option value={vehicleYear}>{vehicleYear}</option>
+                        )}
+                        {VEHICLE_YEARS.map((yr) => (
+                          <option key={yr} value={yr}>{yr}</option>
+                        ))}
+                      </select>
                     </div>
 
                     {/* Mileage */}

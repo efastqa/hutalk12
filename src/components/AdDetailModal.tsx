@@ -693,7 +693,12 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                 listing.jobType ||
                 listing.itemCondition ||
                 listing.brand ||
-                listing.model) && (
+                listing.model ||
+                listing.serviceMode ||
+                listing.serviceExperience ||
+                listing.serviceAvailability ||
+                listing.serviceWarranty ||
+                (listing.serviceFeatures && listing.serviceFeatures.length > 0)) && (
                 <div className="my-3 p-3.5 bg-gray-50/90 dark:bg-[#181B26] rounded-2xl border border-gray-200/80 dark:border-[#252836] space-y-2.5">
                   <div className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center justify-between">
                     <span>Key Specifications & Highlights</span>
@@ -816,7 +821,53 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                         <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.salaryPeriod}</span>
                       </div>
                     )}
+
+                    {/* Service Provider Details */}
+                    {listing.serviceMode && (
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Service Mode</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.serviceMode}</span>
+                      </div>
+                    )}
+                    {listing.serviceExperience && (
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Experience</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.serviceExperience}</span>
+                      </div>
+                    )}
+                    {listing.serviceAvailability && (
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Availability</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.serviceAvailability}</span>
+                      </div>
+                    )}
+                    {listing.serviceWarranty && (
+                      <div className="bg-white dark:bg-[#1E2230] p-2 rounded-xl border border-gray-200/70 dark:border-[#282C3D] shadow-2xs">
+                        <span className="text-[10px] text-gray-400 block font-medium">Warranty / Guarantee</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white">{listing.serviceWarranty}</span>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Included Service Features Pills */}
+                  {Array.isArray(listing.serviceFeatures) && listing.serviceFeatures.length > 0 && (
+                    <div className="pt-2 border-t border-gray-200/70 dark:border-[#252836]">
+                      <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1.5">
+                        Service Highlights & Perks
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {listing.serviceFeatures.map((feat) => (
+                          <span
+                            key={feat}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/70 dark:border-blue-500/30 text-[11px] font-bold"
+                          >
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>{feat}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Included Amenities Pills */}
                   {Array.isArray(listing.amenities) && listing.amenities.length > 0 && (

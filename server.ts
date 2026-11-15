@@ -97,8 +97,13 @@ interface Listing {
   whatsappClicks?: number;
   phoneClicks?: number;
   serviceTrade?: string;
-  pricingType?: 'fixed' | 'starting_at' | 'hourly' | 'quote' | 'per_night' | 'per_weekend';
+  pricingType?: 'fixed' | 'starting_at' | 'hourly' | 'quote' | 'per_night' | 'per_weekend' | 'daily' | 'monthly';
   serviceArea?: string;
+  serviceMode?: string;
+  serviceExperience?: string;
+  serviceAvailability?: string;
+  serviceWarranty?: string;
+  serviceFeatures?: string[];
   isVerifiedPro?: boolean;
   isEmergency247?: boolean;
   videoUrl?: string;
@@ -116,6 +121,7 @@ interface Listing {
   vehicleMileage?: number | string;
   fuelType?: string;
   transmission?: string;
+  rentalDriverOption?: string;
   propertyType?: string;
   propertySize?: string;
   bedrooms?: number | string;
@@ -1130,6 +1136,11 @@ async function startServer() {
       ...(serviceTrade ? { serviceTrade: String(serviceTrade).trim() } : {}),
       pricingType: pricingType || (finalCategory === 'Services' ? 'starting_at' : 'fixed'),
       ...(serviceArea ? { serviceArea: String(serviceArea).trim() } : {}),
+      ...(req.body.serviceMode ? { serviceMode: String(req.body.serviceMode).trim() } : {}),
+      ...(req.body.serviceExperience ? { serviceExperience: String(req.body.serviceExperience).trim() } : {}),
+      ...(req.body.serviceAvailability ? { serviceAvailability: String(req.body.serviceAvailability).trim() } : {}),
+      ...(req.body.serviceWarranty ? { serviceWarranty: String(req.body.serviceWarranty).trim() } : {}),
+      ...(Array.isArray(req.body.serviceFeatures) ? { serviceFeatures: req.body.serviceFeatures.map(String).filter(Boolean) } : {}),
       isVerifiedPro: Boolean(isVerifiedPro),
       isEmergency247: Boolean(isEmergency247),
       ...(videoUrl ? { videoUrl: String(videoUrl).trim() } : {}),
@@ -1147,6 +1158,7 @@ async function startServer() {
       ...(req.body.vehicleMileage !== undefined ? { vehicleMileage: req.body.vehicleMileage } : {}),
       ...(req.body.fuelType ? { fuelType: String(req.body.fuelType).trim() } : {}),
       ...(req.body.transmission ? { transmission: String(req.body.transmission).trim() } : {}),
+      ...(req.body.rentalDriverOption ? { rentalDriverOption: String(req.body.rentalDriverOption).trim() } : {}),
       ...(req.body.electronicsSubcategory ? { electronicsSubcategory: String(req.body.electronicsSubcategory).trim() } : {}),
       ...(req.body.storageCapacity ? { storageCapacity: String(req.body.storageCapacity).trim() } : {}),
       ...(req.body.jobType ? { jobType: String(req.body.jobType).trim() } : {}),
@@ -1248,6 +1260,11 @@ async function startServer() {
       serviceTrade: serviceTrade !== undefined ? String(serviceTrade).trim() : current.serviceTrade,
       pricingType: pricingType !== undefined ? pricingType : current.pricingType,
       serviceArea: serviceArea !== undefined ? String(serviceArea).trim() : current.serviceArea,
+      serviceMode: req.body.serviceMode !== undefined ? (req.body.serviceMode ? String(req.body.serviceMode).trim() : undefined) : current.serviceMode,
+      serviceExperience: req.body.serviceExperience !== undefined ? (req.body.serviceExperience ? String(req.body.serviceExperience).trim() : undefined) : current.serviceExperience,
+      serviceAvailability: req.body.serviceAvailability !== undefined ? (req.body.serviceAvailability ? String(req.body.serviceAvailability).trim() : undefined) : current.serviceAvailability,
+      serviceWarranty: req.body.serviceWarranty !== undefined ? (req.body.serviceWarranty ? String(req.body.serviceWarranty).trim() : undefined) : current.serviceWarranty,
+      serviceFeatures: Array.isArray(req.body.serviceFeatures) ? req.body.serviceFeatures.map(String).filter(Boolean) : current.serviceFeatures,
       isVerifiedPro: isVerifiedPro !== undefined ? Boolean(isVerifiedPro) : current.isVerifiedPro,
       isEmergency247: isEmergency247 !== undefined ? Boolean(isEmergency247) : current.isEmergency247,
       videoUrl: videoUrl !== undefined ? (videoUrl ? String(videoUrl).trim() : undefined) : current.videoUrl,
@@ -1265,6 +1282,19 @@ async function startServer() {
       bathrooms: req.body.bathrooms !== undefined ? req.body.bathrooms : current.bathrooms,
       maxGuests: req.body.maxGuests !== undefined ? req.body.maxGuests : current.maxGuests,
       amenities: Array.isArray(req.body.amenities) ? req.body.amenities.map(String).filter(Boolean) : current.amenities,
+      brand: req.body.brand !== undefined ? (req.body.brand ? String(req.body.brand).trim() : undefined) : current.brand,
+      model: req.body.model !== undefined ? (req.body.model ? String(req.body.model).trim() : undefined) : current.model,
+      itemCondition: req.body.itemCondition !== undefined ? (req.body.itemCondition ? String(req.body.itemCondition).trim() : undefined) : current.itemCondition,
+      vehicleType: req.body.vehicleType !== undefined ? (req.body.vehicleType ? String(req.body.vehicleType).trim() : undefined) : current.vehicleType,
+      vehicleYear: req.body.vehicleYear !== undefined ? req.body.vehicleYear : current.vehicleYear,
+      vehicleMileage: req.body.vehicleMileage !== undefined ? req.body.vehicleMileage : current.vehicleMileage,
+      fuelType: req.body.fuelType !== undefined ? (req.body.fuelType ? String(req.body.fuelType).trim() : undefined) : current.fuelType,
+      transmission: req.body.transmission !== undefined ? (req.body.transmission ? String(req.body.transmission).trim() : undefined) : current.transmission,
+      rentalDriverOption: req.body.rentalDriverOption !== undefined ? (req.body.rentalDriverOption ? String(req.body.rentalDriverOption).trim() : undefined) : current.rentalDriverOption,
+      electronicsSubcategory: req.body.electronicsSubcategory !== undefined ? (req.body.electronicsSubcategory ? String(req.body.electronicsSubcategory).trim() : undefined) : current.electronicsSubcategory,
+      storageCapacity: req.body.storageCapacity !== undefined ? (req.body.storageCapacity ? String(req.body.storageCapacity).trim() : undefined) : current.storageCapacity,
+      jobType: req.body.jobType !== undefined ? (req.body.jobType ? String(req.body.jobType).trim() : undefined) : current.jobType,
+      salaryPeriod: req.body.salaryPeriod !== undefined ? (req.body.salaryPeriod ? String(req.body.salaryPeriod).trim() : undefined) : current.salaryPeriod,
     };
 
     saveStoredListings(listingsCache);
