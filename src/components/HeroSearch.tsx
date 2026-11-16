@@ -97,9 +97,18 @@ export interface LightBackgroundItem {
   tag: string;
   imageUrl: string;
   badgeText: string;
+  isPanoramic?: boolean;
 }
 
 export const DEFAULT_LIGHT_BACKGROUNDS: LightBackgroundItem[] = [
+  {
+    id: 'colombo_skyline',
+    name: 'Colombo Skyline & Island-Wide',
+    tag: 'Colombo & Sri Lanka Marketplace',
+    imageUrl: '/assets/aistudio/Gemini_Generated_Image_6ymi9x6ymi9x6ymi_ebb724c0.jpeg',
+    badgeText: 'Colombo & Island-Wide Marketplace',
+    isPanoramic: true,
+  },
   {
     id: 'all_marketplace',
     name: 'Sri Lanka Marketplace',
@@ -183,21 +192,21 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
       selectedCategory === 'Cars for Rent' ||
       selectedCategory === 'Motorcycles'
     ) {
-      setActiveBgIndex(1);
+      setActiveBgIndex(2);
     } else if (
       selectedCategory === 'Property' ||
       selectedCategory === 'Boardings & Annexes' ||
       selectedCategory === 'Holiday Homes'
     ) {
-      setActiveBgIndex(2);
+      setActiveBgIndex(3);
     } else if (
       selectedCategory === 'Electronics' ||
       selectedCategory === 'Phones' ||
       selectedCategory === 'Computers'
     ) {
-      setActiveBgIndex(3);
-    } else {
       setActiveBgIndex(4);
+    } else {
+      setActiveBgIndex(5);
     }
   }, [selectedCategory]);
 
@@ -213,9 +222,10 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
       onMouseLeave={() => setIsAutoRotatePaused(false)}
       className="relative bg-gradient-to-b from-white via-white to-[#F8FAFC]/50 dark:from-[#0B0C10] dark:via-[#111217] dark:to-[#0B0C10] text-[#181920] dark:text-white py-8 sm:py-14 px-4 sm:px-6 lg:px-8 border-b border-gray-200/70 dark:border-white/10 overflow-hidden w-full max-w-full contain-paint transition-colors duration-200"
     >
-      {/* 3 Changing Background Light Images with Smooth Cross-Fade Transitions */}
+      {/* Changing Hero Background Images with Smooth Cross-Fade Transitions */}
       {DEFAULT_LIGHT_BACKGROUNDS.map((bg, index) => {
         const isCurrent = index === activeBgIndex;
+        const isScenic = Boolean(bg.isPanoramic);
         return (
           <div
             key={bg.id}
@@ -223,55 +233,77 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
               isCurrent ? 'opacity-100 z-0' : 'opacity-0 -z-10'
             }`}
           >
-            {/* Mobile Responsive Layout: Left flank (Vehicles/Tech) + Right flank (Villas/Palm Trees) */}
+            {/* Mobile Responsive Layout: Left flank + Right flank */}
             <div className="md:hidden absolute inset-0 pointer-events-none overflow-hidden select-none">
-              {/* Soft atmospheric base sky */}
-              <div className="absolute inset-0 opacity-40 dark:opacity-10">
+              {/* Soft atmospheric base */}
+              <div className={`absolute inset-0 ${isScenic ? 'opacity-30 dark:opacity-20' : 'opacity-40 dark:opacity-10'}`}>
                 <img
                   src={bg.imageUrl}
                   alt=""
-                  className="w-full h-full object-cover object-top"
+                  className="w-full h-full object-cover object-center"
                 />
               </div>
 
               {/* Left Flank */}
-              <div className="absolute -left-2 top-0 bottom-0 w-[62%] max-w-[280px] pointer-events-none overflow-hidden opacity-90 dark:opacity-30">
+              <div className={`absolute -left-2 top-0 bottom-0 w-[62%] max-w-[280px] pointer-events-none overflow-hidden ${isScenic ? 'opacity-75 dark:opacity-35' : 'opacity-90 dark:opacity-30'}`}>
                 <img
                   src={bg.imageUrl}
                   alt=""
                   className="w-full h-full object-cover object-left filter saturate-110 contrast-105"
                 />
                 {/* Smooth blend to center and bottom so text stays ultra-readable */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-white dark:via-[#0B0C10]/40 dark:to-[#0B0C10]" />
-                <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-white/10 dark:from-[#0B0C10]/90 dark:to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-white dark:via-[#0B0C10]/40 dark:to-[#0B0C10]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-transparent to-white/25 dark:from-[#0B0C10]/90 dark:to-transparent" />
               </div>
 
               {/* Right Flank */}
-              <div className="absolute -right-2 top-0 bottom-0 w-[62%] max-w-[280px] pointer-events-none overflow-hidden opacity-90 dark:opacity-30">
+              <div className={`absolute -right-2 top-0 bottom-0 w-[62%] max-w-[280px] pointer-events-none overflow-hidden ${isScenic ? 'opacity-75 dark:opacity-35' : 'opacity-90 dark:opacity-30'}`}>
                 <img
                   src={bg.imageUrl}
                   alt=""
                   className="w-full h-full object-cover object-right filter saturate-110 contrast-105"
                 />
                 {/* Smooth blend to center and bottom so text stays ultra-readable */}
-                <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/20 to-white dark:via-[#0B0C10]/40 dark:to-[#0B0C10]" />
-                <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-white/10 dark:from-[#0B0C10]/90 dark:to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/30 to-white dark:via-[#0B0C10]/40 dark:to-[#0B0C10]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-transparent to-white/25 dark:from-[#0B0C10]/90 dark:to-transparent" />
               </div>
 
               {/* Center Text Readability Gradient Mask */}
-              <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/35 to-transparent dark:from-[#0B0C10] dark:via-[#0B0C10]/70 dark:to-transparent" />
+              <div
+                className={`absolute inset-0 ${
+                  isScenic
+                    ? 'bg-gradient-to-t from-white/95 via-white/65 to-white/55 dark:from-[#0B0C10] dark:via-[#0B0C10]/70 dark:to-[#0B0C10]/40'
+                    : 'bg-gradient-to-t from-white/95 via-white/35 to-transparent dark:from-[#0B0C10] dark:via-[#0B0C10]/70 dark:to-transparent'
+                }`}
+              />
             </div>
 
-            {/* Desktop / Tablet Unified Wide Visual (Full 16:9 Panorama) */}
-            <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden select-none opacity-90 dark:opacity-20 transition-opacity duration-500">
+            {/* Desktop / Tablet Unified Wide Visual (Full Panorama) */}
+            <div
+              className={`hidden md:block absolute inset-0 pointer-events-none overflow-hidden select-none transition-opacity duration-500 ${
+                isScenic ? 'opacity-85 dark:opacity-35' : 'opacity-90 dark:opacity-20'
+              }`}
+            >
               <img
                 src={bg.imageUrl}
                 alt={bg.name}
                 className="w-full h-full object-cover object-center filter saturate-105"
               />
               {/* Multi-directional soft gradients ensuring center text and search card remain 100% crisp & readable */}
-              <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/40 to-white/30 dark:from-[#0B0C10] dark:via-[#0B0C10]/85 dark:to-[#0B0C10]/70" />
-              <div className="absolute inset-0 bg-gradient-to-r from-white/15 via-white/50 to-white/15 dark:from-[#0B0C10]/30 dark:via-[#0B0C10]/75 dark:to-[#0B0C10]/30" />
+              <div
+                className={`absolute inset-0 ${
+                  isScenic
+                    ? 'bg-gradient-to-t from-white/95 via-white/65 to-white/55 dark:from-[#0B0C10] dark:via-[#0B0C10]/75 dark:to-[#0B0C10]/55'
+                    : 'bg-gradient-to-t from-white/95 via-white/40 to-white/30 dark:from-[#0B0C10] dark:via-[#0B0C10]/85 dark:to-[#0B0C10]/70'
+                }`}
+              />
+              <div
+                className={`absolute inset-0 ${
+                  isScenic
+                    ? 'bg-gradient-to-r from-white/20 via-white/75 to-white/20 dark:from-[#0B0C10]/30 dark:via-[#0B0C10]/75 dark:to-[#0B0C10]/30'
+                    : 'bg-gradient-to-r from-white/15 via-white/50 to-white/15 dark:from-[#0B0C10]/30 dark:via-[#0B0C10]/75 dark:to-[#0B0C10]/30'
+                }`}
+              />
             </div>
           </div>
         );
