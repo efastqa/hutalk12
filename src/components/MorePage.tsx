@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { User, ViewTab } from '../types';
 import {
   User as UserIcon,
@@ -92,7 +93,12 @@ export const MorePage: React.FC<MorePageProps> = ({
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Quick Actions Panel */}
-        <div className="bg-white dark:bg-[#181920] border border-gray-200 dark:border-[#2D2F39] rounded-3xl p-5 sm:p-6 shadow-md dark:shadow-xl relative overflow-hidden transition-colors">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          className="bg-white dark:bg-[#181920] border border-gray-200 dark:border-[#2D2F39] rounded-3xl p-5 sm:p-6 shadow-md dark:shadow-xl relative overflow-hidden transition-colors"
+        >
           {/* Subtle ambient accent glow */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF5A36]/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -169,11 +175,16 @@ export const MorePage: React.FC<MorePageProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Mobile App Download Card (Google Play & App Store) */}
         {onOpenAppStore && (
-          <div className="bg-gradient-to-br from-[#12141A] via-[#1B1D25] to-[#12141A] text-white rounded-3xl p-5 sm:p-6 border border-[#2D2F39] shadow-xl relative overflow-hidden">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+            className="bg-gradient-to-br from-[#12141A] via-[#1B1D25] to-[#12141A] text-white rounded-3xl p-5 sm:p-6 border border-[#2D2F39] shadow-xl relative overflow-hidden"
+          >
             <div className="absolute top-0 right-0 w-48 h-48 bg-[#FF5A36]/15 rounded-full blur-2xl pointer-events-none" />
             <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3.5">
@@ -204,11 +215,16 @@ export const MorePage: React.FC<MorePageProps> = ({
                 <span>Get App / Instructions</span>
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* 1. Account Status Card */}
-        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-100 shadow-sm">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+          className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-100 shadow-sm"
+        >
           {currentUser ? (
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3.5">
@@ -261,7 +277,7 @@ export const MorePage: React.FC<MorePageProps> = ({
               </button>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* 2. ALL LOGINS SECTION (Requested by User: "inside more all login need to add") */}
         <section className="space-y-3">

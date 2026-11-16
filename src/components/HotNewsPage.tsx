@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft,
   Flame,
@@ -399,7 +400,11 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
           <>
             {/* Lead Story Split Card */}
             {leadArticle && (
-              <article
+              <motion.article
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{ y: -3 }}
                 onClick={() => openStoryReader(leadArticle)}
                 role="button"
                 tabIndex={0}
@@ -409,7 +414,7 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                     openStoryReader(leadArticle);
                   }
                 }}
-                className="bg-white dark:bg-[#151822] rounded-3xl border border-gray-200 dark:border-white/10 hover:border-[#FF5A36]/50 shadow-sm hover:shadow-md overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch cursor-pointer transition-all group"
+                className="bg-white dark:bg-[#151822] rounded-3xl border border-gray-200 dark:border-white/10 hover:border-[#FF5A36]/50 shadow-sm hover:shadow-md overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch cursor-pointer transition-colors group"
               >
                 <div className="lg:col-span-6 relative min-h-[220px] sm:min-h-[280px] bg-gradient-to-br from-[#0A2540] via-[#133B63] to-[#FF5A36]/80">
                   {leadArticle.imageUrl && !failedImages[leadArticle.id] ? (
@@ -514,7 +519,7 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                     </div>
                   </div>
                 </div>
-              </article>
+              </motion.article>
             )}
 
             {/* Grid of Sri Lanka News Stories */}
@@ -525,8 +530,12 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                   const hasValidImg = Boolean(article.imageUrl) && !failedImages[imgKey];
                   const isSaved = savedIds.includes(article.id);
                   return (
-                    <article
+                    <motion.article
                       key={`${article.id}-${index}`}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.28, delay: Math.min(index * 0.035, 0.28), ease: [0.22, 1, 0.36, 1] }}
+                      whileHover={{ y: -4 }}
                       onClick={() => openStoryReader(article)}
                       role="button"
                       tabIndex={0}
@@ -536,7 +545,7 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                           openStoryReader(article);
                         }
                       }}
-                      className="bg-white dark:bg-[#151822] rounded-2xl border border-gray-200 dark:border-white/10 hover:border-[#FF5A36]/40 shadow-xs overflow-hidden flex flex-col justify-between hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-pointer group"
+                      className="bg-white dark:bg-[#151822] rounded-2xl border border-gray-200 dark:border-white/10 hover:border-[#FF5A36]/40 shadow-xs overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow duration-200 cursor-pointer group"
                     >
                       <div>
                         {/* Visual Slot with Zero-Broken-Image CSS Fallback */}
@@ -634,7 +643,7 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                           </button>
                         </div>
                       </div>
-                    </article>
+                    </motion.article>
                   );
                 })}
               </div>
@@ -644,15 +653,24 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
       </div>
 
       {/* In-App Sri Lanka News Reader Modal */}
+      <AnimatePresence>
       {activeArticle && (
-        <div
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18 }}
           className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
           onClick={() => setActiveArticle(null)}
           role="dialog"
           aria-modal="true"
           aria-labelledby="news-reader-title"
         >
-          <div
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, y: 10 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="w-full max-w-3xl bg-white dark:bg-[#141722] border border-gray-200 dark:border-white/10 rounded-3xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
@@ -793,9 +811,10 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                 </a>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 };

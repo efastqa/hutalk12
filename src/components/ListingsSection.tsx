@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Listing } from '../types';
 import { DualToneHeading } from './DualToneHeading';
 import { InteractiveMapDiscovery } from './InteractiveMapDiscovery';
@@ -501,19 +501,27 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
               key={cat.id}
               type="button"
               onClick={() => onSelectCategory && onSelectCategory(cat.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`relative px-3 py-1.5 rounded-xl text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
                 isActive
-                  ? 'bg-[#FF5A36] text-white shadow-xs'
-                  : 'bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230] hover:text-gray-900 dark:hover:text-white'
+                  ? 'text-white'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230] hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              {cat.label}
+              {isActive && (
+                <motion.span
+                  layoutId="listings-category-tab-pill"
+                  transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                  className="absolute inset-0 bg-[#FF5A36] rounded-xl shadow-xs -z-0"
+                />
+              )}
+              <span className="relative z-10">{cat.label}</span>
             </button>
           );
         })}
       </div>
 
       {/* Dynamic Category-Specific Filter Bar (Custom Category Fields) */}
+      <AnimatePresence initial={false}>
       {(currentCategory === 'Vehicles' ||
         currentCategory === 'Cars for Rent' ||
         currentCategory === 'Motorcycles' ||
@@ -528,7 +536,14 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
         currentCategory === 'Weddings & Events' ||
         currentCategory === 'Education & Tuition' ||
         currentCategory === 'Pets & Animals') && (
-        <div className="mb-6 p-3.5 bg-gray-50/90 dark:bg-[#151822]/90 rounded-2xl border border-gray-200/90 dark:border-[#252836] space-y-2.5">
+        <motion.div
+          key={`filters-${currentCategory}`}
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-6 p-3.5 bg-gray-50/90 dark:bg-[#151822]/90 rounded-2xl border border-gray-200/90 dark:border-[#252836] space-y-2.5"
+        >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs font-bold text-gray-800 dark:text-white flex items-center gap-1.5">
               <SlidersHorizontal className="w-3.5 h-3.5 text-[#FF5A36]" />
@@ -1158,8 +1173,9 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Section Header */}
       <motion.div

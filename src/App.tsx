@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { MotionConfig, AnimatePresence, motion } from 'motion/react';
 import { Listing, User, ViewTab, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, VideoReelItem, EStore, HotNewsArticle } from './types';
 import { api } from './services/api';
 
@@ -1206,6 +1207,7 @@ export default function App() {
   }).length;
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-[#0B0C10] text-[#0F172A] dark:text-[#F8FAFC] pb-16 lg:pb-0 transition-colors duration-200 overflow-x-clip w-full max-w-full">
       {/* Toast Notification Layer */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
@@ -1227,8 +1229,16 @@ export default function App() {
         />
       )}
 
-      {/* Main Views Container */}
+      {/* Main Views Container with Smooth Page Transitions */}
       <main className="flex-1">
+        <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={currentTab}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+        >
         {currentTab === 'marketplace' && (
           <div>
             {/* Search Header Banner */}
@@ -1339,24 +1349,37 @@ export default function App() {
             />
 
             {/* Admin-Managed Promo Ad Image Slides Carousel (Below Listings for faster ad discovery) */}
-            <PromoAdSlider
-              slides={promoSlides}
-              settings={promoSlidesSettings}
-              onSelectCategory={(category) => handleSelectCategory(category, undefined, true)}
-              onOpenPostAd={handleOpenPostAd}
-              onOpenEStore={() => {
-                setTargetEStoreForView(null);
-                setCurrentTab('estore');
-              }}
-              isAdminLoggedIn={isAdminLoggedIn}
-              onAdminManage={() => {
-                setInitialAdminTab('promo_slides');
-                setCurrentTab('admin_dashboard');
-              }}
-            />
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 'some' }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <PromoAdSlider
+                slides={promoSlides}
+                settings={promoSlidesSettings}
+                onSelectCategory={(category) => handleSelectCategory(category, undefined, true)}
+                onOpenPostAd={handleOpenPostAd}
+                onOpenEStore={() => {
+                  setTargetEStoreForView(null);
+                  setCurrentTab('estore');
+                }}
+                isAdminLoggedIn={isAdminLoggedIn}
+                onAdminManage={() => {
+                  setInitialAdminTab('promo_slides');
+                  setCurrentTab('admin_dashboard');
+                }}
+              />
+            </motion.div>
 
             {/* Video Stories / Short Walk-through Reels Bar (Moved Page Down) */}
-            <div className="py-2">
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 'some' }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="py-2"
+            >
               <VideoReelsSection
                 listings={listings}
                 reels={videoReels}
@@ -1366,30 +1389,43 @@ export default function App() {
                 currentUser={currentUser}
                 onToast={showToast}
               />
-            </div>
+            </motion.div>
 
             {/* Explore More Listings: Sri Lanka E-Stores & Online Merchants Showcase Banner */}
-            <ExploreMoreEStoresBanner
-              stores={eStores}
-              onExploreEStores={() => {
-                setTargetEStoreForView(null);
-                setCurrentTab('estore');
-                window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-              }}
-              onRegisterStore={() => {
-                setTargetEStoreForView(null);
-                setCurrentTab('estore');
-                window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-              }}
-              onOpenStore={(store) => {
-                setTargetEStoreForView(store);
-                setCurrentTab('estore');
-                window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-              }}
-            />
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 'some' }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <ExploreMoreEStoresBanner
+                stores={eStores}
+                onExploreEStores={() => {
+                  setTargetEStoreForView(null);
+                  setCurrentTab('estore');
+                  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                }}
+                onRegisterStore={() => {
+                  setTargetEStoreForView(null);
+                  setCurrentTab('estore');
+                  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                }}
+                onOpenStore={(store) => {
+                  setTargetEStoreForView(store);
+                  setCurrentTab('estore');
+                  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                }}
+              />
+            </motion.div>
 
             {/* HUTA IN Community & Events Hub Teaser Banner */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-8">
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 'some' }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-8"
+            >
               <div className="bg-[#111217] border border-[#2D2F39] rounded-3xl p-6 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden">
                 <div className="absolute -right-16 -top-16 w-56 h-56 bg-[#FF5A36]/10 rounded-full blur-3xl pointer-events-none" />
                 <div className="space-y-2 text-center md:text-left z-10">
@@ -1404,20 +1440,28 @@ export default function App() {
                     Discover handpicked local events, motor exhibitions, food carnivals, and cultural celebrations across Sri Lanka.
                   </p>
                 </div>
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ scale: 1.03, y: -1 }}
+                  whileTap={{ scale: 0.96 }}
                   onClick={() => setCurrentTab('huta_in')}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold text-sm shadow-md transition-all shrink-0 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold text-sm shadow-md transition-colors shrink-0 cursor-pointer"
                 >
                   <Calendar className="w-4 h-4" />
                   <span>Explore HUTA IN</span>
                   <ArrowRight className="w-4 h-4" />
-                </button>
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
 
             {/* Qatar Living style Post-An-Ad Banner */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 'some' }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12"
+            >
               <div className="bg-white dark:bg-[#151822] border border-gray-200 dark:border-[#252836] rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6 transition-colors">
                 <div className="space-y-2 text-center md:text-left">
                   <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#FF5A36] uppercase tracking-wider">
@@ -1430,16 +1474,18 @@ export default function App() {
                     Post your ad for free in 60 seconds with AI assistance. Connect with verified buyers directly via WhatsApp and phone call.
                   </p>
                 </div>
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ scale: 1.03, y: -1 }}
+                  whileTap={{ scale: 0.96 }}
                   onClick={handleOpenPostAd}
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold text-sm shadow-md hover:shadow-lg transition-all shrink-0 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold text-sm shadow-md hover:shadow-lg transition-colors shrink-0 cursor-pointer"
                 >
                   <PlusCircle className="w-5 h-5" />
                   <span>Post Free Advertisement</span>
-                </button>
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
           </div>
         )}
 
@@ -1618,6 +1664,8 @@ export default function App() {
             }}
           />
         )}
+        </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Modals */}
@@ -1803,5 +1851,6 @@ export default function App() {
         />
       )}
     </div>
+    </MotionConfig>
   );
 }

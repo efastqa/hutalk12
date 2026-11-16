@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { Home, Plus, LayoutGrid, MoreHorizontal, Sparkles } from 'lucide-react';
 import { ViewTab } from '../types';
 
@@ -32,22 +33,27 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     >
       <div className="max-w-md md:max-w-lg lg:max-w-2xl mx-auto px-4 flex items-center justify-between relative h-16 sm:h-[68px]">
         {/* 1. Home */}
-        <button
+        <motion.button
           type="button"
           id="nav-tab-home"
+          whileTap={{ scale: 0.9 }}
           onClick={() => onSelectTab('marketplace')}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all group ${
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors group cursor-pointer ${
             isHomeActive ? 'text-[#FF5A36]' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white'
           }`}
         >
           <div className="relative">
             <Home
-              className={`w-6 h-6 transition-transform group-active:scale-90 ${
+              className={`w-6 h-6 transition-transform ${
                 isHomeActive ? 'stroke-[2.5]' : 'stroke-[2]'
               }`}
             />
             {isHomeActive && (
-              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-[#FF5A36] rounded-full" />
+              <motion.span
+                layoutId="bottom-nav-active-bar"
+                transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-[#FF5A36] rounded-full"
+              />
             )}
           </div>
           <span
@@ -57,25 +63,30 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           >
             Home
           </span>
-        </button>
+        </motion.button>
 
         {/* 2. HUTA IN */}
-        <button
+        <motion.button
           type="button"
           id="nav-tab-huta-in"
+          whileTap={{ scale: 0.9 }}
           onClick={() => onSelectTab('huta_in')}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all group ${
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors group cursor-pointer ${
             isHutaInActive ? 'text-[#FF5A36]' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white'
           }`}
         >
           <div className="relative">
             <Sparkles
-              className={`w-6 h-6 transition-transform group-active:scale-90 ${
+              className={`w-6 h-6 transition-transform ${
                 isHutaInActive ? 'stroke-[2.5]' : 'stroke-[2]'
               }`}
             />
             {isHutaInActive && (
-              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-[#FF5A36] rounded-full" />
+              <motion.span
+                layoutId="bottom-nav-active-bar"
+                transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-[#FF5A36] rounded-full"
+              />
             )}
           </div>
           <span
@@ -85,42 +96,50 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           >
             HUTA <span className="text-[#FF5A36] font-black">in</span>
           </span>
-        </button>
+        </motion.button>
 
-        {/* 3. Center Elevated Create Ad Button (Matching Image 1) */}
+        {/* 3. Center Elevated Create Ad Button */}
         <div className="flex-1 flex flex-col items-center justify-center -mt-6 sm:-mt-7 z-10">
-          <button
+          <motion.button
             type="button"
             id="nav-create-ad-btn"
+            whileHover={{ scale: 1.07, y: -2 }}
+            whileTap={{ scale: 0.92 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 24 }}
             onClick={onOpenPostAd}
             title="Create an Advertisement"
             aria-label="Create Advertisement"
-            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-[#FF5A36] to-[#FF7A50] text-white shadow-[0_8px_20px_rgba(255,90,54,0.4)] flex items-center justify-center border-4 border-white dark:border-[#111217] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
+            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-[#FF5A36] to-[#FF7A50] text-white shadow-[0_8px_20px_rgba(255,90,54,0.4)] flex items-center justify-center border-4 border-white dark:border-[#111217] cursor-pointer"
           >
             <Plus className="w-8 h-8 sm:w-9 sm:h-9 stroke-[3]" />
-          </button>
+          </motion.button>
           <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300 mt-1 whitespace-nowrap">
             Create Ad
           </span>
         </div>
 
         {/* 4. Dashboard */}
-        <button
+        <motion.button
           type="button"
           id="nav-tab-dashboard"
+          whileTap={{ scale: 0.9 }}
           onClick={() => onSelectTab(isAdminLoggedIn ? 'admin_dashboard' : 'user_dashboard')}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all group ${
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors group cursor-pointer ${
             isDashboardActive ? 'text-[#FF5A36]' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white'
           }`}
         >
           <div className="relative">
             <LayoutGrid
-              className={`w-6 h-6 transition-transform group-active:scale-90 ${
+              className={`w-6 h-6 transition-transform ${
                 isDashboardActive ? 'stroke-[2.5]' : 'stroke-[2]'
               }`}
             />
             {isDashboardActive && (
-              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-[#FF5A36] rounded-full" />
+              <motion.span
+                layoutId="bottom-nav-active-bar"
+                transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-[#FF5A36] rounded-full"
+              />
             )}
           </div>
           <span
@@ -130,25 +149,30 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           >
             Dashboard
           </span>
-        </button>
+        </motion.button>
 
-        {/* 5. More (Houses all logins as requested) */}
-        <button
+        {/* 5. More */}
+        <motion.button
           type="button"
           id="nav-tab-more"
+          whileTap={{ scale: 0.9 }}
           onClick={() => onSelectTab('more')}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all group ${
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition-colors group cursor-pointer ${
             isMoreActive ? 'text-[#FF5A36]' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white'
           }`}
         >
           <div className="relative">
             <MoreHorizontal
-              className={`w-6 h-6 transition-transform group-active:scale-90 ${
+              className={`w-6 h-6 transition-transform ${
                 isMoreActive ? 'stroke-[2.5]' : 'stroke-[2]'
               }`}
             />
             {isMoreActive && (
-              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-[#FF5A36] rounded-full" />
+              <motion.span
+                layoutId="bottom-nav-active-bar"
+                transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-[#FF5A36] rounded-full"
+              />
             )}
           </div>
           <span
@@ -158,7 +182,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           >
             More
           </span>
-        </button>
+        </motion.button>
       </div>
     </nav>
   );
