@@ -11,6 +11,7 @@ import {
   Wrench,
   Briefcase,
   Layers,
+  MessageSquarePlus,
 } from 'lucide-react';
 import { HeroAd, HeroAdSettings, Listing } from '../types';
 import { HeroAdBanner } from './HeroAdBanner';
@@ -51,6 +52,8 @@ interface HeroSearchProps {
   onSelectListing?: (listing: Listing) => void;
   verifiedOnly?: boolean;
   onToggleVerifiedOnly?: () => void;
+  onOpenBuyerRequests?: () => void;
+  openBuyerRequestsCount?: number;
 }
 
 const DISTRICTS = [
@@ -168,6 +171,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   onSelectListing,
   verifiedOnly = false,
   onToggleVerifiedOnly,
+  onOpenBuyerRequests,
+  openBuyerRequestsCount = 0,
 }) => {
   // 5 Changing Background Light Images state
   const [activeBgIndex, setActiveBgIndex] = useState<number>(0);
@@ -375,6 +380,19 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                 </button>
               );
             })}
+            {onOpenBuyerRequests && (
+              <button
+                type="button"
+                id="hero-looking-for-tab-btn"
+                onClick={onOpenBuyerRequests}
+                className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-t-xl text-xs sm:text-sm font-bold text-[#FF5A36] bg-orange-50/70 dark:bg-[#FF5A36]/15 hover:bg-[#FF5A36] hover:text-white transition-all cursor-pointer whitespace-nowrap"
+              >
+                <MessageSquarePlus className="w-3.5 h-3.5" />
+                <span>
+                  Looking For{openBuyerRequestsCount > 0 ? ` (${openBuyerRequestsCount})` : ''}
+                </span>
+              </button>
+            )}
           </div>
 
           {/* Main Search Bar Box - Frosted Glass with Deep Shadow */}

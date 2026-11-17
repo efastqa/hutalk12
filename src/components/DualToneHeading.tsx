@@ -149,8 +149,10 @@ export const DualToneHeading: React.FC<DualToneHeadingProps> = ({
   className = '',
   id,
 }) => {
-  // Convert accentText to array
-  const words = Array.isArray(accentText) ? accentText : [accentText];
+  // Convert accentText to safe string array
+  const words = (Array.isArray(accentText) ? accentText : [accentText]).map((w) =>
+    typeof w === 'string' ? w : String(w ?? '')
+  );
   const [index, setIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [typewriterText, setTypewriterText] = useState('');
@@ -161,7 +163,9 @@ export const DualToneHeading: React.FC<DualToneHeadingProps> = ({
   const sizeConfig = SIZE_STYLES[size] || SIZE_STYLES.lg;
 
   // Helper to render accent content, replacing "Sri Lanka" or "🇱🇰" with the graphic flag matching the attached image
-  const renderAccentContent = (word: string) => {
+  const renderAccentContent = (rawWord?: string) => {
+    const word = typeof rawWord === 'string' ? rawWord : String(rawWord ?? '');
+    if (!word) return null;
     if (/Sri Lanka/i.test(word)) {
       const clean = word.replace(/🇱🇰/g, '').trim();
       return (
@@ -252,7 +256,7 @@ export const DualToneHeading: React.FC<DualToneHeadingProps> = ({
     }
   };
 
-  const currentAccentWord = words[index % words.length];
+  const currentAccentWord = words[index % words.length] || '';
 
   // Align classes
   const alignClass =

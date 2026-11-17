@@ -137,6 +137,7 @@ export type ViewTab =
   | 'estore'
   | 'huta_in'
   | 'hot_news'
+  | 'buyer_requests'
   | 'categories'
   | 'user_dashboard'
   | 'admin_dashboard'
@@ -425,4 +426,40 @@ export interface CourierCalculation {
   recommendedService: string;
 }
 
+// -------------------------------------------------------------
+// Wanted / Buyer Request Board ("Looking For")
+// -------------------------------------------------------------
 
+export type BuyerRequestUrgency = 'urgent' | 'this_week' | 'flexible';
+export type BuyerRequestStatus = 'open' | 'fulfilled' | 'closed';
+
+export interface BuyerRequestOffer {
+  id: string;
+  sellerName: string;
+  sellerPhone: string;
+  sellerUserId?: string;
+  itemTitle: string;
+  offeredPrice: number;
+  message: string;
+  listingId?: string;
+  createdAt: string;
+}
+
+export interface BuyerRequest {
+  id: string;
+  title: string;
+  category: string;
+  district: string;
+  location: string;
+  maxBudget: number;
+  urgency: BuyerRequestUrgency;
+  description: string;
+  buyerName: string;
+  buyerPhone: string;
+  userId: string;
+  status: BuyerRequestStatus;
+  offersCount: number;
+  offers: BuyerRequestOffer[];
+  createdAt: string;
+  updatedAt: string;
+}

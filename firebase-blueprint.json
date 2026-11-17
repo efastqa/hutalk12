@@ -156,6 +156,30 @@
       },
       "required": ["conversationId", "senderId", "senderName", "text", "createdAt"]
     },
+    "BuyerRequest": {
+      "title": "BuyerRequest",
+      "description": "A Wanted / Looking For buyer request posted on HUTA.LK with seller offers.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "maxLength": 100 },
+        "district": { "type": "string", "maxLength": 100 },
+        "location": { "type": "string", "maxLength": 120 },
+        "maxBudget": { "type": "number" },
+        "urgency": { "type": "string", "enum": ["urgent", "this_week", "flexible"] },
+        "description": { "type": "string", "maxLength": 3000 },
+        "buyerName": { "type": "string", "maxLength": 100 },
+        "buyerPhone": { "type": "string", "maxLength": 50 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "enum": ["open", "fulfilled", "closed"] },
+        "offersCount": { "type": "number" },
+        "offers": { "type": "array" },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "title", "category", "district", "maxBudget", "buyerPhone", "status", "createdAt"]
+    },
     "TestConnection": {
       "title": "TestConnection",
       "description": "Health check document to verify Cloud Firestore connectivity upon app boot.",
@@ -197,6 +221,10 @@
     "/conversations/{conversationId}/messages/{messageId}": {
       "schema": { "$ref": "#/entities/Message" },
       "description": "Subcollection of chat messages belonging to a conversation."
+    },
+    "/buyer_requests/{requestId}": {
+      "schema": { "$ref": "#/entities/BuyerRequest" },
+      "description": "Wanted / Looking For buyer request board posts and seller offers."
     }
   }
 }

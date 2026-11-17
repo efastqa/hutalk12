@@ -19,6 +19,7 @@ import {
   GraduationCap,
   Dog,
   PartyPopper,
+  MessageSquarePlus,
 } from 'lucide-react';
 
 interface QuickCreateOption {
@@ -151,6 +152,7 @@ interface QuickCreateMenuProps {
   onSelectCategory: (category?: string) => void;
   onSelectVideoReel: () => void;
   onSelectEStore: () => void;
+  onSelectBuyerRequest?: () => void;
 }
 
 export const QuickCreateMenu: React.FC<QuickCreateMenuProps> = ({
@@ -159,6 +161,7 @@ export const QuickCreateMenu: React.FC<QuickCreateMenuProps> = ({
   onSelectCategory,
   onSelectVideoReel,
   onSelectEStore,
+  onSelectBuyerRequest,
 }) => {
   useEffect(() => {
     if (!isOpen) return;
@@ -228,6 +231,31 @@ export const QuickCreateMenu: React.FC<QuickCreateMenuProps> = ({
 
             {/* Scrollable Body */}
             <div className="p-5 sm:p-6 overflow-y-auto space-y-5">
+              {/* Highlighted Looking For / Buyer Request inside Create Ad */}
+              {onSelectBuyerRequest && (
+                <button
+                  type="button"
+                  id="quick-create-looking-for-btn"
+                  onClick={onSelectBuyerRequest}
+                  className="w-full group flex items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl border-2 border-[#FF5A36]/35 bg-orange-50/70 dark:bg-[#FF5A36]/12 hover:border-[#FF5A36] hover:bg-orange-50 dark:hover:bg-[#FF5A36]/20 text-left transition-all cursor-pointer active:scale-[0.99]"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-[#FF5A36] text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                      <MessageSquarePlus className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs sm:text-sm font-black text-gray-900 dark:text-white truncate group-hover:text-[#FF5A36] transition-colors">
+                        Looking For · Post Buyer Request
+                      </div>
+                      <div className="text-[11px] text-gray-600 dark:text-gray-300 truncate mt-0.5">
+                        Post what you want to buy or rent with your max budget & receive seller offers
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#FF5A36] shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              )}
+
               {/* Primary Classified Ad Categories */}
               <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                 {QUICK_CREATE_OPTIONS.map((opt) => {

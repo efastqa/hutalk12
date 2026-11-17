@@ -35,6 +35,20 @@ service cloud.firestore {
              (!('description' in data) || (data.description is string && data.description.size() <= 20000));
     }
 
+    function isValidBuyerRequest(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 100 &&
+             data.district is string && data.district.size() > 0 && data.district.size() <= 100 &&
+             data.maxBudget is number && data.maxBudget >= 0 &&
+             data.buyerPhone is string && data.buyerPhone.size() > 0 && data.buyerPhone.size() <= 50 &&
+             data.urgency in ['urgent', 'this_week', 'flexible'] &&
+             data.status in ['open', 'fulfilled', 'closed'] &&
+             (!('location' in data) || (data.location is string && data.location.size() <= 120)) &&
+             (!('buyerName' in data) || (data.buyerName is string && data.buyerName.size() <= 100)) &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 3000)) &&
+             (!('offers' in data) || data.offers is list);
+    }
+
     // Master Gate helper: Get parent conversation document
     function getConversation(conversationId) {
       return get(/databases/$(database)/documents/conversations/$(conversationId)).data;
@@ -170,6 +184,16 @@ service cloud.firestore {
 
         allow update, delete: if false;
       }
+    }
+
+    // Wanted / Buyer Request Board ("Looking For")
+    match /buyer_requests/{requestId} {
+      allow get, list: if true;
+      allow create: if isValidId(requestId) && isValidBuyerRequest(incoming());
+      allow update: if isValidId(requestId) &&
+        (!('status' in incoming()) || incoming().status in ['open', 'fulfilled', 'closed']) &&
+        (!('offers' in incoming()) || incoming().offers is list);
+      allow delete: if isValidId(requestId);
     }
   }
 }

@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { MotionConfig, AnimatePresence, motion } from 'motion/react';
-import { Listing, User, ViewTab, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, VideoReelItem, EStore, HotNewsArticle } from './types';
+import { Listing, User, ViewTab, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, VideoReelItem, EStore, HotNewsArticle, BuyerRequest } from './types';
 import { api } from './services/api';
 
 // Components
 import { Navbar } from './components/Navbar';
 import { HeroSearch } from './components/HeroSearch';
 import { HotNewsPage } from './components/HotNewsPage';
+import { BuyerRequestsBoard, BuyerRequestsHomeStrip } from './components/BuyerRequestsBoard';
 import { CategoryGrid } from './components/CategoryGrid';
 import { PromoAdSlider } from './components/PromoAdSlider';
 import { ListingsSection } from './components/ListingsSection';
@@ -33,7 +34,7 @@ import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { VideoReelsSection } from './components/VideoReelsSection';
 import { LegalPoliciesModal, PolicyTab } from './components/LegalPoliciesModal';
 import { testConnection } from './firebase';
-import { MapPin, Sparkles, PlusCircle, Calendar, ArrowRight, Star, Compass } from 'lucide-react';
+import { MapPin, Sparkles, PlusCircle, Calendar, ArrowRight, Star, Compass, MessageSquarePlus } from 'lucide-react';
 
 function getInitialTab(): ViewTab {
   try {
@@ -55,6 +56,7 @@ function getInitialTab(): ViewTab {
     if (tab === 'estore') return 'estore';
     if (tab === 'huta_in') return 'huta_in';
     if (tab === 'hot_news') return 'hot_news';
+    if (tab === 'buyer_requests') return 'buyer_requests';
     if (tab === 'categories') return 'categories';
     if (tab === 'user_dashboard') return 'user_dashboard';
     if (tab === 'more') return 'more';
@@ -104,6 +106,8 @@ export default function App() {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [videoReels, setVideoReels] = useState<VideoReelItem[]>([]);
   const [eStores, setEStores] = useState<EStore[]>([]);
+  const [buyerRequests, setBuyerRequests] = useState<BuyerRequest[]>([]);
+  const [openBuyerRequestPostModal, setOpenBuyerRequestPostModal] = useState<boolean>(false);
   const [targetEStoreForView, setTargetEStoreForView] = useState<EStore | null>(null);
   const [promoSlides, setPromoSlides] = useState<PromoSlide[]>(() => {
     try {
@@ -371,19 +375,23 @@ export default function App() {
     fetchPromoSlides();
     fetchVideoReels();
     fetchEStores();
+    fetchBuyerRequests();
     loadSriLankaNews();
 
     const newsInterval = window.setInterval(() => {
       loadSriLankaNews(false);
     }, 5 * 60 * 1000);
 
-    // Subscribe to live video stories & promo slides updates
+    // Subscribe to live video stories, promo slides & buyer requests updates
     const unsubReels = api.subscribeToVideoReels((reels) => {
       setVideoReels(reels);
     });
     const unsubPromoSlides = api.subscribeToPromoSlides((data) => {
       if (data.settings) setPromoSlidesSettings(data.settings);
       if (Array.isArray(data.slides)) setPromoSlides(data.slides);
+    });
+    const unsubBuyerRequests = api.subscribeToBuyerRequests((reqs) => {
+      setBuyerRequests(reqs);
     });
 
     // 4. Test Firebase Firestore connection
@@ -393,6 +401,7 @@ export default function App() {
       window.clearInterval(newsInterval);
       unsubReels();
       unsubPromoSlides();
+      unsubBuyerRequests();
     };
   }, []);
 
@@ -417,6 +426,17 @@ export default function App() {
       const data = await api.getEStores();
       if (Array.isArray(data)) {
         setEStores(data);
+      }
+    } catch {
+      // Graceful fallback
+    }
+  };
+
+  const fetchBuyerRequests = async () => {
+    try {
+      const data = await api.getBuyerRequests();
+      if (Array.isArray(data)) {
+        setBuyerRequests(data);
       }
     } catch {
       // Graceful fallback
@@ -985,6 +1005,13 @@ export default function App() {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   };
 
+  const handleQuickCreateBuyerRequest = () => {
+    setIsQuickCreateOpen(false);
+    setOpenBuyerRequestPostModal(true);
+    setCurrentTab('buyer_requests');
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  };
+
   const handleEditListing = (listing: Listing) => {
     setSelectedListing(null);
     setQuickCreateCategory(undefined);
@@ -1266,6 +1293,8 @@ export default function App() {
               onSelectListing={handleSelectListing}
               verifiedOnly={verifiedOnly}
               onToggleVerifiedOnly={() => setVerifiedOnly((prev) => !prev)}
+              onOpenBuyerRequests={() => setCurrentTab('buyer_requests')}
+              openBuyerRequestsCount={buyerRequests.filter((r) => r.status === 'open').length}
             />
 
             {/* Category Browser ("Explore Our Categories" + Live Sri Lanka Hot News Icon) */}
@@ -1456,7 +1485,18 @@ export default function App() {
               </div>
             </motion.div>
 
-            {/* Qatar Living style Post-An-Ad Banner */}
+            {/* Create Ad & Looking For Buyer Requests Placement */}
+            {buyerRequests.some((r) => r.status === 'open') && (
+              <BuyerRequestsHomeStrip
+                requests={buyerRequests}
+                onBrowseAll={() => setCurrentTab('buyer_requests')}
+                onPostRequest={() => {
+                  setOpenBuyerRequestPostModal(true);
+                  setCurrentTab('buyer_requests');
+                }}
+              />
+            )}
+
             <motion.div
               initial={{ opacity: 0, y: 18 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1470,22 +1510,34 @@ export default function App() {
                     <span>Direct Buyer-Seller Connection</span>
                   </div>
                   <h3 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
-                    Have something to sell or rent in Sri Lanka?
+                    Have something to sell, or looking to buy in Sri Lanka?
                   </h3>
                   <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-lg">
-                    Post your ad for free in 60 seconds with AI assistance. Connect with verified buyers directly via WhatsApp and phone call.
+                    Post a free sale ad in 60 seconds, or post a Looking For buyer request with your budget and let sellers send offers directly.
                   </p>
                 </div>
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.03, y: -1 }}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={handleOpenPostAd}
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold text-sm shadow-md hover:shadow-lg transition-colors shrink-0 cursor-pointer"
-                >
-                  <PlusCircle className="w-5 h-5" />
-                  <span>Post Free Advertisement</span>
-                </motion.button>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0 w-full md:w-auto">
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.03, y: -1 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={handleQuickCreateBuyerRequest}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-[#FF5A36] dark:hover:bg-[#FF5A36] dark:hover:text-white font-bold text-sm shadow-sm transition-colors cursor-pointer"
+                  >
+                    <MessageSquarePlus className="w-4 h-4" />
+                    <span>Looking For · Buyer Request</span>
+                  </motion.button>
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.03, y: -1 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={handleOpenPostAd}
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#FF5A36] hover:bg-[#E04826] text-white font-bold text-sm shadow-md hover:shadow-lg transition-colors cursor-pointer"
+                  >
+                    <PlusCircle className="w-5 h-5" />
+                    <span>Post Free Advertisement</span>
+                  </motion.button>
+                </div>
               </div>
             </motion.div>
           </div>
@@ -1525,6 +1577,22 @@ export default function App() {
             isLoading={isLoadingHotNews}
             onRefresh={() => loadSriLankaNews(true)}
             onBackToHome={() => setCurrentTab('marketplace')}
+            onToast={showToast}
+          />
+        )}
+
+        {currentTab === 'buyer_requests' && (
+          <BuyerRequestsBoard
+            requests={buyerRequests}
+            currentUser={currentUser}
+            isAdminLoggedIn={isAdminLoggedIn}
+            listings={listings}
+            selectedDistrict={selectedLocation}
+            initialOpenPostModal={openBuyerRequestPostModal}
+            onConsumeInitialPostModal={() => setOpenBuyerRequestPostModal(false)}
+            onBackToHome={() => setCurrentTab('marketplace')}
+            onSelectListing={handleSelectListing}
+            onRequestsChange={setBuyerRequests}
             onToast={showToast}
           />
         )}
@@ -1741,6 +1809,7 @@ export default function App() {
         onSelectCategory={handleQuickCreateSelectCategory}
         onSelectVideoReel={handleQuickCreateStory}
         onSelectEStore={handleQuickCreateEStore}
+        onSelectBuyerRequest={handleQuickCreateBuyerRequest}
       />
 
       <AddStoryModal
@@ -1774,6 +1843,7 @@ export default function App() {
           setQuickCreateCategory(undefined);
         }}
         onOpenMyAds={() => setCurrentTab('user_dashboard')}
+        onSwitchToBuyerRequest={handleQuickCreateBuyerRequest}
         initialCategory={
           quickCreateCategory || (selectedCategory !== 'All' ? selectedCategory : undefined)
         }

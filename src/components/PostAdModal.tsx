@@ -163,6 +163,7 @@ interface PostAdModalProps {
   onToast: (message: string, type?: 'success' | 'error' | 'info') => void;
   onSelectListing?: (listing: Listing) => void;
   onOpenMyAds?: () => void;
+  onSwitchToBuyerRequest?: () => void;
   initialCategory?: string;
   initialDistrict?: string;
 }
@@ -536,6 +537,7 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
   onToast,
   onSelectListing,
   onOpenMyAds,
+  onSwitchToBuyerRequest,
   initialCategory,
   initialDistrict,
 }) => {
@@ -1266,6 +1268,24 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 Reach thousands of active buyers across all 25 districts with zero commission.
               </p>
+
+              {!editingListing && onSwitchToBuyerRequest && (
+                <div className="mt-3 inline-flex p-1 rounded-xl bg-gray-100 dark:bg-[#1C202E] border border-gray-200/80 dark:border-white/10 gap-1">
+                  <span className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#141722] text-xs font-extrabold text-gray-900 dark:text-white shadow-2xs">
+                    Selling / Renting / Service
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onSwitchToBuyerRequest();
+                    }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#FF5A36] hover:bg-orange-50 dark:hover:bg-[#FF5A36]/15 transition-colors cursor-pointer"
+                  >
+                    Looking For · Buyer Request
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Guest Posting Note */}

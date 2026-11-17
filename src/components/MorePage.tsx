@@ -28,6 +28,7 @@ import {
   Moon,
   Store,
   Mail,
+  MessageSquarePlus,
 } from 'lucide-react';
 import { DeviceSettingsPanel } from './DeviceSettingsPanel';
 import { ThemeToggle } from './ThemeToggle';
@@ -484,6 +485,29 @@ export const MorePage: React.FC<MorePageProps> = ({
                   </div>
                   <p className="text-xs text-gray-400 dark:text-gray-500">
                     Real-time Sri Lankan breaking news, business, sports & tech headlines
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </button>
+
+            {/* Looking For — Buyer Request Board */}
+            <button
+              type="button"
+              id="more-menu-buyer-requests"
+              onClick={() => onSelectTab('buyer_requests')}
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-[#FF5A36] flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <MessageSquarePlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-[#FF5A36] transition-colors">
+                    Looking For — Buyer Request Board
+                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    Post what you need with a budget or respond with seller offers
                   </p>
                 </div>
               </div>

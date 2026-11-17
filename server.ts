@@ -297,6 +297,37 @@ interface VideoReelItem {
   views?: number;
 }
 
+interface BuyerRequestOffer {
+  id: string;
+  sellerName: string;
+  sellerPhone: string;
+  sellerUserId?: string;
+  itemTitle: string;
+  offeredPrice: number;
+  message: string;
+  listingId?: string;
+  createdAt: string;
+}
+
+interface BuyerRequest {
+  id: string;
+  title: string;
+  category: string;
+  district: string;
+  location: string;
+  maxBudget: number;
+  urgency: 'urgent' | 'this_week' | 'flexible';
+  description: string;
+  buyerName: string;
+  buyerPhone: string;
+  userId: string;
+  status: 'open' | 'fulfilled' | 'closed';
+  offersCount: number;
+  offers: BuyerRequestOffer[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 function resolvePort(): number {
   const portArgIndex = process.argv.indexOf('--port');
   if (portArgIndex !== -1 && process.argv[portArgIndex + 1]) {
@@ -322,6 +353,7 @@ const REVIEWS_FILE = path.join(DATA_DIR, 'reviews.json');
 const REPORTS_FILE = path.join(DATA_DIR, 'reports.json');
 const ESTORES_FILE = path.join(DATA_DIR, 'estores.json');
 const VIDEO_REELS_FILE = path.join(DATA_DIR, 'video-reels.json');
+const BUYER_REQUESTS_FILE = path.join(DATA_DIR, 'buyer-requests.json');
 
 interface AdminConfig {
   password?: string;
@@ -523,6 +555,21 @@ function deleteVideoReelFromFirestore(id: string) {
   if (!firestoreDb) return;
   deleteDoc(doc(firestoreDb, 'video_reels', id)).catch((err) => {
     console.warn('[Firestore] delete video reel error:', err);
+  });
+}
+
+function persistBuyerRequestToFirestore(reqItem: BuyerRequest) {
+  if (!firestoreDb) return;
+  const clean = sanitizeForFirestoreServer(reqItem);
+  setDoc(doc(firestoreDb, 'buyer_requests', reqItem.id), clean, { merge: true }).catch((err) => {
+    console.warn('[Firestore] persist buyer request error:', err);
+  });
+}
+
+function deleteBuyerRequestFromFirestore(id: string) {
+  if (!firestoreDb) return;
+  deleteDoc(doc(firestoreDb, 'buyer_requests', id)).catch((err) => {
+    console.warn('[Firestore] delete buyer request error:', err);
   });
 }
 
@@ -918,6 +965,33 @@ function saveStoredVideoReels(reels: VideoReelItem[]) {
   }
 }
 
+function getStoredBuyerRequests(): BuyerRequest[] {
+  try {
+    if (fs.existsSync(BUYER_REQUESTS_FILE)) {
+      const data = fs.readFileSync(BUYER_REQUESTS_FILE, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) {
+        return parsed.map((r) => ({
+          ...r,
+          offers: Array.isArray(r.offers) ? r.offers : [],
+          offersCount: typeof r.offersCount === 'number' ? r.offersCount : (Array.isArray(r.offers) ? r.offers.length : 0),
+        }));
+      }
+    }
+  } catch (err) {
+    console.error('Error reading buyer requests file', err);
+  }
+  return [];
+}
+
+function saveStoredBuyerRequests(requests: BuyerRequest[]) {
+  try {
+    fs.writeFileSync(BUYER_REQUESTS_FILE, JSON.stringify(requests, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error saving buyer requests file', err);
+  }
+}
+
 let listingsCache = getStoredListings();
 let usersCache = getStoredUsers();
 let eventsCache = getStoredEvents();
@@ -927,6 +1001,7 @@ let reviewsCache = getStoredReviews();
 let reportsCache = getStoredReports();
 let eStoresCache = getStoredEStores();
 let videoReelsCache = getStoredVideoReels();
+let buyerRequestsCache = getStoredBuyerRequests();
 
 // Lazy initialize Gemini client
 let genAIClient: GoogleGenAI | null = null;
@@ -3839,6 +3914,167 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
     res.json({ success: true });
   });
 
+  // -------------------------------------------------------------
+  // Wanted / Buyer Request Board ("Looking For") API
+  // -------------------------------------------------------------
+
+  app.get('/api/buyer-requests', (req, res) => {
+    const { category, district, urgency, status, search } = req.query;
+    let result = [...buyerRequestsCache];
+
+    if (status && status !== 'all') {
+      result = result.filter((r) => r.status === String(status));
+    }
+    if (category && category !== 'All') {
+      const catLow = String(category).toLowerCase();
+      result = result.filter((r) => r.category.toLowerCase() === catLow);
+    }
+    if (district && district !== 'All Sri Lanka') {
+      const distLow = String(district).toLowerCase();
+      result = result.filter(
+        (r) =>
+          r.district.toLowerCase() === distLow ||
+          r.location.toLowerCase().includes(distLow)
+      );
+    }
+    if (urgency && urgency !== 'all') {
+      result = result.filter((r) => r.urgency === String(urgency));
+    }
+    if (search) {
+      const q = String(search).toLowerCase().trim();
+      result = result.filter(
+        (r) =>
+          r.title.toLowerCase().includes(q) ||
+          r.description.toLowerCase().includes(q) ||
+          r.location.toLowerCase().includes(q) ||
+          r.category.toLowerCase().includes(q)
+      );
+    }
+
+    result.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    res.json(result);
+  });
+
+  app.post('/api/buyer-requests', (req, res) => {
+    const data = req.body || {};
+    const title = String(data.title || '').trim();
+    const buyerPhone = String(data.buyerPhone || '').trim();
+    if (!title || !buyerPhone) {
+      return res.status(400).json({ error: 'Title and contact phone number are required.' });
+    }
+
+    const now = new Date().toISOString();
+    const id = data.id || `req_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const urgencyVal = data.urgency === 'urgent' || data.urgency === 'this_week' || data.urgency === 'flexible'
+      ? data.urgency
+      : 'this_week';
+    const statusVal = data.status === 'fulfilled' || data.status === 'closed' ? data.status : 'open';
+    const districtVal = String(data.district || 'Colombo').trim() || 'Colombo';
+    const offersList: BuyerRequestOffer[] = Array.isArray(data.offers) ? data.offers : [];
+
+    const created: BuyerRequest = {
+      id,
+      title: title.slice(0, 200),
+      category: String(data.category || 'Other').trim().slice(0, 100) || 'Other',
+      district: districtVal.slice(0, 100),
+      location: String(data.location || districtVal).trim().slice(0, 120) || districtVal,
+      maxBudget: Math.max(0, Number(data.maxBudget) || 0),
+      urgency: urgencyVal,
+      description: String(data.description || '').trim().slice(0, 3000),
+      buyerName: String(data.buyerName || 'Verified Buyer').trim().slice(0, 100) || 'Verified Buyer',
+      buyerPhone: buyerPhone.slice(0, 50),
+      userId: String(data.userId || 'guest').slice(0, 128),
+      status: statusVal,
+      offersCount: offersList.length,
+      offers: offersList,
+      createdAt: data.createdAt || now,
+      updatedAt: now,
+    };
+
+    const existingIdx = buyerRequestsCache.findIndex((r) => r.id === id);
+    if (existingIdx !== -1) {
+      buyerRequestsCache[existingIdx] = created;
+    } else {
+      buyerRequestsCache.unshift(created);
+    }
+    saveStoredBuyerRequests(buyerRequestsCache);
+    persistBuyerRequestToFirestore(created);
+    res.status(201).json(created);
+  });
+
+  app.post('/api/buyer-requests/:id/offers', (req, res) => {
+    const idx = buyerRequestsCache.findIndex((r) => r.id === req.params.id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'Buyer request not found' });
+    }
+    const data = req.body || {};
+    const sellerName = String(data.sellerName || '').trim();
+    const sellerPhone = String(data.sellerPhone || '').trim();
+    const itemTitle = String(data.itemTitle || '').trim();
+    const message = String(data.message || '').trim();
+
+    if (!sellerName || !sellerPhone || !itemTitle) {
+      return res.status(400).json({ error: 'Seller name, phone, and offered item title are required.' });
+    }
+
+    const newOffer: BuyerRequestOffer = {
+      id: data.id || `offer_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      sellerName: sellerName.slice(0, 100),
+      sellerPhone: sellerPhone.slice(0, 50),
+      sellerUserId: data.sellerUserId ? String(data.sellerUserId).slice(0, 128) : undefined,
+      itemTitle: itemTitle.slice(0, 200),
+      offeredPrice: Math.max(0, Number(data.offeredPrice) || 0),
+      message: message.slice(0, 1000),
+      listingId: data.listingId ? String(data.listingId).slice(0, 128) : undefined,
+      createdAt: data.createdAt || new Date().toISOString(),
+    };
+
+    const current = buyerRequestsCache[idx];
+    const currentOffers = Array.isArray(current.offers) ? current.offers : [];
+    const updatedOffers = [newOffer, ...currentOffers.filter((o) => o.id !== newOffer.id)];
+    const updated: BuyerRequest = {
+      ...current,
+      offers: updatedOffers,
+      offersCount: updatedOffers.length,
+      updatedAt: new Date().toISOString(),
+    };
+
+    buyerRequestsCache[idx] = updated;
+    saveStoredBuyerRequests(buyerRequestsCache);
+    persistBuyerRequestToFirestore(updated);
+    res.status(201).json(updated);
+  });
+
+  app.patch('/api/buyer-requests/:id/status', (req, res) => {
+    const idx = buyerRequestsCache.findIndex((r) => r.id === req.params.id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'Buyer request not found' });
+    }
+    const status = req.body?.status;
+    if (status !== 'open' && status !== 'fulfilled' && status !== 'closed') {
+      return res.status(400).json({ error: 'Invalid status value.' });
+    }
+    const updated: BuyerRequest = {
+      ...buyerRequestsCache[idx],
+      status,
+      updatedAt: new Date().toISOString(),
+    };
+    buyerRequestsCache[idx] = updated;
+    saveStoredBuyerRequests(buyerRequestsCache);
+    persistBuyerRequestToFirestore(updated);
+    res.json(updated);
+  });
+
+  app.delete('/api/buyer-requests/:id', (req, res) => {
+    const idx = buyerRequestsCache.findIndex((r) => r.id === req.params.id);
+    if (idx !== -1) {
+      buyerRequestsCache.splice(idx, 1);
+      saveStoredBuyerRequests(buyerRequestsCache);
+    }
+    deleteBuyerRequestFromFirestore(req.params.id);
+    res.json({ success: true });
+  });
+
   // Catch-all for undefined API routes
   app.all('/api/*', (req, res) => {
     res.status(404).json({ error: 'API endpoint not found' });
@@ -4045,6 +4281,51 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
       } catch (e) {
         if (isQuotaExceededError(e)) return;
         console.warn('[Firestore] Initial users sync warning:', e);
+      }
+
+      try {
+        const SEED_BUYER_REQUEST_IDS = new Set([
+          'req_peradeniya_annex_01',
+          'req_vezel_hybrid_02',
+          'req_prius_abs_03',
+          'req_macbook_pro_04',
+          'req_al_physics_tuition_05',
+          'req_golden_retriever_06',
+        ]);
+
+        // Ensure seeded demo buyer requests are removed from cache and Firestore
+        buyerRequestsCache = buyerRequestsCache.filter((r) => !SEED_BUYER_REQUEST_IDS.has(r.id));
+        saveStoredBuyerRequests(buyerRequestsCache);
+
+        const reqSnap = await getDocs(collection(firestoreDb, 'buyer_requests'));
+        if (!reqSnap.empty) {
+          const remoteReqs: BuyerRequest[] = [];
+          for (const d of reqSnap.docs) {
+            if (SEED_BUYER_REQUEST_IDS.has(d.id)) {
+              deleteBuyerRequestFromFirestore(d.id);
+              continue;
+            }
+            const item = d.data() as BuyerRequest;
+            const offers = Array.isArray(item.offers) ? item.offers : [];
+            remoteReqs.push({
+              ...item,
+              id: d.id,
+              offers,
+              offersCount: typeof item.offersCount === 'number' ? item.offersCount : offers.length,
+            });
+          }
+          const reqMap = new Map<string, BuyerRequest>();
+          buyerRequestsCache.forEach((r) => reqMap.set(r.id, r));
+          remoteReqs.forEach((r) => reqMap.set(r.id, r));
+          buyerRequestsCache = Array.from(reqMap.values()).sort(
+            (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+          );
+          saveStoredBuyerRequests(buyerRequestsCache);
+          console.log(`[Firestore] Initialized server buyer requests cache with ${buyerRequestsCache.length} user requests`);
+        }
+      } catch (e) {
+        if (isQuotaExceededError(e)) return;
+        console.warn('[Firestore] Initial buyer requests sync warning:', e);
       }
     })().catch((err) => {
       console.warn('[Firestore] Initial background sync error:', err);

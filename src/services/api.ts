@@ -8,8 +8,8 @@ import {
   updateDoc,
   onSnapshot,
 } from 'firebase/firestore';
-import { db } from '../firebase';
-import { Listing, User, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, HotNewsResponse, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem, EStore, EStoreProduct } from '../types';
+import { db, OperationType, handleFirestoreError } from '../firebase';
+import { Listing, User, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, HotNewsResponse, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem, EStore, EStoreProduct, BuyerRequest, BuyerRequestOffer, BuyerRequestStatus, BuyerRequestUrgency } from '../types';
 
 const API_BASE = '/api';
 
@@ -3338,7 +3338,346 @@ For quick inquiries, call or send a message via WhatsApp!`;
     }
     return { paragraphs: [], resolvedUrl: articleUrl };
   },
+
+  // -------------------------------------------------------------
+  // Wanted / Buyer Request Board ("Looking For")
+  // -------------------------------------------------------------
+
+  getGuestBuyerRequestIds(): string[] {
+    try {
+      const raw = localStorage.getItem('huta_guest_buyer_request_ids');
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  },
+
+  addGuestBuyerRequestId(id: string): void {
+    try {
+      const current = this.getGuestBuyerRequestIds();
+      if (!current.includes(id)) {
+        current.unshift(id);
+        localStorage.setItem('huta_guest_buyer_request_ids', JSON.stringify(current));
+      }
+    } catch {
+      // ignore
+    }
+  },
+
+  subscribeToBuyerRequests(callback: (requests: BuyerRequest[]) => void): () => void {
+    let fallbackTimer: ReturnType<typeof setInterval> | null = null;
+    const fetchRest = async (): Promise<BuyerRequest[]> => {
+      try {
+        const res = await fetch(`${API_BASE}/buyer-requests`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            return [...data].sort(
+              (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+            );
+          }
+        }
+      } catch {
+        // ignore network error
+      }
+      return [];
+    };
+
+    const startRestFallback = () => {
+      if (fallbackTimer) return;
+      fetchRest().then((items) => {
+        if (items.length > 0) callback(items);
+      }).catch(() => {});
+      fallbackTimer = setInterval(() => {
+        fetchRest().then(callback).catch(() => {});
+      }, 30000);
+    };
+
+    if (isFirestoreQuotaActive()) {
+      startRestFallback();
+      return () => {
+        if (fallbackTimer) clearInterval(fallbackTimer);
+      };
+    }
+
+    try {
+      const colRef = collection(db, 'buyer_requests');
+      const unsub = onSnapshot(
+        colRef,
+        (snapshot) => {
+          const fsItems: BuyerRequest[] = [];
+          snapshot.forEach((docSnap) => {
+            const raw = docSnap.data() as BuyerRequest;
+            const offers = Array.isArray(raw.offers) ? raw.offers : [];
+            fsItems.push({
+              ...raw,
+              id: raw.id || docSnap.id,
+              offers,
+              offersCount: typeof raw.offersCount === 'number' ? raw.offersCount : offers.length,
+            });
+          });
+          if (fsItems.length === 0) {
+            fetchRest().then(callback).catch(() => callback([]));
+          } else {
+            fsItems.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+            callback(fsItems);
+          }
+        },
+        (err) => {
+          handleFirestoreError(err, OperationType.LIST, 'buyer_requests');
+          recordFirestoreError(err);
+          startRestFallback();
+        }
+      );
+      return () => {
+        try {
+          unsub();
+        } catch {
+          // ignore
+        }
+        if (fallbackTimer) clearInterval(fallbackTimer);
+      };
+    } catch (err) {
+      handleFirestoreError(err, OperationType.LIST, 'buyer_requests');
+      recordFirestoreError(err);
+      startRestFallback();
+      return () => {
+        if (fallbackTimer) clearInterval(fallbackTimer);
+      };
+    }
+  },
+
+  async getBuyerRequests(): Promise<BuyerRequest[]> {
+    const map = new Map<string, BuyerRequest>();
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const snap = await getDocs(collection(db, 'buyer_requests'));
+        snap.forEach((docSnap) => {
+          const raw = docSnap.data() as BuyerRequest;
+          const offers = Array.isArray(raw.offers) ? raw.offers : [];
+          const normalized: BuyerRequest = {
+            ...raw,
+            id: raw.id || docSnap.id,
+            offers,
+            offersCount: typeof raw.offersCount === 'number' ? raw.offersCount : offers.length,
+          };
+          map.set(normalized.id, normalized);
+        });
+      } catch (err) {
+        handleFirestoreError(err, OperationType.LIST, 'buyer_requests');
+        recordFirestoreError(err);
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/buyer-requests`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          for (const item of data) {
+            if (item && item.id && !map.has(item.id)) {
+              const offers = Array.isArray(item.offers) ? item.offers : [];
+              map.set(item.id, {
+                ...item,
+                offers,
+                offersCount: typeof item.offersCount === 'number' ? item.offersCount : offers.length,
+              });
+            }
+          }
+        }
+      }
+    } catch {
+      // backend optional
+    }
+
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    );
+  },
+
+  async createBuyerRequest(data: {
+    title: string;
+    category: string;
+    district: string;
+    location?: string;
+    maxBudget: number;
+    urgency: BuyerRequestUrgency;
+    description: string;
+    buyerName: string;
+    buyerPhone: string;
+    userId?: string;
+  }): Promise<BuyerRequest> {
+    const id = `req_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const now = new Date().toISOString();
+    const districtVal = String(data.district || 'Colombo').trim() || 'Colombo';
+    const normalizedPhone = normalizeSriLankanPhone(data.buyerPhone) || String(data.buyerPhone).trim();
+
+    const newReq: BuyerRequest = {
+      id,
+      title: String(data.title || '').trim(),
+      category: String(data.category || 'Other').trim() || 'Other',
+      district: districtVal,
+      location: String(data.location || districtVal).trim() || districtVal,
+      maxBudget: Math.max(0, Number(data.maxBudget) || 0),
+      urgency: data.urgency || 'this_week',
+      description: String(data.description || '').trim(),
+      buyerName: String(data.buyerName || 'Verified Buyer').trim() || 'Verified Buyer',
+      buyerPhone: normalizedPhone,
+      userId: data.userId || api.getCurrentUser()?.id || 'guest',
+      status: 'open',
+      offersCount: 0,
+      offers: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const clean = sanitizeForFirestore(newReq) as BuyerRequest;
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await setDoc(doc(db, 'buyer_requests', id), clean);
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          handleFirestoreError(err, OperationType.CREATE, `buyer_requests/${id}`);
+        }
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/buyer-requests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clean),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        this.addGuestBuyerRequestId(saved.id || clean.id);
+        return saved;
+      }
+    } catch {
+      // backend optional
+    }
+
+    this.addGuestBuyerRequestId(clean.id);
+    return clean;
+  },
+
+  async addBuyerRequestOffer(
+    requestItem: BuyerRequest,
+    offerInput: {
+      sellerName: string;
+      sellerPhone: string;
+      sellerUserId?: string;
+      itemTitle: string;
+      offeredPrice: number;
+      message: string;
+      listingId?: string;
+    }
+  ): Promise<BuyerRequest> {
+    const newOffer: BuyerRequestOffer = {
+      id: `offer_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      sellerName: String(offerInput.sellerName || '').trim(),
+      sellerPhone: normalizeSriLankanPhone(offerInput.sellerPhone) || String(offerInput.sellerPhone).trim(),
+      sellerUserId: offerInput.sellerUserId,
+      itemTitle: String(offerInput.itemTitle || '').trim(),
+      offeredPrice: Math.max(0, Number(offerInput.offeredPrice) || 0),
+      message: String(offerInput.message || '').trim(),
+      listingId: offerInput.listingId,
+      createdAt: new Date().toISOString(),
+    };
+
+    const currentOffers = Array.isArray(requestItem.offers) ? requestItem.offers : [];
+    const updatedOffers = [newOffer, ...currentOffers];
+    const now = new Date().toISOString();
+    const updatedReq: BuyerRequest = {
+      ...requestItem,
+      offers: updatedOffers,
+      offersCount: updatedOffers.length,
+      updatedAt: now,
+    };
+
+    const cleanUpdate = sanitizeForFirestore({
+      offers: updatedOffers,
+      offersCount: updatedOffers.length,
+      updatedAt: now,
+    });
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await updateDoc(doc(db, 'buyer_requests', requestItem.id), cleanUpdate);
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          try {
+            await setDoc(doc(db, 'buyer_requests', requestItem.id), sanitizeForFirestore(updatedReq), { merge: true });
+          } catch (innerErr) {
+            handleFirestoreError(innerErr, OperationType.UPDATE, `buyer_requests/${requestItem.id}`);
+          }
+        }
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/buyer-requests/${requestItem.id}/offers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newOffer),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // backend optional
+    }
+
+    return updatedReq;
+  },
+
+  async updateBuyerRequestStatus(requestId: string, status: BuyerRequestStatus): Promise<void> {
+    const updatedAt = new Date().toISOString();
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await updateDoc(doc(db, 'buyer_requests', requestId), { status, updatedAt });
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          handleFirestoreError(err, OperationType.UPDATE, `buyer_requests/${requestId}`);
+        }
+      }
+    }
+
+    try {
+      await fetch(`${API_BASE}/buyer-requests/${requestId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+    } catch {
+      // backend optional
+    }
+  },
+
+  async deleteBuyerRequest(requestId: string): Promise<void> {
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await deleteDoc(doc(db, 'buyer_requests', requestId));
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          handleFirestoreError(err, OperationType.DELETE, `buyer_requests/${requestId}`);
+        }
+      }
+    }
+
+    try {
+      await fetch(`${API_BASE}/buyer-requests/${requestId}`, {
+        method: 'DELETE',
+      });
+    } catch {
+      // backend optional
+    }
+  },
 };
 
 export const apiService = api;
+
 
