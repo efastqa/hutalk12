@@ -233,49 +233,54 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
               isCurrent ? 'opacity-100 z-0' : 'opacity-0 -z-10'
             }`}
           >
-            {/* Mobile Responsive Layout: Left flank + Right flank */}
+            {/* Mobile Responsive Layout */}
             <div className="md:hidden absolute inset-0 pointer-events-none overflow-hidden select-none">
-              {/* Soft atmospheric base */}
-              <div className={`absolute inset-0 ${isScenic ? 'opacity-30 dark:opacity-20' : 'opacity-40 dark:opacity-10'}`}>
-                <img
-                  src={bg.imageUrl}
-                  alt=""
-                  className="w-full h-full object-cover object-center"
-                />
-              </div>
+              {isScenic ? (
+                /* Full-width Panoramic Top Band for Scenic Skyline (preserves Lotus Tower & horizon cleanly) */
+                <div className="absolute top-0 left-0 right-0 h-[250px] overflow-hidden">
+                  <img
+                    src={bg.imageUrl}
+                    alt={bg.name}
+                    className="w-full h-full object-cover object-center filter saturate-110 opacity-95 dark:opacity-50"
+                  />
+                  {/* Balanced light/dark readability scrim fading cleanly into the search card */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/55 to-white dark:from-[#0B0C10]/65 dark:via-[#0B0C10]/60 dark:to-[#0B0C10]" />
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.68)_0%,rgba(255,255,255,0.18)_75%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(11,12,16,0.65)_0%,rgba(11,12,16,0.2)_75%)]" />
+                </div>
+              ) : (
+                /* Proportioned Top Showcase Band for Flank-Composed Light Studio Images */
+                <div className="absolute top-0 left-0 right-0 h-[265px] overflow-hidden">
+                  {/* Soft ambient base */}
+                  <img
+                    src={bg.imageUrl}
+                    alt=""
+                    className="w-full h-full object-cover object-center opacity-25 dark:opacity-10"
+                  />
 
-              {/* Left Flank */}
-              <div className={`absolute -left-2 top-0 bottom-0 w-[62%] max-w-[280px] pointer-events-none overflow-hidden ${isScenic ? 'opacity-75 dark:opacity-35' : 'opacity-90 dark:opacity-30'}`}>
-                <img
-                  src={bg.imageUrl}
-                  alt=""
-                  className="w-full h-full object-cover object-left filter saturate-110 contrast-105"
-                />
-                {/* Smooth blend to center and bottom so text stays ultra-readable */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-white dark:via-[#0B0C10]/40 dark:to-[#0B0C10]" />
-                <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-transparent to-white/25 dark:from-[#0B0C10]/90 dark:to-transparent" />
-              </div>
+                  {/* Left Flank Subject */}
+                  <div className="absolute left-0 top-0 bottom-0 w-[52%] overflow-hidden opacity-95 dark:opacity-35">
+                    <img
+                      src={bg.imageUrl}
+                      alt=""
+                      className="w-full h-full object-cover object-[12%_65%] filter saturate-110 contrast-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-white dark:via-[#0B0C10]/40 dark:to-[#0B0C10]" />
+                  </div>
 
-              {/* Right Flank */}
-              <div className={`absolute -right-2 top-0 bottom-0 w-[62%] max-w-[280px] pointer-events-none overflow-hidden ${isScenic ? 'opacity-75 dark:opacity-35' : 'opacity-90 dark:opacity-30'}`}>
-                <img
-                  src={bg.imageUrl}
-                  alt=""
-                  className="w-full h-full object-cover object-right filter saturate-110 contrast-105"
-                />
-                {/* Smooth blend to center and bottom so text stays ultra-readable */}
-                <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/30 to-white dark:via-[#0B0C10]/40 dark:to-[#0B0C10]" />
-                <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-transparent to-white/25 dark:from-[#0B0C10]/90 dark:to-transparent" />
-              </div>
+                  {/* Right Flank Subject */}
+                  <div className="absolute right-0 top-0 bottom-0 w-[52%] overflow-hidden opacity-95 dark:opacity-35">
+                    <img
+                      src={bg.imageUrl}
+                      alt=""
+                      className="w-full h-full object-cover object-[88%_65%] filter saturate-110 contrast-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/25 to-white dark:via-[#0B0C10]/40 dark:to-[#0B0C10]" />
+                  </div>
 
-              {/* Center Text Readability Gradient Mask */}
-              <div
-                className={`absolute inset-0 ${
-                  isScenic
-                    ? 'bg-gradient-to-t from-white/95 via-white/65 to-white/55 dark:from-[#0B0C10] dark:via-[#0B0C10]/70 dark:to-[#0B0C10]/40'
-                    : 'bg-gradient-to-t from-white/95 via-white/35 to-transparent dark:from-[#0B0C10] dark:via-[#0B0C10]/70 dark:to-transparent'
-                }`}
-              />
+                  {/* Smooth bottom transition into pure surface behind Search Bar */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-white/40 to-white dark:from-[#0B0C10]/45 dark:via-[#0B0C10]/65 dark:to-[#0B0C10]" />
+                </div>
+              )}
             </div>
 
             {/* Desktop / Tablet Unified Wide Visual (Full Panorama) */}

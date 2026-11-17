@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Sparkles,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
@@ -184,7 +183,7 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
       )}
 
       {/* Main Slide Card Container */}
-      <div className="relative min-h-[185px] sm:min-h-[175px] flex items-center justify-center overflow-hidden">
+      <div className="relative min-h-[110px] sm:min-h-[130px] flex items-center justify-center overflow-hidden">
         <AnimatePresence mode="wait">
           {currentSlide.type === 'default' ? (
             /* DEFAULT HERO SLIDE (Dual-Tone Animated Heading System) */
@@ -209,11 +208,6 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
                   'Smart Electronics 📱',
                   'Verified Deals 🏷️',
                 ]}
-                badge={{
-                  text: "Sri Lanka's Direct Buyer-Seller Marketplace",
-                  icon: <Sparkles className="w-3.5 h-3.5 text-[#FF5A36]" />,
-                }}
-                subtitle="Properties, Vehicles, Classifieds, Jobs & Local Services across all 25 districts with direct WhatsApp & telephone contact."
                 animationType="rotate"
                 rotationInterval={3600}
                 showUnderline={false}
