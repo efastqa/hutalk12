@@ -9,7 +9,7 @@ interface FooterProps {
   onOpenPostAd: () => void;
   onOpenAdminLogin?: () => void;
   onOpenAppStore?: () => void;
-  onSelectTab?: (tab: 'marketplace' | 'estore' | 'huta_in' | 'categories' | 'hot_news' | 'buyer_requests') => void;
+  onSelectTab?: (tab: 'marketplace' | 'estore' | 'huta_in' | 'categories' | 'hot_news' | 'donate' | 'buyer_requests') => void;
   currentTab?: string;
   onOpenPolicy?: (tab: PolicyTab) => void;
 }
@@ -189,7 +189,16 @@ export const Footer: React.FC<FooterProps> = ({
                       onClick={() => onSelectTab('hot_news')}
                       className="hover:text-rose-500 transition-colors font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5 cursor-pointer"
                     >
-                      <span>🔥 Sri Lanka Hot News (Live)</span>
+                      <span>Sri Lanka Hot News (Live)</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => onSelectTab('donate')}
+                      className="hover:text-teal-500 transition-colors font-bold text-teal-600 dark:text-teal-400 flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>Donate Sri Lanka · Hospitals & Aid</span>
                     </button>
                   </li>
                 </>

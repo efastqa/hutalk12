@@ -9,7 +9,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { db, OperationType, handleFirestoreError } from '../firebase';
-import { Listing, User, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, HotNewsResponse, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem, EStore, EStoreProduct, BuyerRequest, BuyerRequestOffer, BuyerRequestStatus, BuyerRequestUrgency } from '../types';
+import { Listing, User, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, HotNewsResponse, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem, EStore, EStoreProduct, BuyerRequest, BuyerRequestOffer, BuyerRequestStatus, BuyerRequestUrgency, DonationCause, DonationCategory, DonationUrgency, DonationStatus, DonationPledge, DonationPledgeType } from '../types';
 
 const API_BASE = '/api';
 
@@ -3676,8 +3676,388 @@ For quick inquiries, call or send a message via WhatsApp!`;
       // backend optional
     }
   },
+
+  // -------------------------------------------------------------
+  // Sri Lanka Donate Hub (Most Needed Hospitals & Humanitarian Aid)
+  // -------------------------------------------------------------
+
+  getGuestDonationCauseIds(): string[] {
+    try {
+      const raw = localStorage.getItem('huta_guest_donation_ids');
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  },
+
+  addGuestDonationCauseId(id: string): void {
+    try {
+      const ids = this.getGuestDonationCauseIds();
+      if (!ids.includes(id)) {
+        ids.unshift(id);
+        localStorage.setItem('huta_guest_donation_ids', JSON.stringify(ids.slice(0, 50)));
+      }
+    } catch {
+      // ignore
+    }
+  },
+
+  subscribeToDonationCauses(callback: (causes: DonationCause[]) => void): () => void {
+    let fallbackTimer: ReturnType<typeof setInterval> | null = null;
+    const urgencyRank: Record<string, number> = { critical: 0, urgent: 1, ongoing: 2 };
+    const sortCauses = (list: DonationCause[]) =>
+      [...list].sort((a, b) => {
+        const uDiff = (urgencyRank[a.urgency] ?? 3) - (urgencyRank[b.urgency] ?? 3);
+        if (uDiff !== 0) return uDiff;
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      });
+
+    const fetchRest = async (): Promise<DonationCause[]> => {
+      try {
+        const res = await fetch(`${API_BASE}/donations`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            return sortCauses(data);
+          }
+        }
+      } catch {
+        // ignore network error
+      }
+      return [];
+    };
+
+    const startRestFallback = () => {
+      if (fallbackTimer) return;
+      fetchRest().then((items) => {
+        if (items.length > 0) callback(items);
+      }).catch(() => {});
+      fallbackTimer = setInterval(() => {
+        fetchRest().then(callback).catch(() => {});
+      }, 30000);
+    };
+
+    if (isFirestoreQuotaActive()) {
+      startRestFallback();
+      return () => {
+        if (fallbackTimer) clearInterval(fallbackTimer);
+      };
+    }
+
+    try {
+      const colRef = collection(db, 'donations');
+      const unsub = onSnapshot(
+        colRef,
+        (snapshot) => {
+          const fsItems: DonationCause[] = [];
+          snapshot.forEach((docSnap) => {
+            const raw = docSnap.data() as DonationCause;
+            const pledges = Array.isArray(raw.pledges) ? raw.pledges : [];
+            const neededItems = Array.isArray(raw.neededItems) ? raw.neededItems : [];
+            fsItems.push({
+              ...raw,
+              id: raw.id || docSnap.id,
+              neededItems,
+              pledges,
+              pledgeCount: typeof raw.pledgeCount === 'number' ? raw.pledgeCount : pledges.length,
+              totalPledgedLkr:
+                typeof raw.totalPledgedLkr === 'number'
+                  ? raw.totalPledgedLkr
+                  : pledges.reduce((acc, p) => acc + Math.max(0, Number(p.amountLkr) || 0), 0),
+            });
+          });
+          if (fsItems.length === 0) {
+            fetchRest().then(callback).catch(() => callback([]));
+          } else {
+            callback(sortCauses(fsItems));
+          }
+        },
+        (err) => {
+          handleFirestoreError(err, OperationType.LIST, 'donations');
+          recordFirestoreError(err);
+          startRestFallback();
+        }
+      );
+      return () => {
+        try {
+          unsub();
+        } catch {
+          // ignore
+        }
+        if (fallbackTimer) clearInterval(fallbackTimer);
+      };
+    } catch (err) {
+      handleFirestoreError(err, OperationType.LIST, 'donations');
+      recordFirestoreError(err);
+      startRestFallback();
+      return () => {
+        if (fallbackTimer) clearInterval(fallbackTimer);
+      };
+    }
+  },
+
+  async getDonationCauses(): Promise<DonationCause[]> {
+    const map = new Map<string, DonationCause>();
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const snap = await getDocs(collection(db, 'donations'));
+        snap.forEach((docSnap) => {
+          const raw = docSnap.data() as DonationCause;
+          const pledges = Array.isArray(raw.pledges) ? raw.pledges : [];
+          const neededItems = Array.isArray(raw.neededItems) ? raw.neededItems : [];
+          const normalized: DonationCause = {
+            ...raw,
+            id: raw.id || docSnap.id,
+            neededItems,
+            pledges,
+            pledgeCount: typeof raw.pledgeCount === 'number' ? raw.pledgeCount : pledges.length,
+            totalPledgedLkr:
+              typeof raw.totalPledgedLkr === 'number'
+                ? raw.totalPledgedLkr
+                : pledges.reduce((acc, p) => acc + Math.max(0, Number(p.amountLkr) || 0), 0),
+          };
+          map.set(normalized.id, normalized);
+        });
+      } catch (err) {
+        handleFirestoreError(err, OperationType.LIST, 'donations');
+        recordFirestoreError(err);
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/donations`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          for (const item of data) {
+            if (item && item.id && !map.has(item.id)) {
+              const pledges = Array.isArray(item.pledges) ? item.pledges : [];
+              const neededItems = Array.isArray(item.neededItems) ? item.neededItems : [];
+              map.set(item.id, {
+                ...item,
+                neededItems,
+                pledges,
+                pledgeCount: typeof item.pledgeCount === 'number' ? item.pledgeCount : pledges.length,
+                totalPledgedLkr:
+                  typeof item.totalPledgedLkr === 'number'
+                    ? item.totalPledgedLkr
+                    : pledges.reduce((acc: number, p: DonationPledge) => acc + Math.max(0, Number(p.amountLkr) || 0), 0),
+              });
+            }
+          }
+        }
+      }
+    } catch {
+      // backend optional
+    }
+
+    const urgencyRank: Record<string, number> = { critical: 0, urgent: 1, ongoing: 2 };
+    return Array.from(map.values()).sort((a, b) => {
+      const uDiff = (urgencyRank[a.urgency] ?? 3) - (urgencyRank[b.urgency] ?? 3);
+      if (uDiff !== 0) return uDiff;
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
+  },
+
+  async createDonationCause(data: {
+    organizationName: string;
+    title: string;
+    category: DonationCategory;
+    district: string;
+    address: string;
+    officialWebsite?: string;
+    contactPhone: string;
+    contactPerson?: string;
+    urgency: DonationUrgency;
+    bankDetailsNote: string;
+    neededItems: string[];
+    description: string;
+    image?: string;
+    userId?: string;
+  }): Promise<DonationCause> {
+    const id = `don_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const now = new Date().toISOString();
+    const districtVal = String(data.district || 'Colombo').trim().slice(0, 100) || 'Colombo';
+    const normalizedPhone = normalizeSriLankanPhone(data.contactPhone) || String(data.contactPhone).trim();
+
+    const newCause: DonationCause = {
+      id,
+      organizationName: String(data.organizationName || '').trim().slice(0, 160),
+      title: String(data.title || '').trim().slice(0, 200),
+      category: data.category || 'Hospitals & Medical',
+      district: districtVal,
+      address: String(data.address || districtVal).trim().slice(0, 240),
+      officialWebsite: data.officialWebsite ? String(data.officialWebsite).trim().slice(0, 300) : undefined,
+      contactPhone: normalizedPhone.slice(0, 50),
+      contactPerson: data.contactPerson ? String(data.contactPerson).trim().slice(0, 120) : undefined,
+      urgency: data.urgency || 'urgent',
+      status: 'active',
+      verifiedOfficial: false,
+      bankDetailsNote: String(data.bankDetailsNote || '').trim().slice(0, 1000) || 'Verify details directly with the hospital or charity coordinator before contributing.',
+      neededItems: (Array.isArray(data.neededItems) ? data.neededItems : []).slice(0, 25),
+      description: String(data.description || '').trim().slice(0, 4000),
+      image: data.image,
+      pledgeCount: 0,
+      totalPledgedLkr: 0,
+      pledges: [],
+      userId: data.userId || api.getCurrentUser()?.id || 'guest',
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const clean = sanitizeForFirestore(newCause) as DonationCause;
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await setDoc(doc(db, 'donations', id), clean);
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          handleFirestoreError(err, OperationType.CREATE, `donations/${id}`);
+        }
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/donations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clean),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        this.addGuestDonationCauseId(saved.id || clean.id);
+        return saved;
+      }
+    } catch {
+      // backend optional
+    }
+
+    this.addGuestDonationCauseId(clean.id);
+    return clean;
+  },
+
+  async addDonationPledge(
+    cause: DonationCause,
+    pledgeInput: {
+      donorName: string;
+      donorPhone?: string;
+      donorDistrict?: string;
+      pledgeType: DonationPledgeType;
+      amountLkr?: number;
+      itemsSummary?: string;
+      message?: string;
+    }
+  ): Promise<DonationCause> {
+    const newPledge: DonationPledge = {
+      id: `pledge_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      donorName: String(pledgeInput.donorName || '').trim().slice(0, 100),
+      donorPhone: pledgeInput.donorPhone
+        ? (normalizeSriLankanPhone(pledgeInput.donorPhone) || String(pledgeInput.donorPhone).trim()).slice(0, 50)
+        : undefined,
+      donorDistrict: pledgeInput.donorDistrict ? String(pledgeInput.donorDistrict).trim().slice(0, 80) : undefined,
+      pledgeType: pledgeInput.pledgeType || 'supplies',
+      amountLkr: Math.max(0, Number(pledgeInput.amountLkr) || 0),
+      itemsSummary: pledgeInput.itemsSummary ? String(pledgeInput.itemsSummary).trim().slice(0, 240) : undefined,
+      message: pledgeInput.message ? String(pledgeInput.message).trim().slice(0, 500) : undefined,
+      createdAt: new Date().toISOString(),
+    };
+
+    const currentPledges = Array.isArray(cause.pledges) ? cause.pledges : [];
+    const updatedPledges = [newPledge, ...currentPledges].slice(0, 200);
+    const totalPledgedLkr = updatedPledges.reduce((acc, p) => acc + Math.max(0, Number(p.amountLkr) || 0), 0);
+    const now = new Date().toISOString();
+    const updatedCause: DonationCause = {
+      ...cause,
+      pledges: updatedPledges,
+      pledgeCount: updatedPledges.length,
+      totalPledgedLkr,
+      updatedAt: now,
+    };
+
+    const cleanUpdate = sanitizeForFirestore({
+      pledges: updatedPledges,
+      pledgeCount: updatedPledges.length,
+      totalPledgedLkr,
+      updatedAt: now,
+    });
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await updateDoc(doc(db, 'donations', cause.id), cleanUpdate);
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          try {
+            await setDoc(doc(db, 'donations', cause.id), sanitizeForFirestore(updatedCause), { merge: true });
+          } catch (innerErr) {
+            handleFirestoreError(innerErr, OperationType.UPDATE, `donations/${cause.id}`);
+          }
+        }
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/donations/${cause.id}/pledges`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newPledge),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // backend optional
+    }
+
+    return updatedCause;
+  },
+
+  async updateDonationCauseStatus(causeId: string, status: DonationStatus): Promise<void> {
+    const updatedAt = new Date().toISOString();
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await updateDoc(doc(db, 'donations', causeId), { status, updatedAt });
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          handleFirestoreError(err, OperationType.UPDATE, `donations/${causeId}`);
+        }
+      }
+    }
+
+    try {
+      await fetch(`${API_BASE}/donations/${causeId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+    } catch {
+      // backend optional
+    }
+  },
+
+  async deleteDonationCause(causeId: string): Promise<void> {
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await deleteDoc(doc(db, 'donations', causeId));
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          handleFirestoreError(err, OperationType.DELETE, `donations/${causeId}`);
+        }
+      }
+    }
+
+    try {
+      await fetch(`${API_BASE}/donations/${causeId}`, {
+        method: 'DELETE',
+      });
+    } catch {
+      // backend optional
+    }
+  },
 };
 
 export const apiService = api;
+
 
 

@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   Store,
   Flame,
+  HeartHandshake,
 } from 'lucide-react';
 import { ViewTab, User } from '../types';
 import { ThemeToggle } from './ThemeToggle';
@@ -218,6 +219,26 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse shrink-0" />
         </button>
 
+        {/* Donate Icon Button next to Hot News (Mobile & Tablet < lg) */}
+        <button
+          type="button"
+          id="nav-mobile-donate-btn"
+          onClick={() => {
+            onSelectTab('donate');
+            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+          }}
+          aria-label="Donate to Sri Lanka Hospitals & Urgent Causes"
+          title="Donate to Sri Lanka's Most Needed Hospitals & Causes"
+          className={`inline-flex lg:hidden items-center gap-1 px-2 py-1 rounded-xl text-xs font-black transition-all cursor-pointer shadow-2xs border whitespace-nowrap shrink-0 ${
+            currentTab === 'donate'
+              ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
+              : 'bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border-teal-500/25 hover:bg-teal-100 dark:hover:bg-teal-900/40 active:scale-95'
+          }`}
+        >
+          <HeartHandshake className="w-3.5 h-3.5 text-current shrink-0" />
+          <span className="hidden sm:inline font-black tracking-tight">Donate</span>
+        </button>
+
         {/* Location Dropdown */}
         {onLocationChange && (
           <div className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-gray-100/80 dark:bg-white/5 border border-gray-200/70 dark:border-white/10 backdrop-blur-sm text-xs font-semibold text-gray-700 dark:text-gray-300 hover:border-[#FF5A36]/50 transition-colors whitespace-nowrap shrink-0">
@@ -365,6 +386,21 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Flame className="w-3.5 h-3.5 shrink-0" />
             <span>Hot News</span>
             <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse shrink-0" />
+          </button>
+
+          <button
+            type="button"
+            id="nav-desktop-donate-btn"
+            onClick={() => onSelectTab('donate')}
+            title="Donate to Sri Lanka's Most Needed Hospitals & Causes"
+            className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
+              currentTab === 'donate'
+                ? 'bg-teal-600 text-white shadow-xs'
+                : 'text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 hover:bg-teal-50 dark:hover:bg-teal-950/40'
+            }`}
+          >
+            <HeartHandshake className="w-3.5 h-3.5 shrink-0" />
+            <span>Donate</span>
           </button>
 
           <button

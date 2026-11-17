@@ -33,6 +33,7 @@ import {
 import { DeviceSettingsPanel } from './DeviceSettingsPanel';
 import { ThemeToggle } from './ThemeToggle';
 import hotNewsIconImg from '../assets/images/hot_news_sri_lanka_icon_1794684230454.jpg';
+import donateIcon3D from '../assets/images/donate_icon_3d_1794949597682.jpg';
 
 interface MorePageProps {
   currentUser: User | null;
@@ -485,6 +486,34 @@ export const MorePage: React.FC<MorePageProps> = ({
                   </div>
                   <p className="text-xs text-gray-400 dark:text-gray-500">
                     Real-time Sri Lankan breaking news, business, sports & tech headlines
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </button>
+
+            {/* Donate Sri Lanka — Hospitals & Urgent Causes */}
+            <button
+              type="button"
+              id="more-menu-donate"
+              onClick={() => onSelectTab('donate')}
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-[#F8F9FA] dark:bg-[#1E2230] border border-gray-200 dark:border-white/10 overflow-hidden shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <img
+                    src={donateIcon3D}
+                    alt="Donate Sri Lanka Hospitals and Causes"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                    Donate Sri Lanka — Hospitals &amp; Urgent Causes
+                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    Direct support for Apeksha, LRH, blood banks, children’s homes &amp; relief
                   </p>
                 </div>
               </div>

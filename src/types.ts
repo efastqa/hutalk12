@@ -137,6 +137,7 @@ export type ViewTab =
   | 'estore'
   | 'huta_in'
   | 'hot_news'
+  | 'donate'
   | 'buyer_requests'
   | 'categories'
   | 'user_dashboard'
@@ -463,3 +464,56 @@ export interface BuyerRequest {
   createdAt: string;
   updatedAt: string;
 }
+
+// -------------------------------------------------------------
+// Sri Lanka Donate Hub (Most Needed Hospitals & Humanitarian Aid)
+// -------------------------------------------------------------
+
+export type DonationCategory =
+  | 'Hospitals & Medical'
+  | 'Blood & Emergency'
+  | 'Children & Schools'
+  | 'Food & Elders Relief'
+  | 'Community Infrastructure';
+
+export type DonationUrgency = 'critical' | 'urgent' | 'ongoing';
+export type DonationStatus = 'active' | 'fulfilled' | 'paused';
+export type DonationPledgeType = 'supplies' | 'funds' | 'blood_volunteer';
+
+export interface DonationPledge {
+  id: string;
+  donorName: string;
+  donorPhone?: string;
+  donorDistrict?: string;
+  pledgeType: DonationPledgeType;
+  amountLkr?: number;
+  itemsSummary?: string;
+  message?: string;
+  createdAt: string;
+}
+
+export interface DonationCause {
+  id: string;
+  organizationName: string;
+  title: string;
+  category: DonationCategory;
+  district: string;
+  address: string;
+  officialWebsite?: string;
+  contactPhone: string;
+  contactPerson?: string;
+  urgency: DonationUrgency;
+  status: DonationStatus;
+  verifiedOfficial: boolean;
+  bankDetailsNote: string;
+  neededItems: string[];
+  description: string;
+  image?: string;
+  pledgeCount: number;
+  totalPledgedLkr: number;
+  pledges: DonationPledge[];
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+

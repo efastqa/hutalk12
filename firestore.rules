@@ -49,6 +49,22 @@ service cloud.firestore {
              (!('offers' in data) || data.offers is list);
     }
 
+    function isValidDonationCause(data) {
+      return data.organizationName is string && data.organizationName.size() > 0 && data.organizationName.size() <= 160 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.category in ['Hospitals & Medical', 'Blood & Emergency', 'Children & Schools', 'Food & Elders Relief', 'Community Infrastructure'] &&
+             data.district is string && data.district.size() > 0 && data.district.size() <= 100 &&
+             data.contactPhone is string && data.contactPhone.size() > 0 && data.contactPhone.size() <= 50 &&
+             data.urgency in ['critical', 'urgent', 'ongoing'] &&
+             data.status in ['active', 'fulfilled', 'paused'] &&
+             (!('address' in data) || (data.address is string && data.address.size() <= 240)) &&
+             (!('officialWebsite' in data) || (data.officialWebsite is string && data.officialWebsite.size() <= 300)) &&
+             (!('bankDetailsNote' in data) || (data.bankDetailsNote is string && data.bankDetailsNote.size() <= 1000)) &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 4000)) &&
+             (!('neededItems' in data) || (data.neededItems is list && data.neededItems.size() <= 25)) &&
+             (!('pledges' in data) || (data.pledges is list && data.pledges.size() <= 200));
+    }
+
     // Master Gate helper: Get parent conversation document
     function getConversation(conversationId) {
       return get(/databases/$(database)/documents/conversations/$(conversationId)).data;
@@ -194,6 +210,16 @@ service cloud.firestore {
         (!('status' in incoming()) || incoming().status in ['open', 'fulfilled', 'closed']) &&
         (!('offers' in incoming()) || incoming().offers is list);
       allow delete: if isValidId(requestId);
+    }
+
+    // Sri Lanka Hospitals, Medical Aid & Charity Donations
+    match /donations/{causeId} {
+      allow get, list: if true;
+      allow create: if isValidId(causeId) && isValidDonationCause(incoming());
+      allow update: if isValidId(causeId) &&
+        (!('status' in incoming()) || incoming().status in ['active', 'fulfilled', 'paused']) &&
+        (!('pledges' in incoming()) || (incoming().pledges is list && incoming().pledges.size() <= 200));
+      allow delete: if isValidId(causeId);
     }
   }
 }

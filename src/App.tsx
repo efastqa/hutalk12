@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { MotionConfig, AnimatePresence, motion } from 'motion/react';
-import { Listing, User, ViewTab, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, VideoReelItem, EStore, HotNewsArticle, BuyerRequest } from './types';
+import { Listing, User, ViewTab, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, VideoReelItem, EStore, HotNewsArticle, BuyerRequest, DonationCause } from './types';
 import { api } from './services/api';
 
 // Components
 import { Navbar } from './components/Navbar';
 import { HeroSearch } from './components/HeroSearch';
 import { HotNewsPage } from './components/HotNewsPage';
+import { DonateSriLankaPage } from './components/DonateSriLankaPage';
 import { BuyerRequestsBoard, BuyerRequestsHomeStrip } from './components/BuyerRequestsBoard';
 import { CategoryGrid } from './components/CategoryGrid';
 import { PromoAdSlider } from './components/PromoAdSlider';
@@ -56,6 +57,7 @@ function getInitialTab(): ViewTab {
     if (tab === 'estore') return 'estore';
     if (tab === 'huta_in') return 'huta_in';
     if (tab === 'hot_news') return 'hot_news';
+    if (tab === 'donate') return 'donate';
     if (tab === 'buyer_requests') return 'buyer_requests';
     if (tab === 'categories') return 'categories';
     if (tab === 'user_dashboard') return 'user_dashboard';
@@ -107,6 +109,7 @@ export default function App() {
   const [videoReels, setVideoReels] = useState<VideoReelItem[]>([]);
   const [eStores, setEStores] = useState<EStore[]>([]);
   const [buyerRequests, setBuyerRequests] = useState<BuyerRequest[]>([]);
+  const [donationCauses, setDonationCauses] = useState<DonationCause[]>([]);
   const [openBuyerRequestPostModal, setOpenBuyerRequestPostModal] = useState<boolean>(false);
   const [targetEStoreForView, setTargetEStoreForView] = useState<EStore | null>(null);
   const [promoSlides, setPromoSlides] = useState<PromoSlide[]>(() => {
@@ -376,13 +379,14 @@ export default function App() {
     fetchVideoReels();
     fetchEStores();
     fetchBuyerRequests();
+    fetchDonationCauses();
     loadSriLankaNews();
 
     const newsInterval = window.setInterval(() => {
       loadSriLankaNews(false);
     }, 5 * 60 * 1000);
 
-    // Subscribe to live video stories, promo slides & buyer requests updates
+    // Subscribe to live video stories, promo slides, buyer requests & donation causes updates
     const unsubReels = api.subscribeToVideoReels((reels) => {
       setVideoReels(reels);
     });
@@ -393,6 +397,9 @@ export default function App() {
     const unsubBuyerRequests = api.subscribeToBuyerRequests((reqs) => {
       setBuyerRequests(reqs);
     });
+    const unsubDonations = api.subscribeToDonationCauses((causes) => {
+      setDonationCauses(causes);
+    });
 
     // 4. Test Firebase Firestore connection
     testConnection();
@@ -402,6 +409,7 @@ export default function App() {
       unsubReels();
       unsubPromoSlides();
       unsubBuyerRequests();
+      unsubDonations();
     };
   }, []);
 
@@ -437,6 +445,17 @@ export default function App() {
       const data = await api.getBuyerRequests();
       if (Array.isArray(data)) {
         setBuyerRequests(data);
+      }
+    } catch {
+      // Graceful fallback
+    }
+  };
+
+  const fetchDonationCauses = async () => {
+    try {
+      const data = await api.getDonationCauses();
+      if (Array.isArray(data)) {
+        setDonationCauses(data);
       }
     } catch {
       // Graceful fallback
@@ -1576,6 +1595,18 @@ export default function App() {
             lastUpdated={hotNewsLastUpdated}
             isLoading={isLoadingHotNews}
             onRefresh={() => loadSriLankaNews(true)}
+            onBackToHome={() => setCurrentTab('marketplace')}
+            onToast={showToast}
+          />
+        )}
+
+        {currentTab === 'donate' && (
+          <DonateSriLankaPage
+            causes={donationCauses}
+            currentUser={currentUser}
+            isAdminLoggedIn={isAdminLoggedIn}
+            selectedDistrict={selectedLocation}
+            onCausesChange={setDonationCauses}
             onBackToHome={() => setCurrentTab('marketplace')}
             onToast={showToast}
           />

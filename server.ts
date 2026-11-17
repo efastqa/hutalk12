@@ -328,6 +328,48 @@ interface BuyerRequest {
   updatedAt: string;
 }
 
+interface DonationPledge {
+  id: string;
+  donorName: string;
+  donorPhone?: string;
+  donorDistrict?: string;
+  pledgeType: 'supplies' | 'funds' | 'blood_volunteer';
+  amountLkr?: number;
+  itemsSummary?: string;
+  message?: string;
+  createdAt: string;
+}
+
+interface DonationCause {
+  id: string;
+  organizationName: string;
+  title: string;
+  category:
+    | 'Hospitals & Medical'
+    | 'Blood & Emergency'
+    | 'Children & Schools'
+    | 'Food & Elders Relief'
+    | 'Community Infrastructure';
+  district: string;
+  address: string;
+  officialWebsite?: string;
+  contactPhone: string;
+  contactPerson?: string;
+  urgency: 'critical' | 'urgent' | 'ongoing';
+  status: 'active' | 'fulfilled' | 'paused';
+  verifiedOfficial: boolean;
+  bankDetailsNote: string;
+  neededItems: string[];
+  description: string;
+  image?: string;
+  pledgeCount: number;
+  totalPledgedLkr: number;
+  pledges: DonationPledge[];
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 function resolvePort(): number {
   const portArgIndex = process.argv.indexOf('--port');
   if (portArgIndex !== -1 && process.argv[portArgIndex + 1]) {
@@ -354,6 +396,7 @@ const REPORTS_FILE = path.join(DATA_DIR, 'reports.json');
 const ESTORES_FILE = path.join(DATA_DIR, 'estores.json');
 const VIDEO_REELS_FILE = path.join(DATA_DIR, 'video-reels.json');
 const BUYER_REQUESTS_FILE = path.join(DATA_DIR, 'buyer-requests.json');
+const DONATIONS_FILE = path.join(DATA_DIR, 'donations.json');
 
 interface AdminConfig {
   password?: string;
@@ -570,6 +613,21 @@ function deleteBuyerRequestFromFirestore(id: string) {
   if (!firestoreDb) return;
   deleteDoc(doc(firestoreDb, 'buyer_requests', id)).catch((err) => {
     console.warn('[Firestore] delete buyer request error:', err);
+  });
+}
+
+function persistDonationToFirestore(cause: DonationCause) {
+  if (!firestoreDb) return;
+  const clean = sanitizeForFirestoreServer(cause);
+  setDoc(doc(firestoreDb, 'donations', cause.id), clean, { merge: true }).catch((err) => {
+    console.warn('[Firestore] persist donation cause error:', err);
+  });
+}
+
+function deleteDonationFromFirestore(id: string) {
+  if (!firestoreDb) return;
+  deleteDoc(doc(firestoreDb, 'donations', id)).catch((err) => {
+    console.warn('[Firestore] delete donation cause error:', err);
   });
 }
 
@@ -992,6 +1050,241 @@ function saveStoredBuyerRequests(requests: BuyerRequest[]) {
   }
 }
 
+const DEFAULT_SRI_LANKA_DONATIONS: DonationCause[] = [
+  {
+    id: 'don_apeksha_hospital_01',
+    organizationName: 'Apeksha Hospital (National Cancer Institute)',
+    title: 'Oncology Ward Medicines, Pediatric Care & Surgical Supplies',
+    category: 'Hospitals & Medical',
+    district: 'Colombo',
+    address: 'High Level Road, Maharagama, Colombo 10280',
+    officialWebsite: 'https://ncisl.health.gov.lk',
+    contactPhone: '0112 850 253',
+    contactPerson: 'Hospital Donation & Medical Director Office',
+    urgency: 'critical',
+    status: 'active',
+    verifiedOfficial: true,
+    bankDetailsNote: 'Donate supplies directly at Apeksha Hospital Donation Desk (Maharagama) or call the hospital switchboard to verify the official Treasury/Hospital Development Fund receipt before transferring.',
+    neededItems: [
+      'Pediatric Oncology Essential Medicines',
+      'Sterile Cannulas, Syringes & Surgical Gloves',
+      'Nutritional Supplements & Milk Formula for Child Patients',
+      'Patient Wheelchairs & Drip Stands',
+    ],
+    description: 'Sri Lanka’s main national referral hospital treating thousands of adult and pediatric cancer patients islandwide free of charge. Direct donations of urgently needed surgical consumables, children’s ward care packs, and hospital-verified medicines save lives daily.',
+    image: 'hospital',
+    pledgeCount: 0,
+    totalPledgedLkr: 0,
+    pledges: [],
+    userId: 'official_sl',
+    createdAt: '2026-01-10T08:00:00.000Z',
+    updatedAt: '2026-01-10T08:00:00.000Z',
+  },
+  {
+    id: 'don_lady_ridgeway_02',
+    organizationName: 'Lady Ridgeway Hospital for Children (LRH)',
+    title: 'Pediatric ICU Consumables, Baby Incubator & Ward Essentials',
+    category: 'Hospitals & Medical',
+    district: 'Colombo',
+    address: 'Dr. Danister De Silva Mawatha, Borella, Colombo 08',
+    officialWebsite: 'https://lrh.health.gov.lk',
+    contactPhone: '0112 693 711',
+    contactPerson: 'Hospital Director / Pediatric Welfare Desk',
+    urgency: 'critical',
+    status: 'active',
+    verifiedOfficial: true,
+    bankDetailsNote: 'Contact the LRH Medical Director’s office during weekday hours to confirm the exact current urgent drug or medical equipment list and obtain an official hospital acknowledgment.',
+    neededItems: [
+      'Neonatal Feeding Tubes & Oxygen Masks',
+      'Newborn Diapers, Cotton Swabs & Sterile Gauze',
+      'Pediatric Nebulizer Masks & Stethoscopes',
+      'Infusion Pumps & ICU Monitoring Sensors',
+    ],
+    description: 'The national tertiary-care children’s hospital serving critically ill newborns and children across all 25 districts of Sri Lanka. Supports intensive care, heart surgery, and general pediatric wards.',
+    image: 'hospital',
+    pledgeCount: 0,
+    totalPledgedLkr: 0,
+    pledges: [],
+    userId: 'official_sl',
+    createdAt: '2026-01-09T08:00:00.000Z',
+    updatedAt: '2026-01-09T08:00:00.000Z',
+  },
+  {
+    id: 'don_nbts_blood_03',
+    organizationName: 'National Blood Transfusion Service (NBTS Sri Lanka)',
+    title: 'Urgent Islandwide Blood, Platelet Donors & Testing Supplies',
+    category: 'Blood & Emergency',
+    district: 'All Sri Lanka',
+    address: 'No. 555/5, Elvitigala Mawatha, Narahenpita, Colombo 05',
+    officialWebsite: 'https://nbts.health.gov.lk',
+    contactPhone: '0112 369 931',
+    contactPerson: 'National Blood Center Donor Coordination',
+    urgency: 'critical',
+    status: 'active',
+    verifiedOfficial: true,
+    bankDetailsNote: 'Register as a voluntary blood/platelet donor at Narahenpita or any of the 25 district government hospital blood banks, or organize a local community mobile camp.',
+    neededItems: [
+      'A-, O-, AB- & B- Whole Blood Voluntary Donors',
+      'Urgent Platelet Apheresis Volunteers',
+      'Community Mobile Blood Camp Organizers',
+      'Refreshments & Donor Recovery Packs',
+    ],
+    description: 'Sri Lanka’s 100% voluntary non-remunerated blood supply network supporting emergency surgeries, maternity care, thalassemia patients, and cancer treatment islandwide.',
+    image: 'hospital',
+    pledgeCount: 0,
+    totalPledgedLkr: 0,
+    pledges: [],
+    userId: 'official_sl',
+    createdAt: '2026-01-08T08:00:00.000Z',
+    updatedAt: '2026-01-08T08:00:00.000Z',
+  },
+  {
+    id: 'don_nhsl_colombo_04',
+    organizationName: 'National Hospital of Sri Lanka (NHSL)',
+    title: 'Accident & Emergency Trauma Care, Wheelchairs & Ward Aid',
+    category: 'Hospitals & Medical',
+    district: 'Colombo',
+    address: 'Regent Street, Colombo 10',
+    officialWebsite: 'https://nhsl.health.gov.lk',
+    contactPhone: '0112 691 111',
+    contactPerson: 'NHSL Hospital Welfare & Social Service Unit',
+    urgency: 'urgent',
+    status: 'active',
+    verifiedOfficial: true,
+    bankDetailsNote: 'Equipment and mobility aid donations (wheelchairs, crutches, mattresses) are coordinated through the NHSL Welfare Desk with official hospital inventory registration.',
+    neededItems: [
+      'Foldable Wheelchairs & Elbow Crutches',
+      'Surgical Bandages, Plaster Rolls & Antiseptics',
+      'Hospital Bed Linen & Waterproof Mattress Covers',
+      'Pulse Oximeters & Blood Pressure Cuffs',
+    ],
+    description: 'Sri Lanka’s largest teaching hospital and primary Accident & Emergency trauma center treating critical surgical, neuro, and medical emergency patients every hour.',
+    image: 'hospital',
+    pledgeCount: 0,
+    totalPledgedLkr: 0,
+    pledges: [],
+    userId: 'official_sl',
+    createdAt: '2026-01-07T08:00:00.000Z',
+    updatedAt: '2026-01-07T08:00:00.000Z',
+  },
+  {
+    id: 'don_kandy_peradeniya_05',
+    organizationName: 'National Hospital Kandy & Teaching Hospital Peradeniya',
+    title: 'Central Province Dialysis, Maternity & Pediatric Ward Supplies',
+    category: 'Hospitals & Medical',
+    district: 'Kandy',
+    address: 'William Gopallawa Mawatha, Kandy / Peradeniya',
+    officialWebsite: 'https://www.health.gov.lk',
+    contactPhone: '0812 222 261',
+    contactPerson: 'Kandy Hospital Patient Welfare Desk',
+    urgency: 'urgent',
+    status: 'active',
+    verifiedOfficial: true,
+    bankDetailsNote: 'Call the hospital Director / Patient Welfare Unit to coordinate direct medical supply delivery for Kidney/Dialysis and Maternal wards.',
+    neededItems: [
+      'Hemodialysis Tubing & Dialyzer Kits',
+      'Maternity Ward Newborn Kits & Towels',
+      'Essential Chronic Kidney & Cardiac Medicines',
+      'Patient Trolleys & Nebulizers',
+    ],
+    description: 'Serving families across Kandy, Matale, Nuwara Eliya, and surrounding rural hill-country communities who rely on free public specialist care.',
+    image: 'hospital',
+    pledgeCount: 0,
+    totalPledgedLkr: 0,
+    pledges: [],
+    userId: 'official_sl',
+    createdAt: '2026-01-06T08:00:00.000Z',
+    updatedAt: '2026-01-06T08:00:00.000Z',
+  },
+  {
+    id: 'don_rural_children_schools_06',
+    organizationName: 'Rural Sri Lanka School & Children’s Home Aid Network',
+    title: 'Exercise Books, Backpacks & Nutrition for Rural Students',
+    category: 'Children & Schools',
+    district: 'All Sri Lanka',
+    address: 'Monaragala, Anuradhapura, Ratnapura & Estate Sector Schools',
+    contactPhone: '+94 77 526 0765',
+    contactPerson: 'HUTA Community Aid Coordination Desk',
+    urgency: 'urgent',
+    status: 'active',
+    verifiedOfficial: true,
+    bankDetailsNote: 'Donate physical school packs directly to registered rural school principals or orphanages, or pledge school stationery sets through our verified district coordinators.',
+    neededItems: [
+      'CR & Single-Rule School Exercise Books',
+      'Durable School Backpacks & Shoes',
+      'Pens, Geometry Boxes & Color Pencils',
+      'Mid-Day School Meal Dry Rations',
+    ],
+    description: 'Helps low-income rural village students and registered children’s homes across Sri Lanka stay in school with essential books, shoes, and daily nutrition.',
+    image: 'children',
+    pledgeCount: 0,
+    totalPledgedLkr: 0,
+    pledges: [],
+    userId: 'official_sl',
+    createdAt: '2026-01-05T08:00:00.000Z',
+    updatedAt: '2026-01-05T08:00:00.000Z',
+  },
+  {
+    id: 'don_elders_disaster_relief_07',
+    organizationName: 'Sri Lanka Red Cross & Elders’ Home Relief Drives',
+    title: 'Dry Food Rations, Clean Water & Elders’ Home Hygiene Kits',
+    category: 'Food & Elders Relief',
+    district: 'All Sri Lanka',
+    address: 'No. 106, Dharmapala Mawatha, Colombo 07 (District Branches Islandwide)',
+    officialWebsite: 'https://www.redcross.lk',
+    contactPhone: '0112 691 095',
+    contactPerson: 'Sri Lanka Red Cross Disaster & Community Relief',
+    urgency: 'ongoing',
+    status: 'active',
+    verifiedOfficial: true,
+    bankDetailsNote: 'Verify district branch drop-off points or official Sri Lanka Red Cross website channels before sending financial contributions.',
+    neededItems: [
+      '5kg White/Red Rice, Dhal & Dry Food Packs',
+      'Bottled Drinking Water & Water Purification Tablets',
+      'Adult Hygiene & Elders’ Care Supplies',
+      'Mosquito Nets, Sleeping Mats & First-Aid Kits',
+    ],
+    description: 'Supports vulnerable senior citizens in registered elders’ homes as well as families displaced during seasonal monsoon floods and landslides across Sri Lanka.',
+    image: 'food',
+    pledgeCount: 0,
+    totalPledgedLkr: 0,
+    pledges: [],
+    userId: 'official_sl',
+    createdAt: '2026-01-04T08:00:00.000Z',
+    updatedAt: '2026-01-04T08:00:00.000Z',
+  },
+];
+
+function getStoredDonations(): DonationCause[] {
+  try {
+    if (fs.existsSync(DONATIONS_FILE)) {
+      const data = fs.readFileSync(DONATIONS_FILE, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((d) => ({
+          ...d,
+          neededItems: Array.isArray(d.neededItems) ? d.neededItems : [],
+          pledges: Array.isArray(d.pledges) ? d.pledges : [],
+          pledgeCount: typeof d.pledgeCount === 'number' ? d.pledgeCount : (Array.isArray(d.pledges) ? d.pledges.length : 0),
+          totalPledgedLkr: typeof d.totalPledgedLkr === 'number' ? d.totalPledgedLkr : 0,
+        }));
+      }
+    }
+  } catch (err) {
+    console.error('Error reading donations file', err);
+  }
+  saveStoredDonations(DEFAULT_SRI_LANKA_DONATIONS);
+  return [...DEFAULT_SRI_LANKA_DONATIONS];
+}
+
+function saveStoredDonations(causes: DonationCause[]) {
+  try {
+    fs.writeFileSync(DONATIONS_FILE, JSON.stringify(causes, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error saving donations file', err);
+  }
+}
+
 let listingsCache = getStoredListings();
 let usersCache = getStoredUsers();
 let eventsCache = getStoredEvents();
@@ -1002,6 +1295,7 @@ let reportsCache = getStoredReports();
 let eStoresCache = getStoredEStores();
 let videoReelsCache = getStoredVideoReels();
 let buyerRequestsCache = getStoredBuyerRequests();
+let donationsCache = getStoredDonations();
 
 // Lazy initialize Gemini client
 let genAIClient: GoogleGenAI | null = null;
@@ -4075,6 +4369,195 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
     res.json({ success: true });
   });
 
+  // -------------------------------------------------------------
+  // Sri Lanka Donate Hub (Most Needed Hospitals & Humanitarian Aid) API
+  // -------------------------------------------------------------
+
+  app.get('/api/donations', (req, res) => {
+    const { category, district, urgency, status, search } = req.query;
+    let result = [...donationsCache];
+
+    if (status && status !== 'all') {
+      result = result.filter((d) => d.status === String(status));
+    }
+    if (category && category !== 'All') {
+      const catLow = String(category).toLowerCase();
+      result = result.filter((d) => d.category.toLowerCase() === catLow);
+    }
+    if (district && district !== 'All Sri Lanka') {
+      const distLow = String(district).toLowerCase();
+      result = result.filter(
+        (d) =>
+          d.district.toLowerCase() === distLow ||
+          d.district.toLowerCase() === 'all sri lanka' ||
+          d.address.toLowerCase().includes(distLow)
+      );
+    }
+    if (urgency && urgency !== 'all') {
+      result = result.filter((d) => d.urgency === String(urgency));
+    }
+    if (search) {
+      const q = String(search).toLowerCase().trim();
+      result = result.filter(
+        (d) =>
+          d.title.toLowerCase().includes(q) ||
+          d.organizationName.toLowerCase().includes(q) ||
+          d.description.toLowerCase().includes(q) ||
+          d.address.toLowerCase().includes(q) ||
+          d.neededItems.some((item) => item.toLowerCase().includes(q))
+      );
+    }
+
+    const urgencyRank: Record<string, number> = { critical: 0, urgent: 1, ongoing: 2 };
+    result.sort((a, b) => {
+      const uDiff = (urgencyRank[a.urgency] ?? 3) - (urgencyRank[b.urgency] ?? 3);
+      if (uDiff !== 0) return uDiff;
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
+    res.json(result);
+  });
+
+  app.post('/api/donations', (req, res) => {
+    const data = req.body || {};
+    const organizationName = String(data.organizationName || '').trim();
+    const title = String(data.title || '').trim();
+    const contactPhone = String(data.contactPhone || '').trim();
+    if (!organizationName || !title || !contactPhone) {
+      return res.status(400).json({ error: 'Institution name, cause title, and contact phone are required.' });
+    }
+
+    const allowedCategories = [
+      'Hospitals & Medical',
+      'Blood & Emergency',
+      'Children & Schools',
+      'Food & Elders Relief',
+      'Community Infrastructure',
+    ] as const;
+    const categoryVal = allowedCategories.includes(data.category)
+      ? data.category
+      : 'Hospitals & Medical';
+    const urgencyVal = data.urgency === 'critical' || data.urgency === 'urgent' || data.urgency === 'ongoing'
+      ? data.urgency
+      : 'urgent';
+    const statusVal = data.status === 'fulfilled' || data.status === 'paused' ? data.status : 'active';
+    const now = new Date().toISOString();
+    const id = data.id || `don_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const neededItems = Array.isArray(data.neededItems)
+      ? data.neededItems.map((i: unknown) => String(i || '').trim()).filter(Boolean).slice(0, 25)
+      : [];
+    const pledges: DonationPledge[] = Array.isArray(data.pledges) ? data.pledges.slice(0, 200) : [];
+
+    const created: DonationCause = {
+      id,
+      organizationName: organizationName.slice(0, 160),
+      title: title.slice(0, 200),
+      category: categoryVal,
+      district: String(data.district || 'Colombo').trim().slice(0, 100) || 'Colombo',
+      address: String(data.address || data.district || 'Sri Lanka').trim().slice(0, 240) || 'Sri Lanka',
+      officialWebsite: data.officialWebsite ? String(data.officialWebsite).trim().slice(0, 300) : undefined,
+      contactPhone: contactPhone.slice(0, 50),
+      contactPerson: data.contactPerson ? String(data.contactPerson).trim().slice(0, 120) : undefined,
+      urgency: urgencyVal,
+      status: statusVal,
+      verifiedOfficial: Boolean(data.verifiedOfficial),
+      bankDetailsNote: String(data.bankDetailsNote || 'Contact the hospital or organization desk directly to verify official receipts or drop-off hours before contributing.').trim().slice(0, 1000),
+      neededItems,
+      description: String(data.description || '').trim().slice(0, 4000),
+      image: data.image ? String(data.image).trim().slice(0, 1000) : undefined,
+      pledgeCount: pledges.length,
+      totalPledgedLkr: pledges.reduce((acc, p) => acc + Math.max(0, Number(p.amountLkr) || 0), 0),
+      pledges,
+      userId: String(data.userId || 'guest').slice(0, 128),
+      createdAt: data.createdAt || now,
+      updatedAt: now,
+    };
+
+    const existingIdx = donationsCache.findIndex((d) => d.id === id);
+    if (existingIdx !== -1) {
+      donationsCache[existingIdx] = created;
+    } else {
+      donationsCache.unshift(created);
+    }
+    saveStoredDonations(donationsCache);
+    persistDonationToFirestore(created);
+    res.status(201).json(created);
+  });
+
+  app.post('/api/donations/:id/pledges', (req, res) => {
+    const idx = donationsCache.findIndex((d) => d.id === req.params.id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'Donation cause not found' });
+    }
+    const data = req.body || {};
+    const donorName = String(data.donorName || '').trim();
+    if (!donorName) {
+      return res.status(400).json({ error: 'Donor name is required.' });
+    }
+
+    const pledgeType = data.pledgeType === 'funds' || data.pledgeType === 'blood_volunteer'
+      ? data.pledgeType
+      : 'supplies';
+    const amountLkr = Math.max(0, Number(data.amountLkr) || 0);
+
+    const newPledge: DonationPledge = {
+      id: data.id || `pledge_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      donorName: donorName.slice(0, 100),
+      donorPhone: data.donorPhone ? String(data.donorPhone).trim().slice(0, 50) : undefined,
+      donorDistrict: data.donorDistrict ? String(data.donorDistrict).trim().slice(0, 80) : undefined,
+      pledgeType,
+      amountLkr,
+      itemsSummary: data.itemsSummary ? String(data.itemsSummary).trim().slice(0, 240) : undefined,
+      message: data.message ? String(data.message).trim().slice(0, 500) : undefined,
+      createdAt: data.createdAt || new Date().toISOString(),
+    };
+
+    const current = donationsCache[idx];
+    const currentPledges = Array.isArray(current.pledges) ? current.pledges : [];
+    const updatedPledges = [newPledge, ...currentPledges.filter((p) => p.id !== newPledge.id)].slice(0, 200);
+    const updated: DonationCause = {
+      ...current,
+      pledges: updatedPledges,
+      pledgeCount: updatedPledges.length,
+      totalPledgedLkr: updatedPledges.reduce((acc, p) => acc + Math.max(0, Number(p.amountLkr) || 0), 0),
+      updatedAt: new Date().toISOString(),
+    };
+
+    donationsCache[idx] = updated;
+    saveStoredDonations(donationsCache);
+    persistDonationToFirestore(updated);
+    res.status(201).json(updated);
+  });
+
+  app.patch('/api/donations/:id/status', (req, res) => {
+    const idx = donationsCache.findIndex((d) => d.id === req.params.id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'Donation cause not found' });
+    }
+    const status = req.body?.status;
+    if (status !== 'active' && status !== 'fulfilled' && status !== 'paused') {
+      return res.status(400).json({ error: 'Invalid status value.' });
+    }
+    const updated: DonationCause = {
+      ...donationsCache[idx],
+      status,
+      updatedAt: new Date().toISOString(),
+    };
+    donationsCache[idx] = updated;
+    saveStoredDonations(donationsCache);
+    persistDonationToFirestore(updated);
+    res.json(updated);
+  });
+
+  app.delete('/api/donations/:id', (req, res) => {
+    const idx = donationsCache.findIndex((d) => d.id === req.params.id);
+    if (idx !== -1) {
+      donationsCache.splice(idx, 1);
+      saveStoredDonations(donationsCache);
+    }
+    deleteDonationFromFirestore(req.params.id);
+    res.json({ success: true });
+  });
+
   // Catch-all for undefined API routes
   app.all('/api/*', (req, res) => {
     res.status(404).json({ error: 'API endpoint not found' });
@@ -4326,6 +4809,43 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
       } catch (e) {
         if (isQuotaExceededError(e)) return;
         console.warn('[Firestore] Initial buyer requests sync warning:', e);
+      }
+
+      try {
+        const donSnap = await getDocs(collection(firestoreDb, 'donations'));
+        if (!donSnap.empty) {
+          const remoteDons: DonationCause[] = [];
+          donSnap.forEach((d) => {
+            const item = d.data() as DonationCause;
+            const pledges = Array.isArray(item.pledges) ? item.pledges : [];
+            const neededItems = Array.isArray(item.neededItems) ? item.neededItems : [];
+            remoteDons.push({
+              ...item,
+              id: d.id,
+              neededItems,
+              pledges,
+              pledgeCount: typeof item.pledgeCount === 'number' ? item.pledgeCount : pledges.length,
+              totalPledgedLkr:
+                typeof item.totalPledgedLkr === 'number'
+                  ? item.totalPledgedLkr
+                  : pledges.reduce((acc, p) => acc + Math.max(0, Number(p.amountLkr) || 0), 0),
+            });
+          });
+          const donMap = new Map<string, DonationCause>();
+          donationsCache.forEach((d) => donMap.set(d.id, d));
+          remoteDons.forEach((d) => donMap.set(d.id, d));
+          donationsCache = Array.from(donMap.values());
+          saveStoredDonations(donationsCache);
+          console.log(`[Firestore] Initialized server donations cache with ${donationsCache.length} Sri Lanka causes`);
+        } else {
+          for (const d of donationsCache) {
+            persistDonationToFirestore(d);
+          }
+          console.log(`[Firestore] Seeded initial ${donationsCache.length} Sri Lanka donation causes to Firestore`);
+        }
+      } catch (e) {
+        if (isQuotaExceededError(e)) return;
+        console.warn('[Firestore] Initial donations sync warning:', e);
       }
     })().catch((err) => {
       console.warn('[Firestore] Initial background sync error:', err);

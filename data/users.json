@@ -1,67 +1,67 @@
 [
   {
-    "fullname": "Demo Member",
-    "created": "2026-09-20T00:00:00.000Z",
+    "username": "demo",
+    "securityAnswer": "puppy",
     "email": "demo@huta.lk",
     "phone": "0771234567",
-    "securityAnswer": "puppy",
     "id": "user_demo",
-    "password": "Monday2026",
     "securityQuestion": "pet",
-    "username": "demo"
+    "password": "Monday2026",
+    "fullname": "Demo Member",
+    "created": "2026-09-20T00:00:00.000Z"
   },
   {
-    "email": "seller@huta.lk",
-    "fullname": "Kasun Fernando (Verified Seller)",
-    "created": "2026-09-20T00:00:00.000Z",
-    "password": "password123",
-    "securityQuestion": "city",
     "username": "seller",
-    "phone": "0719876543",
     "securityAnswer": "colombo",
-    "id": "user_seller"
+    "created": "2026-09-20T00:00:00.000Z",
+    "fullname": "Kasun Fernando (Verified Seller)",
+    "id": "user_seller",
+    "password": "password123",
+    "phone": "0719876543",
+    "email": "seller@huta.lk",
+    "securityQuestion": "city"
   },
   {
-    "username": "efastqa",
     "created": "2026-09-20T00:00:00.000Z",
-    "password": "admin123",
-    "phone": "0777000111",
+    "username": "efastqa",
     "securityAnswer": "huta",
+    "phone": "0777000111",
     "email": "efastqa@gmail.com",
     "id": "user_efastqa",
     "securityQuestion": "pet",
-    "fullname": "HUTA Administrator"
+    "fullname": "HUTA Administrator",
+    "password": "admin123"
   },
   {
-    "created": "2026-09-16T17:45:40.506Z",
     "phone": "0774038723",
-    "securityQuestion": "city",
-    "id": "user_1789580740506",
-    "fullname": "M.A.M Rimaz",
-    "username": "rimaz1993",
-    "securityAnswer": "kurunegala",
     "email": "mamrimazrimaz@gmail.com",
-    "password": "Rimaz1993"
-  },
-  {
-    "id": "user_1789890651187",
-    "fullname": "Nashan",
-    "phone": "0775260765",
-    "created": "2026-09-20T07:50:51.187Z",
+    "password": "Rimaz1993",
+    "created": "2026-09-16T17:45:40.506Z",
+    "fullname": "M.A.M Rimaz",
+    "id": "user_1789580740506",
     "securityQuestion": "city",
-    "securityAnswer": "colombo",
-    "email": "efastqa@gmail.com",
-    "username": "mymnashan",
-    "password": "Nashan520765"
+    "username": "rimaz1993",
+    "securityAnswer": "kurunegala"
   },
   {
-    "securityAnswer": "laky",
-    "fullname": "Tharaka Madusankha",
-    "phone": "0767428189",
-    "securityQuestion": "pet",
+    "securityAnswer": "colombo",
+    "id": "user_1789890651187",
+    "securityQuestion": "city",
+    "created": "2026-09-20T07:50:51.187Z",
+    "password": "Nashan520765",
+    "fullname": "Nashan",
+    "email": "efastqa@gmail.com",
+    "phone": "0775260765",
+    "username": "mymnashan"
+  },
+  {
     "created": "2026-09-22T02:28:55.393Z",
+    "securityAnswer": "laky",
+    "securityQuestion": "pet",
+    "fullname": "Tharaka Madusankha",
     "password": "GaTm@19881109",
     "id": "user_1790044135393",
+    "phone": "0767428189",
     "email": "tmgangodwila@gmail.com",
     "username": "tmgangodwia"
   }

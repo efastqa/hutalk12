@@ -180,6 +180,36 @@
       },
       "required": ["id", "title", "category", "district", "maxBudget", "buyerPhone", "status", "createdAt"]
     },
+    "DonationCause": {
+      "title": "DonationCause",
+      "description": "Verified Sri Lanka hospital, medical aid, children's home, or emergency relief donation drive.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "organizationName": { "type": "string", "maxLength": 160 },
+        "title": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "enum": ["Hospitals & Medical", "Blood & Emergency", "Children & Schools", "Food & Elders Relief", "Community Infrastructure"] },
+        "district": { "type": "string", "maxLength": 100 },
+        "address": { "type": "string", "maxLength": 240 },
+        "officialWebsite": { "type": "string", "maxLength": 300 },
+        "contactPhone": { "type": "string", "maxLength": 50 },
+        "contactPerson": { "type": "string", "maxLength": 120 },
+        "urgency": { "type": "string", "enum": ["critical", "urgent", "ongoing"] },
+        "status": { "type": "string", "enum": ["active", "fulfilled", "paused"] },
+        "verifiedOfficial": { "type": "boolean" },
+        "bankDetailsNote": { "type": "string", "maxLength": 1000 },
+        "neededItems": { "type": "array" },
+        "description": { "type": "string", "maxLength": 4000 },
+        "image": { "type": "string", "maxLength": 1000 },
+        "pledgeCount": { "type": "number" },
+        "totalPledgedLkr": { "type": "number" },
+        "pledges": { "type": "array" },
+        "userId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "organizationName", "title", "category", "district", "contactPhone", "urgency", "status", "createdAt"]
+    },
     "TestConnection": {
       "title": "TestConnection",
       "description": "Health check document to verify Cloud Firestore connectivity upon app boot.",
@@ -225,6 +255,10 @@
     "/buyer_requests/{requestId}": {
       "schema": { "$ref": "#/entities/BuyerRequest" },
       "description": "Wanted / Looking For buyer request board posts and seller offers."
+    },
+    "/donations/{causeId}": {
+      "schema": { "$ref": "#/entities/DonationCause" },
+      "description": "Verified Sri Lanka hospital, charity, and emergency relief donation causes and pledges."
     }
   }
 }
