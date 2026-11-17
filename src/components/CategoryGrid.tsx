@@ -3,15 +3,25 @@ import { motion } from 'motion/react';
 import { RotateCcw, ArrowRight, Flame } from 'lucide-react';
 import { Listing, HotNewsArticle } from '../types';
 import { DualToneHeading } from './DualToneHeading';
-import holidayHomesImg from '../assets/images/holiday_homes_category_1794527575851.jpg';
+import catVehicles3dImg from '../assets/images/cat_vehicles_3d_1794907415689.jpg';
+import catProperty3dImg from '../assets/images/cat_property_3d_1794907416481.jpg';
 import carsForRentImg from '../assets/images/cars_for_rent_category_1794683403631.jpg';
-import hotNewsIconImg from '../assets/images/hot_news_sri_lanka_icon_1794684230454.jpg';
+import holidayHomesImg from '../assets/images/holiday_homes_category_1794527575851.jpg';
+import catPhones3dImg from '../assets/images/cat_phones_3d_1794907416738.jpg';
+import catServices3dImg from '../assets/images/cat_services_3d_1794907415367.jpg';
+import catJobs3dImg from '../assets/images/cat_jobs_3d_1794907417386.jpg';
+import catComputers3dImg from '../assets/images/cat_computers_3d_1794907417216.jpg';
+import catWomens3dImg from '../assets/images/cat_womens_3d_1794907418654.jpg';
+import catMens3dImg from '../assets/images/cat_mens_3d_1794907419777.jpg';
+import catBeauty3dImg from '../assets/images/cat_beauty_3d_1794907420014.jpg';
 import catAutoPartsImg from '../assets/images/cat_auto_parts_1794777622668.jpg';
 import catBoardingsImg from '../assets/images/cat_boardings_1794777622750.jpg';
 import catAgricultureImg from '../assets/images/cat_agriculture_1794777623729.jpg';
 import catWeddingsImg from '../assets/images/cat_weddings_1794777623764.jpg';
 import catEducationImg from '../assets/images/cat_education_1794777624140.jpg';
 import catPetsImg from '../assets/images/cat_pets_1794777624936.jpg';
+import catLuxury3dImg from '../assets/images/cat_luxury_3d_1794907420791.jpg';
+import hotNewsIconImg from '../assets/images/hot_news_sri_lanka_icon_1794684230454.jpg';
 
 export interface CategoryGridProps {
   currentCategory: string;
@@ -32,18 +42,18 @@ export interface CategoryItem {
   isNew?: boolean;
 }
 
-// Curated 3D categories for Explore Our Categories
+// Unified modern 3D studio icon categories — uniform size & crisp framing across light and dark themes
 export const CATEGORIES_ITEMS: CategoryItem[] = [
   {
     key: 'Vehicles',
     label: 'Vehicles',
-    image: '/assets/categories/vehicles.png',
+    image: catVehicles3dImg,
     targetCategory: 'Vehicles',
   },
   {
     key: 'Property',
     label: 'Property',
-    image: '/assets/categories/property.png',
+    image: catProperty3dImg,
     targetCategory: 'Property',
   },
   {
@@ -63,47 +73,47 @@ export const CATEGORIES_ITEMS: CategoryItem[] = [
   {
     key: 'Phones',
     label: 'Phones',
-    image: '/assets/categories/phones.png',
+    image: catPhones3dImg,
     targetCategory: 'Phones',
     searchQuery: 'phone',
   },
   {
     key: 'Services',
     label: 'Services',
-    image: '/assets/categories/services.png',
+    image: catServices3dImg,
     targetCategory: 'Services',
   },
   {
     key: 'Jobs',
     label: 'Jobs',
-    image: '/assets/categories/jobs.png',
+    image: catJobs3dImg,
     targetCategory: 'Jobs',
   },
   {
     key: 'Computers',
     label: 'Computers',
-    image: '/assets/categories/computers.png',
+    image: catComputers3dImg,
     targetCategory: 'Computers',
     searchQuery: 'computer',
   },
   {
     key: "Women's",
     label: "Women's",
-    image: '/assets/categories/womens.png',
+    image: catWomens3dImg,
     targetCategory: "Women's",
     searchQuery: 'women',
   },
   {
     key: "Men's",
     label: "Men's",
-    image: '/assets/categories/mens.png',
+    image: catMens3dImg,
     targetCategory: "Men's",
     searchQuery: 'men',
   },
   {
     key: 'Beauty',
     label: 'Beauty',
-    image: '/assets/categories/beauty.png',
+    image: catBeauty3dImg,
     targetCategory: 'Beauty',
     searchQuery: 'beauty',
   },
@@ -152,7 +162,7 @@ export const CATEGORIES_ITEMS: CategoryItem[] = [
   {
     key: 'Luxury',
     label: 'Luxury',
-    image: '/assets/categories/luxury.png',
+    image: catLuxury3dImg,
     targetCategory: 'Luxury',
     searchQuery: 'gem',
   },
@@ -427,7 +437,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
         {/* Subtle top ambient glow */}
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-96 h-32 bg-[#FF5A36]/10 dark:bg-[#FF5A36]/15 blur-3xl pointer-events-none rounded-full" />
 
-        <div className="relative grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-x-2 sm:gap-x-4 md:gap-x-5 gap-y-6 sm:gap-y-8">
+        <div className="relative grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-x-2 sm:gap-x-4 md:gap-x-5 gap-y-5 sm:gap-y-7">
           {CATEGORIES_ITEMS.map((cat, idx) => {
             const isActive =
               currentCategory.toLowerCase() === cat.key.toLowerCase() ||
@@ -440,44 +450,36 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
                 type="button"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, delay: idx * 0.03 }}
-                whileHover={{ y: -5 }}
+                transition={{ duration: 0.25, delay: idx * 0.025 }}
+                whileHover={{ y: -4 }}
                 whileTap={{ scale: 0.96 }}
                 onClick={() => handleCategoryClick(cat)}
-                className={`relative flex flex-col items-center justify-start text-center cursor-pointer select-none group p-1.5 sm:p-2.5 rounded-2xl transition-all duration-300 ${
+                className={`relative flex flex-col items-center justify-start text-center cursor-pointer select-none group p-1.5 sm:p-2 rounded-2xl transition-all duration-200 ${
                   isActive
                     ? 'bg-gradient-to-b from-[#FF5A36]/12 to-transparent dark:from-[#FF5A36]/20 dark:to-transparent border border-[#FF5A36]/50 shadow-md shadow-[#FF5A36]/10'
-                    : 'hover:bg-white dark:hover:bg-[#1A1E2B] hover:shadow-md hover:shadow-black/5 dark:hover:shadow-black/40 border border-transparent hover:border-gray-200/80 dark:hover:border-white/10'
+                    : 'hover:bg-gray-50/90 dark:hover:bg-[#1A1E2B] hover:shadow-md hover:shadow-black/5 dark:hover:shadow-black/40 border border-transparent hover:border-gray-200/80 dark:hover:border-white/10'
                 }`}
                 title={`Browse ${cat.label} (${count} ads)`}
               >
-                {/* "New" Badge */}
-                {cat.isNew && (
-                  <span className="absolute top-1.5 right-1.5 z-10 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-[#FF5A36] to-amber-500 text-white text-[9px] font-black uppercase tracking-wider shadow-xs">
-                    New
-                  </span>
-                )}
-
-                {/* 3D Icon Presentation with Ground Shadow */}
-                <div className="relative w-16 h-14 sm:w-20 sm:h-18 md:w-24 md:h-20 flex flex-col items-center justify-center mb-1">
+                {/* Uniform Modern 3D Studio Squircle Frame (Same Exact Size Across All Categories) */}
+                <div
+                  className={`relative w-14 h-14 sm:w-[72px] sm:h-[72px] md:w-20 md:h-20 rounded-2xl sm:rounded-[22px] bg-white border overflow-hidden mb-1.5 transition-all duration-200 ${
+                    isActive
+                      ? 'border-[#FF5A36] ring-2 ring-[#FF5A36] ring-offset-2 ring-offset-white dark:ring-offset-[#12141D] shadow-lg shadow-[#FF5A36]/20 scale-[1.03]'
+                      : 'border-gray-200/80 dark:border-white/20 shadow-[0_6px_16px_rgba(15,23,42,0.06)] dark:shadow-[0_8px_20px_rgba(0,0,0,0.4)] group-hover:shadow-lg group-hover:border-[#FF5A36]/40'
+                  }`}
+                >
                   <img
                     src={cat.image}
                     alt={cat.label}
-                    className="w-full h-full object-contain rounded-2xl filter group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 ease-out select-none pointer-events-none drop-shadow-sm group-hover:drop-shadow-[0_10px_18px_rgba(255,90,54,0.25)]"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ease-out select-none pointer-events-none"
                     loading="lazy"
                   />
-                  {/* 3D Ground Contact Shadow */}
-                  <div className="w-10 sm:w-14 h-1.5 bg-black/10 dark:bg-black/50 rounded-full blur-[2px] mt-0.5 group-hover:scale-90 group-hover:opacity-40 transition-all duration-300" />
-
-                  {/* Active Indicator Glow Dot */}
-                  {isActive && (
-                    <span className="absolute -top-1 -left-1 w-3 h-3 bg-[#FF5A36] rounded-full ring-2 ring-white dark:ring-[#12141D] shadow-sm animate-pulse" />
-                  )}
                 </div>
 
                 {/* Category Label */}
                 <span
-                  className={`text-[11px] sm:text-sm font-black tracking-tight leading-tight text-center transition-colors mt-1 ${
+                  className={`text-[11px] sm:text-[13px] font-bold tracking-tight leading-tight text-center transition-colors mt-0.5 line-clamp-2 ${
                     isActive
                       ? 'text-[#FF5A36] dark:text-[#FF7A59]'
                       : 'text-gray-900 dark:text-gray-100 group-hover:text-[#FF5A36] dark:group-hover:text-[#FF5A36]'
@@ -486,13 +488,18 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
                   {cat.label}
                 </span>
 
-                {/* Ads Count */}
+                {/* Unboxed Ads Count Metadata */}
                 <span
-                  className={`text-[10px] sm:text-[11px] font-semibold mt-0.5 transition-colors ${
+                  className={`text-[10px] sm:text-[11px] font-medium mt-0.5 transition-colors tabular-nums ${
                     isActive ? 'text-[#FF5A36]/90 dark:text-[#FF7A59]/90' : 'text-gray-400 dark:text-gray-500'
                   }`}
                 >
                   {count} ads
+                  {cat.isNew && (
+                    <span className="text-[#FF5A36] dark:text-[#FF7A59] font-bold">
+                      {' · '}New
+                    </span>
+                  )}
                 </span>
               </motion.button>
             );
@@ -505,32 +512,24 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
             <motion.button
               type="button"
               id="category-hot-news-icon-btn"
-              whileHover={{ y: -5 }}
+              whileHover={{ y: -4 }}
               whileTap={{ scale: 0.96 }}
               onClick={onOpenHotNews}
-              className="relative flex flex-col items-center justify-start text-center cursor-pointer select-none group p-2 rounded-2xl transition-all duration-300 hover:bg-white dark:hover:bg-[#1A1E2B] hover:shadow-md hover:shadow-black/5 dark:hover:shadow-black/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-500/30 shrink-0"
+              className="relative flex flex-col items-center justify-start text-center cursor-pointer select-none group p-2 rounded-2xl transition-all duration-200 hover:bg-gray-50/90 dark:hover:bg-[#1A1E2B] hover:shadow-md hover:shadow-black/5 dark:hover:shadow-black/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-500/30 shrink-0"
               title="Open Sri Lanka Live Hot News"
             >
-              {/* LIVE Pulse Badge */}
-              <span className="absolute top-1.5 right-1.5 z-10 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-rose-600 to-[#FF5A36] text-white text-[9px] font-black uppercase tracking-wider shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                <span>Live</span>
-              </span>
-
-              {/* 3D Category Icon Frame */}
-              <div className="relative w-16 h-14 sm:w-20 sm:h-18 md:w-24 md:h-20 flex flex-col items-center justify-center mb-1">
+              {/* Same Uniform 3D Studio Squircle Frame */}
+              <div className="relative w-14 h-14 sm:w-[72px] sm:h-[72px] md:w-20 md:h-20 rounded-2xl sm:rounded-[22px] bg-white border border-rose-200/80 dark:border-white/20 overflow-hidden mb-1.5 shadow-[0_6px_16px_rgba(244,63,94,0.08)] dark:shadow-[0_8px_20px_rgba(0,0,0,0.4)] group-hover:shadow-lg group-hover:border-rose-400/50 transition-all duration-200">
                 <img
                   src={hotNewsIconImg}
                   alt="Sri Lanka Hot News"
-                  className="w-full h-full object-contain rounded-2xl filter group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 ease-out select-none pointer-events-none drop-shadow-sm group-hover:drop-shadow-[0_10px_18px_rgba(244,63,94,0.28)]"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ease-out select-none pointer-events-none"
                   loading="lazy"
                 />
-                {/* 3D Ground Contact Shadow */}
-                <div className="w-10 sm:w-14 h-1.5 bg-black/10 dark:bg-black/50 rounded-full blur-[2px] mt-0.5 group-hover:scale-90 group-hover:opacity-40 transition-all duration-300" />
               </div>
 
               {/* Label */}
-              <span className="text-xs sm:text-sm font-black tracking-tight leading-tight text-center text-gray-900 dark:text-gray-100 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors mt-1">
+              <span className="text-xs sm:text-[13px] font-bold tracking-tight leading-tight text-center text-gray-900 dark:text-gray-100 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors mt-0.5">
                 Hot News
               </span>
 
@@ -541,6 +540,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
                   : isLoadingHotNews
                   ? 'Updating...'
                   : 'Sri Lanka'}
+                <span className="text-rose-600 dark:text-rose-400 font-bold"> · Live</span>
               </span>
             </motion.button>
 

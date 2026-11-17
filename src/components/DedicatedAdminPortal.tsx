@@ -232,7 +232,7 @@ export const DedicatedAdminPortal: React.FC<DedicatedAdminPortalProps> = ({
               </div>
               <span className="hidden md:inline-flex items-center gap-1.5 text-xs text-slate-400 border-l border-slate-700/80 pl-3">
                 <Globe className="w-3.5 h-3.5 text-slate-500" />
-                <span>Route: {isDedicatedSubdomain ? hostDisplay : `${hostDisplay}/admin`}</span>
+                <span>Route: {isDedicatedSubdomain ? hostDisplay : `${hostDisplay}/nashan`}</span>
               </span>
             </div>
 
@@ -473,7 +473,7 @@ export const DedicatedAdminPortal: React.FC<DedicatedAdminPortalProps> = ({
               </span>
               <span className="text-slate-500">•</span>
               <span className="font-mono text-[11px] text-slate-400">
-                {isDedicatedSubdomain ? hostDisplay : `${hostDisplay}/admin`}
+                {isDedicatedSubdomain ? hostDisplay : `${hostDisplay}/nashan`}
               </span>
             </div>
           </div>

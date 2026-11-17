@@ -47,18 +47,8 @@ function getInitialTab(): ViewTab {
       return 'admin_dashboard';
     }
 
-    // 2. Model A Dedicated Route detection: /admin or /admin/*
-    if (pathname === '/admin' || pathname.startsWith('/admin/')) {
-      return 'admin_dashboard';
-    }
-
-    // 3. Fallback query / hash detection (?admin=true, #admin, ?tab=admin_dashboard, ?tab=admin)
-    if (
-      params.get('admin') === 'true' ||
-      window.location.hash === '#admin' ||
-      tab === 'admin_dashboard' ||
-      tab === 'admin'
-    ) {
+    // 2. Secured Dedicated Admin Route detection: /nashan or /nashan/* (replaces /admin for safety)
+    if (pathname === '/nashan' || pathname.startsWith('/nashan/')) {
       return 'admin_dashboard';
     }
 
@@ -242,24 +232,34 @@ export default function App() {
     }
   }, [compareIds]);
 
-  // Keep browser URL query and path in sync with currentTab (Model A dedicated routing)
+  // Keep browser URL query and path in sync with currentTab (Secured dedicated /nashan routing)
   useEffect(() => {
     try {
       const url = new URL(window.location.href);
       if (currentTab === 'admin_dashboard') {
         url.searchParams.delete('tab');
         url.searchParams.delete('admin');
-        if (!url.pathname.startsWith('/admin') && !url.hostname.startsWith('admin.')) {
-          url.pathname = '/admin';
+        if (!url.pathname.startsWith('/nashan') && !url.hostname.startsWith('admin.')) {
+          url.pathname = '/nashan';
         }
       } else if (currentTab === 'marketplace') {
         url.searchParams.delete('tab');
-        if (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) {
+        if (
+          url.pathname === '/nashan' ||
+          url.pathname.startsWith('/nashan/') ||
+          url.pathname === '/admin' ||
+          url.pathname.startsWith('/admin/')
+        ) {
           url.pathname = '/';
         }
       } else {
         url.searchParams.set('tab', currentTab);
-        if (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) {
+        if (
+          url.pathname === '/nashan' ||
+          url.pathname.startsWith('/nashan/') ||
+          url.pathname === '/admin' ||
+          url.pathname.startsWith('/admin/')
+        ) {
           url.pathname = '/';
         }
       }
@@ -294,16 +294,18 @@ export default function App() {
         if (
           hostname.startsWith('admin.') ||
           hostname === 'admin.huta.lk' ||
-          pathname === '/admin' ||
-          pathname.startsWith('/admin/') ||
-          params.get('admin') === 'true' ||
-          window.location.hash === '#admin'
+          pathname === '/nashan' ||
+          pathname.startsWith('/nashan/')
         ) {
           setCurrentTab('admin_dashboard');
           return;
         }
 
-        const tab = (params.get('tab') as ViewTab) || 'marketplace';
+        const rawTab = params.get('tab');
+        const tab: ViewTab =
+          rawTab && rawTab !== 'admin' && rawTab !== 'admin_dashboard'
+            ? (rawTab as ViewTab)
+            : 'marketplace';
         setCurrentTab(tab);
       } catch {
         // ignore
@@ -1212,7 +1214,7 @@ export default function App() {
       {/* Toast Notification Layer */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
-      {/* Top Navigation (Public Marketplace Only - Model A isolates /admin & admin.huta.lk) */}
+      {/* Top Navigation (Public Marketplace Only - Isolates /nashan & admin.huta.lk) */}
       {currentTab !== 'admin_dashboard' && (
         <Navbar
           currentTab={currentTab}

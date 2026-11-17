@@ -140,9 +140,9 @@ export const Navbar: React.FC<NavbarProps> = ({
       }`}
     >
       {/* Main Brand & Actions Header */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-1.5 sm:gap-4">
+      <div className="max-w-[1560px] mx-auto px-3 sm:px-5 lg:px-4 xl:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2">
         {/* Brand Logo & Location */}
-        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
         <motion.div
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -150,9 +150,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             if (onSelectCategory) onSelectCategory('All');
             onSelectTab('marketplace');
           }}
-          className="flex items-center gap-1.5 sm:gap-3 cursor-pointer group select-none py-1 shrink-0"
+          className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group select-none py-1 shrink-0 whitespace-nowrap"
         >
-          <div className="relative w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-white dark:bg-[#151822] border-2 border-gray-200/90 dark:border-white/10 flex items-center justify-center p-1 sm:p-1.5 shadow-md group-hover:border-[#FF5A36] group-hover:shadow-[0_0_20px_rgba(255,90,54,0.3)] transition-all duration-300">
+          <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white dark:bg-[#151822] border-2 border-gray-200/90 dark:border-white/10 flex items-center justify-center p-1 sm:p-1.5 shadow-md group-hover:border-[#FF5A36] group-hover:shadow-[0_0_20px_rgba(255,90,54,0.3)] transition-all duration-300 shrink-0">
             <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-sm">
               <rect width="100" height="100" rx="20" className="fill-gray-900 dark:fill-[#181920]" />
               <rect x="20" y="16" width="18" height="68" rx="9" fill="#FF5A36" />
@@ -220,7 +220,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Location Dropdown */}
         {onLocationChange && (
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100/80 dark:bg-white/5 border border-gray-200/70 dark:border-white/10 backdrop-blur-sm text-xs font-semibold text-gray-700 dark:text-gray-300 hover:border-[#FF5A36]/50 transition-colors">
+          <div className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-gray-100/80 dark:bg-white/5 border border-gray-200/70 dark:border-white/10 backdrop-blur-sm text-xs font-semibold text-gray-700 dark:text-gray-300 hover:border-[#FF5A36]/50 transition-colors whitespace-nowrap shrink-0">
             <MapPin className="w-3.5 h-3.5 text-[#FF5A36] shrink-0" />
             <select
               value={selectedLocation}
@@ -238,21 +238,21 @@ export const Navbar: React.FC<NavbarProps> = ({
         )}
         </div>
 
-        {/* Center: Qatar Living Style Navigation Menu */}
-        <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+        {/* Center: Desktop Navigation Menu (Never overlaps brand or wraps onto two lines) */}
+        <nav className="hidden lg:flex flex-1 items-center justify-center gap-1 min-w-0">
           <button
             type="button"
             onClick={() => {
               if (onSelectCategory) onSelectCategory('Property');
               onSelectTab('marketplace');
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`hidden xl:inline-flex px-2 py-1.5 rounded-xl text-xs font-bold transition-all items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'marketplace' && activeCategory === 'Property'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920]'
             }`}
           >
-            <Home className="w-3.5 h-3.5" />
+            <Home className="w-3.5 h-3.5 shrink-0" />
             <span>Properties</span>
           </button>
 
@@ -262,13 +262,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               if (onSelectCategory) onSelectCategory('Vehicles');
               onSelectTab('marketplace');
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`hidden xl:inline-flex px-2 py-1.5 rounded-xl text-xs font-bold transition-all items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'marketplace' && activeCategory === 'Vehicles'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920]'
             }`}
           >
-            <Car className="w-3.5 h-3.5" />
+            <Car className="w-3.5 h-3.5 shrink-0" />
             <span>Vehicles</span>
           </button>
 
@@ -278,13 +278,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               if (onSelectCategory) onSelectCategory('Electronics');
               onSelectTab('marketplace');
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`hidden 2xl:inline-flex px-2 py-1.5 rounded-xl text-xs font-bold transition-all items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'marketplace' && activeCategory === 'Electronics'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920]'
             }`}
           >
-            <ShoppingBag className="w-3.5 h-3.5" />
+            <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
             <span>Classifieds</span>
           </button>
 
@@ -294,13 +294,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               if (onSelectCategory) onSelectCategory('Services');
               onSelectTab('marketplace');
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`hidden 2xl:inline-flex px-2 py-1.5 rounded-xl text-xs font-bold transition-all items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'marketplace' && activeCategory === 'Services'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920]'
             }`}
           >
-            <Wrench className="w-3.5 h-3.5" />
+            <Wrench className="w-3.5 h-3.5 shrink-0" />
             <span>Services</span>
           </button>
 
@@ -310,13 +310,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               if (onSelectCategory) onSelectCategory('Jobs');
               onSelectTab('marketplace');
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`hidden 2xl:inline-flex px-2 py-1.5 rounded-xl text-xs font-bold transition-all items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'marketplace' && activeCategory === 'Jobs'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920]'
             }`}
           >
-            <Briefcase className="w-3.5 h-3.5" />
+            <Briefcase className="w-3.5 h-3.5 shrink-0" />
             <span>Jobs</span>
           </button>
 
@@ -325,23 +325,23 @@ export const Navbar: React.FC<NavbarProps> = ({
             target="_blank"
             rel="noopener noreferrer"
             title="Open Sri Lanka E-Stores and Online Merchant Marketplace in a New Tab"
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer no-underline ${
+            className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1 cursor-pointer no-underline whitespace-nowrap shrink-0 ${
               currentTab === 'estore'
                 ? 'bg-emerald-600 text-white shadow-xs'
                 : 'text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-emerald-500/20'
             }`}
           >
-            <Store className="w-3.5 h-3.5" />
+            <Store className="w-3.5 h-3.5 shrink-0" />
             <span>E-Store</span>
-            <span className="bg-emerald-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-black uppercase tracking-wider">
-              New ↗
+            <span className="bg-emerald-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider leading-none">
+              New
             </span>
           </a>
 
           <button
             type="button"
             onClick={() => onSelectTab('huta_in')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+            className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'huta_in'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920]'
@@ -356,7 +356,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             type="button"
             onClick={() => onSelectTab('hot_news')}
-            className={`px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'hot_news'
                 ? 'bg-rose-600 text-white shadow-xs'
                 : 'text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40'
@@ -370,19 +370,20 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             type="button"
             onClick={() => onSelectTab('categories')}
-            className={`px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'categories'
                 ? 'bg-[#FF5A36] text-white shadow-xs'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920]'
             }`}
           >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            <span>All Categories</span>
+            <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
+            <span className="xl:hidden">Categories</span>
+            <span className="hidden xl:inline">All Categories</span>
           </button>
         </nav>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* User Account / Login */}
           {currentUser ? (
             (() => {
@@ -396,13 +397,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => onSelectTab('user_dashboard')}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/10 text-xs font-bold transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/10 text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0"
                   title="My Profile & Account"
                 >
-                  <div className="w-5 h-5 rounded-full bg-[#FF5A36]/15 text-[#FF5A36] flex items-center justify-center text-[10px] font-bold">
+                  <div className="w-5 h-5 rounded-full bg-[#FF5A36]/15 text-[#FF5A36] flex items-center justify-center text-[10px] font-bold shrink-0">
                     {initial}
                   </div>
-                  <span className="max-w-[100px] truncate">{displayName}</span>
+                  <span className="max-w-[78px] xl:max-w-[100px] truncate">{displayName}</span>
                 </button>
               );
             })()
@@ -410,9 +411,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenUserAuth}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-gray-700 dark:text-gray-200 hover:text-[#FF5A36] dark:hover:text-[#FF5A36] hover:bg-gray-100 dark:hover:bg-white/5 text-xs font-bold transition-colors cursor-pointer"
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-gray-700 dark:text-gray-200 hover:text-[#FF5A36] dark:hover:text-[#FF5A36] hover:bg-gray-100 dark:hover:bg-white/5 text-xs font-bold transition-colors cursor-pointer whitespace-nowrap shrink-0"
             >
-              <UserIcon className="w-3.5 h-3.5 text-[#FF5A36]" />
+              <UserIcon className="w-3.5 h-3.5 text-[#FF5A36] shrink-0" />
               <span>Log In</span>
             </button>
           )}
@@ -426,9 +427,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               whileHover={{ scale: 1.03, y: -1 }}
               whileTap={{ scale: 0.97, y: 0 }}
               onClick={onOpenPostAd}
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#FF5A36] via-[#FF623E] to-[#FF7A59] hover:from-[#E04826] hover:to-[#FF5A36] text-white font-black text-xs sm:text-sm shadow-md shadow-[#FF5A36]/30 hover:shadow-lg hover:shadow-[#FF5A36]/40 transition-all cursor-pointer whitespace-nowrap shrink-0"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#FF5A36] via-[#FF623E] to-[#FF7A59] hover:from-[#E04826] hover:to-[#FF5A36] text-white font-black text-xs sm:text-sm shadow-md shadow-[#FF5A36]/30 hover:shadow-lg hover:shadow-[#FF5A36]/40 transition-all cursor-pointer whitespace-nowrap shrink-0"
             >
-              <Plus className="w-4 h-4 stroke-[3]" />
+              <Plus className="w-4 h-4 stroke-[3] shrink-0" />
               <span>Create Ad</span>
             </motion.button>
           )}
@@ -437,7 +438,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             type="button"
             onClick={() => onSelectTab('more')}
-            className="lg:hidden p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920] transition-colors cursor-pointer"
+            className="lg:hidden p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181920] transition-colors cursor-pointer shrink-0"
             aria-label="Open menu"
           >
             <LayoutGrid className="w-5 h-5" />
