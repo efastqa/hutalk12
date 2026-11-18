@@ -637,8 +637,12 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
   };
 
   return (
-    <section
+    <motion.section
       id="visit-sri-lanka-section"
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.05 }}
+      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
       className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 mt-6 sm:mt-8"
       aria-label="Visit Sri Lanka Island Guide"
     >
@@ -752,10 +756,12 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
               const Icon = chapter.icon;
               const isActive = chapter.id === activeChapterId;
               return (
-                <button
+                <motion.button
                   key={chapter.id}
                   type="button"
                   id={`visit-sl-tab-${chapter.id}`}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => handleSelectChapter(chapter.id)}
                   className={`group text-left rounded-2xl p-3 sm:p-3.5 border transition-all cursor-pointer flex items-center gap-3 ${
                     isActive
@@ -798,7 +804,7 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                       {chapter.gallery.length} Photos · Video Reel
                     </p>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -843,12 +849,19 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
             {(mediaMode === 'both' || mediaMode === 'image') && (
               <div className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50/70 dark:bg-[#171B26] overflow-hidden flex flex-col">
                 <div className="relative aspect-[16/9] w-full bg-slate-900 overflow-hidden group">
-                  <img
-                    src={activePhoto.image}
-                    alt={activePhoto.title}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={activePhoto.id}
+                      src={activePhoto.image}
+                      alt={activePhoto.title}
+                      referrerPolicy="no-referrer"
+                      initial={{ opacity: 0.35, scale: 1.04 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0.35 }}
+                      transition={{ duration: 0.38, ease: 'easeOut' }}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </AnimatePresence>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
 
                   <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950/75 backdrop-blur-md text-white text-[11px] font-bold border border-white/15">
@@ -1191,10 +1204,15 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
             </div>
 
             <div className="mt-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredSacredSites.map((site) => (
-                <div
+              {filteredSacredSites.map((site, idx) => (
+                <motion.div
                   key={site.id}
-                  className="rounded-2xl border border-gray-200/80 dark:border-slate-800 bg-gray-50/70 dark:bg-[#11151F] overflow-hidden flex flex-col group"
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.1 }}
+                  transition={{ duration: 0.3, delay: idx * 0.04 }}
+                  whileHover={{ y: -4 }}
+                  className="rounded-2xl border border-gray-200/80 dark:border-slate-800 bg-gray-50/70 dark:bg-[#11151F] overflow-hidden flex flex-col group shadow-xs hover:shadow-lg transition-shadow"
                 >
                   <div className="relative aspect-[16/9] bg-slate-900 overflow-hidden">
                     <img
@@ -1231,7 +1249,7 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                       {site.visitingTip}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -1560,6 +1578,6 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
           </div>
         </div>
       )}
-    </section>
+    </motion.section>
   );
 };

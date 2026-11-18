@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import {
   Map as MapIcon,
   Navigation,
@@ -623,7 +624,13 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
   });
 
   return (
-    <div className="mt-8 rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-[#121722] overflow-hidden shadow-sm">
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.08 }}
+      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+      className="mt-8 rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-[#121722] overflow-hidden shadow-sm"
+    >
       {/* Unified Tool Switcher Header */}
       <div className="bg-gradient-to-r from-[#0B1120] via-[#111B2E] to-[#0B1924] text-white px-5 py-5 sm:px-6 border-b border-white/10">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -777,20 +784,28 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
                 {/* Active Route Curved Connection */}
                 {fromNode.id !== toNode.id && (
                   <>
-                    <path
+                    <motion.path
+                      key={`glow-${fromNode.id}-${toNode.id}`}
                       d={routePathD}
                       fill="none"
-                      stroke="rgba(255,90,54,0.25)"
+                      stroke="rgba(255,90,54,0.28)"
                       strokeWidth="6"
                       strokeLinecap="round"
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 1 }}
+                      transition={{ duration: 0.65, ease: 'easeOut' }}
                     />
-                    <path
+                    <motion.path
+                      key={`arc-${fromNode.id}-${toNode.id}`}
                       d={routePathD}
                       fill="none"
                       stroke="url(#routeArcGrad)"
                       strokeWidth="3"
                       strokeDasharray="7 5"
                       strokeLinecap="round"
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 1 }}
+                      transition={{ duration: 0.65, ease: 'easeOut' }}
                     />
                   </>
                 )}
@@ -809,12 +824,24 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
                       className="cursor-pointer group"
                     >
                       {active && (
-                        <circle
-                          cx={node.x}
-                          cy={node.y}
-                          r={14}
-                          fill={isFrom ? 'rgba(16,185,129,0.24)' : 'rgba(255,90,54,0.26)'}
-                        />
+                        <>
+                          <circle
+                            cx={node.x}
+                            cy={node.y}
+                            r={14}
+                            fill={isFrom ? 'rgba(16,185,129,0.24)' : 'rgba(255,90,54,0.26)'}
+                          />
+                          <circle
+                            cx={node.x}
+                            cy={node.y}
+                            r={16}
+                            fill="none"
+                            stroke={isFrom ? 'rgba(16,185,129,0.5)' : 'rgba(255,90,54,0.5)'}
+                            strokeWidth="1.5"
+                            className="animate-ping"
+                            style={{ transformOrigin: `${node.x}px ${node.y}px` }}
+                          />
+                        </>
                       )}
                       <circle
                         cx={node.x}
@@ -1314,6 +1341,6 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };

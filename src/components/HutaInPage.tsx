@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { EventItem } from '../types';
 export type { EventItem };
 import { VisitSriLankaSection } from './VisitSriLankaSection';
 import visitSriLankaIcon from '../assets/images/visit_srilanka_icon_3d_1794991123817.jpg';
 import hutaInHeroBg from '../assets/images/huta_in_hero_bg_1794993555484.jpg';
+import sigiriyaHeroBg from '../assets/images/srilanka_heritage_sigiriya_1794991126174.jpg';
+import highlandsHeroBg from '../assets/images/srilanka_nature_highlands_1794991124649.jpg';
+import mirissaCoastHeroBg from '../assets/images/srilanka_beaches_coast_1794991125473.jpg';
+import galleFortHeroBg from '../assets/images/srilanka_beaches_galle_fort_1794991773072.jpg';
+import safariElephantsHeroBg from '../assets/images/srilanka_nature_elephants_safari_1794991773156.jpg';
 import {
   Calendar,
   MapPin,
@@ -18,6 +23,7 @@ import {
   List,
   X,
   Heart,
+  ChevronLeft,
   ChevronRight,
   Sparkles,
   ArrowLeft,
@@ -300,6 +306,96 @@ export const HUTA_ALL_CATEGORIES: HutaCategoryItem[] = [
 
 const EVENTS_DATA: EventItem[] = [];
 
+interface SriLankaHeroSlide {
+  id: string;
+  image: string;
+  region: string;
+  title: string;
+  tagline: string;
+  objectPosition: string;
+  scaleFrom: number;
+  scaleTo: number;
+  xFrom: string;
+  xTo: string;
+}
+
+const SRI_LANKA_HERO_SLIDES: SriLankaHeroSlide[] = [
+  {
+    id: 'sl-colombo-dusk',
+    image: hutaInHeroBg,
+    region: 'Colombo · Western Coast',
+    title: 'Colombo Skyline & Indian Ocean Dusk',
+    tagline: 'Lotus Tower, Galle Face promenade & city nightlife',
+    objectPosition: 'center 45%',
+    scaleFrom: 1.03,
+    scaleTo: 1.1,
+    xFrom: '0%',
+    xTo: '-1.5%',
+  },
+  {
+    id: 'sl-sigiriya-heritage',
+    image: sigiriyaHeroBg,
+    region: 'Sigiriya · Cultural Triangle',
+    title: 'Sigiriya Lion Rock Citadel',
+    tagline: 'Ancient 5th-century sky fortress & royal water gardens',
+    objectPosition: 'center 42%',
+    scaleFrom: 1.08,
+    scaleTo: 1.02,
+    xFrom: '-1.5%',
+    xTo: '1%',
+  },
+  {
+    id: 'sl-ella-highlands',
+    image: highlandsHeroBg,
+    region: 'Ella · Central Highlands',
+    title: 'Nine Arch Bridge & Tea Country',
+    tagline: 'Misty emerald peaks, viaduct trains & Ceylon tea estates',
+    objectPosition: 'center 50%',
+    scaleFrom: 1.02,
+    scaleTo: 1.09,
+    xFrom: '1%',
+    xTo: '-1%',
+  },
+  {
+    id: 'sl-mirissa-coast',
+    image: mirissaCoastHeroBg,
+    region: 'Mirissa · Southern Province',
+    title: 'Coconut Tree Hill & Golden Surf',
+    tagline: 'Blue whale waters, palm cliffs & tropical bay sunsets',
+    objectPosition: 'center 52%',
+    scaleFrom: 1.09,
+    scaleTo: 1.03,
+    xFrom: '0%',
+    xTo: '1.5%',
+  },
+  {
+    id: 'sl-galle-fort',
+    image: galleFortHeroBg,
+    region: 'Galle · UNESCO Sea Ramparts',
+    title: 'Galle Dutch Fort & Lighthouse',
+    tagline: 'Cobblestone heritage streets overlooking Indian Ocean waves',
+    objectPosition: 'center 48%',
+    scaleFrom: 1.03,
+    scaleTo: 1.1,
+    xFrom: '-1%',
+    xTo: '1%',
+  },
+  {
+    id: 'sl-yala-safari',
+    image: safariElephantsHeroBg,
+    region: 'Minneriya & Yala · Wildlife',
+    title: 'Wild Elephants & National Parks',
+    tagline: 'Lakeside safaris & the island’s untamed natural heritage',
+    objectPosition: 'center 50%',
+    scaleFrom: 1.08,
+    scaleTo: 1.02,
+    xFrom: '1.5%',
+    xTo: '-1%',
+  },
+];
+
+const HERO_SLIDE_DURATION_MS = 5500;
+
 interface HutaInPageProps {
   onBackToHome: () => void;
   onOpenPostAd: () => void;
@@ -328,6 +424,27 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
   const [rsvpIds, setRsvpIds] = useState<string[]>([]);
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [selectedEventModal, setSelectedEventModal] = useState<EventItem | null>(null);
+
+  // Multi-Changing Sri Lanka Hero Banner State
+  const prefersReducedMotion = useReducedMotion();
+  const [heroSlideIndex, setHeroSlideIndex] = useState(0);
+  const [isHeroPaused, setIsHeroPaused] = useState(false);
+
+  useEffect(() => {
+    if (isHeroPaused || prefersReducedMotion) return;
+    const interval = window.setInterval(() => {
+      setHeroSlideIndex((prev) => (prev + 1) % SRI_LANKA_HERO_SLIDES.length);
+    }, HERO_SLIDE_DURATION_MS);
+    return () => window.clearInterval(interval);
+  }, [isHeroPaused, prefersReducedMotion]);
+
+  const activeHeroSlide = SRI_LANKA_HERO_SLIDES[heroSlideIndex] || SRI_LANKA_HERO_SLIDES[0];
+
+  const handleCycleHero = (delta: number) => {
+    setHeroSlideIndex(
+      (prev) => (prev + delta + SRI_LANKA_HERO_SLIDES.length) % SRI_LANKA_HERO_SLIDES.length
+    );
+  };
 
   // Category Grid State
   const [categoryTab, setCategoryTab] = useState<'all' | 'marketplace' | 'services' | 'lifestyle'>('all');
@@ -397,21 +514,53 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0B0C10] text-[#181920] dark:text-[#F8FAFC] pb-32 animate-in fade-in duration-200 transition-colors">
-      {/* 1. Header Hero Banner */}
-      <div className="bg-[#0B0F19] text-white min-h-[165px] sm:min-h-[210px] md:min-h-[245px] flex flex-col justify-between py-4 sm:py-6 px-3 sm:px-6 lg:px-8 border-b border-slate-800 relative overflow-hidden transition-colors">
-        {/* Matching Sri Lanka twilight skyline & palm coast background image */}
-        <img
-          src={hutaInHeroBg}
-          alt="Sri Lanka Twilight Coast & Skyline"
-          referrerPolicy="no-referrer"
-          className="absolute inset-0 w-full h-full object-cover object-[center_45%] opacity-100 pointer-events-none"
-        />
-        {/* Light top & bottom edge scrim only so the island panorama stays crisp and vibrant */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-black/60 pointer-events-none" />
+    <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0B0C10] text-[#181920] dark:text-[#F8FAFC] pb-32 overflow-x-hidden transition-colors">
+      {/* 1. Multi-Changing Animated Sri Lanka Hero Banner */}
+      <div
+        className="bg-[#0B0F19] text-white min-h-[185px] sm:min-h-[225px] md:min-h-[255px] flex flex-col justify-between py-4 sm:py-6 px-3 sm:px-6 lg:px-8 border-b border-slate-800 relative overflow-hidden transition-colors"
+        onMouseEnter={() => setIsHeroPaused(true)}
+        onMouseLeave={() => setIsHeroPaused(false)}
+      >
+        {/* Animated Cross-Fading Sri Lanka Photography + Ken Burns Motion */}
+        <AnimatePresence initial={false}>
+          <motion.img
+            key={activeHeroSlide.id}
+            src={activeHeroSlide.image}
+            alt={`${activeHeroSlide.title} — ${activeHeroSlide.region}`}
+            referrerPolicy="no-referrer"
+            initial={{
+              opacity: 0,
+              scale: prefersReducedMotion ? 1 : activeHeroSlide.scaleFrom,
+              x: prefersReducedMotion ? '0%' : activeHeroSlide.xFrom,
+            }}
+            animate={{
+              opacity: 1,
+              scale: prefersReducedMotion ? 1 : activeHeroSlide.scaleTo,
+              x: prefersReducedMotion ? '0%' : activeHeroSlide.xTo,
+            }}
+            exit={{ opacity: 0 }}
+            transition={{
+              opacity: { duration: 0.85, ease: 'easeInOut' },
+              scale: { duration: HERO_SLIDE_DURATION_MS / 1000 + 0.6, ease: 'linear' },
+              x: { duration: HERO_SLIDE_DURATION_MS / 1000 + 0.6, ease: 'linear' },
+            }}
+            style={{ objectPosition: activeHeroSlide.objectPosition }}
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+          />
+        </AnimatePresence>
 
-        <div className="max-w-6xl w-full mx-auto relative z-10 flex-1 flex flex-col justify-between gap-4 sm:gap-6">
-          <div className="flex items-center justify-between gap-2 sm:gap-3">
+        {/* Measured top & bottom gradient scrims for crisp readability without dimming island photography */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/15 to-black/75 pointer-events-none z-[1]" />
+        <div className="hidden sm:block absolute inset-y-0 left-0 w-2/3 bg-gradient-to-r from-black/45 via-black/15 to-transparent pointer-events-none z-[1]" />
+
+        <div className="max-w-6xl w-full mx-auto relative z-10 flex-1 flex flex-col justify-between gap-4 sm:gap-5">
+          {/* Top Navigation Bar Row */}
+          <motion.div
+            initial={prefersReducedMotion ? false : { opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="flex items-center justify-between gap-2 sm:gap-3"
+          >
             <button
               type="button"
               id="huta-in-back-btn"
@@ -423,14 +572,16 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
               <span className="xs:hidden sm:hidden">Back</span>
             </button>
 
-            <button
+            <motion.button
               type="button"
               id="huta-in-visit-sl-jump"
+              whileHover={prefersReducedMotion ? undefined : { scale: 1.03, y: -1 }}
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
               onClick={() => {
                 const el = document.getElementById('visit-sri-lanka-section');
                 if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }}
-              className="inline-flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full bg-black/55 hover:bg-black/75 backdrop-blur-md border border-cyan-400/60 text-white text-xs font-bold shadow-md transition-all cursor-pointer whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full bg-black/55 hover:bg-black/75 backdrop-blur-md border border-cyan-400/60 text-white text-xs font-bold shadow-md transition-colors cursor-pointer whitespace-nowrap shrink-0"
               title="Explore Visit Sri Lanka — Colombo City, Nature, Beaches & Heritage"
             >
               <img
@@ -440,17 +591,115 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                 className="w-5 h-5 rounded-full object-cover border border-cyan-400/60"
               />
               <span>Visit Sri Lanka</span>
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
 
-          <div className="flex items-end justify-between gap-4 pt-2">
-            <div className="inline-flex items-center gap-2 sm:gap-2.5 drop-shadow-[0_6px_18px_rgba(0,0,0,0.75)]">
-              <span className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
-                HUTA
-              </span>
-              <span className="text-3xl sm:text-4xl md:text-5xl font-black text-white bg-[#FF5A36] px-2.5 sm:px-3 py-0.5 rounded-xl sm:rounded-2xl tracking-tight leading-none shadow-xl shadow-[#FF5A36]/40">
-                IN
-              </span>
+          {/* Bottom Row: HUTA IN Wordmark + Rotating Sri Lanka Scene Story & Slide Controls */}
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 pt-1">
+            <motion.div
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col gap-1.5"
+            >
+              <div className="inline-flex items-center gap-2 sm:gap-2.5 drop-shadow-[0_6px_18px_rgba(0,0,0,0.75)]">
+                <span className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
+                  HUTA
+                </span>
+                <span className="text-3xl sm:text-4xl md:text-5xl font-black text-white bg-[#FF5A36] px-2.5 sm:px-3 py-0.5 rounded-xl sm:rounded-2xl tracking-tight leading-none shadow-xl shadow-[#FF5A36]/40">
+                  IN
+                </span>
+              </div>
+
+              <div className="min-h-[34px] sm:min-h-[38px] flex items-center">
+                <AnimatePresence mode="wait">
+                  <motion.button
+                    key={activeHeroSlide.id}
+                    type="button"
+                    onClick={() => {
+                      const el = document.getElementById('visit-sri-lanka-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+                    transition={{ duration: 0.32, ease: 'easeOut' }}
+                    className="text-left group cursor-pointer focus:outline-none"
+                    title="Jump to Visit Sri Lanka Guide"
+                  >
+                    <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-extrabold text-cyan-300 tracking-wide">
+                      <MapPin className="w-3 h-3 text-[#FF5A36] shrink-0" />
+                      <span>{activeHeroSlide.region}</span>
+                      <span aria-hidden="true" className="text-white/40">·</span>
+                      <span className="text-white group-hover:text-[#FF7A59] transition-colors">
+                        {activeHeroSlide.title}
+                      </span>
+                    </div>
+                    <p className="text-[11px] sm:text-xs text-slate-200/90 line-clamp-1 mt-0.5">
+                      {activeHeroSlide.tagline}
+                    </p>
+                  </motion.button>
+                </AnimatePresence>
+              </div>
+            </motion.div>
+
+            {/* Right: Sri Lanka Multi-Banner Stepper & Animated Progress Bars */}
+            <div className="flex items-center justify-between sm:justify-end gap-2.5 self-stretch sm:self-auto">
+              <div
+                className="flex items-center gap-1.5 bg-black/45 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-white/15"
+                role="tablist"
+                aria-label="Sri Lanka hero banner scenes"
+              >
+                {SRI_LANKA_HERO_SLIDES.map((slide, idx) => {
+                  const isActive = idx === heroSlideIndex;
+                  return (
+                    <button
+                      key={slide.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      aria-label={`Show ${slide.title}`}
+                      onClick={() => setHeroSlideIndex(idx)}
+                      className={`relative h-1.5 rounded-full overflow-hidden transition-all duration-300 cursor-pointer ${
+                        isActive ? 'w-7 sm:w-9 bg-white/30' : 'w-2 bg-white/40 hover:bg-white/70'
+                      }`}
+                    >
+                      {isActive && (
+                        <motion.span
+                          key={`progress-${slide.id}-${heroSlideIndex}`}
+                          initial={{ scaleX: 0 }}
+                          animate={{ scaleX: 1 }}
+                          transition={{
+                            duration: isHeroPaused || prefersReducedMotion ? 0 : HERO_SLIDE_DURATION_MS / 1000,
+                            ease: 'linear',
+                          }}
+                          style={{ transformOrigin: 'left center' }}
+                          className="absolute inset-0 bg-[#FF5A36] rounded-full"
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleCycleHero(-1)}
+                  aria-label="Previous Sri Lanka banner"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/50 hover:bg-black/75 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all cursor-pointer active:scale-95"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleCycleHero(1)}
+                  aria-label="Next Sri Lanka banner"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/50 hover:bg-black/75 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all cursor-pointer active:scale-95"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -460,7 +709,13 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
       <VisitSriLankaSection onSelectCategory={onSelectCategory} onToast={onToast} />
 
       {/* 3. Our Categories all in GRID view */}
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 mt-8 sm:mt-10">
+      <motion.div
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.08 }}
+        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 mt-8 sm:mt-10"
+      >
         <div className="bg-white dark:bg-[#151822] rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-xl border border-gray-100 dark:border-[#252836]">
           {/* Section Header */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-gray-100 dark:border-[#252836]">
@@ -561,14 +816,18 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
 
           {/* GRID View */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-4 mt-5 sm:mt-6">
-            {filteredCategories.map((cat) => {
+            {filteredCategories.map((cat, idx) => {
               const IconComp = cat.icon;
               return (
                 <motion.div
                   key={cat.id}
                   id={`huta-cat-card-${cat.id}`}
-                  whileHover={{ y: -3, scale: 1.015 }}
-                  whileTap={{ scale: 0.98 }}
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.1 }}
+                  transition={{ duration: 0.25, delay: Math.min(idx * 0.02, 0.22) }}
+                  whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.015 }}
+                  whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                   onClick={() => handleCategoryClick(cat)}
                   className="group bg-white dark:bg-[#151822] rounded-2xl p-3 sm:p-4 border border-gray-200/80 dark:border-[#252836] hover:border-[#FF5A36]/40 dark:hover:border-[#FF5A36]/40 hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden"
                 >
@@ -620,10 +879,16 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* 4. Upcoming Festivals & Events (Left) + Upcoming Spotlight (Right Side) */}
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 mt-8 sm:mt-12">
+      <motion.div
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.08 }}
+        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 mt-8 sm:mt-12"
+      >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-7 items-start">
           {/* LEFT COLUMN: Upcoming Festivals & Events Directory */}
           <div className="lg:col-span-8 min-w-0 space-y-5">
@@ -1052,9 +1317,14 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
 
               {displaySpotlight.length > 0 ? (
                 <div className="mt-4 flex lg:flex-col gap-4 overflow-x-auto lg:overflow-x-visible pb-1 lg:pb-0 scrollbar-thin">
-                  {displaySpotlight.map((evt) => (
-                    <div
+                  {displaySpotlight.map((evt, idx) => (
+                    <motion.div
                       key={evt.id}
+                      initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.15 }}
+                      transition={{ duration: 0.3, delay: idx * 0.06 }}
+                      whileHover={prefersReducedMotion ? undefined : { y: -3 }}
                       onClick={() => setSelectedEventModal(evt)}
                       className="min-w-[270px] lg:min-w-0 w-full rounded-2xl overflow-hidden relative shadow-sm hover:shadow-md border border-gray-100 dark:border-[#252836] group flex-shrink-0 cursor-pointer bg-gradient-to-br from-[#0F172A] via-[#131C31] to-[#0A2540]"
                     >
@@ -1101,7 +1371,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               ) : (
@@ -1120,7 +1390,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
             </div>
           </aside>
         </div>
-      </div>
+      </motion.div>
 
       {/* 5. Interactive Event Details Modal */}
       <AnimatePresence>
