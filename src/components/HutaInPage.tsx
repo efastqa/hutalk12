@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { EventItem } from '../types';
 export type { EventItem };
 import { VisitSriLankaSection } from './VisitSriLankaSection';
+import { SriLankaPrayerTimesWidget } from './SriLankaPrayerTimesWidget';
 import visitSriLankaIcon from '../assets/images/visit_srilanka_icon_3d_1794991123817.jpg';
 import hutaInHeroBg from '../assets/images/huta_in_hero_bg_1794993555484.jpg';
 import sigiriyaHeroBg from '../assets/images/srilanka_heritage_sigiriya_1794991126174.jpg';
@@ -705,7 +706,10 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
         </div>
       </div>
 
-      {/* 2. Visit Sri Lanka Modern Tech Island Showcase */}
+      {/* 2. Compact Live Sri Lanka Prayer Times Strip */}
+      <SriLankaPrayerTimesWidget />
+
+      {/* 3. Visit Sri Lanka Modern Tech Island Showcase */}
       <VisitSriLankaSection onSelectCategory={onSelectCategory} onToast={onToast} />
 
       {/* 3. Our Categories all in GRID view */}
