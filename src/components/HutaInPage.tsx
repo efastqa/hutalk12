@@ -568,8 +568,8 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
               className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-black/45 hover:bg-black/65 backdrop-blur-md border border-white/25 text-xs sm:text-sm font-semibold text-white shadow-md transition-all cursor-pointer whitespace-nowrap shrink-0"
             >
               <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden xs:inline sm:inline">Back to Marketplace</span>
-              <span className="xs:hidden sm:hidden">Back</span>
+              <span className="hidden sm:inline">Back to Marketplace</span>
+              <span className="sm:hidden">Back</span>
             </button>
 
             <motion.button
@@ -815,53 +815,61 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
           </div>
 
           {/* GRID View */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-4 mt-5 sm:mt-6">
-            {filteredCategories.map((cat, idx) => {
-              const IconComp = cat.icon;
-              return (
-                <motion.div
-                  key={cat.id}
-                  id={`huta-cat-card-${cat.id}`}
-                  initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.1 }}
-                  transition={{ duration: 0.25, delay: Math.min(idx * 0.02, 0.22) }}
-                  whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.015 }}
-                  whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-                  onClick={() => handleCategoryClick(cat)}
-                  className="group bg-white dark:bg-[#151822] rounded-2xl p-3 sm:p-4 border border-gray-200/80 dark:border-[#252836] hover:border-[#FF5A36]/40 dark:hover:border-[#FF5A36]/40 hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden"
-                >
-                  {/* Subtle hover top border line */}
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-transparent group-hover:bg-[#FF5A36] transition-colors" />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={categoryTab}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-4 mt-4 sm:mt-6"
+            >
+              {filteredCategories.map((cat, idx) => {
+                const IconComp = cat.icon;
+                return (
+                  <motion.div
+                    key={cat.id}
+                    id={`huta-cat-card-${cat.id}`}
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.22, delay: Math.min(idx * 0.015, 0.18) }}
+                    whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.015 }}
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                    onClick={() => handleCategoryClick(cat)}
+                    className="group bg-white dark:bg-[#151822] rounded-2xl p-3 sm:p-4 border border-gray-200/80 dark:border-[#252836] hover:border-[#FF5A36]/40 dark:hover:border-[#FF5A36]/40 hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden"
+                  >
+                    {/* Subtle hover top border line */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-transparent group-hover:bg-[#FF5A36] transition-colors" />
 
-                  <div className="flex items-start justify-between gap-2">
-                    <div className={`w-12 h-12 rounded-2xl border ${cat.iconBg} flex items-center justify-center shrink-0 shadow-xs group-hover:scale-110 transition-transform duration-300`}>
-                      <IconComp className={`w-6 h-6 ${cat.iconColor}`} />
+                    <div className="flex items-start justify-between gap-1.5 sm:gap-2">
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl border ${cat.iconBg} flex items-center justify-center shrink-0 shadow-xs group-hover:scale-110 transition-transform duration-300`}>
+                        <IconComp className={`w-5 h-5 sm:w-6 sm:h-6 ${cat.iconColor}`} />
+                      </div>
+                      {cat.popular && (
+                        <span className="text-[9px] sm:text-[10px] font-black uppercase text-[#FF5A36] bg-orange-50 dark:bg-orange-950/40 px-1.5 py-0.5 rounded-md border border-orange-100/60 dark:border-orange-500/30">
+                          Popular
+                        </span>
+                      )}
                     </div>
-                    {cat.popular && (
-                      <span className="text-[10px] font-black uppercase text-[#FF5A36] bg-orange-50 dark:bg-orange-950/40 px-1.5 py-0.5 rounded-md border border-orange-100/60 dark:border-orange-500/30">
-                        Popular
-                      </span>
-                    )}
-                  </div>
 
-                  <div className="mt-3.5">
-                    <h3 className="font-extrabold text-xs sm:text-sm text-gray-900 dark:text-white group-hover:text-[#FF5A36] transition-colors leading-snug line-clamp-1">
-                      {cat.name}
-                    </h3>
-                    <p className="text-[11px] text-gray-400 font-medium mt-1 truncate">
-                      {cat.tag}
-                    </p>
-                  </div>
+                    <div className="mt-3 sm:mt-3.5">
+                      <h3 className="font-extrabold text-xs sm:text-sm text-gray-900 dark:text-white group-hover:text-[#FF5A36] transition-colors leading-snug line-clamp-1">
+                        {cat.name}
+                      </h3>
+                      <p className="text-[11px] text-gray-400 font-medium mt-0.5 sm:mt-1 truncate">
+                        {cat.tag}
+                      </p>
+                    </div>
 
-                  <div className="mt-3 pt-2.5 border-t border-gray-100 dark:border-[#252836] flex items-center justify-between text-[11px] font-bold text-gray-400 group-hover:text-[#FF5A36] transition-colors">
-                    <span>View ads</span>
-                    <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                    <div className="mt-2.5 sm:mt-3 pt-2 sm:pt-2.5 border-t border-gray-100 dark:border-[#252836] flex items-center justify-between text-[11px] font-bold text-gray-400 group-hover:text-[#FF5A36] transition-colors">
+                      <span>View ads</span>
+                      <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>
 
           {filteredCategories.length === 0 && (
             <div className="py-12 text-center">
@@ -1051,235 +1059,263 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                     </button>
                   </div>
                 )
-              ) : viewMode === 'grid' ? (
-                /* High-Visibility Card Grid (2-col balanced inside left 8-col container) */
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  {filteredEvents.map((evt) => {
-                    const hasRsvp = rsvpIds.includes(evt.id);
-                    const isBookmarked = bookmarkedIds.includes(evt.id);
-
-                    return (
-                      <motion.article
-                        key={evt.id}
-                        whileHover={{ y: -4 }}
-                        onClick={() => setSelectedEventModal(evt)}
-                        className="bg-white dark:bg-[#151822] rounded-3xl overflow-hidden border border-gray-100 dark:border-[#252836] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer group"
-                      >
-                        <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0A2540]">
-                          <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
-                            <Ticket className="w-16 h-16 text-cyan-300" />
-                          </div>
-                          {evt.image && (
-                            <img
-                              src={evt.image}
-                              alt={evt.title}
-                              loading="lazy"
-                              referrerPolicy="no-referrer"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).style.display = 'none';
-                              }}
-                              className="relative z-[1] w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                          )}
-                          <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/65 via-transparent to-black/20" />
-
-                          {/* Ticket Date Stamp Box */}
-                          <div className="absolute top-3.5 left-3.5 bg-white dark:bg-[#151822] rounded-2xl shadow-lg border border-gray-100/80 dark:border-[#252836] p-1.5 min-w-[50px] text-center z-10">
-                            <span className="block text-[10px] font-black text-[#FF5A36] uppercase tracking-wider leading-none">
-                              {evt.month}
-                            </span>
-                            <span className="block text-base font-black text-gray-900 dark:text-white leading-none mt-1">
-                              {evt.day}
-                            </span>
-                          </div>
-
-                          <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5 z-10">
-                            <button
-                              type="button"
-                              onClick={(e) => handleToggleBookmark(evt.id, e)}
-                              title="Bookmark event"
-                              className={`p-2 rounded-xl backdrop-blur-md transition-all ${
-                                isBookmarked
-                                  ? 'bg-rose-500 text-white shadow-md'
-                                  : 'bg-black/40 hover:bg-black/60 text-white'
-                              }`}
-                            >
-                              <Heart className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current' : ''}`} />
-                            </button>
-                          </div>
-
-                          <div className="absolute bottom-3 left-3.5 right-3.5 flex items-center justify-between text-white z-10">
-                            <span
-                              className={`text-[11px] font-black px-2.5 py-1 rounded-lg backdrop-blur-md shadow-sm ${
-                                evt.isFree
-                                  ? 'bg-emerald-600 text-white'
-                                  : 'bg-[#0A2540]/90 text-white border border-white/20'
-                              }`}
-                            >
-                              {evt.price}
-                            </span>
-
-                            <span className="text-[11px] font-bold text-gray-200 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-md">
-                              {evt.district}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                          <div className="space-y-2.5">
-                            <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
-                              <span className="text-[#FF5A36] font-bold uppercase tracking-wider text-[11px]">
-                                {evt.category}
-                              </span>
-                              <div className="flex items-center gap-1 text-gray-400">
-                                <Clock className="w-3.5 h-3.5" />
-                                <span>{evt.time.split('-')[0].trim()}</span>
-                              </div>
-                            </div>
-
-                            <h3 className="font-extrabold text-base sm:text-lg text-gray-900 dark:text-white leading-snug group-hover:text-[#FF5A36] transition-colors line-clamp-2">
-                              {evt.title}
-                            </h3>
-
-                            <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
-                              {evt.description}
-                            </p>
-
-                            <div className="pt-3 border-t border-gray-100 dark:border-[#252836] flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
-                              <div className="flex items-center gap-1.5 truncate max-w-[180px]">
-                                <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                <span className="truncate font-medium">{evt.venue}</span>
-                              </div>
-                              <div className="flex items-center gap-1 font-bold text-gray-700 dark:text-gray-300 shrink-0">
-                                <Users className="w-3.5 h-3.5 text-gray-400" />
-                                <span>{evt.attendees}+</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="pt-2 flex items-center gap-2">
-                            <button
-                              type="button"
-                              id={`rsvp-btn-${evt.id}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleToggleRSVP(evt);
-                              }}
-                              className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                                hasRsvp
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 font-extrabold shadow-sm'
-                                  : 'bg-[#FF5A36] hover:bg-[#E04826] active:scale-95 text-white shadow-md shadow-[#FF5A36]/20'
-                              }`}
-                            >
-                              {hasRsvp ? (
-                                <>
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
-                                  <span>RSVP Confirmed</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Ticket className="w-4 h-4 stroke-[2.5]" />
-                                  <span>Get Passes / RSVP</span>
-                                </>
-                              )}
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={(e) => handleShare(evt, e)}
-                              title="Share event"
-                              className="p-2.5 rounded-xl bg-gray-100 dark:bg-[#1E2230] hover:bg-gray-200 text-gray-600 dark:text-gray-300 hover:text-gray-900 transition-colors cursor-pointer"
-                            >
-                              <Share2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </motion.article>
-                    );
-                  })}
-                </div>
               ) : (
-                /* Compact List View */
-                <div className="space-y-3.5">
-                  {filteredEvents.map((evt) => {
-                    const hasRsvp = rsvpIds.includes(evt.id);
+                <AnimatePresence mode="wait">
+                  {viewMode === 'grid' ? (
+                    /* High-Visibility Card Grid (2-col balanced inside left 8-col container) */
+                    <motion.div
+                      key={`grid-${selectedCategory}-${selectedDistrict}`}
+                      initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+                      transition={{ duration: 0.24, ease: 'easeOut' }}
+                      className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5"
+                    >
+                      {filteredEvents.map((evt, idx) => {
+                        const hasRsvp = rsvpIds.includes(evt.id);
+                        const isBookmarked = bookmarkedIds.includes(evt.id);
 
-                    return (
-                      <div
-                        key={evt.id}
-                        onClick={() => setSelectedEventModal(evt)}
-                        className="bg-white dark:bg-[#151822] rounded-2xl p-4 border border-gray-100 dark:border-[#252836] shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 cursor-pointer group"
-                      >
-                        <div className="flex items-center gap-4 w-full sm:w-auto">
-                          <div className="bg-[#111217] text-white rounded-xl p-2.5 min-w-[56px] text-center shrink-0">
-                            <span className="block text-[10px] font-black text-[#FF5A36] uppercase leading-none">
-                              {evt.month}
-                            </span>
-                            <span className="block text-base font-black leading-none mt-1">
-                              {evt.day}
-                            </span>
-                          </div>
+                        return (
+                          <motion.article
+                            key={evt.id}
+                            initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.25, delay: Math.min(idx * 0.04, 0.2) }}
+                            whileHover={prefersReducedMotion ? undefined : { y: -4 }}
+                            onClick={() => setSelectedEventModal(evt)}
+                            className="bg-white dark:bg-[#151822] rounded-2xl sm:rounded-3xl overflow-hidden border border-gray-100 dark:border-[#252836] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer group"
+                          >
+                            <div className="relative h-44 sm:h-48 w-full overflow-hidden bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0A2540]">
+                              <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
+                                <Ticket className="w-16 h-16 text-cyan-300" />
+                              </div>
+                              {evt.image && (
+                                <img
+                                  src={evt.image}
+                                  alt={evt.title}
+                                  loading="lazy"
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                  }}
+                                  className="relative z-[1] w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                />
+                              )}
+                              <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/65 via-transparent to-black/20" />
 
-                          <div className="h-16 w-20 sm:w-24 rounded-xl overflow-hidden shrink-0 bg-gradient-to-br from-[#0F172A] to-[#0A2540] relative flex items-center justify-center">
-                            <Ticket className="w-5 h-5 text-cyan-300/40" />
-                            {evt.image && (
-                              <img
-                                src={evt.image}
-                                alt={evt.title}
-                                referrerPolicy="no-referrer"
-                                onError={(e) => {
-                                  (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                }}
-                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform"
-                              />
-                            )}
-                          </div>
+                              {/* Ticket Date Stamp Box */}
+                              <div className="absolute top-3 left-3 sm:top-3.5 sm:left-3.5 bg-white dark:bg-[#151822] rounded-xl sm:rounded-2xl shadow-lg border border-gray-100/80 dark:border-[#252836] p-1.5 min-w-[46px] sm:min-w-[50px] text-center z-10">
+                                <span className="block text-[10px] font-black text-[#FF5A36] uppercase tracking-wider leading-none">
+                                  {evt.month}
+                                </span>
+                                <span className="block text-sm sm:text-base font-black text-gray-900 dark:text-white leading-none mt-1">
+                                  {evt.day}
+                                </span>
+                              </div>
 
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-bold text-[#FF5A36] uppercase">
-                                {evt.category}
-                              </span>
-                              <span className="text-gray-300">•</span>
-                              <span className="text-xs font-bold text-gray-500">{evt.district}</span>
+                              <div className="absolute top-3 right-3 sm:top-3.5 sm:right-3.5 flex items-center gap-1.5 z-10">
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleToggleBookmark(evt.id, e)}
+                                  title="Bookmark event"
+                                  className={`p-2 rounded-xl backdrop-blur-md transition-all cursor-pointer ${
+                                    isBookmarked
+                                      ? 'bg-rose-500 text-white shadow-md'
+                                      : 'bg-black/40 hover:bg-black/60 text-white'
+                                  }`}
+                                >
+                                  <Heart className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current' : ''}`} />
+                                </button>
+                              </div>
+
+                              <div className="absolute bottom-3 left-3 right-3 sm:left-3.5 sm:right-3.5 flex items-center justify-between text-white z-10">
+                                <span
+                                  className={`text-[11px] font-black px-2.5 py-1 rounded-lg backdrop-blur-md shadow-sm ${
+                                    evt.isFree
+                                      ? 'bg-emerald-600 text-white'
+                                      : 'bg-[#0A2540]/90 text-white border border-white/20'
+                                  }`}
+                                >
+                                  {evt.price}
+                                </span>
+
+                                <span className="text-[11px] font-bold text-gray-200 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-md">
+                                  {evt.district}
+                                </span>
+                              </div>
                             </div>
-                            <h4 className="font-extrabold text-sm sm:text-base text-gray-900 dark:text-white truncate group-hover:text-[#FF5A36] transition-colors">
-                              {evt.title}
-                            </h4>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                              {evt.venue} • {evt.time}
-                            </p>
-                          </div>
-                        </div>
 
-                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-[#252836]">
-                          <span
-                            className={`text-xs font-black px-2.5 py-1 rounded-lg ${
-                              evt.isFree ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-900'
-                            }`}
-                          >
-                            {evt.price}
-                          </span>
+                            <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3.5 sm:space-y-4">
+                              <div className="space-y-2 sm:space-y-2.5">
+                                <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
+                                  <span className="text-[#FF5A36] font-bold uppercase tracking-wider text-[11px]">
+                                    {evt.category}
+                                  </span>
+                                  <div className="flex items-center gap-1 text-gray-400">
+                                    <Clock className="w-3.5 h-3.5" />
+                                    <span>{evt.time.split('-')[0].trim()}</span>
+                                  </div>
+                                </div>
 
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleRSVP(evt);
-                            }}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                              hasRsvp
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-300'
-                                : 'bg-[#FF5A36] hover:bg-[#E04826] text-white shadow-sm'
-                            }`}
+                                <h3 className="font-extrabold text-base sm:text-lg text-gray-900 dark:text-white leading-snug group-hover:text-[#FF5A36] transition-colors line-clamp-2">
+                                  {evt.title}
+                                </h3>
+
+                                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                                  {evt.description}
+                                </p>
+
+                                <div className="pt-2.5 sm:pt-3 border-t border-gray-100 dark:border-[#252836] flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
+                                  <div className="flex items-center gap-1.5 truncate max-w-[180px]">
+                                    <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                    <span className="truncate font-medium">{evt.venue}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1 font-bold text-gray-700 dark:text-gray-300 shrink-0">
+                                    <Users className="w-3.5 h-3.5 text-gray-400" />
+                                    <span>{evt.attendees}+</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="pt-1 sm:pt-2 flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  id={`rsvp-btn-${evt.id}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleToggleRSVP(evt);
+                                  }}
+                                  className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                                    hasRsvp
+                                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/50 font-extrabold shadow-sm'
+                                      : 'bg-[#FF5A36] hover:bg-[#E04826] active:scale-95 text-white shadow-md shadow-[#FF5A36]/20'
+                                  }`}
+                                >
+                                  {hasRsvp ? (
+                                    <>
+                                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
+                                      <span>RSVP Confirmed</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Ticket className="w-4 h-4 stroke-[2.5]" />
+                                      <span>Get Passes / RSVP</span>
+                                    </>
+                                  )}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleShare(evt, e)}
+                                  title="Share event"
+                                  className="p-2.5 rounded-xl bg-gray-100 dark:bg-[#1E2230] hover:bg-gray-200 dark:hover:bg-[#2A2F42] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+                                >
+                                  <Share2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          </motion.article>
+                        );
+                      })}
+                    </motion.div>
+                  ) : (
+                    /* Compact List View */
+                    <motion.div
+                      key={`compact-${selectedCategory}-${selectedDistrict}`}
+                      initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+                      transition={{ duration: 0.24, ease: 'easeOut' }}
+                      className="space-y-3"
+                    >
+                      {filteredEvents.map((evt, idx) => {
+                        const hasRsvp = rsvpIds.includes(evt.id);
+
+                        return (
+                          <motion.div
+                            key={evt.id}
+                            initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.22, delay: Math.min(idx * 0.03, 0.16) }}
+                            onClick={() => setSelectedEventModal(evt)}
+                            className="bg-white dark:bg-[#151822] rounded-2xl p-3 sm:p-4 border border-gray-100 dark:border-[#252836] shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 cursor-pointer group"
                           >
-                            {hasRsvp ? 'RSVP Confirmed' : 'Get Pass'}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto min-w-0">
+                              <div className="bg-[#111217] dark:bg-[#1E2230] text-white rounded-xl p-2 sm:p-2.5 min-w-[48px] sm:min-w-[56px] text-center shrink-0">
+                                <span className="block text-[9px] sm:text-[10px] font-black text-[#FF5A36] uppercase leading-none">
+                                  {evt.month}
+                                </span>
+                                <span className="block text-sm sm:text-base font-black leading-none mt-1">
+                                  {evt.day}
+                                </span>
+                              </div>
+
+                              <div className="h-14 w-16 sm:h-16 sm:w-24 rounded-xl overflow-hidden shrink-0 bg-gradient-to-br from-[#0F172A] to-[#0A2540] relative flex items-center justify-center">
+                                <Ticket className="w-5 h-5 text-cyan-300/40" />
+                                {evt.image && (
+                                  <img
+                                    src={evt.image}
+                                    alt={evt.title}
+                                    referrerPolicy="no-referrer"
+                                    onError={(e) => {
+                                      (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                    }}
+                                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                  />
+                                )}
+                              </div>
+
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 sm:gap-2">
+                                  <span className="text-[10px] font-bold text-[#FF5A36] uppercase truncate">
+                                    {evt.category}
+                                  </span>
+                                  <span className="text-gray-300 dark:text-gray-600">•</span>
+                                  <span className="text-[11px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 truncate">
+                                    {evt.district}
+                                  </span>
+                                </div>
+                                <h4 className="font-extrabold text-sm sm:text-base text-gray-900 dark:text-white truncate group-hover:text-[#FF5A36] transition-colors">
+                                  {evt.title}
+                                </h4>
+                                <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                                  {evt.venue} • {evt.time}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3 w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-[#252836]">
+                              <span
+                                className={`text-xs font-black px-2.5 py-1 rounded-lg ${
+                                  evt.isFree
+                                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300'
+                                    : 'bg-gray-100 dark:bg-[#1E2230] text-gray-900 dark:text-gray-200'
+                                }`}
+                              >
+                                {evt.price}
+                              </span>
+
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleRSVP(evt);
+                                }}
+                                className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                  hasRsvp
+                                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/50'
+                                    : 'bg-[#FF5A36] hover:bg-[#E04826] text-white shadow-sm'
+                                }`}
+                              >
+                                {hasRsvp ? 'RSVP Confirmed' : 'Get Pass'}
+                              </button>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               )}
             </div>
           </div>
@@ -1316,7 +1352,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
               )}
 
               {displaySpotlight.length > 0 ? (
-                <div className="mt-4 flex lg:flex-col gap-4 overflow-x-auto lg:overflow-x-visible pb-1 lg:pb-0 scrollbar-thin">
+                <div className="mt-4 flex lg:flex-col gap-3 sm:gap-4 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 snap-x snap-mandatory lg:snap-none scrollbar-none">
                   {displaySpotlight.map((evt, idx) => (
                     <motion.div
                       key={evt.id}
@@ -1326,9 +1362,9 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                       transition={{ duration: 0.3, delay: idx * 0.06 }}
                       whileHover={prefersReducedMotion ? undefined : { y: -3 }}
                       onClick={() => setSelectedEventModal(evt)}
-                      className="min-w-[270px] lg:min-w-0 w-full rounded-2xl overflow-hidden relative shadow-sm hover:shadow-md border border-gray-100 dark:border-[#252836] group flex-shrink-0 cursor-pointer bg-gradient-to-br from-[#0F172A] via-[#131C31] to-[#0A2540]"
+                      className="w-[78vw] max-w-[275px] sm:w-[290px] lg:w-full lg:max-w-none snap-start rounded-2xl overflow-hidden relative shadow-sm hover:shadow-md border border-gray-100 dark:border-[#252836] group shrink-0 cursor-pointer bg-gradient-to-br from-[#0F172A] via-[#131C31] to-[#0A2540]"
                     >
-                      <div className="h-44 w-full relative overflow-hidden">
+                      <div className="h-40 sm:h-44 w-full relative overflow-hidden">
                         {/* Clean ambient icon fallback behind image */}
                         <div className="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none">
                           <Sparkles className="w-16 h-16 text-[#FF5A36]" />
@@ -1395,15 +1431,24 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
       {/* 5. Interactive Event Details Modal */}
       <AnimatePresence>
         {selectedEventModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setSelectedEventModal(null)}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-sm"
+          >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.96, y: 24 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="bg-white rounded-3xl overflow-hidden max-w-xl w-full shadow-2xl border border-gray-100 max-h-[90vh] flex flex-col"
+              exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.96, y: 20 }}
+              transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-[#151822] rounded-t-3xl sm:rounded-3xl overflow-hidden max-w-xl w-full shadow-2xl border border-gray-100 dark:border-[#252836] max-h-[92vh] flex flex-col"
             >
               {/* Modal Cover Image */}
-              <div className="relative h-60 w-full shrink-0 bg-gradient-to-br from-[#0F172A] to-[#0A2540]">
+              <div className="relative h-48 sm:h-60 w-full shrink-0 bg-gradient-to-br from-[#0F172A] to-[#0A2540]">
                 {selectedEventModal.image && (
                   <img
                     src={selectedEventModal.image}
@@ -1420,44 +1465,45 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedEventModal(null)}
-                  className="absolute top-4 right-4 p-2 rounded-full bg-black/60 hover:bg-black text-white transition-colors cursor-pointer"
+                  aria-label="Close event details"
+                  className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 p-2 rounded-full bg-black/60 hover:bg-black text-white transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
 
-                <div className="absolute top-4 left-4 bg-white rounded-xl px-2.5 py-1 shadow-md text-center">
+                <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 bg-white dark:bg-[#151822] rounded-xl px-2.5 py-1 shadow-md text-center border border-gray-100 dark:border-[#252836]">
                   <span className="block text-[10px] font-black text-[#FF5A36] uppercase leading-none">
                     {selectedEventModal.month}
                   </span>
-                  <span className="block text-base font-black text-gray-900 leading-none mt-0.5">
+                  <span className="block text-base font-black text-gray-900 dark:text-white leading-none mt-0.5">
                     {selectedEventModal.day}
                   </span>
                 </div>
 
-                <div className="absolute bottom-4 left-4 right-4 text-white">
-                  <span className="text-[11px] font-bold text-[#FF5A36] uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">
+                <div className="absolute bottom-3.5 left-4 right-4 sm:bottom-4 text-white">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-[#FF5A36] uppercase tracking-wider bg-black/50 px-2 py-0.5 rounded">
                     {selectedEventModal.category}
                   </span>
-                  <h2 className="text-xl sm:text-2xl font-black mt-1 leading-tight">
+                  <h2 className="text-lg sm:text-2xl font-black mt-1 leading-tight">
                     {selectedEventModal.title}
                   </h2>
                   <p className="text-xs text-gray-300 mt-1 flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-[#FF5A36]" />
-                    <span>{selectedEventModal.venue}, {selectedEventModal.location}</span>
+                    <MapPin className="w-3.5 h-3.5 text-[#FF5A36] shrink-0" />
+                    <span className="truncate">{selectedEventModal.venue}, {selectedEventModal.location}</span>
                   </p>
                 </div>
               </div>
 
               {/* Modal Body */}
-              <div className="p-6 overflow-y-auto space-y-5">
+              <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5">
                 {/* Event Highlights Grid */}
-                <div className="grid grid-cols-2 gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 text-xs">
+                <div className="grid grid-cols-2 gap-3 bg-gray-50 dark:bg-[#1B1F2E] p-3.5 sm:p-4 rounded-2xl border border-gray-100 dark:border-[#2A2F42] text-xs">
                   <div>
                     <span className="text-gray-400 block font-medium">Date & Schedule</span>
-                    <span className="font-extrabold text-gray-900 block mt-0.5">
+                    <span className="font-extrabold text-gray-900 dark:text-white block mt-0.5">
                       {selectedEventModal.date}
                     </span>
-                    <span className="text-gray-500 font-medium block">
+                    <span className="text-gray-500 dark:text-gray-400 font-medium block">
                       {selectedEventModal.time}
                     </span>
                   </div>
@@ -1466,7 +1512,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                     <span className="font-extrabold text-[#FF5A36] text-sm block mt-0.5">
                       {selectedEventModal.price}
                     </span>
-                    <span className="text-gray-500 font-medium block">
+                    <span className="text-gray-500 dark:text-gray-400 font-medium block">
                       Expected {selectedEventModal.attendees}+ visitors
                     </span>
                   </div>
@@ -1474,32 +1520,32 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
 
                 {/* Description */}
                 <div>
-                  <h4 className="text-xs font-black text-gray-900 uppercase tracking-wider mb-1.5">
+                  <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider mb-1.5">
                     About This Event
                   </h4>
-                  <p className="text-sm text-gray-600 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                     {selectedEventModal.description}
                   </p>
                 </div>
 
                 {/* Organizer Info */}
-                <div className="flex items-center justify-between text-xs py-3 border-t border-b border-gray-100">
+                <div className="flex items-center justify-between text-xs py-3 border-t border-b border-gray-100 dark:border-[#252836]">
                   <div>
                     <span className="text-gray-400 block">Organized By</span>
-                    <span className="font-bold text-gray-800">{selectedEventModal.organizer}</span>
+                    <span className="font-bold text-gray-800 dark:text-gray-200">{selectedEventModal.organizer}</span>
                   </div>
                   <div className="text-right">
                     <span className="text-gray-400 block">District</span>
-                    <span className="font-bold text-[#0A2540]">{selectedEventModal.district}</span>
+                    <span className="font-bold text-[#0A2540] dark:text-cyan-300">{selectedEventModal.district}</span>
                   </div>
                 </div>
 
                 {/* Modal Actions */}
-                <div className="flex items-center gap-3 pt-2">
+                <div className="flex items-center gap-2.5 sm:gap-3 pt-1">
                   <button
                     type="button"
                     onClick={() => handleToggleRSVP(selectedEventModal)}
-                    className={`flex-1 py-3 px-5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    className={`flex-1 py-3 px-4 sm:px-5 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       rsvpIds.includes(selectedEventModal.id)
                         ? 'bg-emerald-600 text-white shadow-md'
                         : 'bg-[#FF5A36] hover:bg-[#E04826] text-white shadow-lg shadow-[#FF5A36]/30'
@@ -1507,12 +1553,12 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                   >
                     {rsvpIds.includes(selectedEventModal.id) ? (
                       <>
-                        <Check className="w-5 h-5 stroke-[3]" />
+                        <Check className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" />
                         <span>Pass Confirmed & Saved</span>
                       </>
                     ) : (
                       <>
-                        <Ticket className="w-5 h-5 stroke-[2.5]" />
+                        <Ticket className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
                         <span>Confirm RSVP / Get Free Pass</span>
                       </>
                     )}
@@ -1521,7 +1567,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                   <button
                     type="button"
                     onClick={() => handleShare(selectedEventModal)}
-                    className="p-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors cursor-pointer"
+                    className="p-3 rounded-2xl bg-gray-100 dark:bg-[#1E2230] hover:bg-gray-200 dark:hover:bg-[#2A2F42] text-gray-700 dark:text-gray-200 transition-colors cursor-pointer"
                     title="Share with friends"
                   >
                     <Share2 className="w-5 h-5" />
@@ -1529,7 +1575,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                 </div>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import {
   Play,
   Pause,
@@ -571,6 +571,7 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
   const [isCinemaOpen, setIsCinemaOpen] = useState<boolean>(false);
   const [dossierTab, setDossierTab] = useState<DossierTab>('overview');
   const [sacredFilter, setSacredFilter] = useState<SacredFilter>('all');
+  const prefersReducedMotion = useReducedMotion();
 
   const activeChapter =
     SRI_LANKA_CHAPTERS.find((c) => c.id === activeChapterId) || SRI_LANKA_CHAPTERS[0];
@@ -648,7 +649,7 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
     >
       <div className="bg-white dark:bg-[#11141D] rounded-2xl sm:rounded-3xl shadow-xl border border-gray-200/80 dark:border-slate-800 overflow-hidden transition-colors">
         {/* Top Modern Tech Header Banner */}
-        <div className="relative bg-gradient-to-br from-[#070B14] via-[#0E1628] to-[#081C24] text-white px-4 py-5 sm:px-8 sm:py-7 border-b border-white/10 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-[#070B14] via-[#0E1628] to-[#081C24] text-white px-3.5 py-4 sm:px-8 sm:py-7 border-b border-white/10 overflow-hidden">
           <div className="absolute -top-20 -right-12 w-80 h-80 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 left-12 w-72 h-72 bg-[#FF5A36]/15 rounded-full blur-3xl pointer-events-none" />
           <div
@@ -660,10 +661,10 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
             }}
           />
 
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="flex items-start sm:items-center gap-4 sm:gap-5">
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
+            <div className="flex items-center gap-3.5 sm:gap-5">
               <div className="relative shrink-0 group">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-cyan-400/40 shadow-[0_0_30px_rgba(34,211,238,0.28)] bg-slate-900">
+                <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-cyan-400/40 shadow-[0_0_30px_rgba(34,211,238,0.28)] bg-slate-900">
                   <img
                     src={visitSriLankaIcon}
                     alt="Visit Sri Lanka Modern Tech Icon"
@@ -672,69 +673,69 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                   />
                 </div>
                 <span
-                  className="absolute -bottom-1.5 -right-1.5 inline-flex items-center justify-center w-6 h-6 rounded-lg bg-[#FF5A36] text-white shadow-md border border-slate-900"
+                  className="absolute -bottom-1 -right-1 sm:-bottom-1.5 sm:-right-1.5 inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-[#FF5A36] text-white shadow-md border border-slate-900"
                   title="Interactive Island Explorer"
                 >
-                  <Compass className="w-3.5 h-3.5" />
+                  <Compass className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 </span>
               </div>
 
-              <div>
-                <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold tracking-wider uppercase text-cyan-300">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-cyan-300">
                   <span className="inline-flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[#FF5A36]" />
+                    <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#FF5A36]" />
                     <span>HUTA IN · 12 Photos + 4K Reels</span>
                   </span>
-                  <span className="text-slate-500">·</span>
-                  <span className="font-mono text-slate-300 tabular-nums">7.8731° N, 80.7718° E</span>
+                  <span className="hidden sm:inline text-slate-500">·</span>
+                  <span className="hidden sm:inline font-mono text-slate-300 tabular-nums">7.8731° N, 80.7718° E</span>
                 </div>
 
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white mt-1">
+                <h2 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tight text-white mt-0.5 sm:mt-1 leading-tight">
                   Visit Sri Lanka
                 </h2>
-                <p className="text-sm sm:text-base text-slate-300 font-medium mt-1">
+                <p className="text-xs sm:text-base text-slate-300 font-medium mt-0.5 sm:mt-1">
                   Explore the island from Colombo to the coast
                 </p>
               </div>
             </div>
 
             {/* Right Interactive Media Display Mode Switch */}
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <div className="inline-flex items-center bg-white/5 border border-white/10 p-1 rounded-xl backdrop-blur-md">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5 sm:pb-0 sm:flex-wrap">
+              <div className="inline-flex items-center bg-white/5 border border-white/10 p-1 rounded-xl backdrop-blur-md shrink-0">
                 <button
                   type="button"
                   onClick={() => setMediaMode('both')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  className={`inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                     mediaMode === 'both'
                       ? 'bg-[#FF5A36] text-white shadow-sm'
                       : 'text-slate-300 hover:text-white'
                   }`}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   <span>Photo + Video</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setMediaMode('image')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  className={`inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                     mediaMode === 'image'
                       ? 'bg-cyan-500 text-slate-950 shadow-sm'
                       : 'text-slate-300 hover:text-white'
                   }`}
                 >
-                  <ImageIcon className="w-3.5 h-3.5" />
+                  <ImageIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   <span>Gallery</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setMediaMode('video')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  className={`inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                     mediaMode === 'video'
                       ? 'bg-emerald-500 text-slate-950 shadow-sm'
                       : 'text-slate-300 hover:text-white'
                   }`}
                 >
-                  <Video className="w-3.5 h-3.5" />
+                  <Video className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   <span>Video Tour</span>
                 </button>
               </div>
@@ -742,16 +743,16 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
               <button
                 type="button"
                 onClick={() => setIsCinemaOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white whitespace-nowrap transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-[11px] sm:text-xs font-bold text-white whitespace-nowrap shrink-0 transition-all cursor-pointer"
               >
-                <Maximize2 className="w-3.5 h-3.5 text-cyan-300" />
+                <Maximize2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-cyan-300" />
                 <span>Theater Mode</span>
               </button>
             </div>
           </div>
 
           {/* 4 Chapter Selector Cards: Colombo City · Nature · Beaches · Heritage */}
-          <div className="relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+          <div className="relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mt-4 sm:mt-6">
             {SRI_LANKA_CHAPTERS.map((chapter) => {
               const Icon = chapter.icon;
               const isActive = chapter.id === activeChapterId;
@@ -760,16 +761,16 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                   key={chapter.id}
                   type="button"
                   id={`visit-sl-tab-${chapter.id}`}
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+                  whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                   onClick={() => handleSelectChapter(chapter.id)}
-                  className={`group text-left rounded-2xl p-3 sm:p-3.5 border transition-all cursor-pointer flex items-center gap-3 ${
+                  className={`group text-left rounded-xl sm:rounded-2xl p-2 sm:p-3.5 border transition-all cursor-pointer flex items-center gap-2 sm:gap-3 ${
                     isActive
                       ? 'bg-white text-slate-900 border-white shadow-lg shadow-cyan-500/15'
                       : 'bg-white/5 hover:bg-white/10 text-white border-white/10'
                   }`}
                 >
-                  <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 relative bg-slate-800">
+                  <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl overflow-hidden shrink-0 relative bg-slate-800">
                     <img
                       src={chapter.gallery[0].image}
                       alt={chapter.title}
@@ -778,18 +779,18 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                     <Icon
-                      className={`w-3.5 h-3.5 absolute bottom-1 right-1 ${
+                      className={`w-3 h-3 sm:w-3.5 sm:h-3.5 absolute bottom-1 right-1 ${
                         isActive ? 'text-white' : 'text-cyan-300'
                       }`}
                     />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-1">
-                      <span className="font-extrabold text-sm sm:text-base truncate">
+                      <span className="font-extrabold text-xs sm:text-base truncate">
                         {chapter.title}
                       </span>
                       <ChevronRight
-                        className={`w-4 h-4 shrink-0 transition-transform ${
+                        className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 transition-transform ${
                           isActive
                             ? 'text-[#FF5A36] translate-x-0.5'
                             : 'text-slate-400 group-hover:translate-x-0.5'
@@ -797,11 +798,11 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                       />
                     </div>
                     <p
-                      className={`text-[11px] truncate mt-0.5 ${
+                      className={`text-[10px] sm:text-[11px] truncate mt-0.5 ${
                         isActive ? 'text-slate-600 font-semibold' : 'text-slate-400'
                       }`}
                     >
-                      {chapter.gallery.length} Photos · Video Reel
+                      {chapter.gallery.length} Photos · Reel
                     </p>
                   </div>
                 </motion.button>
@@ -840,11 +841,17 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
           </div>
 
           {/* Interactive Media Split Grid */}
-          <div
-            className={`mt-6 grid gap-6 ${
-              mediaMode === 'both' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'
-            }`}
-          >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${activeChapterId}-${mediaMode}`}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className={`mt-5 sm:mt-6 grid gap-4 sm:gap-6 ${
+                mediaMode === 'both' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'
+              }`}
+            >
             {/* LEFT PANEL: Multi-Photo Gallery + Image Description */}
             {(mediaMode === 'both' || mediaMode === 'image') && (
               <div className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50/70 dark:bg-[#171B26] overflow-hidden flex flex-col">
@@ -1093,7 +1100,7 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                   </div>
 
                   {/* Scene Jump Chips */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-white/10">
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2 pt-3 border-t border-white/10">
                     {activeChapter.scenes.map((scene, idx) => {
                       const isCurrent = idx === activeSceneIndex;
                       return (
@@ -1104,16 +1111,16 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                             setPlaybackSec(idx * sceneDuration + 0.1);
                             setIsPlaying(true);
                           }}
-                          className={`text-left p-2 rounded-xl border transition-all cursor-pointer ${
+                          className={`text-left p-1.5 sm:p-2 rounded-lg sm:rounded-xl border transition-all cursor-pointer ${
                             isCurrent
                               ? 'bg-white/15 border-cyan-400/60 text-white'
                               : 'bg-white/5 hover:bg-white/10 border-white/10 text-slate-400'
                           }`}
                         >
-                          <div className="text-[10px] font-mono text-cyan-300">
+                          <div className="text-[9px] sm:text-[10px] font-mono text-cyan-300">
                             Scene 0{idx + 1}
                           </div>
-                          <div className="text-[11px] font-bold truncate mt-0.5 text-white">
+                          <div className="text-[10px] sm:text-[11px] font-bold truncate mt-0.5 text-white">
                             {scene.title.replace(/^Scene 0\d · /, '')}
                           </div>
                         </button>
@@ -1123,48 +1130,51 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                 </div>
               </div>
             )}
-          </div>
+            </motion.div>
+          </AnimatePresence>
 
-          {/* Quick Overview Strip of All 4 Chapters (Colombo City · Nature · Beaches · Heritage) */}
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {/* Quick Overview Grid of All 4 Chapters (2x2 Grid View on Mobile · 4 Columns on Desktop) */}
+          <div className="mt-5 sm:mt-6 grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
             {SRI_LANKA_CHAPTERS.map((ch) => {
               const isSelected = ch.id === activeChapterId;
               const Icon = ch.icon;
               return (
-                <div
+                <motion.div
                   key={`summary-${ch.id}`}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => handleSelectChapter(ch.id)}
-                  className={`rounded-2xl p-3.5 border transition-all cursor-pointer ${
+                  className={`rounded-2xl p-2.5 sm:p-3.5 border transition-all cursor-pointer flex flex-col justify-between ${
                     isSelected
                       ? 'border-[#FF5A36] bg-orange-50/50 dark:bg-[#FF5A36]/10 shadow-sm'
                       : 'border-gray-200 dark:border-slate-800 bg-white dark:bg-[#171B26] hover:border-gray-300 dark:hover:border-slate-700'
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                       <div
-                        className={`w-7 h-7 rounded-lg bg-gradient-to-br ${ch.accentGradient} text-white flex items-center justify-center shrink-0`}
+                        className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-gradient-to-br ${ch.accentGradient} text-white flex items-center justify-center shrink-0`}
                       >
-                        <Icon className="w-4 h-4" />
+                        <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </div>
-                      <h4 className="font-extrabold text-sm text-gray-900 dark:text-white">
+                      <h4 className="font-extrabold text-xs sm:text-sm text-gray-900 dark:text-white truncate">
                         {ch.title}
                       </h4>
                     </div>
-                    <span className="text-[10px] font-bold text-gray-500 dark:text-slate-400 tabular-nums">
+                    <span className="text-[10px] font-bold text-gray-500 dark:text-slate-400 tabular-nums whitespace-nowrap shrink-0">
                       {progressPercent > 0 && isSelected ? `${progressPercent}%` : `${ch.gallery.length} Photos`}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-600 dark:text-slate-400 line-clamp-2 mt-2 leading-relaxed">
+                  <p className="text-[11px] sm:text-xs text-gray-600 dark:text-slate-400 line-clamp-2 mt-1.5 sm:mt-2 leading-relaxed">
                     {ch.gallery[0].description}
                   </p>
-                </div>
+                </motion.div>
               );
             })}
           </div>
 
           {/* Sacred Sri Lanka: Famous Masjids (Mosques), Buddhist Temples, Kovils & Shrines */}
-          <div className="mt-8 rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-[#151A25] p-5 sm:p-6">
+          <div className="mt-8 rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-[#151A25] p-3.5 sm:p-6">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-slate-800">
               <div>
                 <div className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-[#FF5A36]">
@@ -1203,59 +1213,69 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredSacredSites.map((site, idx) => (
-                <motion.div
-                  key={site.id}
-                  initial={{ opacity: 0, y: 14 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.1 }}
-                  transition={{ duration: 0.3, delay: idx * 0.04 }}
-                  whileHover={{ y: -4 }}
-                  className="rounded-2xl border border-gray-200/80 dark:border-slate-800 bg-gray-50/70 dark:bg-[#11151F] overflow-hidden flex flex-col group shadow-xs hover:shadow-lg transition-shadow"
-                >
-                  <div className="relative aspect-[16/9] bg-slate-900 overflow-hidden">
-                    <img
-                      src={site.image}
-                      alt={site.name}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
-                    <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-[10px] font-extrabold text-cyan-300 border border-white/10">
-                      {site.faithLabel}
-                    </span>
-                    <div className="absolute bottom-2.5 left-3 right-3 text-white">
-                      <h4 className="font-black text-sm leading-tight">{site.name}</h4>
-                      <div className="flex items-center gap-1 text-[11px] text-slate-300 mt-0.5">
-                        <MapPin className="w-3 h-3 text-[#FF5A36] shrink-0" />
-                        <span className="truncate">{site.city}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4 flex-1 flex flex-col justify-between gap-3">
-                    <div>
-                      <div className="text-[11px] font-mono text-gray-500 dark:text-slate-400">
-                        {site.era}
-                      </div>
-                      <p className="text-xs text-gray-700 dark:text-slate-300 leading-relaxed mt-1.5">
-                        {site.description}
-                      </p>
-                    </div>
-                    <div className="pt-2.5 border-t border-gray-200/70 dark:border-slate-800 text-[11px] text-gray-600 dark:text-slate-400">
-                      <span className="font-bold text-gray-800 dark:text-slate-200">
-                        Visitor Note:{' '}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={sacredFilter}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+                transition={{ duration: 0.24, ease: 'easeOut' }}
+                className="mt-4 sm:mt-5 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4"
+              >
+                {filteredSacredSites.map((site, idx) => (
+                  <motion.div
+                    key={site.id}
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.28, delay: Math.min(idx * 0.035, 0.21) }}
+                    whileHover={prefersReducedMotion ? undefined : { y: -4 }}
+                    className="rounded-xl sm:rounded-2xl border border-gray-200/80 dark:border-slate-800 bg-gray-50/70 dark:bg-[#11151F] overflow-hidden flex flex-col group shadow-xs hover:shadow-lg transition-shadow"
+                  >
+                    <div className="relative aspect-[4/3] sm:aspect-[16/9] bg-slate-900 overflow-hidden">
+                      <img
+                        src={site.image}
+                        alt={site.name}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-black/25" />
+                      <span className="absolute top-1.5 left-1.5 sm:top-2.5 sm:left-2.5 px-1.5 sm:px-2.5 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-[9px] sm:text-[10px] font-extrabold text-cyan-300 border border-white/10 max-w-[calc(100%-12px)] truncate">
+                        {site.faithLabel}
                       </span>
-                      {site.visitingTip}
+                      <div className="absolute bottom-1.5 left-2 right-2 sm:bottom-2.5 sm:left-3 sm:right-3 text-white">
+                        <h4 className="font-black text-[11px] sm:text-sm leading-tight line-clamp-2 sm:line-clamp-1">
+                          {site.name}
+                        </h4>
+                        <div className="flex items-center gap-1 text-[10px] sm:text-[11px] text-slate-300 mt-0.5">
+                          <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#FF5A36] shrink-0" />
+                          <span className="truncate">{site.city}</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                    <div className="p-2.5 sm:p-4 flex-1 flex flex-col justify-between gap-2 sm:gap-3">
+                      <div>
+                        <div className="text-[10px] sm:text-[11px] font-mono text-gray-500 dark:text-slate-400 truncate">
+                          {site.era}
+                        </div>
+                        <p className="text-[11px] sm:text-xs text-gray-700 dark:text-slate-300 leading-snug sm:leading-relaxed mt-1 sm:mt-1.5 line-clamp-3 sm:line-clamp-none">
+                          {site.description}
+                        </p>
+                      </div>
+                      <div className="pt-2 sm:pt-2.5 border-t border-gray-200/70 dark:border-slate-800 text-[10px] sm:text-[11px] text-gray-600 dark:text-slate-400 line-clamp-2 sm:line-clamp-none">
+                        <span className="font-bold text-gray-800 dark:text-slate-200">
+                          Visitor Note:{' '}
+                        </span>
+                        {site.visitingTip}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* All About Sri Lanka — Modern Interactive Island Dossier */}
-          <div className="mt-8 rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50/80 dark:bg-[#0E131F] p-5 sm:p-6">
+          <div className="mt-6 sm:mt-8 rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50/80 dark:bg-[#0E131F] p-3.5 sm:p-6">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-slate-800">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl overflow-hidden border border-cyan-500/40 shrink-0">
@@ -1305,151 +1325,181 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
               </div>
             </div>
 
-            {dossierTab === 'overview' && (
-              <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[
-                    { label: 'Total Land Area', value: '65,610 km²', sub: 'Teardrop Island' },
-                    { label: 'Administrative Map', value: '9 Provinces', sub: '25 Districts' },
-                    { label: 'UNESCO Treasures', value: '8 Sites', sub: '6 Cultural · 2 Natural' },
-                    { label: 'Currency & Time', value: 'LKR (Rs.)', sub: 'UTC +5:30' },
-                    { label: 'Commercial Capital', value: 'Colombo', sub: 'Sri Jayewardenepura Kotte (Official)' },
-                    { label: 'Highest Peak', value: 'Pidurutalagala', sub: '2,524 meters' },
-                    { label: 'Coastline Length', value: '1,340 km', sub: 'Indian Ocean Reefs' },
-                    { label: 'Languages', value: 'Sinhala · Tamil', sub: 'English widely spoken' },
-                  ].map((stat) => (
-                    <div
-                      key={stat.label}
-                      className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200/80 dark:border-slate-800 p-3"
-                    >
-                      <div className="text-[11px] font-semibold text-gray-500 dark:text-slate-400">
-                        {stat.label}
+            <AnimatePresence mode="wait">
+              {dossierTab === 'overview' && (
+                <motion.div
+                  key="dossier-overview"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
+                  className="mt-4 sm:mt-5 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4"
+                >
+                  <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+                    {[
+                      { label: 'Total Land Area', value: '65,610 km²', sub: 'Teardrop Island' },
+                      { label: 'Administrative Map', value: '9 Provinces', sub: '25 Districts' },
+                      { label: 'UNESCO Treasures', value: '8 Sites', sub: '6 Cultural · 2 Natural' },
+                      { label: 'Currency & Time', value: 'LKR (Rs.)', sub: 'UTC +5:30' },
+                      { label: 'Commercial Capital', value: 'Colombo', sub: 'Sri Jayewardenepura Kotte (Official)' },
+                      { label: 'Highest Peak', value: 'Pidurutalagala', sub: '2,524 meters' },
+                      { label: 'Coastline Length', value: '1,340 km', sub: 'Indian Ocean Reefs' },
+                      { label: 'Languages', value: 'Sinhala · Tamil', sub: 'English widely spoken' },
+                    ].map((stat) => (
+                      <div
+                        key={stat.label}
+                        className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200/80 dark:border-slate-800 p-2.5 sm:p-3"
+                      >
+                        <div className="text-[10px] sm:text-[11px] font-semibold text-gray-500 dark:text-slate-400">
+                          {stat.label}
+                        </div>
+                        <div className="text-xs sm:text-base font-black text-gray-900 dark:text-white mt-0.5 tabular-nums truncate">
+                          {stat.value}
+                        </div>
+                        <div className="text-[10px] sm:text-[11px] text-gray-500 dark:text-slate-400 truncate mt-0.5">
+                          {stat.sub}
+                        </div>
                       </div>
-                      <div className="text-sm sm:text-base font-black text-gray-900 dark:text-white mt-0.5 tabular-nums">
-                        {stat.value}
-                      </div>
-                      <div className="text-[11px] text-gray-500 dark:text-slate-400 truncate mt-0.5">
-                        {stat.sub}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
 
-                <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200/80 dark:border-slate-800 p-4 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#FF5A36] uppercase tracking-wider">
-                      <Info className="w-3.5 h-3.5" />
-                      <span>Why Sri Lanka Stands Out</span>
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200/80 dark:border-slate-800 p-3.5 sm:p-4 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#FF5A36] uppercase tracking-wider">
+                        <Info className="w-3.5 h-3.5" />
+                        <span>Why Sri Lanka Stands Out</span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-gray-700 dark:text-slate-300 leading-relaxed mt-2">
+                        Few islands pack tropical beaches, 2,000-meter tea-covered mountains, misty rainforests, big-game safaris (elephants, leopards, blue whales), and ancient multi-faith sacred landmarks within a single scenic loop from Colombo.
+                      </p>
                     </div>
-                    <p className="text-xs sm:text-sm text-gray-700 dark:text-slate-300 leading-relaxed mt-2">
-                      Few islands pack tropical beaches, 2,000-meter tea-covered mountains, misty rainforests, big-game safaris (elephants, leopards, blue whales), and ancient multi-faith sacred landmarks within a single scenic loop from Colombo.
+                    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-slate-800 text-[11px] font-semibold text-gray-500 dark:text-slate-400">
+                      Tip · Combine Colombo + Sigiriya + Kandy/Ella + Mirissa or Trincomalee for a complete island journey.
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {dossierTab === 'seasons' && (
+                <motion.div
+                  key="dossier-seasons"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
+                  className="mt-4 sm:mt-5 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4"
+                >
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
+                    <div className="text-[11px] sm:text-xs font-extrabold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider">
+                      November – April
+                    </div>
+                    <h4 className="font-black text-sm sm:text-base text-gray-900 dark:text-white mt-1">
+                      Colombo, West & South Coast Peak
+                    </h4>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
+                      Dry, calm turquoise seas across Bentota, Hikkaduwa, Galle Fort, Unawatuna, and Mirissa. Peak season for blue whale watching and the Central Highlands (Kandy, Nuwara Eliya, Ella).
                     </p>
                   </div>
-                  <div className="mt-3 pt-3 border-t border-gray-100 dark:border-slate-800 text-[11px] font-semibold text-gray-500 dark:text-slate-400">
-                    Tip · Combine Colombo + Sigiriya + Kandy/Ella + Mirissa or Trincomalee for a complete island journey.
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
+                    <div className="text-[11px] sm:text-xs font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                      May – September
+                    </div>
+                    <h4 className="font-black text-sm sm:text-base text-gray-900 dark:text-white mt-1">
+                      East Coast, Trincomalee & Arugam Bay
+                    </h4>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
+                      Ideal weather on the East Coast for Pasikudah calm bays, Nilaveli & Pigeon Island snorkeling, Jaffna northern temples, and world-class surf swells at Arugam Bay.
+                    </p>
                   </div>
-                </div>
-              </div>
-            )}
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
+                    <div className="text-[11px] sm:text-xs font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                      Year-Round · Cultural Triangle
+                    </div>
+                    <h4 className="font-black text-sm sm:text-base text-gray-900 dark:text-white mt-1">
+                      Sigiriya, Minneriya & Festivals
+                    </h4>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
+                      August features Kandy’s iconic Esala Perahera pageant and “The Gathering” of wild Asian elephants at Minneriya National Park.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
 
-            {dossierTab === 'seasons' && (
-              <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-4">
-                  <div className="text-xs font-extrabold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider">
-                    November – April
+              {dossierTab === 'culture' && (
+                <motion.div
+                  key="dossier-culture"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
+                  className="mt-4 sm:mt-5 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4"
+                >
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
+                    <h4 className="font-black text-sm sm:text-base text-gray-900 dark:text-white">
+                      8 UNESCO World Heritage Sites
+                    </h4>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
+                      Polonnaruwa, Anuradhapura, Sigiriya Lion Rock, Sacred City of Kandy, Galle Fort, Dambulla Cave Temple, Sinharaja Forest Reserve, and Central Highlands.
+                    </p>
                   </div>
-                  <h4 className="font-black text-base text-gray-900 dark:text-white mt-1">
-                    Colombo, West & South Coast Peak
-                  </h4>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-                    Dry, calm turquoise seas across Bentota, Hikkaduwa, Galle Fort, Unawatuna, and Mirissa. Peak season for blue whale watching and the Central Highlands (Kandy, Nuwara Eliya, Ella).
-                  </p>
-                </div>
-                <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-4">
-                  <div className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                    May – September
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
+                    <h4 className="font-black text-sm sm:text-base text-gray-900 dark:text-white">
+                      Signature Sri Lankan Cuisine
+                    </h4>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
+                      Rice & vibrant curries slow-cooked with Ceylon cinnamon and coconut milk; crisp egg hoppers, string hoppers, sizzling Kottu Roti, Jaffna crab curry, king coconut, and highland Ceylon Tea.
+                    </p>
                   </div>
-                  <h4 className="font-black text-base text-gray-900 dark:text-white mt-1">
-                    East Coast, Trincomalee & Arugam Bay
-                  </h4>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-                    Ideal weather on the East Coast for Pasikudah calm bays, Nilaveli & Pigeon Island snorkeling, Jaffna northern temples, and world-class surf swells at Arugam Bay.
-                  </p>
-                </div>
-                <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-4">
-                  <div className="text-xs font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-                    Year-Round · Cultural Triangle
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
+                    <h4 className="font-black text-sm sm:text-base text-gray-900 dark:text-white">
+                      Gems, Spices & Living Crafts
+                    </h4>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
+                      World-famous for Royal Blue Ceylon Sapphires (Ratnapura), Ambalangoda masks, Kandyan brassware, and Dumbara textiles across local markets.
+                    </p>
                   </div>
-                  <h4 className="font-black text-base text-gray-900 dark:text-white mt-1">
-                    Sigiriya, Minneriya & Festivals
-                  </h4>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-                    August features Kandy’s iconic Esala Perahera pageant and “The Gathering” of wild Asian elephants at Minneriya National Park.
-                  </p>
-                </div>
-              </div>
-            )}
+                </motion.div>
+              )}
 
-            {dossierTab === 'culture' && (
-              <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-4">
-                  <h4 className="font-black text-base text-gray-900 dark:text-white">
-                    8 UNESCO World Heritage Sites
-                  </h4>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-                    Polonnaruwa, Anuradhapura, Sigiriya Lion Rock, Sacred City of Kandy, Galle Fort, Dambulla Cave Temple, Sinharaja Forest Reserve, and Central Highlands.
-                  </p>
-                </div>
-                <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-4">
-                  <h4 className="font-black text-base text-gray-900 dark:text-white">
-                    Signature Sri Lankan Cuisine
-                  </h4>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-                    Rice & vibrant curries slow-cooked with Ceylon cinnamon and coconut milk; crisp egg hoppers, string hoppers, sizzling Kottu Roti, Jaffna crab curry, king coconut, and highland Ceylon Tea.
-                  </p>
-                </div>
-                <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-4">
-                  <h4 className="font-black text-base text-gray-900 dark:text-white">
-                    Gems, Spices & Living Crafts
-                  </h4>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-                    World-famous for Royal Blue Ceylon Sapphires (Ratnapura), Ambalangoda masks, Kandyan brassware, and Dumbara textiles across local markets.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {dossierTab === 'essentials' && (
-              <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-4">
-                  <div className="flex items-center gap-2 font-black text-base text-gray-900 dark:text-white">
-                    <Train className="w-4 h-4 text-[#FF5A36]" />
-                    <span>Getting Around</span>
+              {dossierTab === 'essentials' && (
+                <motion.div
+                  key="dossier-essentials"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
+                  className="mt-4 sm:mt-5 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4"
+                >
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
+                    <div className="flex items-center gap-2 font-black text-sm sm:text-base text-gray-900 dark:text-white">
+                      <Train className="w-4 h-4 text-[#FF5A36]" />
+                      <span>Getting Around</span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
+                      Expressways connect Colombo to Galle/Matara (1.5 hrs) and Kurunegala. Scenic railways serve Colombo–Kandy–Ella and Colombo–Galle alongside islandwide taxis and tuk-tuks.
+                    </p>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-                    Expressways connect Colombo to Galle/Matara (1.5 hrs) and Kurunegala. Scenic railways serve Colombo–Kandy–Ella and Colombo–Galle alongside islandwide taxis and tuk-tuks.
-                  </p>
-                </div>
-                <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-4">
-                  <div className="flex items-center gap-2 font-black text-base text-gray-900 dark:text-white">
-                    <Clock className="w-4 h-4 text-cyan-500" />
-                    <span>Connectivity & Power</span>
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
+                    <div className="flex items-center gap-2 font-black text-sm sm:text-base text-gray-900 dark:text-white">
+                      <Clock className="w-4 h-4 text-cyan-500" />
+                      <span>Connectivity & Power</span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
+                      5G/4G SIMs available 24/7 at Bandaranaike International Airport (CMB). Power is 230V / 50Hz (Type D & Type G). Tap cards & LKR cash are widely accepted.
+                    </p>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-                    5G/4G SIMs available 24/7 at Bandaranaike International Airport (CMB). Power is 230V / 50Hz (Type D & Type G). Tap cards & LKR cash are widely accepted.
-                  </p>
-                </div>
-                <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-4">
-                  <div className="flex items-center gap-2 font-black text-base text-gray-900 dark:text-white">
-                    <PhoneCall className="w-4 h-4 text-emerald-500" />
-                    <span>Emergency & Tourist Hotlines</span>
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
+                    <div className="flex items-center gap-2 font-black text-sm sm:text-base text-gray-900 dark:text-white">
+                      <PhoneCall className="w-4 h-4 text-emerald-500" />
+                      <span>Emergency & Tourist Hotlines</span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed tabular-nums">
+                      Tourist Police: <strong>1912</strong> · Police Emergency: <strong>119</strong> · Suwa Seriya Ambulance: <strong>1990</strong> · Fire & Rescue: <strong>110</strong>.
+                    </p>
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed tabular-nums">
-                    Tourist Police: <strong>1912</strong> · Police Emergency: <strong>119</strong> · Suwa Seriya Ambulance: <strong>1990</strong> · Fire & Rescue: <strong>110</strong>.
-                  </p>
-                </div>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div className="mt-4 pt-3 border-t border-gray-200/80 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-gray-600 dark:text-slate-300">
               <div>
@@ -1474,110 +1524,122 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
       </div>
 
       {/* Fullscreen Theater Cinema Modal */}
-      {isCinemaOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4"
-          onClick={() => setIsCinemaOpen(false)}
-        >
-          <div
-            className="w-full max-w-5xl rounded-3xl overflow-hidden border border-white/15 bg-[#0A0E17] text-white shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+      <AnimatePresence>
+        {isCinemaOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-2.5 sm:p-4"
+            onClick={() => setIsCinemaOpen(false)}
           >
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <img
-                  src={visitSriLankaIcon}
-                  alt="Visit Sri Lanka"
-                  referrerPolicy="no-referrer"
-                  className="w-8 h-8 rounded-lg object-cover border border-cyan-400/40"
-                />
-                <div>
-                  <h4 className="font-black text-sm sm:text-base">
-                    Visit Sri Lanka · {activeChapter.videoTitle}
-                  </h4>
-                  <p className="text-[11px] text-slate-400">
-                    {activeChapter.region} · {activeChapter.coordinates}
-                  </p>
+            <motion.div
+              initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.96, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.96, y: 16 }}
+              transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-2xl sm:rounded-3xl border border-white/15 bg-[#0A0E17] text-white shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-3.5 py-3 sm:px-5 sm:py-3.5 border-b border-white/10">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                  <img
+                    src={visitSriLankaIcon}
+                    alt="Visit Sri Lanka"
+                    referrerPolicy="no-referrer"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover border border-cyan-400/40 shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <h4 className="font-black text-xs sm:text-base truncate">
+                      Visit Sri Lanka · {activeChapter.videoTitle}
+                    </h4>
+                    <p className="text-[10px] sm:text-[11px] text-slate-400 truncate">
+                      {activeChapter.region} · {activeChapter.coordinates}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsCinemaOpen(false)}
-                className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center cursor-pointer"
-                aria-label="Close Theater Mode"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="relative aspect-[16/9] bg-black overflow-hidden">
-              <motion.img
-                key={`modal-${activeChapter.id}-${activeScene.id}`}
-                src={activeScene.image}
-                alt={activeScene.title}
-                referrerPolicy="no-referrer"
-                initial={{ transform: activeScene.transformStart }}
-                animate={{
-                  transform: isPlaying ? activeScene.transformEnd : activeScene.transformStart,
-                }}
-                transition={{ duration: sceneDuration, ease: 'linear' }}
-                className={`w-full h-full object-cover ${activeScene.filterClass}`}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30 pointer-events-none" />
-              <div className="absolute bottom-14 left-6 right-6 pointer-events-none">
-                <span className="inline-block px-2.5 py-0.5 rounded bg-black/70 text-[11px] font-mono text-cyan-300 mb-1.5">
-                  {activeScene.timecode} · {activeScene.cameraMove}
-                </span>
-                <h5 className="text-lg sm:text-xl font-black">{activeScene.title}</h5>
-                <p className="text-xs sm:text-sm text-slate-200 mt-1 max-w-3xl">
-                  {activeScene.caption}
-                </p>
-              </div>
-              <div className="absolute bottom-0 inset-x-0 px-5 py-3 bg-black/85 flex items-center gap-4">
                 <button
                   type="button"
-                  onClick={() => setIsPlaying((p) => !p)}
-                  className="w-9 h-9 rounded-full bg-[#FF5A36] hover:bg-[#e84b28] text-white flex items-center justify-center shrink-0 cursor-pointer"
+                  onClick={() => setIsCinemaOpen(false)}
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center shrink-0 cursor-pointer"
+                  aria-label="Close Theater Mode"
                 >
-                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
-                <input
-                  type="range"
-                  min={0}
-                  max={activeChapter.videoDurationSec}
-                  step={0.25}
-                  value={playbackSec}
-                  onChange={(e) => setPlaybackSec(Number(e.target.value))}
-                  className="flex-1 accent-[#FF5A36] h-1.5 cursor-pointer"
-                />
-                <span className="text-xs font-mono tabular-nums text-slate-300">
-                  {formatTimer(playbackSec)} / {formatTimer(activeChapter.videoDurationSec)}
-                </span>
               </div>
-            </div>
 
-            <div className="p-4 sm:p-5 bg-[#0D121E] flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2">
-                {SRI_LANKA_CHAPTERS.map((ch) => (
+              <div className="relative aspect-[4/3] sm:aspect-[16/9] bg-black overflow-hidden">
+                <motion.img
+                  key={`modal-${activeChapter.id}-${activeScene.id}`}
+                  src={activeScene.image}
+                  alt={activeScene.title}
+                  referrerPolicy="no-referrer"
+                  initial={{ transform: activeScene.transformStart }}
+                  animate={{
+                    transform: isPlaying ? activeScene.transformEnd : activeScene.transformStart,
+                  }}
+                  transition={{ duration: sceneDuration, ease: 'linear' }}
+                  className={`w-full h-full object-cover ${activeScene.filterClass}`}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30 pointer-events-none" />
+                <div className="absolute bottom-14 left-3.5 right-3.5 sm:left-6 sm:right-6 pointer-events-none">
+                  <span className="inline-block px-2 sm:px-2.5 py-0.5 rounded bg-black/70 text-[10px] sm:text-[11px] font-mono text-cyan-300 mb-1 sm:mb-1.5">
+                    {activeScene.timecode} · {activeScene.cameraMove}
+                  </span>
+                  <h5 className="text-sm sm:text-xl font-black">{activeScene.title}</h5>
+                  <p className="text-[11px] sm:text-sm text-slate-200 mt-0.5 sm:mt-1 max-w-3xl line-clamp-2 sm:line-clamp-none">
+                    {activeScene.caption}
+                  </p>
+                </div>
+                <div className="absolute bottom-0 inset-x-0 px-3.5 sm:px-5 py-2.5 sm:py-3 bg-black/85 flex items-center gap-2.5 sm:gap-4">
                   <button
-                    key={`cinema-ch-${ch.id}`}
                     type="button"
-                    onClick={() => handleSelectChapter(ch.id)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      ch.id === activeChapterId
-                        ? 'bg-[#FF5A36] text-white'
-                        : 'bg-white/10 hover:bg-white/15 text-slate-300'
-                    }`}
+                    onClick={() => setIsPlaying((p) => !p)}
+                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#FF5A36] hover:bg-[#e84b28] text-white flex items-center justify-center shrink-0 cursor-pointer"
                   >
-                    {ch.title}
+                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                   </button>
-                ))}
+                  <input
+                    type="range"
+                    min={0}
+                    max={activeChapter.videoDurationSec}
+                    step={0.25}
+                    value={playbackSec}
+                    onChange={(e) => setPlaybackSec(Number(e.target.value))}
+                    className="flex-1 accent-[#FF5A36] h-1.5 cursor-pointer"
+                  />
+                  <span className="text-[11px] sm:text-xs font-mono tabular-nums text-slate-300 shrink-0">
+                    {formatTimer(playbackSec)} / {formatTimer(activeChapter.videoDurationSec)}
+                  </span>
+                </div>
               </div>
-              <p className="text-xs text-slate-400 max-w-xl">{activeChapter.videoDescription}</p>
-            </div>
-          </div>
-        </div>
-      )}
+
+              <div className="p-3.5 sm:p-5 bg-[#0D121E] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 overflow-x-auto scrollbar-none sm:flex-wrap pb-0.5 sm:pb-0">
+                  {SRI_LANKA_CHAPTERS.map((ch) => (
+                    <button
+                      key={`cinema-ch-${ch.id}`}
+                      type="button"
+                      onClick={() => handleSelectChapter(ch.id)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
+                        ch.id === activeChapterId
+                          ? 'bg-[#FF5A36] text-white'
+                          : 'bg-white/10 hover:bg-white/15 text-slate-300'
+                      }`}
+                    >
+                      {ch.title}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11px] sm:text-xs text-slate-400 max-w-xl leading-relaxed">
+                  {activeChapter.videoDescription}
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.section>
   );
 };

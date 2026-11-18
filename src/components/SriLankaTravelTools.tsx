@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import {
   Map as MapIcon,
   Navigation,
@@ -616,6 +616,7 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
   // Tool 3: Timetable State
   const [modeFilter, setModeFilter] = useState<'all' | 'train' | 'bus'>('all');
   const [corridorFilter, setCorridorFilter] = useState<string>('all');
+  const prefersReducedMotion = useReducedMotion();
 
   const filteredTimetable = TIMETABLE_DATA.filter((row) => {
     const matchMode = modeFilter === 'all' || row.mode === modeFilter;
@@ -632,24 +633,24 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
       className="mt-8 rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-[#121722] overflow-hidden shadow-sm"
     >
       {/* Unified Tool Switcher Header */}
-      <div className="bg-gradient-to-r from-[#0B1120] via-[#111B2E] to-[#0B1924] text-white px-5 py-5 sm:px-6 border-b border-white/10">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-[#0B1120] via-[#111B2E] to-[#0B1924] text-white px-3.5 py-3.5 sm:px-6 sm:py-5 border-b border-white/10">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-cyan-300">
+            <div className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-cyan-300">
               <Sparkles className="w-3.5 h-3.5 text-[#FF5A36]" />
               <span>Smart Island Trip Planner</span>
             </div>
-            <h3 className="text-lg sm:text-xl font-black tracking-tight mt-0.5">
+            <h3 className="text-sm sm:text-xl font-black tracking-tight mt-0.5 leading-snug">
               Interactive Route Map, Wildlife & Surf Seasons, and Rail/Bus Timetables
             </h3>
           </div>
 
-          <div className="flex flex-wrap items-center gap-1.5 bg-white/5 border border-white/10 p-1 rounded-xl">
+          <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 p-1 rounded-xl overflow-x-auto scrollbar-none lg:flex-wrap">
             <button
               type="button"
               id="sl-tool-tab-route"
               onClick={() => setActiveTool('route_map')}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-xs font-bold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                 activeTool === 'route_map'
                   ? 'bg-[#FF5A36] text-white shadow-sm'
                   : 'text-slate-300 hover:text-white hover:bg-white/5'
@@ -663,7 +664,7 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
               type="button"
               id="sl-tool-tab-seasons"
               onClick={() => setActiveTool('seasons')}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-xs font-bold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                 activeTool === 'seasons'
                   ? 'bg-cyan-500 text-slate-950 shadow-sm'
                   : 'text-slate-300 hover:text-white hover:bg-white/5'
@@ -677,7 +678,7 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
               type="button"
               id="sl-tool-tab-timetable"
               onClick={() => setActiveTool('timetable')}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-xs font-bold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                 activeTool === 'timetable'
                   ? 'bg-emerald-500 text-slate-950 shadow-sm'
                   : 'text-slate-300 hover:text-white hover:bg-white/5'
@@ -690,14 +691,22 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
         </div>
       </div>
 
-      {/* PANEL 1: INTERACTIVE SRI LANKA ROUTE MAP */}
-      {activeTool === 'route_map' && (
-        <div className="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <AnimatePresence mode="wait">
+        {/* PANEL 1: INTERACTIVE SRI LANKA ROUTE MAP */}
+        {activeTool === 'route_map' && (
+          <motion.div
+            key="tool-route-map"
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+            transition={{ duration: 0.24, ease: 'easeOut' }}
+            className="p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start"
+          >
           {/* Left: Vector Island Map */}
-          <div className="lg:col-span-5 rounded-2xl bg-gradient-to-b from-[#07111E] via-[#0B1A2D] to-[#081523] border border-slate-800 p-4 relative overflow-hidden">
-            <div className="flex items-center justify-between text-[11px] font-bold text-slate-300 mb-2 relative z-10">
-              <span className="inline-flex items-center gap-1.5 text-cyan-300">
-                <Compass className="w-3.5 h-3.5" />
+          <div className="lg:col-span-5 rounded-2xl bg-gradient-to-b from-[#07111E] via-[#0B1A2D] to-[#081523] border border-slate-800 p-2.5 sm:p-4 relative overflow-hidden">
+            <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-slate-300 mb-1.5 sm:mb-2 relative z-10">
+              <span className="inline-flex items-center gap-1 sm:gap-1.5 text-cyan-300">
+                <Compass className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 <span>Click Any City Pin</span>
               </span>
               <div className="inline-flex bg-white/10 rounded-lg p-0.5 text-[10px]">
@@ -722,7 +731,7 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
               </div>
             </div>
 
-            <div className="w-full max-w-[330px] mx-auto">
+            <div className="w-full max-w-[195px] sm:max-w-[260px] lg:max-w-[310px] mx-auto">
               <svg
                 viewBox="0 0 360 520"
                 className="w-full h-auto select-none drop-shadow-[0_12px_30px_rgba(6,182,212,0.18)]"
@@ -870,17 +879,17 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
           </div>
 
           {/* Right: Route Controls, Distance Telemetry & Preset Island Loops */}
-          <div className="lg:col-span-7 space-y-5">
+          <div className="lg:col-span-7 space-y-3.5 sm:space-y-5">
             {/* Origin & Destination Selectors */}
-            <div className="grid grid-cols-1 sm:grid-cols-11 gap-3 items-center">
-              <div className="sm:col-span-5">
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">
+            <div className="grid grid-cols-11 gap-1.5 sm:gap-3 items-end">
+              <div className="col-span-5 min-w-0">
+                <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1 truncate">
                   Start Destination
                 </label>
                 <select
                   value={fromId}
                   onChange={(e) => setFromId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-[#1A2030] border border-gray-200 dark:border-slate-700 text-sm font-bold text-gray-900 dark:text-white outline-none focus:border-[#FF5A36]"
+                  className="w-full px-2 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-gray-50 dark:bg-[#1A2030] border border-gray-200 dark:border-slate-700 text-xs sm:text-sm font-bold text-gray-900 dark:text-white outline-none focus:border-[#FF5A36]"
                 >
                   {ROUTE_NODES.map((n) => (
                     <option key={`from-${n.id}`} value={n.id}>
@@ -890,25 +899,25 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
                 </select>
               </div>
 
-              <div className="sm:col-span-1 flex justify-center py-1 sm:py-0 sm:pt-5">
+              <div className="col-span-1 flex justify-center pb-0.5">
                 <button
                   type="button"
                   onClick={handleSwapRoute}
                   title="Swap Origin & Destination"
-                  className="p-2.5 rounded-xl bg-gray-100 dark:bg-slate-800 hover:bg-[#FF5A36] hover:text-white text-gray-700 dark:text-slate-200 transition-colors cursor-pointer"
+                  className="p-2 sm:p-2.5 rounded-xl bg-gray-100 dark:bg-slate-800 hover:bg-[#FF5A36] hover:text-white text-gray-700 dark:text-slate-200 transition-colors cursor-pointer"
                 >
-                  <ArrowRightLeft className="w-4 h-4" />
+                  <ArrowRightLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               </div>
 
-              <div className="sm:col-span-5">
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-[#FF5A36] mb-1">
+              <div className="col-span-5 min-w-0">
+                <label className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#FF5A36] mb-1 truncate">
                   Target Destination
                 </label>
                 <select
                   value={toId}
                   onChange={(e) => setToId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-[#1A2030] border border-gray-200 dark:border-slate-700 text-sm font-bold text-gray-900 dark:text-white outline-none focus:border-[#FF5A36]"
+                  className="w-full px-2 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-gray-50 dark:bg-[#1A2030] border border-gray-200 dark:border-slate-700 text-xs sm:text-sm font-bold text-gray-900 dark:text-white outline-none focus:border-[#FF5A36]"
                 >
                   {ROUTE_NODES.map((n) => (
                     <option key={`to-${n.id}`} value={n.id}>
@@ -920,9 +929,9 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
             </div>
 
             {/* Quick Island Preset Loops */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-bold text-gray-500 dark:text-slate-400">
-                Popular Routes:
+            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none pb-0.5 sm:flex-wrap">
+              <span className="text-[10px] sm:text-[11px] font-bold text-gray-500 dark:text-slate-400 whitespace-nowrap shrink-0">
+                Popular:
               </span>
               {[
                 { label: 'Colombo → Ella', from: 'colombo', to: 'ella' },
@@ -938,7 +947,7 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
                     setFromId(preset.from);
                     setToId(preset.to);
                   }}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                  className={`px-2 sm:px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold border whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                     fromId === preset.from && toId === preset.to
                       ? 'bg-[#FF5A36] text-white border-[#FF5A36]'
                       : 'bg-gray-50 dark:bg-slate-800/70 text-gray-700 dark:text-slate-300 border-gray-200 dark:border-slate-700 hover:border-[#FF5A36]'
@@ -950,47 +959,47 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
             </div>
 
             {/* Calculated Route Telemetry Card */}
-            <div className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50/70 dark:bg-[#171C28] p-4 sm:p-5 space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-gray-200/80 dark:border-slate-800">
-                <div className="flex items-center gap-2">
-                  <Navigation className="w-4 h-4 text-[#FF5A36]" />
-                  <h4 className="font-black text-base sm:text-lg text-gray-900 dark:text-white">
+            <div className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50/70 dark:bg-[#171C28] p-3 sm:p-5 space-y-3 sm:space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-2 sm:pb-3 border-b border-gray-200/80 dark:border-slate-800">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Navigation className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FF5A36]" />
+                  <h4 className="font-black text-sm sm:text-lg text-gray-900 dark:text-white">
                     {fromNode.name} → {toNode.name}
                   </h4>
                 </div>
-                <span className="text-xs font-mono text-gray-500 dark:text-slate-400">
+                <span className="text-[10px] sm:text-xs font-mono text-gray-500 dark:text-slate-400">
                   {fromNode.coordinates.split(',')[0]} → {toNode.coordinates.split(',')[0]}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div className="rounded-xl bg-white dark:bg-[#11151F] border border-gray-200/80 dark:border-slate-800 p-3">
-                  <div className="text-[11px] text-gray-500 dark:text-slate-400 font-semibold">
-                    Road Distance
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
+                <div className="rounded-xl bg-white dark:bg-[#11151F] border border-gray-200/80 dark:border-slate-800 p-2 sm:p-3">
+                  <div className="text-[10px] sm:text-[11px] text-gray-500 dark:text-slate-400 font-semibold truncate">
+                    Distance
                   </div>
-                  <div className="text-lg font-black text-gray-900 dark:text-white tabular-nums mt-0.5">
+                  <div className="text-sm sm:text-lg font-black text-gray-900 dark:text-white tabular-nums mt-0.5">
                     {fromNode.id === toNode.id ? '0 km' : `${metrics.roadKm} km`}
                   </div>
                 </div>
-                <div className="rounded-xl bg-white dark:bg-[#11151F] border border-gray-200/80 dark:border-slate-800 p-3">
-                  <div className="text-[11px] text-gray-500 dark:text-slate-400 font-semibold">
-                    Est. Drive Time
+                <div className="rounded-xl bg-white dark:bg-[#11151F] border border-gray-200/80 dark:border-slate-800 p-2 sm:p-3">
+                  <div className="text-[10px] sm:text-[11px] text-gray-500 dark:text-slate-400 font-semibold truncate">
+                    Drive Time
                   </div>
-                  <div className="text-lg font-black text-[#FF5A36] tabular-nums mt-0.5">
+                  <div className="text-sm sm:text-lg font-black text-[#FF5A36] tabular-nums mt-0.5 leading-tight">
                     {fromNode.id === toNode.id ? 'At Location' : metrics.driveTime}
                   </div>
                 </div>
-                <div className="col-span-2 sm:col-span-1 rounded-xl bg-white dark:bg-[#11151F] border border-gray-200/80 dark:border-slate-800 p-3">
-                  <div className="text-[11px] text-gray-500 dark:text-slate-400 font-semibold">
+                <div className="rounded-xl bg-white dark:bg-[#11151F] border border-gray-200/80 dark:border-slate-800 p-2 sm:p-3">
+                  <div className="text-[10px] sm:text-[11px] text-gray-500 dark:text-slate-400 font-semibold truncate">
                     Main Hub
                   </div>
-                  <div className="text-xs font-bold text-gray-900 dark:text-white mt-1 line-clamp-2">
+                  <div className="text-[10px] sm:text-xs font-bold text-gray-900 dark:text-white mt-0.5 sm:mt-1 line-clamp-2 leading-tight">
                     {toNode.stationOrHub}
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-2 text-xs text-gray-700 dark:text-slate-300">
+              <div className="space-y-1.5 sm:space-y-2 text-[11px] sm:text-xs text-gray-700 dark:text-slate-300">
                 <div>
                   <span className="font-extrabold text-gray-900 dark:text-white">
                     Highway Corridor:{' '}
@@ -1011,7 +1020,7 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-gray-200/80 dark:border-slate-800 flex flex-wrap items-center gap-2.5">
+              <div className="pt-2.5 sm:pt-3 border-t border-gray-200/80 dark:border-slate-800 flex flex-wrap items-center gap-2">
                 {onSelectChapter && (
                   <button
                     type="button"
@@ -1021,7 +1030,7 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
                       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                       if (onToast) onToast(`Showing ${toNode.name} inside ${toNode.chapterId.toUpperCase()}`, 'info');
                     }}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gray-900 dark:bg-white hover:bg-[#FF5A36] dark:hover:bg-[#FF5A36] text-white dark:text-slate-900 dark:hover:text-white text-xs font-bold cursor-pointer transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-gray-900 dark:bg-white hover:bg-[#FF5A36] dark:hover:bg-[#FF5A36] text-white dark:text-slate-900 dark:hover:text-white text-[11px] sm:text-xs font-bold cursor-pointer transition-colors"
                   >
                     <span>Explore {toNode.name} Photos & Video</span>
                     <ArrowUpRight className="w-3.5 h-3.5" />
@@ -1032,7 +1041,7 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
                   <button
                     type="button"
                     onClick={() => onSelectCategory('Cars for Rent', toNode.name)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-[#11151F] border border-gray-200 dark:border-slate-700 hover:border-[#FF5A36] text-gray-800 dark:text-white text-xs font-bold cursor-pointer transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-white dark:bg-[#11151F] border border-gray-200 dark:border-slate-700 hover:border-[#FF5A36] text-gray-800 dark:text-white text-[11px] sm:text-xs font-bold cursor-pointer transition-colors"
                   >
                     <span>Find Transport / Drivers for {toNode.name}</span>
                   </button>
@@ -1040,12 +1049,19 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
               </div>
             </div>
           </div>
-        </div>
-      )}
+          </motion.div>
+        )}
 
-      {/* PANEL 2: WILDLIFE & SURF SEASON FINDER */}
-      {activeTool === 'seasons' && (
-        <div className="p-5 sm:p-6 space-y-5">
+        {/* PANEL 2: WILDLIFE & SURF SEASON FINDER */}
+        {activeTool === 'seasons' && (
+          <motion.div
+            key="tool-seasons"
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+            transition={{ duration: 0.24, ease: 'easeOut' }}
+            className="p-3 sm:p-6 space-y-4 sm:space-y-5"
+          >
           {/* Interactive 12-Month Bar + Filter */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-slate-800">
             <div>
@@ -1103,116 +1119,135 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
           </div>
 
           {/* Sighting Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredSeasonSpots.map((spot) => {
-              const isPeak = spot.peakMonths.includes(selectedMonth);
-              const isGood = spot.goodMonths.includes(selectedMonth);
-              const statusLabel = isPeak
-                ? 'Peak Season'
-                : isGood
-                ? 'Good Conditions'
-                : 'Off-Peak / Monsoon';
-              const statusClasses = isPeak
-                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700/50'
-                : isGood
-                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-700/50'
-                : 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-400 border-gray-200 dark:border-slate-700';
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${seasonFilter}-${selectedMonth}`}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, y: -4 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
+            >
+              {filteredSeasonSpots.map((spot, idx) => {
+                const isPeak = spot.peakMonths.includes(selectedMonth);
+                const isGood = spot.goodMonths.includes(selectedMonth);
+                const statusLabel = isPeak
+                  ? 'Peak Season'
+                  : isGood
+                  ? 'Good Conditions'
+                  : 'Off-Peak / Monsoon';
+                const statusClasses = isPeak
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700/50'
+                  : isGood
+                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-700/50'
+                  : 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-slate-400 border-gray-200 dark:border-slate-700';
 
-              return (
-                <div
-                  key={spot.id}
-                  className={`rounded-2xl border p-4 flex flex-col justify-between gap-3 transition-all ${
-                    isPeak
-                      ? 'border-emerald-300/80 dark:border-emerald-500/40 bg-emerald-50/20 dark:bg-[#151D27]'
-                      : 'border-gray-200 dark:border-slate-800 bg-gray-50/60 dark:bg-[#151A24]'
-                  }`}
-                >
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#FF5A36] flex items-center gap-1">
-                        {spot.category === 'surf' ? (
-                          <Waves className="w-3.5 h-3.5" />
-                        ) : (
-                          <Binoculars className="w-3.5 h-3.5" />
-                        )}
-                        <span>{spot.categoryLabel}</span>
+                return (
+                  <motion.div
+                    key={spot.id}
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.22, delay: Math.min(idx * 0.03, 0.15) }}
+                    className={`rounded-2xl border p-3 sm:p-4 flex flex-col justify-between gap-2.5 sm:gap-3 transition-all ${
+                      isPeak
+                        ? 'border-emerald-300/80 dark:border-emerald-500/40 bg-emerald-50/20 dark:bg-[#151D27]'
+                        : 'border-gray-200 dark:border-slate-800 bg-gray-50/60 dark:bg-[#151A24]'
+                    }`}
+                  >
+                    <div className="space-y-2 sm:space-y-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-[#FF5A36] flex items-center gap-1">
+                          {spot.category === 'surf' ? (
+                            <Waves className="w-3.5 h-3.5" />
+                          ) : (
+                            <Binoculars className="w-3.5 h-3.5" />
+                          )}
+                          <span>{spot.categoryLabel}</span>
+                        </span>
+
+                        <span
+                          className={`text-[10px] font-black px-2 py-0.5 rounded-md border ${statusClasses}`}
+                        >
+                          {statusLabel}
+                        </span>
+                      </div>
+
+                      <div>
+                        <h5 className="font-black text-sm sm:text-base text-gray-900 dark:text-white leading-snug">
+                          {spot.title}
+                        </h5>
+                        <div className="flex items-center gap-1 text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">
+                          <MapPin className="w-3 h-3 text-[#FF5A36] shrink-0" />
+                          <span>{spot.location}</span>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-gray-700 dark:text-slate-300 leading-relaxed">
+                        {spot.description}
+                      </p>
+
+                      {/* 12-Month Mini Heatmap Bar */}
+                      <div>
+                        <div className="text-[10px] font-bold text-gray-500 dark:text-slate-400 mb-1">
+                          Annual Window (Jan–Dec)
+                        </div>
+                        <div className="grid grid-cols-12 gap-1">
+                          {MONTHS_SHORT.map((m, i) => {
+                            const p = spot.peakMonths.includes(i);
+                            const g = spot.goodMonths.includes(i);
+                            const curr = i === selectedMonth;
+                            return (
+                              <div
+                                key={`${spot.id}-${m}`}
+                                title={`${m}: ${p ? 'Peak' : g ? 'Good' : 'Off-Peak'}`}
+                                className={`h-2 rounded-sm ${
+                                  p
+                                    ? 'bg-emerald-500'
+                                    : g
+                                    ? 'bg-amber-400'
+                                    : 'bg-gray-200 dark:bg-slate-700'
+                                } ${curr ? 'ring-2 ring-[#FF5A36]' : ''}`}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-2.5 border-t border-gray-200/70 dark:border-slate-800 flex items-center justify-between gap-2 text-[11px]">
+                      <span className="text-gray-600 dark:text-slate-400 truncate">
+                        <strong>Timing:</strong> {spot.bestTimeOfDay.split('·')[0]}
                       </span>
-
-                      <span
-                        className={`text-[10px] font-black px-2 py-0.5 rounded-md border ${statusClasses}`}
-                      >
-                        {statusLabel}
-                      </span>
+                      {onSelectCategory && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onSelectCategory(spot.marketplaceCategory, spot.marketplaceKeyword)
+                          }
+                          className="font-extrabold text-[#FF5A36] hover:underline shrink-0 cursor-pointer"
+                        >
+                          Find Stays →
+                        </button>
+                      )}
                     </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>
+          </motion.div>
+        )}
 
-                    <div>
-                      <h5 className="font-black text-sm sm:text-base text-gray-900 dark:text-white leading-snug">
-                        {spot.title}
-                      </h5>
-                      <div className="flex items-center gap-1 text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">
-                        <MapPin className="w-3 h-3 text-[#FF5A36] shrink-0" />
-                        <span>{spot.location}</span>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-gray-700 dark:text-slate-300 leading-relaxed">
-                      {spot.description}
-                    </p>
-
-                    {/* 12-Month Mini Heatmap Bar */}
-                    <div>
-                      <div className="text-[10px] font-bold text-gray-500 dark:text-slate-400 mb-1">
-                        Annual Window (Jan–Dec)
-                      </div>
-                      <div className="grid grid-cols-12 gap-1">
-                        {MONTHS_SHORT.map((m, i) => {
-                          const p = spot.peakMonths.includes(i);
-                          const g = spot.goodMonths.includes(i);
-                          const curr = i === selectedMonth;
-                          return (
-                            <div
-                              key={`${spot.id}-${m}`}
-                              title={`${m}: ${p ? 'Peak' : g ? 'Good' : 'Off-Peak'}`}
-                              className={`h-2 rounded-sm ${
-                                p
-                                  ? 'bg-emerald-500'
-                                  : g
-                                  ? 'bg-amber-400'
-                                  : 'bg-gray-200 dark:bg-slate-700'
-                              } ${curr ? 'ring-2 ring-[#FF5A36]' : ''}`}
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-2.5 border-t border-gray-200/70 dark:border-slate-800 flex items-center justify-between gap-2 text-[11px]">
-                    <span className="text-gray-600 dark:text-slate-400 truncate">
-                      <strong>Timing:</strong> {spot.bestTimeOfDay.split('·')[0]}
-                    </span>
-                    {onSelectCategory && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onSelectCategory(spot.marketplaceCategory, spot.marketplaceKeyword)
-                        }
-                        className="font-extrabold text-[#FF5A36] hover:underline shrink-0 cursor-pointer"
-                      >
-                        Find Stays →
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* PANEL 3: SCENIC TRAIN & EXPRESS BUS TIMETABLE */}
-      {activeTool === 'timetable' && (
-        <div className="p-5 sm:p-6 space-y-5">
+        {/* PANEL 3: SCENIC TRAIN & EXPRESS BUS TIMETABLE */}
+        {activeTool === 'timetable' && (
+          <motion.div
+            key="tool-timetable"
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+            transition={{ duration: 0.24, ease: 'easeOut' }}
+            className="p-3 sm:p-6 space-y-4 sm:space-y-5"
+          >
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-slate-800">
             <div>
               <h4 className="font-black text-base sm:text-lg text-gray-900 dark:text-white flex items-center gap-2">
@@ -1224,8 +1259,8 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1 bg-gray-100 dark:bg-[#0D1119] p-1 rounded-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
+              <div className="flex items-center gap-1 bg-gray-100 dark:bg-[#0D1119] p-1 rounded-xl overflow-x-auto scrollbar-none">
                 {[
                   { id: 'all', label: 'All Services', icon: Sparkles },
                   { id: 'train', label: 'Scenic Railways', icon: Train },
@@ -1237,7 +1272,7 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
                       key={m.id}
                       type="button"
                       onClick={() => setModeFilter(m.id as 'all' | 'train' | 'bus')}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap cursor-pointer transition-all ${
+                      className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold whitespace-nowrap shrink-0 cursor-pointer transition-all ${
                         modeFilter === m.id
                           ? 'bg-gray-900 dark:bg-[#FF5A36] text-white'
                           : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
@@ -1253,7 +1288,7 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
               <select
                 value={corridorFilter}
                 onChange={(e) => setCorridorFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-xl bg-gray-50 dark:bg-[#171C28] border border-gray-200 dark:border-slate-700 text-xs font-bold text-gray-800 dark:text-white outline-none"
+                className="w-full sm:w-auto px-3 py-2 sm:py-1.5 rounded-xl bg-gray-50 dark:bg-[#171C28] border border-gray-200 dark:border-slate-700 text-xs font-bold text-gray-800 dark:text-white outline-none"
               >
                 <option value="all">All Corridors</option>
                 <option value="hill">Hill Country (Kandy – Ella – Badulla)</option>
@@ -1264,83 +1299,96 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredTimetable.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50/70 dark:bg-[#161B27] p-4 flex flex-col justify-between gap-3"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-black ${
-                        item.mode === 'train'
-                          ? 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-300'
-                          : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                      }`}
-                    >
-                      {item.mode === 'train' ? (
-                        <Train className="w-3.5 h-3.5" />
-                      ) : (
-                        <Bus className="w-3.5 h-3.5" />
-                      )}
-                      <span>{item.code}</span>
-                    </span>
-                    <span className="text-[11px] font-bold text-gray-500 dark:text-slate-400">
-                      {item.frequency}
-                    </span>
-                  </div>
-
-                  <div>
-                    <h5 className="font-black text-sm sm:text-base text-gray-900 dark:text-white">
-                      {item.serviceName}
-                    </h5>
-                    <p className="text-xs font-semibold text-[#FF5A36] mt-0.5">{item.route}</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 rounded-xl bg-white dark:bg-[#10141F] border border-gray-200/80 dark:border-slate-800 p-2.5 text-xs">
-                    <div>
-                      <span className="block text-[10px] text-gray-400 font-semibold">Departs</span>
-                      <span className="font-extrabold text-gray-900 dark:text-white tabular-nums">
-                        {item.departure}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${modeFilter}-${corridorFilter}`}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, y: -4 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4"
+            >
+              {filteredTimetable.map((item, idx) => (
+                <motion.div
+                  key={item.id}
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.22, delay: Math.min(idx * 0.035, 0.16) }}
+                  className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50/70 dark:bg-[#161B27] p-3 sm:p-4 flex flex-col justify-between gap-2.5 sm:gap-3"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-black ${
+                          item.mode === 'train'
+                            ? 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-300'
+                            : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                        }`}
+                      >
+                        {item.mode === 'train' ? (
+                          <Train className="w-3.5 h-3.5" />
+                        ) : (
+                          <Bus className="w-3.5 h-3.5" />
+                        )}
+                        <span>{item.code}</span>
+                      </span>
+                      <span className="text-[11px] font-bold text-gray-500 dark:text-slate-400">
+                        {item.frequency}
                       </span>
                     </div>
+
                     <div>
-                      <span className="block text-[10px] text-gray-400 font-semibold">Arrives</span>
-                      <span className="font-extrabold text-gray-900 dark:text-white tabular-nums">
-                        {item.arrival}
-                      </span>
+                      <h5 className="font-black text-sm sm:text-base text-gray-900 dark:text-white">
+                        {item.serviceName}
+                      </h5>
+                      <p className="text-xs font-semibold text-[#FF5A36] mt-0.5">{item.route}</p>
                     </div>
-                    <div>
-                      <span className="block text-[10px] text-gray-400 font-semibold">Duration</span>
-                      <span className="font-bold text-cyan-700 dark:text-cyan-400">
-                        {item.duration.split('·')[0].trim()}
-                      </span>
+
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2 rounded-xl bg-white dark:bg-[#10141F] border border-gray-200/80 dark:border-slate-800 p-2 sm:p-2.5 text-[11px] sm:text-xs">
+                      <div>
+                        <span className="block text-[9px] sm:text-[10px] text-gray-400 font-semibold">Departs</span>
+                        <span className="font-extrabold text-gray-900 dark:text-white tabular-nums">
+                          {item.departure}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block text-[9px] sm:text-[10px] text-gray-400 font-semibold">Arrives</span>
+                        <span className="font-extrabold text-gray-900 dark:text-white tabular-nums">
+                          {item.arrival}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block text-[9px] sm:text-[10px] text-gray-400 font-semibold">Duration</span>
+                        <span className="font-bold text-cyan-700 dark:text-cyan-400 truncate block">
+                          {item.duration.split('·')[0].trim()}
+                        </span>
+                      </div>
                     </div>
+
+                    <p className="text-xs text-gray-600 dark:text-slate-300 leading-relaxed">
+                      <span className="font-bold text-gray-800 dark:text-slate-200">Classes: </span>
+                      {item.classes}
+                    </p>
                   </div>
 
-                  <p className="text-xs text-gray-600 dark:text-slate-300 leading-relaxed">
-                    <span className="font-bold text-gray-800 dark:text-slate-200">Classes: </span>
-                    {item.classes}
-                  </p>
-                </div>
+                  <div className="pt-2.5 border-t border-gray-200/70 dark:border-slate-800 flex items-start gap-1.5 text-[11px] text-gray-600 dark:text-slate-400">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>{item.highlight}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
 
-                <div className="pt-2.5 border-t border-gray-200/70 dark:border-slate-800 flex items-start gap-1.5 text-[11px] text-gray-600 dark:text-slate-400">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>{item.highlight}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="rounded-xl bg-blue-50/70 dark:bg-slate-800/50 border border-blue-200/60 dark:border-slate-700 p-3.5 flex items-start gap-2.5 text-xs text-gray-700 dark:text-slate-300">
+          <div className="rounded-xl bg-blue-50/70 dark:bg-slate-800/50 border border-blue-200/60 dark:border-slate-700 p-3 sm:p-3.5 flex items-start gap-2.5 text-xs text-gray-700 dark:text-slate-300">
             <Info className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5" />
             <p>
               <strong>Booking Tip:</strong> Reserved Observation & 1st/2nd Class hill-country train seats (<em>Podi Menike</em>, <em>Udarata Menike</em>, <em>Ella Odyssey</em>) open 30 days in advance via Sri Lanka Railways. Expressway coaches operate walk-up departures all day from Makumbura Multimodal Hub (Kottawa) and Pettah Central Bus Stand.
             </p>
           </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
