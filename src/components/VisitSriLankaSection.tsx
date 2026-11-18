@@ -639,12 +639,12 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
   return (
     <section
       id="visit-sri-lanka-section"
-      className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-10"
+      className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 mt-6 sm:mt-8"
       aria-label="Visit Sri Lanka Island Guide"
     >
-      <div className="bg-white dark:bg-[#11141D] rounded-3xl shadow-xl border border-gray-200/80 dark:border-slate-800 overflow-hidden transition-colors">
+      <div className="bg-white dark:bg-[#11141D] rounded-2xl sm:rounded-3xl shadow-xl border border-gray-200/80 dark:border-slate-800 overflow-hidden transition-colors">
         {/* Top Modern Tech Header Banner */}
-        <div className="relative bg-gradient-to-br from-[#070B14] via-[#0E1628] to-[#081C24] text-white px-5 py-6 sm:px-8 sm:py-8 border-b border-white/10 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-[#070B14] via-[#0E1628] to-[#081C24] text-white px-4 py-5 sm:px-8 sm:py-7 border-b border-white/10 overflow-hidden">
           <div className="absolute -top-20 -right-12 w-80 h-80 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 left-12 w-72 h-72 bg-[#FF5A36]/15 rounded-full blur-3xl pointer-events-none" />
           <div
@@ -805,7 +805,7 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
         </div>
 
         {/* Main Active Chapter Showcase: Multi-Photo Gallery & Multi-Scene Video Tour */}
-        <div className="p-5 sm:p-8">
+        <div className="p-4 sm:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-gray-100 dark:border-slate-800">
             <div>
               <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-gray-500 dark:text-slate-400">
@@ -954,7 +954,7 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
             {/* RIGHT PANEL: Modern Interactive Multi-Scene Video Tour + Video Description */}
             {(mediaMode === 'both' || mediaMode === 'video') && (
               <div className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-[#0B0F19] text-white overflow-hidden flex flex-col shadow-lg">
-                <div className="relative aspect-[16/9] w-full bg-black overflow-hidden">
+                <div className="relative aspect-[4/3] sm:aspect-[16/9] w-full bg-black overflow-hidden">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={`${activeChapter.id}-${activeScene.id}`}
@@ -982,8 +982,8 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/55 pointer-events-none" />
 
-                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md text-[11px] font-bold border border-white/15">
+                  <div className="absolute top-2.5 left-2.5 right-2.5 sm:top-3 sm:left-3 sm:right-3 flex items-center justify-between gap-2">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md text-[10px] sm:text-[11px] font-bold border border-white/15">
                       <span
                         className={`w-2 h-2 rounded-full ${
                           isPlaying ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
@@ -996,7 +996,7 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                     <button
                       type="button"
                       onClick={() => setIsCinemaOpen(true)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/70 hover:bg-black/90 backdrop-blur-md text-[11px] font-bold border border-white/15 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/70 hover:bg-black/90 backdrop-blur-md text-[10px] sm:text-[11px] font-bold border border-white/15 transition-colors cursor-pointer"
                     >
                       <Maximize2 className="w-3 h-3 text-cyan-300" />
                       <span>Fullscreen</span>
@@ -1004,14 +1004,14 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                   </div>
 
                   {/* Synchronized Video Scene Subtitles */}
-                  <div className="absolute bottom-14 left-3 right-3 pointer-events-none">
+                  <div className="absolute bottom-12 sm:bottom-14 left-3 right-3 pointer-events-none">
                     <div className="inline-block px-2 py-0.5 rounded bg-black/65 text-[10px] font-mono text-cyan-300 mb-1">
                       {activeScene.timecode} · {activeScene.cameraMove}
                     </div>
                     <h4 className="text-xs sm:text-sm font-black text-white">
                       {activeScene.title}
                     </h4>
-                    <p className="text-[11px] sm:text-xs text-slate-200 line-clamp-2 mt-0.5 leading-snug">
+                    <p className="hidden sm:block text-xs text-slate-200 line-clamp-2 mt-0.5 leading-snug">
                       {activeScene.caption}
                     </p>
                   </div>
@@ -1080,7 +1080,7 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                   </div>
 
                   {/* Scene Jump Chips */}
-                  <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/10">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-white/10">
                     {activeChapter.scenes.map((scene, idx) => {
                       const isCurrent = idx === activeSceneIndex;
                       return (

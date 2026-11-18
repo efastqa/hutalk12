@@ -863,7 +863,7 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
                 </select>
               </div>
 
-              <div className="sm:col-span-1 flex justify-center pt-4 sm:pt-5">
+              <div className="sm:col-span-1 flex justify-center py-1 sm:py-0 sm:pt-5">
                 <button
                   type="button"
                   onClick={handleSwapRoute}
@@ -1271,7 +1271,7 @@ export const SriLankaTravelTools: React.FC<SriLankaTravelToolsProps> = ({
                     <p className="text-xs font-semibold text-[#FF5A36] mt-0.5">{item.route}</p>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 rounded-xl bg-white dark:bg-[#10141F] border border-gray-200/80 dark:border-slate-800 p-2.5 text-xs">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 rounded-xl bg-white dark:bg-[#10141F] border border-gray-200/80 dark:border-slate-800 p-2.5 text-xs">
                     <div>
                       <span className="block text-[10px] text-gray-400 font-semibold">Departs</span>
                       <span className="font-extrabold text-gray-900 dark:text-white tabular-nums">

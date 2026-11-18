@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EventItem } from '../types';
 export type { EventItem };
-import { DualToneHeading } from './DualToneHeading';
 import { VisitSriLankaSection } from './VisitSriLankaSection';
 import visitSriLankaIcon from '../assets/images/visit_srilanka_icon_3d_1794991123817.jpg';
+import hutaInHeroBg from '../assets/images/huta_in_hero_bg_1794993555484.jpg';
 import {
   Calendar,
   MapPin,
@@ -324,7 +324,6 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
 
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('All');
-  const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'compact'>('grid');
   const [rsvpIds, setRsvpIds] = useState<string[]>([]);
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
@@ -357,12 +356,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
   const filteredEvents = allEvents.filter((evt) => {
     const matchesCategory = selectedCategory === 'All' || evt.category === selectedCategory;
     const matchesDistrict = selectedDistrict === 'All' || evt.district === selectedDistrict;
-    const matchesSearch =
-      evt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      evt.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      evt.venue.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      evt.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesDistrict && matchesSearch;
+    return matchesCategory && matchesDistrict;
   });
 
   const handleToggleRSVP = (evt: EventItem) => {
@@ -405,103 +399,58 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
   return (
     <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0B0C10] text-[#181920] dark:text-[#F8FAFC] pb-32 animate-in fade-in duration-200 transition-colors">
       {/* 1. Header Hero Banner */}
-      <div className="bg-white dark:bg-[#111217] text-[#181920] dark:text-white pt-8 pb-14 px-4 sm:px-6 lg:px-8 border-b border-gray-200 dark:border-[#2D2F39] relative overflow-hidden transition-colors">
-        {/* Ambient background aura */}
-        <div className="absolute -top-10 right-10 w-96 h-96 bg-[#FF5A36]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-1/2 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-[#0B0F19] text-white min-h-[165px] sm:min-h-[210px] md:min-h-[245px] flex flex-col justify-between py-4 sm:py-6 px-3 sm:px-6 lg:px-8 border-b border-slate-800 relative overflow-hidden transition-colors">
+        {/* Matching Sri Lanka twilight skyline & palm coast background image */}
+        <img
+          src={hutaInHeroBg}
+          alt="Sri Lanka Twilight Coast & Skyline"
+          referrerPolicy="no-referrer"
+          className="absolute inset-0 w-full h-full object-cover object-[center_45%] opacity-100 pointer-events-none"
+        />
+        {/* Light top & bottom edge scrim only so the island panorama stays crisp and vibrant */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-black/60 pointer-events-none" />
 
-        <div className="max-w-6xl mx-auto relative z-10">
-          <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="max-w-6xl w-full mx-auto relative z-10 flex-1 flex flex-col justify-between gap-4 sm:gap-6">
+          <div className="flex items-center justify-between gap-2 sm:gap-3">
             <button
               type="button"
               id="huta-in-back-btn"
               onClick={onBackToHome}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-black/45 hover:bg-black/65 backdrop-blur-md border border-white/25 text-xs sm:text-sm font-semibold text-white shadow-md transition-all cursor-pointer whitespace-nowrap shrink-0"
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to Marketplace</span>
+              <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline sm:inline">Back to Marketplace</span>
+              <span className="xs:hidden sm:hidden">Back</span>
             </button>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                id="huta-in-visit-sl-jump"
-                onClick={() => {
-                  const el = document.getElementById('visit-sri-lanka-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }}
-                className="inline-flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full bg-slate-900 dark:bg-white/10 hover:bg-slate-800 dark:hover:bg-white/20 border border-cyan-500/40 text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
-                title="Explore Visit Sri Lanka — Colombo City, Nature, Beaches & Heritage"
-              >
-                <img
-                  src={visitSriLankaIcon}
-                  alt="Visit Sri Lanka Icon"
-                  referrerPolicy="no-referrer"
-                  className="w-5 h-5 rounded-full object-cover border border-cyan-400/50"
-                />
-                <span>Visit Sri Lanka</span>
-              </button>
-
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FF5A36]/15 border border-[#FF5A36]/30 text-[#FF5A36] text-xs font-bold">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Live Events Hub</span>
-              </div>
-            </div>
+            <button
+              type="button"
+              id="huta-in-visit-sl-jump"
+              onClick={() => {
+                const el = document.getElementById('visit-sri-lanka-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className="inline-flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full bg-black/55 hover:bg-black/75 backdrop-blur-md border border-cyan-400/60 text-white text-xs font-bold shadow-md transition-all cursor-pointer whitespace-nowrap shrink-0"
+              title="Explore Visit Sri Lanka — Colombo City, Nature, Beaches & Heritage"
+            >
+              <img
+                src={visitSriLankaIcon}
+                alt="Visit Sri Lanka Icon"
+                referrerPolicy="no-referrer"
+                className="w-5 h-5 rounded-full object-cover border border-cyan-400/60"
+              />
+              <span>Visit Sri Lanka</span>
+            </button>
           </div>
 
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <div className="flex items-center gap-2.5">
-                <span className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight">
-                  HUTA
-                </span>
-                <span className="text-3xl sm:text-4xl md:text-5xl font-black text-white bg-[#FF5A36] px-2.5 py-0.5 rounded-2xl tracking-tight leading-none shadow-lg shadow-[#FF5A36]/30">
-                  IN
-                </span>
-              </div>
-              <div className="mt-3">
-                <DualToneHeading
-                  as="h1"
-                  size="lg"
-                  theme="auto"
-                  primaryText="Discover"
-                  accentText={[
-                    'Festivals & Expos 🎪',
-                    'Weekend Happenings 🎉',
-                    'Community Meetups 🤝',
-                    'Live Island Events 🇱🇰',
-                  ]}
-                  suffixText="in Sri Lanka"
-                  animationType="rotate"
-                  rotationInterval={3500}
-                  align="left"
-                  showUnderline={false}
-                  subtitle="Connect with local communities, reserve free and paid event passes, and explore weekend exhibitions across Colombo, Kandy, Galle, and beyond."
-                  id="huta-in-dual-tone-heading"
-                />
-              </div>
-            </div>
-
-            {/* Event Search Input */}
-            <div className="relative w-full md:w-80">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
-              <input
-                type="text"
-                id="huta-in-search-input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search event, venue or city..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#181920] border border-[#2D2F39] text-white placeholder:text-gray-400 text-xs sm:text-sm focus:border-[#FF5A36] focus:ring-1 focus:ring-[#FF5A36] outline-none transition-all shadow-inner"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-white"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+          <div className="flex items-end justify-between gap-4 pt-2">
+            <div className="inline-flex items-center gap-2 sm:gap-2.5 drop-shadow-[0_6px_18px_rgba(0,0,0,0.75)]">
+              <span className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
+                HUTA
+              </span>
+              <span className="text-3xl sm:text-4xl md:text-5xl font-black text-white bg-[#FF5A36] px-2.5 sm:px-3 py-0.5 rounded-xl sm:rounded-2xl tracking-tight leading-none shadow-xl shadow-[#FF5A36]/40">
+                IN
+              </span>
             </div>
           </div>
         </div>
@@ -511,10 +460,10 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
       <VisitSriLankaSection onSelectCategory={onSelectCategory} onToast={onToast} />
 
       {/* 3. Our Categories all in GRID view */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-        <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-gray-100">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 mt-8 sm:mt-10">
+        <div className="bg-white dark:bg-[#151822] rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-xl border border-gray-100 dark:border-[#252836]">
           {/* Section Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-gray-100">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-gray-100 dark:border-[#252836]">
             <div>
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-2xl bg-[#FF5A36]/10 text-[#FF5A36] flex items-center justify-center font-black shadow-xs">
@@ -611,7 +560,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
           </div>
 
           {/* GRID View */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 mt-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-4 mt-5 sm:mt-6">
             {filteredCategories.map((cat) => {
               const IconComp = cat.icon;
               return (
@@ -621,7 +570,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                   whileHover={{ y: -3, scale: 1.015 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleCategoryClick(cat)}
-                  className="group bg-white dark:bg-[#151822] rounded-2xl p-4 border border-gray-200/80 dark:border-[#252836] hover:border-[#FF5A36]/40 dark:hover:border-[#FF5A36]/40 hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden"
+                  className="group bg-white dark:bg-[#151822] rounded-2xl p-3 sm:p-4 border border-gray-200/80 dark:border-[#252836] hover:border-[#FF5A36]/40 dark:hover:border-[#FF5A36]/40 hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden"
                 >
                   {/* Subtle hover top border line */}
                   <div className="absolute top-0 left-0 right-0 h-1 bg-transparent group-hover:bg-[#FF5A36] transition-colors" />
@@ -674,7 +623,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
       </div>
 
       {/* 4. Upcoming Festivals & Events (Left) + Upcoming Spotlight (Right Side) */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 mt-8 sm:mt-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-7 items-start">
           {/* LEFT COLUMN: Upcoming Festivals & Events Directory */}
           <div className="lg:col-span-8 min-w-0 space-y-5">
@@ -830,7 +779,6 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                       onClick={() => {
                         setSelectedCategory('All');
                         setSelectedDistrict('All');
-                        setSearchQuery('');
                       }}
                       className="px-5 py-2.5 rounded-xl bg-[#0A2540] text-white text-xs font-bold hover:bg-[#112f50] transition-colors cursor-pointer"
                     >
