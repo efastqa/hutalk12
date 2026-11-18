@@ -461,18 +461,18 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
                 }`}
                 title={`Browse ${cat.label} (${count} ads)`}
               >
-                {/* Uniform Modern 3D Studio Squircle Frame (Same Exact Size Across All Categories) */}
+                {/* Uniform Modern 3D Studio Squircle Frame (Seamless Dark-Mode Studio Halo + Crisp Light Studio) */}
                 <div
-                  className={`relative w-14 h-14 sm:w-[72px] sm:h-[72px] md:w-20 md:h-20 rounded-2xl sm:rounded-[22px] bg-white border overflow-hidden mb-1.5 transition-all duration-200 ${
+                  className={`relative w-14 h-14 sm:w-[72px] sm:h-[72px] md:w-20 md:h-20 rounded-2xl sm:rounded-[22px] bg-white dark:bg-[#191E2C] dark:bg-[radial-gradient(circle_at_center,rgba(216,223,235,0.92)_0%,rgba(122,135,156,0.58)_58%,rgba(25,30,44,0.98)_100%)] border overflow-hidden mb-1.5 transition-all duration-200 ${
                     isActive
                       ? 'border-[#FF5A36] ring-2 ring-[#FF5A36] ring-offset-2 ring-offset-white dark:ring-offset-[#12141D] shadow-lg shadow-[#FF5A36]/20 scale-[1.03]'
-                      : 'border-gray-200/80 dark:border-white/20 shadow-[0_6px_16px_rgba(15,23,42,0.06)] dark:shadow-[0_8px_20px_rgba(0,0,0,0.4)] group-hover:shadow-lg group-hover:border-[#FF5A36]/40'
+                      : 'border-gray-200/80 dark:border-white/10 shadow-[0_6px_16px_rgba(15,23,42,0.06)] dark:shadow-[0_10px_22px_rgba(0,0,0,0.45)] group-hover:shadow-lg group-hover:border-[#FF5A36]/40 dark:group-hover:border-[#FF5A36]/50'
                   }`}
                 >
                   <img
                     src={cat.image}
                     alt={cat.label}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ease-out select-none pointer-events-none"
+                    className="w-full h-full object-cover dark:mix-blend-multiply dark:contrast-[1.06] dark:brightness-[1.05] group-hover:scale-110 transition-transform duration-300 ease-out select-none pointer-events-none"
                     loading="lazy"
                   />
                 </div>
@@ -491,7 +491,7 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
                 {/* Unboxed Ads Count Metadata */}
                 <span
                   className={`text-[10px] sm:text-[11px] font-medium mt-0.5 transition-colors tabular-nums ${
-                    isActive ? 'text-[#FF5A36]/90 dark:text-[#FF7A59]/90' : 'text-gray-400 dark:text-gray-500'
+                    isActive ? 'text-[#FF5A36]/90 dark:text-[#FF7A59]/90' : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   {count} ads
@@ -519,11 +519,11 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
               title="Open Sri Lanka Live Hot News"
             >
               {/* Same Uniform 3D Studio Squircle Frame */}
-              <div className="relative w-14 h-14 sm:w-[72px] sm:h-[72px] md:w-20 md:h-20 rounded-2xl sm:rounded-[22px] bg-white border border-rose-200/80 dark:border-white/20 overflow-hidden mb-1.5 shadow-[0_6px_16px_rgba(244,63,94,0.08)] dark:shadow-[0_8px_20px_rgba(0,0,0,0.4)] group-hover:shadow-lg group-hover:border-rose-400/50 transition-all duration-200">
+              <div className="relative w-14 h-14 sm:w-[72px] sm:h-[72px] md:w-20 md:h-20 rounded-2xl sm:rounded-[22px] bg-white dark:bg-[#191E2C] dark:bg-[radial-gradient(circle_at_center,rgba(216,223,235,0.92)_0%,rgba(122,135,156,0.58)_58%,rgba(25,30,44,0.98)_100%)] border border-rose-200/80 dark:border-white/10 overflow-hidden mb-1.5 shadow-[0_6px_16px_rgba(244,63,94,0.08)] dark:shadow-[0_10px_22px_rgba(0,0,0,0.45)] group-hover:shadow-lg group-hover:border-rose-400/50 transition-all duration-200">
                 <img
                   src={hotNewsIconImg}
                   alt="Sri Lanka Hot News"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ease-out select-none pointer-events-none"
+                  className="w-full h-full object-cover dark:mix-blend-multiply dark:contrast-[1.06] dark:brightness-[1.05] group-hover:scale-110 transition-transform duration-300 ease-out select-none pointer-events-none"
                   loading="lazy"
                 />
               </div>

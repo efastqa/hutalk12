@@ -467,11 +467,11 @@ export const MorePage: React.FC<MorePageProps> = ({
               className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-[#F8F9FA] dark:bg-[#1E2230] border border-gray-200 dark:border-white/10 overflow-hidden shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-[#F8F9FA] dark:bg-[#191E2C] dark:bg-[radial-gradient(circle_at_center,rgba(216,223,235,0.92)_0%,rgba(122,135,156,0.58)_58%,rgba(25,30,44,0.98)_100%)] border border-gray-200 dark:border-white/10 overflow-hidden shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <img
                     src={hotNewsIconImg}
                     alt="Sri Lanka Hot News"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover dark:mix-blend-multiply dark:contrast-[1.06] dark:brightness-[1.05]"
                   />
                 </div>
                 <div>
@@ -500,12 +500,12 @@ export const MorePage: React.FC<MorePageProps> = ({
               className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50/80 dark:hover:bg-[#1C1F2B] transition-colors group cursor-pointer"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-[#F8F9FA] dark:bg-[#1E2230] border border-gray-200 dark:border-white/10 overflow-hidden shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-[#F8F9FA] dark:bg-[#191E2C] dark:bg-[radial-gradient(circle_at_center,rgba(216,223,235,0.92)_0%,rgba(122,135,156,0.58)_58%,rgba(25,30,44,0.98)_100%)] border border-gray-200 dark:border-white/10 overflow-hidden shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <img
                     src={donateIcon3D}
                     alt="Donate Sri Lanka Hospitals and Causes"
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover dark:mix-blend-multiply dark:contrast-[1.06] dark:brightness-[1.05]"
                   />
                 </div>
                 <div>

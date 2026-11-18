@@ -228,11 +228,11 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                 <span>Back</span>
               </button>
 
-              <div className="w-11 h-11 rounded-2xl bg-[#F8F9FA] dark:bg-[#1A1D29] border border-gray-200 dark:border-white/10 overflow-hidden shrink-0 shadow-2xs">
+              <div className="w-11 h-11 rounded-2xl bg-[#F8F9FA] dark:bg-[#191E2C] dark:bg-[radial-gradient(circle_at_center,rgba(216,223,235,0.92)_0%,rgba(122,135,156,0.58)_58%,rgba(25,30,44,0.98)_100%)] border border-gray-200 dark:border-white/10 overflow-hidden shrink-0 shadow-2xs">
                 <img
                   src={hotNewsIconImg}
                   alt="Hot News"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover dark:mix-blend-multiply dark:contrast-[1.06] dark:brightness-[1.05]"
                 />
               </div>
 
@@ -429,11 +429,13 @@ export const HotNewsPage: React.FC<HotNewsPageProps> = ({
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center p-8 text-white text-center gap-3">
-                      <img
-                        src={hotNewsIconImg}
-                        alt={leadArticle.source}
-                        className="w-20 h-20 rounded-2xl object-cover shadow-lg border border-white/20"
-                      />
+                      <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg border border-white/15 bg-[radial-gradient(circle_at_center,rgba(226,232,240,0.94)_0%,rgba(122,135,156,0.62)_58%,rgba(15,23,42,0.98)_100%)]">
+                        <img
+                          src={hotNewsIconImg}
+                          alt={leadArticle.source}
+                          className="w-full h-full object-cover mix-blend-multiply contrast-[1.06] brightness-[1.05]"
+                        />
+                      </div>
                       <span className="text-xs font-bold tracking-wider uppercase text-white/80">
                         {leadArticle.source} · Sri Lanka
                       </span>

@@ -405,12 +405,12 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-stone-50 dark:bg-[#1C202E] shrink-0">
+                <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-stone-50 dark:bg-[#191E2C] dark:bg-[radial-gradient(circle_at_center,rgba(216,223,235,0.92)_0%,rgba(122,135,156,0.58)_58%,rgba(25,30,44,0.98)_100%)] shrink-0">
                   <img
                     src={donateIcon3D}
                     alt="Donate Sri Lanka Emblem"
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover dark:mix-blend-multiply dark:contrast-[1.06] dark:brightness-[1.05]"
                   />
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold flex flex-wrap items-center gap-2">
