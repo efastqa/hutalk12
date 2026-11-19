@@ -5,6 +5,7 @@ export type { EventItem };
 import { VisitSriLankaSection } from './VisitSriLankaSection';
 import { SriLankaPrayerTimesWidget } from './SriLankaPrayerTimesWidget';
 import { SriLankaTravelBookingSection } from './SriLankaTravelBookingSection';
+import { FloatingWhatsAppButton } from './FloatingWhatsAppButton';
 import visitSriLankaIcon from '../assets/images/visit_srilanka_icon_3d_1794991123817.jpg';
 import hutaInColomboDaylightBg from '../assets/images/hot_news_colombo_daylight_1795079034857.jpg';
 import hutaInPortEconomyDaylightBg from '../assets/images/hot_news_economy_daylight_1795079033833.jpg';
@@ -1599,6 +1600,15 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Animated WhatsApp Concierge Icon (HUTA IN page) */}
+      <FloatingWhatsAppButton
+        phone="94775260765"
+        label="HUTA IN WhatsApp"
+        sublabel="Tours, Events & Local Help"
+        message="Hello HUTA IN Team, I need assistance with Sri Lanka tours, events, or local services on HUTA.lk!"
+        hidden={Boolean(selectedEventModal)}
+      />
     </div>
   );
 };

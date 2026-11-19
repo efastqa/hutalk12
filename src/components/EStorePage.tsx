@@ -49,6 +49,7 @@ import {
 import { EStore, EStoreProduct, User, CartItem } from '../types';
 import { api } from '../services/api';
 import { EStoreSmartCart } from './EStoreSmartCart';
+import { FloatingWhatsAppButton } from './FloatingWhatsAppButton';
 
 // Image compression helper for fast client-side upload & data URL conversion
 async function compressImageFile(file: File, maxDim = 800, quality = 0.82): Promise<string> {
@@ -3798,6 +3799,27 @@ export const EStorePage: React.FC<EStorePageProps> = ({
         onOpen={() => setIsSmartCartOpen(true)}
         currentUser={currentUser}
         onToast={onToast}
+      />
+
+      {/* Animated WhatsApp Button (E-Store page only — routes to active storefront or HUTA E-Store support) */}
+      <FloatingWhatsAppButton
+        phone={selectedStore?.whatsapp || '94775260765'}
+        label={selectedStore ? `WhatsApp ${selectedStore.storeName}` : 'E-Store WhatsApp'}
+        sublabel={selectedStore ? 'Chat directly with merchant' : 'Merchant & Order Support'}
+        message={
+          selectedStore
+            ? `Hello ${selectedStore.storeName}, I found your E-Store on HUTA.lk and would like to inquire about your products!`
+            : 'Hello HUTA.lk E-Store Support, I need assistance with online stores or ordering on HUTA.lk!'
+        }
+        hidden={Boolean(
+          isSmartCartOpen ||
+            isRegisterModalOpen ||
+            isAddProductModalOpen ||
+            isEditStoreModalOpen ||
+            quickOrderTarget ||
+            storeToDelete ||
+            productToDelete
+        )}
       />
     </div>
   );
