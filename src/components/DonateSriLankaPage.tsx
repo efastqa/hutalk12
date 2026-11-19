@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import {
   ArrowLeft,
   HeartHandshake,
@@ -20,6 +21,8 @@ import {
   Trash2,
   Share2,
   HandHeart,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import {
   DonationCause,
@@ -29,11 +32,10 @@ import {
   User,
 } from '../types';
 import { api } from '../services/api';
-import { DualToneHeading } from './DualToneHeading';
 import donateIcon3D from '../assets/images/donate_icon_3d_1794949597682.jpg';
-import donateHospitalImg from '../assets/images/donate_hospital_care_1794949599903.jpg';
-import donateChildrenImg from '../assets/images/donate_children_education_1794949599370.jpg';
-import donateFoodImg from '../assets/images/donate_food_relief_1794949599451.jpg';
+import donateHeroMedicalImg from '../assets/images/donate_hero_medical_bright_1795080157718.jpg';
+import donateHeroEducationImg from '../assets/images/donate_hero_education_bright_1795080158968.jpg';
+import donateHeroCommunityImg from '../assets/images/donate_hero_community_bright_1795080158481.jpg';
 
 interface DonateSriLankaPageProps {
   causes: DonationCause[];
@@ -90,14 +92,72 @@ function getSafeExternalUrl(url?: string): string | null {
   return null;
 }
 
+interface DonateHeroSlide {
+  id: string;
+  focusLabel: string;
+  title: string;
+  tagline: string;
+  image: string;
+  categories: Array<'All' | DonationCategory>;
+  objectPosition: string;
+  scaleFrom: number;
+  scaleTo: number;
+  xFrom: string;
+  xTo: string;
+}
+
+const DONATE_HERO_DURATION_MS = 6500;
+
+const DONATE_HERO_SLIDES: DonateHeroSlide[] = [
+  {
+    id: 'donate-medical-care',
+    focusLabel: 'Priority Healthcare Focus',
+    title: 'Public Hospitals & Blood Relief',
+    tagline: 'Direct support for Apeksha Cancer Institute, Lady Ridgeway Children’s Hospital & National Blood Bank.',
+    image: donateHeroMedicalImg,
+    categories: ['All', 'Hospitals & Medical', 'Blood & Emergency'],
+    objectPosition: '50% 42%',
+    scaleFrom: 1.01,
+    scaleTo: 1.07,
+    xFrom: '0%',
+    xTo: '-1.2%',
+  },
+  {
+    id: 'donate-education-bright',
+    focusLabel: 'Education & Childcare',
+    title: 'Rural Schools & Youth Learning',
+    tagline: 'Books, backpacks, uniforms, and bright learning resources delivered to underserved districts.',
+    image: donateHeroEducationImg,
+    categories: ['Children & Schools'],
+    objectPosition: '50% 45%',
+    scaleFrom: 1.06,
+    scaleTo: 1.01,
+    xFrom: '-1.2%',
+    xTo: '1.2%',
+  },
+  {
+    id: 'donate-community-aid',
+    focusLabel: 'Community & Family Relief',
+    title: 'Dry Rations & Island Aid Hubs',
+    tagline: 'Verified food packs, clean drinking water, and senior care essentials across all 25 districts.',
+    image: donateHeroCommunityImg,
+    categories: ['Food & Elders Relief', 'Community Infrastructure'],
+    objectPosition: '50% 45%',
+    scaleFrom: 1.02,
+    scaleTo: 1.08,
+    xFrom: '1.2%',
+    xTo: '-1.2%',
+  },
+];
+
 function getCategoryImage(cause: DonationCause): string {
   if (cause.image === 'children' || cause.category === 'Children & Schools') {
-    return donateChildrenImg;
+    return donateHeroEducationImg;
   }
   if (cause.image === 'food' || cause.category === 'Food & Elders Relief') {
-    return donateFoodImg;
+    return donateHeroCommunityImg;
   }
-  return donateHospitalImg;
+  return donateHeroMedicalImg;
 }
 
 function getCategoryIcon(category: DonationCategory) {
@@ -186,6 +246,32 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
   const [causeBankNote, setCauseBankNote] = useState<string>('');
   const [causeDescription, setCauseDescription] = useState<string>('');
   const [isCreatingCause, setIsCreatingCause] = useState<boolean>(false);
+
+  const prefersReducedMotion = useReducedMotion();
+  const [heroSlideIndex, setHeroSlideIndex] = useState<number>(0);
+  const [isHeroPaused, setIsHeroPaused] = useState<boolean>(false);
+
+  const activeHeroSlide = DONATE_HERO_SLIDES[heroSlideIndex % DONATE_HERO_SLIDES.length];
+
+  const handleCycleHero = useCallback((direction: 1 | -1) => {
+    setHeroSlideIndex((prev) => (prev + direction + DONATE_HERO_SLIDES.length) % DONATE_HERO_SLIDES.length);
+  }, []);
+
+  const handleSelectPillarCategory = useCallback((category: 'All' | DonationCategory) => {
+    setActiveCategory(category);
+    const matchIdx = DONATE_HERO_SLIDES.findIndex((slide) => slide.categories.includes(category));
+    if (matchIdx >= 0) {
+      setHeroSlideIndex(matchIdx);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isHeroPaused || prefersReducedMotion) return;
+    const timer = window.setInterval(() => {
+      setHeroSlideIndex((prev) => (prev + 1) % DONATE_HERO_SLIDES.length);
+    }, DONATE_HERO_DURATION_MS);
+    return () => window.clearInterval(timer);
+  }, [isHeroPaused, prefersReducedMotion]);
 
   const guestIds = useMemo(() => api.getGuestDonationCauseIds(), [causes]);
 
@@ -375,133 +461,242 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0B0C10] text-gray-900 dark:text-white pb-20">
-      {/* Top Action Bar */}
-      <div className="bg-white dark:bg-[#11131B] border-b border-gray-200 dark:border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={onBackToHome}
-            className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-200 hover:text-teal-600 dark:hover:text-teal-400 transition-colors cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4 shrink-0" />
-            <span>Back to Marketplace</span>
-          </button>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0B0C10] text-gray-900 dark:text-white pb-20 transition-colors">
+      {/* Bright Modern Sunlit Sri Lanka Donate Hero Banner */}
+      <header
+        className="relative overflow-hidden bg-[#EAF6F5] dark:bg-[#0B1419] text-slate-900 dark:text-white border-b border-slate-200/80 dark:border-slate-800/80 transition-colors"
+        onMouseEnter={() => setIsHeroPaused(true)}
+        onMouseLeave={() => setIsHeroPaused(false)}
+      >
+        {/* Cross-Fading Bright Daylight Sri Lanka Humanitarian Photography + Ken Burns Motion */}
+        <AnimatePresence initial={false}>
+          <motion.img
+            key={activeHeroSlide.id}
+            src={activeHeroSlide.image}
+            alt={`${activeHeroSlide.title} — ${activeHeroSlide.focusLabel}`}
+            referrerPolicy="no-referrer"
+            initial={{
+              opacity: 0,
+              scale: prefersReducedMotion ? 1 : activeHeroSlide.scaleFrom,
+              x: prefersReducedMotion ? '0%' : activeHeroSlide.xFrom,
+            }}
+            animate={{
+              opacity: 1,
+              scale: prefersReducedMotion ? 1 : activeHeroSlide.scaleTo,
+              x: prefersReducedMotion ? '0%' : activeHeroSlide.xTo,
+            }}
+            exit={{ opacity: 0 }}
+            transition={{
+              opacity: { duration: 0.85, ease: 'easeInOut' },
+              scale: { duration: DONATE_HERO_DURATION_MS / 1000 + 0.6, ease: 'linear' },
+              x: { duration: DONATE_HERO_DURATION_MS / 1000 + 0.6, ease: 'linear' },
+            }}
+            style={{ objectPosition: activeHeroSlide.objectPosition }}
+            className="absolute inset-0 w-full h-full object-cover brightness-[1.03] saturate-[1.05] pointer-events-none select-none"
+          />
+        </AnimatePresence>
 
-          <button
-            type="button"
-            onClick={() => setIsSubmitModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shadow-sm transition-colors cursor-pointer whitespace-nowrap shrink-0"
-          >
-            <Plus className="w-4 h-4 shrink-0" />
-            <span>Submit Hospital / Relief Need</span>
-          </button>
-        </div>
-      </div>
+        {/* Airy Luminous Directional Veil for Crisp WCAG AA Contrast across Mobile, Tablet & Desktop */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/55 via-white/15 to-white/60 dark:from-[#081016]/50 dark:via-transparent dark:to-[#081016]/75 pointer-events-none z-[1]" />
+        <div className="absolute inset-y-0 left-0 w-full md:w-3/4 bg-gradient-to-r from-white/92 via-white/65 to-transparent dark:from-[#081016]/88 dark:via-[#081016]/55 dark:to-transparent pointer-events-none z-[1]" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-10 space-y-10">
-        {/* Hero / Editorial Overview */}
-        <section className="bg-white dark:bg-[#151822] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 lg:p-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-7 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-stone-50 dark:bg-[#191E2C] dark:bg-[radial-gradient(circle_at_center,rgba(216,223,235,0.92)_0%,rgba(122,135,156,0.58)_58%,rgba(25,30,44,0.98)_100%)] shrink-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 relative z-10 flex flex-col justify-between gap-5 sm:gap-6 min-h-[305px] sm:min-h-[340px] lg:min-h-[375px]">
+          {/* Top Hero Navigation & Submit Need CTA */}
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+            <button
+              type="button"
+              id="donate-back-btn"
+              onClick={onBackToHome}
+              className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-2 min-h-[42px] sm:min-h-[40px] rounded-xl bg-white/90 hover:bg-white dark:bg-slate-900/75 dark:hover:bg-slate-900/90 backdrop-blur-md border border-white/85 dark:border-white/20 text-xs sm:text-sm font-bold text-slate-900 dark:text-white shadow-sm transition-colors cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+            >
+              <ArrowLeft className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Back to Marketplace</span>
+              <span className="sm:hidden">Back</span>
+            </button>
+
+            <button
+              type="button"
+              id="donate-submit-need-btn"
+              onClick={() => setIsSubmitModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 min-h-[42px] sm:min-h-[40px] rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm font-extrabold shadow-lg shadow-teal-600/25 transition-colors cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              <Plus className="w-4 h-4 shrink-0" />
+              <span className="sm:hidden">Submit Need</span>
+              <span className="hidden sm:inline">Submit Hospital / Relief Need</span>
+            </button>
+          </div>
+
+          {/* Main Hero Split Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 lg:gap-8 items-end">
+            <div className="md:col-span-7 space-y-3 min-w-0">
+              {/* Unboxed Directory Context */}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] sm:text-xs font-semibold text-slate-700 dark:text-white/85">
+                <span className="inline-flex items-center gap-1 font-black uppercase tracking-wider text-teal-700 dark:text-teal-300">
+                  <HandHeart className="w-3.5 h-3.5 shrink-0" />
+                  <span>Sri Lanka Humanitarian Directory</span>
+                </span>
+                <span aria-hidden="true" className="text-slate-400 dark:text-white/40">·</span>
+                <span>Direct Verification</span>
+                <span aria-hidden="true" className="text-slate-400 dark:text-white/40">·</span>
+                <span>All 25 Districts</span>
+              </div>
+
+              {/* Brand Mark + Display Headline */}
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/95 dark:bg-[#141E26]/90 border border-white dark:border-white/25 overflow-hidden shrink-0 shadow-md">
                   <img
                     src={donateIcon3D}
                     alt="Donate Sri Lanka Emblem"
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover dark:mix-blend-multiply dark:contrast-[1.06] dark:brightness-[1.05]"
+                    className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold flex flex-wrap items-center gap-2">
-                  <span className="text-teal-700 dark:text-teal-400 font-bold">Sri Lanka Humanitarian Directory</span>
-                  <span aria-hidden="true">·</span>
-                  <span>Direct Verification</span>
-                  <span aria-hidden="true">·</span>
-                  <span>All 25 Districts</span>
-                </div>
+                <h1 className="text-[1.75rem] sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.08] [text-wrap:balance] min-w-0">
+                  <span className="text-[#0A2540] dark:text-white">Donate to </span>
+                  <span className="text-teal-600 dark:text-teal-400">Sri Lanka</span>
+                </h1>
               </div>
 
-              <DualToneHeading
-                primaryText="Donate to"
-                accentText="Sri Lanka"
-                className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-balance"
-              />
+              {/* Rotating Focus + Institutional Trust Copy */}
+              <div className="space-y-2">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeHeroSlide.id}
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+                    transition={{ duration: 0.28, ease: 'easeOut' }}
+                    className="space-y-1"
+                  >
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] sm:text-xs font-extrabold tracking-wide">
+                      <span className="text-teal-700 dark:text-teal-300 uppercase tracking-wider">{activeHeroSlide.focusLabel}</span>
+                      <span aria-hidden="true" className="text-slate-400 dark:text-white/35">·</span>
+                      <span className="text-slate-900 dark:text-white">{activeHeroSlide.title}</span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 max-w-2xl leading-relaxed font-medium">
+                      {activeHeroSlide.tagline}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
 
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed max-w-2xl">
-                Connect directly with Sri Lanka’s most urgent public hospitals, blood transfusion centers, rural children’s homes, and emergency food relief drives. Pledge medical supplies, equipment, blood donation, or funds safely with direct institutional contacts.
-              </p>
-
-              {/* Safety Notice */}
-              <div className="pt-2 border-t border-gray-100 dark:border-white/10 flex items-start gap-2.5 text-xs text-gray-600 dark:text-gray-400">
-                <ShieldCheck className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
-                <p>
-                  <strong className="text-gray-900 dark:text-white">Zero Middleman Fees:</strong>{' '}
-                  HUTA.LK never collects cash online. Always call the listed Hospital Welfare Desk or verify the official <span className="font-mono text-xs">.gov.lk</span> charity page before transferring funds or delivering supplies.
-                </p>
+                <div className="pt-1 flex items-start gap-2 text-[11px] sm:text-xs text-slate-700 dark:text-slate-200 max-w-2xl">
+                  <ShieldCheck className="w-4 h-4 text-teal-700 dark:text-teal-400 shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">
+                    <strong className="text-slate-950 dark:text-white">Zero Middleman Fees:</strong>{' '}
+                    Verify institutional contacts directly or pledge medical equipment, school packs, and blood support across Sri Lanka.
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Right: Visual Aid Highlights & Real Totals */}
-            <div className="lg:col-span-5 space-y-4">
-              <div className="relative h-56 sm:h-64 rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-gradient-to-br from-teal-900 to-slate-900">
-                {!failedImages.hero ? (
-                  <img
-                    src={donateHospitalImg}
-                    alt="Sri Lanka public hospital care and essential medical supplies"
-                    referrerPolicy="no-referrer"
-                    onError={() => setFailedImages((p) => ({ ...p, hero: true }))}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-white">
-                    <Hospital className="w-10 h-10 text-teal-300 mb-2" />
-                    <p className="text-sm font-bold">Sri Lanka Priority Hospitals & Care</p>
+            {/* Right Column: Live Impact Stats Card + Hero Slide Controls */}
+            <div className="md:col-span-5 flex flex-col items-stretch md:items-end justify-end gap-3 min-w-0">
+              <div className="w-full rounded-2xl bg-white/88 dark:bg-slate-900/78 backdrop-blur-xl border border-white/85 dark:border-white/15 p-3.5 sm:p-4 shadow-lg">
+                <div className="flex items-center justify-between gap-2 mb-2.5 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                  <span className="uppercase tracking-wider text-teal-700 dark:text-teal-400 font-black">
+                    Island Aid Pulse
+                  </span>
+                  <span>Verified Directory</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2.5 text-left">
+                  <div className="p-2.5 rounded-xl bg-slate-50/90 dark:bg-white/5 border border-slate-200/70 dark:border-white/10">
+                    <div className="text-base sm:text-xl font-black text-slate-900 dark:text-white tabular-nums">
+                      {totals.activeCount}
+                    </div>
+                    <div className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-tight">Active Causes</div>
                   </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-5">
-                  <span className="text-[11px] font-semibold text-teal-300">Priority Healthcare Focus</span>
-                  <h2 className="text-base sm:text-lg font-bold text-white leading-snug">
-                    Apeksha Cancer Institute, Lady Ridgeway Children’s Hospital & National Blood Bank
-                  </h2>
+                  <div className="p-2.5 rounded-xl bg-slate-50/90 dark:bg-white/5 border border-slate-200/70 dark:border-white/10">
+                    <div className="text-base sm:text-xl font-black text-teal-700 dark:text-teal-400 tabular-nums">
+                      {totals.totalPledges}
+                    </div>
+                    <div className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-tight">Donor Pledges</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-50/90 dark:bg-white/5 border border-slate-200/70 dark:border-white/10">
+                    <div className="text-xs sm:text-base font-black text-slate-900 dark:text-white tabular-nums truncate">
+                      {totals.totalLkr > 0 ? formatLkr(totals.totalLkr) : 'Direct Aid'}
+                    </div>
+                    <div className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-tight">Pledged Value</div>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 text-left">
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#1C202E] border border-gray-200/80 dark:border-white/10">
-                  <div className="text-lg sm:text-xl font-black text-gray-900 dark:text-white tabular-nums">
-                    {totals.activeCount}
-                  </div>
-                  <div className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Active Causes</div>
+              {/* Hero Backdrop Stepper & Circular Controls */}
+              <div className="flex items-center justify-between md:justify-end gap-2.5 w-full">
+                <div
+                  className="flex items-center gap-1.5 bg-white/85 dark:bg-slate-900/65 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-white/80 dark:border-white/15 shadow-sm"
+                  role="tablist"
+                  aria-label="Donate hero scenes"
+                >
+                  {DONATE_HERO_SLIDES.map((slide, idx) => {
+                    const isActive = idx === heroSlideIndex;
+                    return (
+                      <button
+                        key={slide.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={isActive}
+                        aria-label={`Show ${slide.title}`}
+                        onClick={() => setHeroSlideIndex(idx)}
+                        className={`relative h-1.5 rounded-full overflow-hidden transition-all duration-300 cursor-pointer ${
+                          isActive
+                            ? 'w-8 sm:w-10 bg-slate-900/20 dark:bg-white/30'
+                            : 'w-2.5 bg-slate-900/35 hover:bg-slate-900/65 dark:bg-white/40 dark:hover:bg-white/75'
+                        }`}
+                      >
+                        {isActive && (
+                          <motion.span
+                            key={`donate-progress-${slide.id}-${heroSlideIndex}`}
+                            initial={{ scaleX: 0 }}
+                            animate={{ scaleX: 1 }}
+                            transition={{
+                              duration: isHeroPaused || prefersReducedMotion ? 0 : DONATE_HERO_DURATION_MS / 1000,
+                              ease: 'linear',
+                            }}
+                            style={{ transformOrigin: 'left center' }}
+                            className="absolute inset-0 bg-teal-600 dark:bg-teal-400 rounded-full"
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#1C202E] border border-gray-200/80 dark:border-white/10">
-                  <div className="text-lg sm:text-xl font-black text-teal-600 dark:text-teal-400 tabular-nums">
-                    {totals.totalPledges}
-                  </div>
-                  <div className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Donor Pledges</div>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#1C202E] border border-gray-200/80 dark:border-white/10">
-                  <div className="text-sm sm:text-base font-black text-gray-900 dark:text-white tabular-nums truncate">
-                    {totals.totalLkr > 0 ? formatLkr(totals.totalLkr) : 'Direct Aid'}
-                  </div>
-                  <div className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Pledged Value</div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleCycleHero(-1)}
+                    aria-label="Previous humanitarian hero backdrop"
+                    className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-white/90 hover:bg-white dark:bg-slate-900/70 dark:hover:bg-slate-900/90 backdrop-blur-md border border-white/80 dark:border-white/20 text-slate-900 dark:text-white flex items-center justify-center transition-colors cursor-pointer shadow-sm"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleCycleHero(1)}
+                    aria-label="Next humanitarian hero backdrop"
+                    className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-white/90 hover:bg-white dark:bg-slate-900/70 dark:hover:bg-slate-900/90 backdrop-blur-md border border-white/80 dark:border-white/20 text-slate-900 dark:text-white flex items-center justify-center transition-colors cursor-pointer shadow-sm"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </header>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 space-y-8 sm:space-y-10">
         {/* Three Priority Aid Pillars */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <button
             type="button"
-            onClick={() => setActiveCategory('Hospitals & Medical')}
+            onClick={() => handleSelectPillarCategory('Hospitals & Medical')}
             className="group text-left bg-white dark:bg-[#151822] border border-gray-200 dark:border-white/10 hover:border-teal-500/60 rounded-2xl overflow-hidden transition-colors cursor-pointer"
           >
-            <div className="h-36 overflow-hidden bg-slate-100 dark:bg-[#1C202E]">
+            <div className="h-40 overflow-hidden bg-slate-100 dark:bg-[#1C202E]">
               {!failedImages.p1 ? (
                 <img
-                  src={donateHospitalImg}
+                  src={donateHeroMedicalImg}
                   alt="Public hospitals and essential medicine care in Sri Lanka"
                   referrerPolicy="no-referrer"
                   onError={() => setFailedImages((p) => ({ ...p, p1: true }))}
@@ -524,14 +719,14 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
 
           <button
             type="button"
-            onClick={() => setActiveCategory('Children & Schools')}
+            onClick={() => handleSelectPillarCategory('Children & Schools')}
             className="group text-left bg-white dark:bg-[#151822] border border-gray-200 dark:border-white/10 hover:border-teal-500/60 rounded-2xl overflow-hidden transition-colors cursor-pointer"
           >
-            <div className="h-36 overflow-hidden bg-slate-100 dark:bg-[#1C202E]">
+            <div className="h-40 overflow-hidden bg-slate-100 dark:bg-[#1C202E]">
               {!failedImages.p2 ? (
                 <img
-                  src={donateChildrenImg}
-                  alt="School exercise books and learning packs for rural Sri Lankan children"
+                  src={donateHeroEducationImg}
+                  alt="School backpacks and learning resources for rural Sri Lankan children"
                   referrerPolicy="no-referrer"
                   onError={() => setFailedImages((p) => ({ ...p, p2: true }))}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -553,14 +748,14 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
 
           <button
             type="button"
-            onClick={() => setActiveCategory('Food & Elders Relief')}
+            onClick={() => handleSelectPillarCategory('Food & Elders Relief')}
             className="group text-left bg-white dark:bg-[#151822] border border-gray-200 dark:border-white/10 hover:border-teal-500/60 rounded-2xl overflow-hidden transition-colors cursor-pointer"
           >
-            <div className="h-36 overflow-hidden bg-slate-100 dark:bg-[#1C202E]">
+            <div className="h-40 overflow-hidden bg-slate-100 dark:bg-[#1C202E]">
               {!failedImages.p3 ? (
                 <img
-                  src={donateFoodImg}
-                  alt="Dry rations and disaster relief packs in Sri Lanka"
+                  src={donateHeroCommunityImg}
+                  alt="Community aid relief packages and family essentials in Sri Lanka"
                   referrerPolicy="no-referrer"
                   onError={() => setFailedImages((p) => ({ ...p, p3: true }))}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -644,7 +839,7 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
               <button
                 key={cat}
                 type="button"
-                onClick={() => setActiveCategory(cat)}
+                onClick={() => handleSelectPillarCategory(cat)}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                   activeCategory === cat
                     ? 'bg-teal-600 text-white'
