@@ -637,7 +637,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
               initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col gap-2 min-w-0 max-w-full sm:max-w-lg lg:max-w-xl"
+              className="flex flex-col gap-2 min-w-0"
             >
               <div className="inline-flex items-center gap-2 sm:gap-2.5">
                 <span className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0A2540] dark:text-white tracking-tight drop-shadow-[0_2px_10px_rgba(255,255,255,0.65)] dark:drop-shadow-[0_6px_18px_rgba(0,0,0,0.75)]">
@@ -646,37 +646,6 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                 <span className="text-3xl sm:text-4xl lg:text-5xl font-black text-white bg-[#FF5A36] px-2.5 sm:px-3 py-0.5 rounded-xl sm:rounded-2xl tracking-tight leading-none shadow-lg shadow-[#FF5A36]/35">
                   IN
                 </span>
-              </div>
-
-              <div className="min-h-[42px] sm:min-h-[44px] flex items-center min-w-0">
-                <AnimatePresence mode="wait">
-                  <motion.button
-                    key={activeHeroSlide.id}
-                    type="button"
-                    onClick={() => {
-                      const el = document.getElementById('visit-sri-lanka-section');
-                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }}
-                    initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
-                    transition={{ duration: 0.32, ease: 'easeOut' }}
-                    className="w-full sm:w-auto text-left group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A36] bg-white/82 dark:bg-black/45 backdrop-blur-md px-3 py-2 rounded-xl border border-white/80 dark:border-white/15 shadow-xs min-w-0"
-                    title="Jump to Visit Sri Lanka Guide"
-                  >
-                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] sm:text-xs font-extrabold text-[#0A2540] dark:text-cyan-300 tracking-wide">
-                      <MapPin className="w-3 h-3 text-[#FF5A36] shrink-0" />
-                      <span>{activeHeroSlide.region}</span>
-                      <span aria-hidden="true" className="text-slate-400 dark:text-white/40">·</span>
-                      <span className="text-slate-900 dark:text-white group-hover:text-[#FF5A36] dark:group-hover:text-[#FF7A59] transition-colors">
-                        {activeHeroSlide.title}
-                      </span>
-                    </div>
-                    <p className="text-[11px] sm:text-xs text-slate-700 dark:text-slate-200/90 line-clamp-1 mt-0.5 font-medium">
-                      {activeHeroSlide.tagline}
-                    </p>
-                  </motion.button>
-                </AnimatePresence>
               </div>
             </motion.div>
 
