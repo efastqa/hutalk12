@@ -241,49 +241,49 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
             {/* Mobile Responsive Layout */}
             <div className="md:hidden absolute inset-0 pointer-events-none overflow-hidden select-none">
               {isScenic ? (
-                /* Full-width Panoramic Top Band for Scenic Skyline (preserves Lotus Tower & horizon cleanly) */
-                <div className="absolute top-0 left-0 right-0 h-[250px] overflow-hidden">
+                /* Full-width Panoramic Top Band for Scenic Skyline (bright & vivid while preserving readability) */
+                <div className="absolute top-0 left-0 right-0 h-[255px] overflow-hidden">
                   <img
                     src={bg.imageUrl}
                     alt={bg.name}
-                    className="w-full h-full object-cover object-center filter saturate-110 opacity-95 dark:opacity-50"
+                    className="w-full h-full object-cover object-center filter brightness-[1.07] contrast-[1.05] saturate-[1.15] opacity-100 dark:opacity-75"
                   />
                   {/* Balanced light/dark readability scrim fading cleanly into the search card */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/55 to-white dark:from-[#0B0C10]/65 dark:via-[#0B0C10]/60 dark:to-[#0B0C10]" />
-                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.68)_0%,rgba(255,255,255,0.18)_75%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(11,12,16,0.65)_0%,rgba(11,12,16,0.2)_75%)]" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/32 via-white/18 to-white/95 dark:from-[#0B0C10]/35 dark:via-[#0B0C10]/35 dark:to-[#0B0C10]" />
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.46)_0%,rgba(255,255,255,0.06)_68%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(11,12,16,0.52)_0%,rgba(11,12,16,0.12)_72%)]" />
                 </div>
               ) : (
                 /* Proportioned Top Showcase Band for Flank-Composed Light Studio Images */
                 <div className="absolute top-0 left-0 right-0 h-[265px] overflow-hidden">
-                  {/* Soft ambient base */}
+                  {/* Bright ambient base */}
                   <img
                     src={bg.imageUrl}
                     alt=""
-                    className="w-full h-full object-cover object-center opacity-25 dark:opacity-10"
+                    className="w-full h-full object-cover object-center brightness-[1.05] saturate-[1.1] opacity-55 dark:opacity-25"
                   />
 
                   {/* Left Flank Subject */}
-                  <div className="absolute left-0 top-0 bottom-0 w-[52%] overflow-hidden opacity-95 dark:opacity-35">
+                  <div className="absolute left-0 top-0 bottom-0 w-[52%] overflow-hidden opacity-100 dark:opacity-65">
                     <img
                       src={bg.imageUrl}
                       alt=""
-                      className="w-full h-full object-cover object-[12%_65%] filter saturate-110 contrast-105"
+                      className="w-full h-full object-cover object-[12%_65%] filter brightness-[1.06] saturate-[1.15] contrast-[1.06]"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-white dark:via-[#0B0C10]/40 dark:to-[#0B0C10]" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-white/90 dark:via-[#0B0C10]/25 dark:to-[#0B0C10]/90" />
                   </div>
 
                   {/* Right Flank Subject */}
-                  <div className="absolute right-0 top-0 bottom-0 w-[52%] overflow-hidden opacity-95 dark:opacity-35">
+                  <div className="absolute right-0 top-0 bottom-0 w-[52%] overflow-hidden opacity-100 dark:opacity-65">
                     <img
                       src={bg.imageUrl}
                       alt=""
-                      className="w-full h-full object-cover object-[88%_65%] filter saturate-110 contrast-105"
+                      className="w-full h-full object-cover object-[88%_65%] filter brightness-[1.06] saturate-[1.15] contrast-[1.06]"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/25 to-white dark:via-[#0B0C10]/40 dark:to-[#0B0C10]" />
+                    <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/10 to-white/90 dark:via-[#0B0C10]/25 dark:to-[#0B0C10]/90" />
                   </div>
 
                   {/* Smooth bottom transition into pure surface behind Search Bar */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-white/40 to-white dark:from-[#0B0C10]/45 dark:via-[#0B0C10]/65 dark:to-[#0B0C10]" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/20 to-white/95 dark:from-[#0B0C10]/25 dark:via-[#0B0C10]/45 dark:to-[#0B0C10]" />
                 </div>
               )}
             </div>
@@ -291,27 +291,27 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
             {/* Desktop / Tablet Unified Wide Visual (Full Panorama) */}
             <div
               className={`hidden md:block absolute inset-0 pointer-events-none overflow-hidden select-none transition-opacity duration-500 ${
-                isScenic ? 'opacity-85 dark:opacity-35' : 'opacity-90 dark:opacity-20'
+                isScenic ? 'opacity-100 dark:opacity-70' : 'opacity-100 dark:opacity-55'
               }`}
             >
               <img
                 src={bg.imageUrl}
                 alt={bg.name}
-                className="w-full h-full object-cover object-center filter saturate-105"
+                className="w-full h-full object-cover object-center filter brightness-[1.06] contrast-[1.05] saturate-[1.14] dark:brightness-[0.96] dark:contrast-[1.06]"
               />
-              {/* Multi-directional soft gradients ensuring center text and search card remain 100% crisp & readable */}
+              {/* Light, measured center scrim so bright photography shines while center headline & search bar stay crisp */}
               <div
                 className={`absolute inset-0 ${
                   isScenic
-                    ? 'bg-gradient-to-t from-white/95 via-white/65 to-white/55 dark:from-[#0B0C10] dark:via-[#0B0C10]/75 dark:to-[#0B0C10]/55'
-                    : 'bg-gradient-to-t from-white/95 via-white/40 to-white/30 dark:from-[#0B0C10] dark:via-[#0B0C10]/85 dark:to-[#0B0C10]/70'
+                    ? 'bg-gradient-to-t from-white/90 via-white/28 to-white/20 dark:from-[#0B0C10] dark:via-[#0B0C10]/50 dark:to-[#0B0C10]/30'
+                    : 'bg-gradient-to-t from-white/88 via-white/16 to-white/10 dark:from-[#0B0C10] dark:via-[#0B0C10]/55 dark:to-[#0B0C10]/35'
                 }`}
               />
               <div
                 className={`absolute inset-0 ${
                   isScenic
-                    ? 'bg-gradient-to-r from-white/20 via-white/75 to-white/20 dark:from-[#0B0C10]/30 dark:via-[#0B0C10]/75 dark:to-[#0B0C10]/30'
-                    : 'bg-gradient-to-r from-white/15 via-white/50 to-white/15 dark:from-[#0B0C10]/30 dark:via-[#0B0C10]/75 dark:to-[#0B0C10]/30'
+                    ? 'bg-gradient-to-r from-transparent via-white/48 to-transparent dark:from-transparent dark:via-[#0B0C10]/52 dark:to-transparent'
+                    : 'bg-gradient-to-r from-transparent via-white/30 to-transparent dark:from-transparent dark:via-[#0B0C10]/48 dark:to-transparent'
                 }`}
               />
             </div>
@@ -348,14 +348,16 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
 
       <div className="relative max-w-5xl mx-auto space-y-6 text-center">
         {/* Hero Title & Admin Animated Ads Slot */}
-        <HeroAdBanner
-          heroAds={heroAds}
-          heroSettings={heroSettings}
-          onSelectCategory={onSelectCategory}
-          onOpenPostAd={onOpenPostAd}
-          isAdminLoggedIn={isAdminLoggedIn}
-          onAdminManage={onAdminManage}
-        />
+        <div className="drop-shadow-[0_1px_14px_rgba(255,255,255,0.92)] dark:drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)]">
+          <HeroAdBanner
+            heroAds={heroAds}
+            heroSettings={heroSettings}
+            onSelectCategory={onSelectCategory}
+            onOpenPostAd={onOpenPostAd}
+            isAdminLoggedIn={isAdminLoggedIn}
+            onAdminManage={onAdminManage}
+          />
+        </div>
 
         {/* Qatar Living Signature Tabbed Search Card */}
         <div className="max-w-4xl mx-auto">
@@ -372,10 +374,10 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                   className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-t-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
                     isActive
                       ? 'bg-white dark:bg-[#151822] text-[#FF5A36] border-t-2 border-[#FF5A36] shadow-sm'
-                      : 'bg-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100/80 dark:hover:bg-white/5'
+                      : 'bg-white/70 dark:bg-[#151822]/65 backdrop-blur-xs text-gray-700 dark:text-gray-200 hover:text-gray-950 dark:hover:text-white hover:bg-white/90 dark:hover:bg-[#151822]/85'
                   }`}
                 >
-                  <TabIcon className={`w-3.5 h-3.5 ${isActive ? 'text-[#FF5A36]' : 'text-gray-400'}`} />
+                  <TabIcon className={`w-3.5 h-3.5 ${isActive ? 'text-[#FF5A36]' : 'text-gray-500 dark:text-gray-400'}`} />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -385,7 +387,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                 type="button"
                 id="hero-looking-for-tab-btn"
                 onClick={onOpenBuyerRequests}
-                className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-t-xl text-xs sm:text-sm font-bold text-[#FF5A36] bg-orange-50/70 dark:bg-[#FF5A36]/15 hover:bg-[#FF5A36] hover:text-white transition-all cursor-pointer whitespace-nowrap"
+                className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-t-xl text-xs sm:text-sm font-bold text-[#FF5A36] bg-white/85 dark:bg-[#151822]/80 backdrop-blur-xs hover:bg-[#FF5A36] hover:text-white transition-all cursor-pointer whitespace-nowrap"
               >
                 <MessageSquarePlus className="w-3.5 h-3.5" />
                 <span>
