@@ -13,6 +13,7 @@ import {
   getDoc,
   setDoc,
   deleteDoc,
+  onSnapshot,
   setLogLevel,
 } from 'firebase/firestore';
 import firebaseConfig from './firebase-applet-config.json';
@@ -4727,6 +4728,79 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
   // Sri Lanka Donate Hub (Most Needed Hospitals & Humanitarian Aid) API
   // -------------------------------------------------------------
 
+  const donationUrgencyRank: Record<string, number> = { critical: 0, urgent: 1, ongoing: 2 };
+  const sortDonationList = (list: DonationCause[]): DonationCause[] =>
+    [...list].sort((a, b) => {
+      const uDiff = (donationUrgencyRank[a.urgency] ?? 3) - (donationUrgencyRank[b.urgency] ?? 3);
+      if (uDiff !== 0) return uDiff;
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
+
+  const donationStreamClients = new Set<express.Response>();
+
+  const broadcastDonationsUpdate = (
+    eventType: 'init' | 'upsert' | 'pledge' | 'status' | 'delete' | 'sync',
+    cause?: DonationCause,
+    deletedId?: string
+  ) => {
+    if (donationStreamClients.size === 0) return;
+    const payload = JSON.stringify({
+      type: eventType,
+      cause: cause || null,
+      deletedId: deletedId || null,
+      causes: sortDonationList(donationsCache),
+      syncedAt: new Date().toISOString(),
+    });
+    const frame = `event: donations\ndata: ${payload}\n\n`;
+    for (const clientRes of Array.from(donationStreamClients)) {
+      try {
+        clientRes.write(frame);
+      } catch {
+        donationStreamClients.delete(clientRes);
+      }
+    }
+  };
+
+  // Real-time Server-Sent Events (SSE) stream so open Donate pages update instantaneously
+  app.get('/api/donations/stream', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    if (typeof (res as any).flushHeaders === 'function') {
+      (res as any).flushHeaders();
+    }
+
+    donationStreamClients.add(res);
+    const initPayload = JSON.stringify({
+      type: 'init',
+      cause: null,
+      deletedId: null,
+      causes: sortDonationList(donationsCache),
+      syncedAt: new Date().toISOString(),
+    });
+    try {
+      res.write(`retry: 3000\nevent: donations\ndata: ${initPayload}\n\n`);
+    } catch {
+      donationStreamClients.delete(res);
+      return;
+    }
+
+    const heartbeat = setInterval(() => {
+      try {
+        res.write(`: keepalive ${Date.now()}\n\n`);
+      } catch {
+        clearInterval(heartbeat);
+        donationStreamClients.delete(res);
+      }
+    }, 25000);
+
+    req.on('close', () => {
+      clearInterval(heartbeat);
+      donationStreamClients.delete(res);
+    });
+  });
+
   app.get('/api/donations', (req, res) => {
     const { category, district, urgency, status, search } = req.query;
     let result = [...donationsCache];
@@ -4834,6 +4908,7 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
     }
     saveStoredDonations(donationsCache);
     persistDonationToFirestore(created);
+    broadcastDonationsUpdate('upsert', created);
     res.status(201).json(created);
   });
 
@@ -4860,7 +4935,7 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
       donorDistrict: data.donorDistrict ? String(data.donorDistrict).trim().slice(0, 80) : undefined,
       pledgeType,
       amountLkr,
-      itemsSummary: data.itemsSummary ? String(data.itemsSummary).trim().slice(0, 240) : undefined,
+      itemsSummary: pledgeType ? (data.itemsSummary ? String(data.itemsSummary).trim().slice(0, 240) : undefined) : undefined,
       message: data.message ? String(data.message).trim().slice(0, 500) : undefined,
       createdAt: data.createdAt || new Date().toISOString(),
     };
@@ -4879,6 +4954,7 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
     donationsCache[idx] = updated;
     saveStoredDonations(donationsCache);
     persistDonationToFirestore(updated);
+    broadcastDonationsUpdate('pledge', updated);
     res.status(201).json(updated);
   });
 
@@ -4899,6 +4975,7 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
     donationsCache[idx] = updated;
     saveStoredDonations(donationsCache);
     persistDonationToFirestore(updated);
+    broadcastDonationsUpdate('status', updated);
     res.json(updated);
   });
 
@@ -4909,6 +4986,7 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
       saveStoredDonations(donationsCache);
     }
     deleteDonationFromFirestore(req.params.id);
+    broadcastDonationsUpdate('delete', undefined, req.params.id);
     res.json({ success: true });
   });
 
@@ -5432,6 +5510,73 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
             persistDonationToFirestore(d);
           }
           console.log(`[Firestore] Seeded initial ${donationsCache.length} Sri Lanka donation causes to Firestore`);
+        }
+
+        // Keep server cache & SSE Donate stream live-synced with any external Firestore writes
+        try {
+          onSnapshot(
+            collection(firestoreDb, 'donations'),
+            (snap) => {
+              let changed = false;
+              let latestCause: DonationCause | undefined;
+              let removedId: string | undefined;
+              const cacheMap = new Map<string, DonationCause>();
+              donationsCache.forEach((d) => cacheMap.set(d.id, d));
+
+              for (const change of snap.docChanges()) {
+                const docId = change.doc.id;
+                if (change.type === 'removed') {
+                  if (cacheMap.delete(docId)) {
+                    changed = true;
+                    removedId = docId;
+                  }
+                } else {
+                  const raw = change.doc.data() as DonationCause;
+                  const pledges = Array.isArray(raw.pledges) ? raw.pledges : [];
+                  const neededItems = Array.isArray(raw.neededItems) ? raw.neededItems : [];
+                  const normalized: DonationCause = {
+                    ...raw,
+                    id: raw.id || docId,
+                    neededItems,
+                    pledges,
+                    pledgeCount: typeof raw.pledgeCount === 'number' ? raw.pledgeCount : pledges.length,
+                    totalPledgedLkr:
+                      typeof raw.totalPledgedLkr === 'number'
+                        ? raw.totalPledgedLkr
+                        : pledges.reduce((acc, p) => acc + Math.max(0, Number(p.amountLkr) || 0), 0),
+                  };
+                  const existing = cacheMap.get(normalized.id);
+                  const existingTs = existing ? new Date(existing.updatedAt || existing.createdAt || 0).getTime() : 0;
+                  const incomingTs = new Date(normalized.updatedAt || normalized.createdAt || 0).getTime();
+                  if (
+                    !existing ||
+                    incomingTs > existingTs ||
+                    existing.status !== normalized.status ||
+                    (existing.pledgeCount || 0) !== (normalized.pledgeCount || 0)
+                  ) {
+                    cacheMap.set(normalized.id, normalized);
+                    latestCause = normalized;
+                    changed = true;
+                  }
+                }
+              }
+
+              if (changed) {
+                donationsCache = Array.from(cacheMap.values());
+                saveStoredDonations(donationsCache);
+                broadcastDonationsUpdate(removedId && !latestCause ? 'delete' : 'sync', latestCause, removedId);
+              }
+            },
+            (err) => {
+              if (!isQuotaExceededError(err)) {
+                console.warn('[Firestore] Live donations listener warning:', err);
+              }
+            }
+          );
+        } catch (listenErr) {
+          if (!isQuotaExceededError(listenErr)) {
+            console.warn('[Firestore] Could not attach live donations listener:', listenErr);
+          }
         }
       } catch (e) {
         if (isQuotaExceededError(e)) return;

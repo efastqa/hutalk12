@@ -3706,8 +3706,21 @@ For quick inquiries, call or send a message via WhatsApp!`;
     }
   },
 
-  subscribeToDonationCauses(callback: (causes: DonationCause[]) => void): () => void {
+  subscribeToDonationCauses(
+    callback: (causes: DonationCause[]) => void,
+    onStatusChange?: (status: 'live' | 'reconnecting' | 'offline') => void
+  ): () => void {
     let fallbackTimer: ReturnType<typeof setInterval> | null = null;
+    let eventSource: EventSource | null = null;
+    let unsubFirestore: (() => void) | null = null;
+    let sseConnected = false;
+    let fsConnected = false;
+    let disposed = false;
+
+    const sseMap = new Map<string, DonationCause>();
+    const fsMap = new Map<string, DonationCause>();
+    const deletedIds = new Set<string>();
+
     const urgencyRank: Record<string, number> = { critical: 0, urgent: 1, ongoing: 2 };
     const sortCauses = (list: DonationCause[]) =>
       [...list].sort((a, b) => {
@@ -3716,12 +3729,72 @@ For quick inquiries, call or send a message via WhatsApp!`;
         return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
       });
 
+    const normalizeCause = (raw: DonationCause, fallbackId?: string): DonationCause => {
+      const pledges = Array.isArray(raw.pledges) ? raw.pledges : [];
+      const neededItems = Array.isArray(raw.neededItems) ? raw.neededItems : [];
+      return {
+        ...raw,
+        id: raw.id || fallbackId || '',
+        neededItems,
+        pledges,
+        pledgeCount: typeof raw.pledgeCount === 'number' ? raw.pledgeCount : pledges.length,
+        totalPledgedLkr:
+          typeof raw.totalPledgedLkr === 'number'
+            ? raw.totalPledgedLkr
+            : pledges.reduce((acc, p) => acc + Math.max(0, Number(p.amountLkr) || 0), 0),
+      };
+    };
+
+    const updateStatus = () => {
+      if (disposed || !onStatusChange) return;
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        onStatusChange('offline');
+        return;
+      }
+      onStatusChange(sseConnected || fsConnected ? 'live' : 'reconnecting');
+    };
+
+    const emitMerged = () => {
+      if (disposed) return;
+      const merged = new Map<string, DonationCause>();
+
+      for (const [id, item] of sseMap.entries()) {
+        if (!deletedIds.has(id)) {
+          merged.set(id, item);
+        }
+      }
+
+      for (const [id, fsItem] of fsMap.entries()) {
+        if (deletedIds.has(id)) continue;
+        const sseItem = merged.get(id);
+        if (!sseItem) {
+          merged.set(id, fsItem);
+          continue;
+        }
+        const fsUpdated = new Date(fsItem.updatedAt || fsItem.createdAt || 0).getTime();
+        const sseUpdated = new Date(sseItem.updatedAt || sseItem.createdAt || 0).getTime();
+        if (fsUpdated > sseUpdated || (fsUpdated === sseUpdated && (fsItem.pledgeCount || 0) > (sseItem.pledgeCount || 0))) {
+          merged.set(id, fsItem);
+        }
+      }
+
+      callback(sortCauses(Array.from(merged.values())));
+    };
+
     const fetchRest = async (): Promise<DonationCause[]> => {
       try {
-        const res = await fetch(`${API_BASE}/donations`);
+        const res = await fetch(`${API_BASE}/donations`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data)) {
+            sseMap.clear();
+            for (const item of data) {
+              if (item && item.id) {
+                deletedIds.delete(item.id);
+                sseMap.set(item.id, normalizeCause(item));
+              }
+            }
+            emitMerged();
             return sortCauses(data);
           }
         }
@@ -3732,72 +3805,188 @@ For quick inquiries, call or send a message via WhatsApp!`;
     };
 
     const startRestFallback = () => {
-      if (fallbackTimer) return;
-      fetchRest().then((items) => {
-        if (items.length > 0) callback(items);
-      }).catch(() => {});
+      if (fallbackTimer || disposed) return;
+      fetchRest().catch(() => {});
       fallbackTimer = setInterval(() => {
-        fetchRest().then(callback).catch(() => {});
-      }, 30000);
+        if (!sseConnected && !fsConnected) {
+          fetchRest().catch(() => {});
+        }
+      }, 15000);
     };
 
-    if (isFirestoreQuotaActive()) {
+    updateStatus();
+
+    // 1. Primary Real-Time Server-Sent Events (SSE) stream (instant <100ms updates across sessions)
+    if (typeof window !== 'undefined' && typeof EventSource !== 'undefined') {
+      try {
+        eventSource = new EventSource(`${API_BASE}/donations/stream`);
+
+        const handleSsePayload = (rawData: string) => {
+          if (disposed) return;
+          try {
+            const payload = JSON.parse(rawData) as {
+              type?: string;
+              cause?: DonationCause | null;
+              deletedId?: string | null;
+              causes?: DonationCause[];
+            };
+
+            if (payload.deletedId) {
+              deletedIds.add(payload.deletedId);
+              sseMap.delete(payload.deletedId);
+              fsMap.delete(payload.deletedId);
+            }
+
+            if (Array.isArray(payload.causes)) {
+              const incomingIds = new Set<string>();
+              sseMap.clear();
+              for (const rawItem of payload.causes) {
+                if (rawItem && rawItem.id) {
+                  incomingIds.add(rawItem.id);
+                  deletedIds.delete(rawItem.id);
+                  sseMap.set(rawItem.id, normalizeCause(rawItem));
+                }
+              }
+              // Clear stale items on full authoritative init/delete from server
+              if (payload.type === 'init' || payload.type === 'delete') {
+                for (const existingFsId of Array.from(fsMap.keys())) {
+                  if (!incomingIds.has(existingFsId) && payload.deletedId === existingFsId) {
+                    fsMap.delete(existingFsId);
+                  }
+                }
+              }
+            } else if (payload.cause && payload.cause.id) {
+              deletedIds.delete(payload.cause.id);
+              sseMap.set(payload.cause.id, normalizeCause(payload.cause));
+            }
+
+            sseConnected = true;
+            updateStatus();
+            emitMerged();
+          } catch {
+            // ignore malformed event frame
+          }
+        };
+
+        eventSource.addEventListener('donations', (ev) => {
+          handleSsePayload((ev as MessageEvent).data);
+        });
+        eventSource.onmessage = (ev) => {
+          handleSsePayload(ev.data);
+        };
+        eventSource.onopen = () => {
+          sseConnected = true;
+          updateStatus();
+        };
+        eventSource.onerror = () => {
+          sseConnected = false;
+          updateStatus();
+        };
+      } catch {
+        startRestFallback();
+      }
+    } else {
       startRestFallback();
-      return () => {
-        if (fallbackTimer) clearInterval(fallbackTimer);
-      };
     }
 
-    try {
-      const colRef = collection(db, 'donations');
-      const unsub = onSnapshot(
-        colRef,
-        (snapshot) => {
-          const fsItems: DonationCause[] = [];
-          snapshot.forEach((docSnap) => {
-            const raw = docSnap.data() as DonationCause;
-            const pledges = Array.isArray(raw.pledges) ? raw.pledges : [];
-            const neededItems = Array.isArray(raw.neededItems) ? raw.neededItems : [];
-            fsItems.push({
-              ...raw,
-              id: raw.id || docSnap.id,
-              neededItems,
-              pledges,
-              pledgeCount: typeof raw.pledgeCount === 'number' ? raw.pledgeCount : pledges.length,
-              totalPledgedLkr:
-                typeof raw.totalPledgedLkr === 'number'
-                  ? raw.totalPledgedLkr
-                  : pledges.reduce((acc, p) => acc + Math.max(0, Number(p.amountLkr) || 0), 0),
+    // 2. Real-Time Cloud Firestore listener (mirrors across deployments & offline cache)
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const colRef = collection(db, 'donations');
+        unsubFirestore = onSnapshot(
+          colRef,
+          (snapshot) => {
+            if (disposed) return;
+            for (const change of snapshot.docChanges()) {
+              if (change.type === 'removed') {
+                const removedId = change.doc.id;
+                deletedIds.add(removedId);
+                fsMap.delete(removedId);
+                sseMap.delete(removedId);
+              }
+            }
+
+            fsMap.clear();
+            snapshot.forEach((docSnap) => {
+              const normalized = normalizeCause(docSnap.data() as DonationCause, docSnap.id);
+              if (normalized.id) {
+                deletedIds.delete(normalized.id);
+                fsMap.set(normalized.id, normalized);
+              }
             });
-          });
-          if (fsItems.length === 0) {
-            fetchRest().then(callback).catch(() => callback([]));
-          } else {
-            callback(sortCauses(fsItems));
+
+            fsConnected = true;
+            updateStatus();
+            if (fsMap.size > 0 || sseMap.size > 0) {
+              emitMerged();
+            } else {
+              fetchRest().catch(() => {});
+            }
+          },
+          (err) => {
+            handleFirestoreError(err, OperationType.LIST, 'donations');
+            recordFirestoreError(err);
+            fsConnected = false;
+            updateStatus();
+            if (!sseConnected) startRestFallback();
           }
-        },
-        (err) => {
-          handleFirestoreError(err, OperationType.LIST, 'donations');
-          recordFirestoreError(err);
-          startRestFallback();
-        }
-      );
-      return () => {
+        );
+      } catch (err) {
+        handleFirestoreError(err, OperationType.LIST, 'donations');
+        recordFirestoreError(err);
+        fsConnected = false;
+        updateStatus();
+        if (!sseConnected) startRestFallback();
+      }
+    }
+
+    // 3. Re-sync immediately when device wakes up, returns to tab, or regains internet
+    const handleOnline = () => {
+      updateStatus();
+      fetchRest().catch(() => {});
+    };
+    const handleOffline = () => {
+      updateStatus();
+    };
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetchRest().catch(() => {});
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+    }
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibility);
+    }
+
+    return () => {
+      disposed = true;
+      if (fallbackTimer) clearInterval(fallbackTimer);
+      if (eventSource) {
         try {
-          unsub();
+          eventSource.close();
         } catch {
           // ignore
         }
-        if (fallbackTimer) clearInterval(fallbackTimer);
-      };
-    } catch (err) {
-      handleFirestoreError(err, OperationType.LIST, 'donations');
-      recordFirestoreError(err);
-      startRestFallback();
-      return () => {
-        if (fallbackTimer) clearInterval(fallbackTimer);
-      };
-    }
+      }
+      if (unsubFirestore) {
+        try {
+          unsubFirestore();
+        } catch {
+          // ignore
+        }
+      }
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      }
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibility);
+      }
+    };
   },
 
   async getDonationCauses(): Promise<DonationCause[]> {

@@ -110,6 +110,7 @@ export default function App() {
   const [eStores, setEStores] = useState<EStore[]>([]);
   const [buyerRequests, setBuyerRequests] = useState<BuyerRequest[]>([]);
   const [donationCauses, setDonationCauses] = useState<DonationCause[]>([]);
+  const [donationLiveStatus, setDonationLiveStatus] = useState<'live' | 'reconnecting' | 'offline'>('reconnecting');
   const [openBuyerRequestPostModal, setOpenBuyerRequestPostModal] = useState<boolean>(false);
   const [targetEStoreForView, setTargetEStoreForView] = useState<EStore | null>(null);
   const [promoSlides, setPromoSlides] = useState<PromoSlide[]>(() => {
@@ -397,9 +398,14 @@ export default function App() {
     const unsubBuyerRequests = api.subscribeToBuyerRequests((reqs) => {
       setBuyerRequests(reqs);
     });
-    const unsubDonations = api.subscribeToDonationCauses((causes) => {
-      setDonationCauses(causes);
-    });
+    const unsubDonations = api.subscribeToDonationCauses(
+      (causes) => {
+        setDonationCauses(causes);
+      },
+      (status) => {
+        setDonationLiveStatus(status);
+      }
+    );
 
     // 4. Test Firebase Firestore connection
     testConnection();
@@ -1608,10 +1614,12 @@ export default function App() {
         {currentTab === 'donate' && (
           <DonateSriLankaPage
             causes={donationCauses}
+            liveStatus={donationLiveStatus}
             currentUser={currentUser}
             isAdminLoggedIn={isAdminLoggedIn}
             selectedDistrict={selectedLocation}
             onCausesChange={setDonationCauses}
+            onRefreshCauses={fetchDonationCauses}
             onBackToHome={() => setCurrentTab('marketplace')}
             onToast={showToast}
           />

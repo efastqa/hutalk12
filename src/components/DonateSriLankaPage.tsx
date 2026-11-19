@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import {
   ArrowLeft,
@@ -23,6 +23,7 @@ import {
   HandHeart,
   ChevronLeft,
   ChevronRight,
+  RefreshCw,
 } from 'lucide-react';
 import {
   DonationCause,
@@ -39,10 +40,12 @@ import donateHeroCommunityImg from '../assets/images/donate_hero_community_brigh
 
 interface DonateSriLankaPageProps {
   causes: DonationCause[];
+  liveStatus?: 'live' | 'reconnecting' | 'offline';
   currentUser: User | null;
   isAdminLoggedIn: boolean;
   selectedDistrict?: string;
   onCausesChange: React.Dispatch<React.SetStateAction<DonationCause[]>>;
+  onRefreshCauses?: () => Promise<void> | void;
   onBackToHome: () => void;
   onToast: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
@@ -201,16 +204,36 @@ function getUrgencyLabel(urgency: DonationUrgency): {
   };
 }
 
+const URGENCY_RANK: Record<DonationUrgency, number> = {
+  critical: 0,
+  urgent: 1,
+  ongoing: 2,
+};
+
+function sortDonationCauses(list: DonationCause[]): DonationCause[] {
+  return [...list].sort((a, b) => {
+    const uDiff = (URGENCY_RANK[a.urgency] ?? 3) - (URGENCY_RANK[b.urgency] ?? 3);
+    if (uDiff !== 0) return uDiff;
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+  });
+}
+
+function upsertAndSortCause(list: DonationCause[], nextCause: DonationCause): DonationCause[] {
+  return sortDonationCauses([nextCause, ...list.filter((c) => c.id !== nextCause.id)]);
+}
+
 function formatLkr(amount: number): string {
   return `LKR ${Math.round(amount).toLocaleString('en-LK')}`;
 }
 
 export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
   causes,
+  liveStatus = 'live',
   currentUser,
   isAdminLoggedIn,
   selectedDistrict = 'All Sri Lanka',
   onCausesChange,
+  onRefreshCauses,
   onBackToHome,
   onToast,
 }) => {
@@ -218,6 +241,9 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
   const [districtFilter, setDistrictFilter] = useState<string>(selectedDistrict || 'All Sri Lanka');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'active' | 'all'>('active');
+  const [urgencyFilter, setUrgencyFilter] = useState<'all' | 'urgent_only'>('all');
+  const [isManualSyncing, setIsManualSyncing] = useState<boolean>(false);
+  const [liveUrgentAlert, setLiveUrgentAlert] = useState<DonationCause | null>(null);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
 
   // Selected cause detail & pledge modal
@@ -273,6 +299,52 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
     return () => window.clearInterval(timer);
   }, [isHeroPaused, prefersReducedMotion]);
 
+  const knownIdsRef = useRef<Set<string>>(new Set());
+  const hasSeededKnownIdsRef = useRef<boolean>(false);
+  const suppressNextLocalAlertRef = useRef<boolean>(false);
+
+  // Detect brand-new incoming critical/urgent causes arriving live from other sessions
+  useEffect(() => {
+    if (!hasSeededKnownIdsRef.current) {
+      if (causes.length > 0) {
+        causes.forEach((c) => knownIdsRef.current.add(c.id));
+        hasSeededKnownIdsRef.current = true;
+      }
+      return;
+    }
+
+    const newlyArrivedUrgent = causes.find(
+      (c) =>
+        !knownIdsRef.current.has(c.id) &&
+        c.status === 'active' &&
+        (c.urgency === 'critical' || c.urgency === 'urgent')
+    );
+
+    causes.forEach((c) => knownIdsRef.current.add(c.id));
+
+    if (newlyArrivedUrgent) {
+      if (suppressNextLocalAlertRef.current) {
+        suppressNextLocalAlertRef.current = false;
+      } else {
+        setLiveUrgentAlert(newlyArrivedUrgent);
+      }
+    }
+  }, [causes]);
+
+  const handleManualSync = useCallback(async () => {
+    setIsManualSyncing(true);
+    try {
+      if (onRefreshCauses) {
+        await onRefreshCauses();
+      } else {
+        const fresh = await api.getDonationCauses();
+        onCausesChange(fresh);
+      }
+    } finally {
+      setIsManualSyncing(false);
+    }
+  }, [onRefreshCauses, onCausesChange]);
+
   const guestIds = useMemo(() => api.getGuestDonationCauseIds(), [causes]);
 
   const selectedCause = useMemo(
@@ -281,8 +353,11 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
   );
 
   const filteredCauses = useMemo(() => {
-    return causes.filter((cause) => {
+    const filtered = causes.filter((cause) => {
       if (statusFilter === 'active' && cause.status !== 'active') return false;
+      if (urgencyFilter === 'urgent_only' && cause.urgency !== 'critical' && cause.urgency !== 'urgent') {
+        return false;
+      }
       if (activeCategory !== 'All' && cause.category !== activeCategory) return false;
       if (districtFilter && districtFilter !== 'All Sri Lanka') {
         const dLow = districtFilter.toLowerCase();
@@ -304,7 +379,8 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
       }
       return true;
     });
-  }, [causes, statusFilter, activeCategory, districtFilter, searchQuery]);
+    return sortDonationCauses(filtered);
+  }, [causes, statusFilter, urgencyFilter, activeCategory, districtFilter, searchQuery]);
 
   const totals = useMemo(() => {
     const activeCount = causes.filter((c) => c.status === 'active').length;
@@ -395,6 +471,7 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
       .slice(0, 25);
 
     setIsCreatingCause(true);
+    suppressNextLocalAlertRef.current = true;
     try {
       const created = await api.createDonationCause({
         organizationName: orgName.trim(),
@@ -414,7 +491,9 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
         userId: currentUser?.id || 'guest',
       });
 
-      onCausesChange((prev) => [created, ...prev]);
+      knownIdsRef.current.add(created.id);
+      hasSeededKnownIdsRef.current = true;
+      onCausesChange((prev) => upsertAndSortCause(prev, created));
       setIsSubmitModalOpen(false);
       setOrgName('');
       setCauseTitle('');
@@ -425,8 +504,9 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
       setCauseNeededItemsText('');
       setCauseBankNote('');
       setCauseDescription('');
-      onToast('Sri Lanka hospital / relief need published successfully.', 'success');
+      onToast('Sri Lanka hospital / relief need published live across all users.', 'success');
     } catch {
+      suppressNextLocalAlertRef.current = false;
       onToast('Could not publish the donation request. Please try again.', 'error');
     } finally {
       setIsCreatingCause(false);
@@ -596,7 +676,36 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
                   <span className="uppercase tracking-wider text-teal-700 dark:text-teal-400 font-black">
                     Island Aid Pulse
                   </span>
-                  <span>Verified Directory</span>
+                  <div className="inline-flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-200 font-semibold">
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          liveStatus === 'live'
+                            ? 'bg-emerald-500'
+                            : liveStatus === 'reconnecting'
+                              ? 'bg-amber-500'
+                              : 'bg-slate-400'
+                        }`}
+                      />
+                      <span>
+                        {liveStatus === 'live'
+                          ? 'Live Sync'
+                          : liveStatus === 'reconnecting'
+                            ? 'Connecting'
+                            : 'Offline'}
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleManualSync}
+                      disabled={isManualSyncing}
+                      title="Sync urgent needs now"
+                      aria-label="Sync urgent needs now"
+                      className="p-1 rounded-lg hover:bg-slate-200/70 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isManualSyncing ? 'animate-spin' : ''}`} />
+                    </button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2.5 text-left">
                   <div className="p-2.5 rounded-xl bg-slate-50/90 dark:bg-white/5 border border-slate-200/70 dark:border-white/10">
@@ -810,6 +919,31 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
               <div className="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-[#1C202E] border border-gray-200/80 dark:border-white/10">
                 <button
                   type="button"
+                  onClick={() => setUrgencyFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
+                    urgencyFilter === 'all'
+                      ? 'bg-white dark:bg-[#151822] text-gray-900 dark:text-white shadow-2xs'
+                      : 'text-gray-600 dark:text-gray-400'
+                  }`}
+                >
+                  All Priority
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUrgencyFilter('urgent_only')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
+                    urgencyFilter === 'urgent_only'
+                      ? 'bg-white dark:bg-[#151822] text-rose-700 dark:text-rose-400 shadow-2xs'
+                      : 'text-gray-600 dark:text-gray-400'
+                  }`}
+                >
+                  Critical &amp; Urgent
+                </button>
+              </div>
+
+              <div className="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-[#1C202E] border border-gray-200/80 dark:border-white/10">
+                <button
+                  type="button"
                   onClick={() => setStatusFilter('active')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
                     statusFilter === 'active'
@@ -852,6 +986,60 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
           </div>
         </section>
 
+        {/* Instant Live Urgent Need Alert Banner when an external emergency is published while page is open */}
+        <AnimatePresence>
+          {liveUrgentAlert && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="bg-white dark:bg-[#151822] border border-rose-300/90 dark:border-rose-500/40 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm"
+            >
+              <div className="flex items-start sm:items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-black uppercase tracking-wider text-rose-700 dark:text-rose-400">
+                    New {liveUrgentAlert.urgency === 'critical' ? 'Critical' : 'Urgent'} Need Live
+                    <span className="text-gray-400 dark:text-gray-500 font-semibold ml-2">
+                      · {liveUrgentAlert.district}
+                    </span>
+                  </div>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                    {liveUrgentAlert.organizationName} — {liveUrgentAlert.title}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveCategory('All');
+                    setDistrictFilter('All Sri Lanka');
+                    setSearchQuery('');
+                    setStatusFilter('active');
+                    setUrgencyFilter('all');
+                    setSelectedCauseId(liveUrgentAlert.id);
+                    setLiveUrgentAlert(null);
+                  }}
+                  className="px-3.5 py-2 min-h-[38px] rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  View Urgent Need
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLiveUrgentAlert(null)}
+                  aria-label="Dismiss alert"
+                  className="p-2 rounded-xl border border-gray-200 dark:border-white/10 text-gray-500 hover:text-gray-800 dark:hover:text-white cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Causes Directory Grid */}
         {filteredCauses.length === 0 ? (
           <div className="bg-white dark:bg-[#151822] border border-gray-200 dark:border-white/10 rounded-2xl p-10 text-center space-y-3">
@@ -870,6 +1058,7 @@ export const DonateSriLankaPage: React.FC<DonateSriLankaPageProps> = ({
                   setDistrictFilter('All Sri Lanka');
                   setSearchQuery('');
                   setStatusFilter('active');
+                  setUrgencyFilter('all');
                 }}
                 className="px-4 py-2 rounded-xl border border-gray-300 dark:border-white/15 text-xs font-bold text-gray-700 dark:text-gray-200 cursor-pointer"
               >
