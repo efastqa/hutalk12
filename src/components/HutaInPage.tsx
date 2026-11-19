@@ -6,7 +6,8 @@ import { VisitSriLankaSection } from './VisitSriLankaSection';
 import { SriLankaPrayerTimesWidget } from './SriLankaPrayerTimesWidget';
 import { SriLankaTravelBookingSection } from './SriLankaTravelBookingSection';
 import visitSriLankaIcon from '../assets/images/visit_srilanka_icon_3d_1794991123817.jpg';
-import hutaInHeroBg from '../assets/images/huta_in_hero_bg_1794993555484.jpg';
+import hutaInColomboDaylightBg from '../assets/images/hot_news_colombo_daylight_1795079034857.jpg';
+import hutaInPortEconomyDaylightBg from '../assets/images/hot_news_economy_daylight_1795079033833.jpg';
 import sigiriyaHeroBg from '../assets/images/srilanka_heritage_sigiriya_1794991126174.jpg';
 import highlandsHeroBg from '../assets/images/srilanka_nature_highlands_1794991124649.jpg';
 import mirissaCoastHeroBg from '../assets/images/srilanka_beaches_coast_1794991125473.jpg';
@@ -323,16 +324,28 @@ interface SriLankaHeroSlide {
 
 const SRI_LANKA_HERO_SLIDES: SriLankaHeroSlide[] = [
   {
-    id: 'sl-colombo-dusk',
-    image: hutaInHeroBg,
+    id: 'sl-colombo-daylight',
+    image: hutaInColomboDaylightBg,
     region: 'Colombo · Western Coast',
-    title: 'Colombo Skyline & Indian Ocean Dusk',
-    tagline: 'Lotus Tower, Galle Face promenade & city nightlife',
-    objectPosition: 'center 45%',
-    scaleFrom: 1.03,
-    scaleTo: 1.1,
+    title: 'Colombo Skyline & Beira Lake',
+    tagline: 'Sunlit Lotus Tower, lakeside boulevards & modern city life',
+    objectPosition: 'center 42%',
+    scaleFrom: 1.02,
+    scaleTo: 1.09,
     xFrom: '0%',
     xTo: '-1.5%',
+  },
+  {
+    id: 'sl-port-city-coast',
+    image: hutaInPortEconomyDaylightBg,
+    region: 'Port City · Indian Ocean',
+    title: 'Colombo Marina & Coastal Drive',
+    tagline: 'Turquoise bay horizons, oceanfront promenade & harbor views',
+    objectPosition: 'center 48%',
+    scaleFrom: 1.07,
+    scaleTo: 1.01,
+    xFrom: '1%',
+    xTo: '-1%',
   },
   {
     id: 'sl-sigiriya-heritage',
@@ -521,13 +534,13 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
 
   return (
     <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0B0C10] text-[#181920] dark:text-[#F8FAFC] pb-32 overflow-x-hidden transition-colors">
-      {/* 1. Multi-Changing Animated Sri Lanka Hero Banner */}
+      {/* 1. Bright Sunlit Multi-Changing Animated Sri Lanka Hero Banner */}
       <div
-        className="bg-[#0B0F19] text-white min-h-[185px] sm:min-h-[225px] md:min-h-[255px] flex flex-col justify-between py-4 sm:py-6 px-3 sm:px-6 lg:px-8 border-b border-slate-800 relative overflow-hidden transition-colors"
+        className="bg-[#EAF2FA] dark:bg-[#0B0F19] text-slate-900 dark:text-white min-h-[215px] sm:min-h-[245px] md:min-h-[270px] lg:min-h-[300px] flex flex-col justify-between py-4 sm:py-6 lg:py-7 px-4 sm:px-6 lg:px-8 border-b border-slate-200 dark:border-slate-800 relative overflow-hidden transition-colors"
         onMouseEnter={() => setIsHeroPaused(true)}
         onMouseLeave={() => setIsHeroPaused(false)}
       >
-        {/* Animated Cross-Fading Sri Lanka Photography + Ken Burns Motion */}
+        {/* Animated Cross-Fading Bright Sri Lanka Photography + Ken Burns Motion */}
         <AnimatePresence initial={false}>
           <motion.img
             key={activeHeroSlide.id}
@@ -551,13 +564,13 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
               x: { duration: HERO_SLIDE_DURATION_MS / 1000 + 0.6, ease: 'linear' },
             }}
             style={{ objectPosition: activeHeroSlide.objectPosition }}
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+            className="absolute inset-0 w-full h-full object-cover brightness-[1.04] saturate-[1.05] pointer-events-none select-none"
           />
         </AnimatePresence>
 
-        {/* Measured top & bottom gradient scrims for crisp readability without dimming island photography */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/15 to-black/75 pointer-events-none z-[1]" />
-        <div className="hidden sm:block absolute inset-y-0 left-0 w-2/3 bg-gradient-to-r from-black/45 via-black/15 to-transparent pointer-events-none z-[1]" />
+        {/* Airy luminous scrim preserving bright daylight photography on mobile, tablet & desktop */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/10 to-white/50 dark:from-black/40 dark:via-transparent dark:to-black/60 pointer-events-none z-[1]" />
+        <div className="absolute inset-y-0 left-0 w-full sm:w-3/4 lg:w-2/3 bg-gradient-to-r from-white/85 via-white/45 to-transparent dark:from-black/60 dark:via-black/25 dark:to-transparent pointer-events-none z-[1]" />
 
         <div className="max-w-6xl w-full mx-auto relative z-10 flex-1 flex flex-col justify-between gap-4 sm:gap-5">
           {/* Top Navigation Bar Row */}
@@ -565,15 +578,15 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
             initial={prefersReducedMotion ? false : { opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="flex items-center justify-between gap-2 sm:gap-3"
+            className="flex flex-wrap items-center justify-between gap-2 sm:gap-3"
           >
             <button
               type="button"
               id="huta-in-back-btn"
               onClick={onBackToHome}
-              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-black/45 hover:bg-black/65 backdrop-blur-md border border-white/25 text-xs sm:text-sm font-semibold text-white shadow-md transition-all cursor-pointer whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-2 min-h-[40px] rounded-xl bg-white/90 hover:bg-white dark:bg-black/45 dark:hover:bg-black/65 backdrop-blur-md border border-white/85 dark:border-white/25 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white shadow-sm transition-all cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A36]"
             >
-              <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
               <span className="hidden sm:inline">Back to Marketplace</span>
               <span className="sm:hidden">Back</span>
             </button>
@@ -588,10 +601,10 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                   const el = document.getElementById('travel-booking-system-section');
                   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
-                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#FF5A36]/90 hover:bg-[#FF5A36] backdrop-blur-md border border-white/25 text-white text-[11px] sm:text-xs font-extrabold shadow-md transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 min-h-[40px] rounded-full bg-[#FF5A36] hover:bg-[#E04826] border border-white/40 text-white text-[11px] sm:text-xs font-extrabold shadow-md transition-colors cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 title="Jump to Sri Lanka Travel & Tourism Booking System"
               >
-                <Plane className="w-3.5 h-3.5" />
+                <Plane className="w-3.5 h-3.5 shrink-0" />
                 <span>Book Tours</span>
               </motion.button>
 
@@ -604,14 +617,14 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                   const el = document.getElementById('visit-sri-lanka-section');
                   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
-                className="inline-flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full bg-black/55 hover:bg-black/75 backdrop-blur-md border border-cyan-400/60 text-white text-xs font-bold shadow-md transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 sm:gap-2 pl-1.5 pr-2.5 sm:pr-3 py-1.5 min-h-[40px] rounded-full bg-white/90 hover:bg-white dark:bg-black/55 dark:hover:bg-black/75 backdrop-blur-md border border-cyan-500/40 text-slate-900 dark:text-white text-[11px] sm:text-xs font-bold shadow-sm transition-colors cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                 title="Explore Visit Sri Lanka — Colombo City, Nature, Beaches & Heritage"
               >
                 <img
                   src={visitSriLankaIcon}
                   alt="Visit Sri Lanka Icon"
                   referrerPolicy="no-referrer"
-                  className="w-5 h-5 rounded-full object-cover border border-cyan-400/60"
+                  className="w-5 h-5 rounded-full object-cover border border-cyan-500/50 shrink-0"
                 />
                 <span>Visit Sri Lanka</span>
               </motion.button>
@@ -624,18 +637,18 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
               initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col gap-1.5"
+              className="flex flex-col gap-2 min-w-0 max-w-full sm:max-w-lg lg:max-w-xl"
             >
-              <div className="inline-flex items-center gap-2 sm:gap-2.5 drop-shadow-[0_6px_18px_rgba(0,0,0,0.75)]">
-                <span className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
+              <div className="inline-flex items-center gap-2 sm:gap-2.5">
+                <span className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0A2540] dark:text-white tracking-tight drop-shadow-[0_2px_10px_rgba(255,255,255,0.65)] dark:drop-shadow-[0_6px_18px_rgba(0,0,0,0.75)]">
                   HUTA
                 </span>
-                <span className="text-3xl sm:text-4xl md:text-5xl font-black text-white bg-[#FF5A36] px-2.5 sm:px-3 py-0.5 rounded-xl sm:rounded-2xl tracking-tight leading-none shadow-xl shadow-[#FF5A36]/40">
+                <span className="text-3xl sm:text-4xl lg:text-5xl font-black text-white bg-[#FF5A36] px-2.5 sm:px-3 py-0.5 rounded-xl sm:rounded-2xl tracking-tight leading-none shadow-lg shadow-[#FF5A36]/35">
                   IN
                 </span>
               </div>
 
-              <div className="min-h-[34px] sm:min-h-[38px] flex items-center">
+              <div className="min-h-[42px] sm:min-h-[44px] flex items-center min-w-0">
                 <AnimatePresence mode="wait">
                   <motion.button
                     key={activeHeroSlide.id}
@@ -648,18 +661,18 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                     animate={{ opacity: 1, y: 0 }}
                     exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
                     transition={{ duration: 0.32, ease: 'easeOut' }}
-                    className="text-left group cursor-pointer focus:outline-none"
+                    className="w-full sm:w-auto text-left group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5A36] bg-white/82 dark:bg-black/45 backdrop-blur-md px-3 py-2 rounded-xl border border-white/80 dark:border-white/15 shadow-xs min-w-0"
                     title="Jump to Visit Sri Lanka Guide"
                   >
-                    <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-extrabold text-cyan-300 tracking-wide">
+                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] sm:text-xs font-extrabold text-[#0A2540] dark:text-cyan-300 tracking-wide">
                       <MapPin className="w-3 h-3 text-[#FF5A36] shrink-0" />
                       <span>{activeHeroSlide.region}</span>
-                      <span aria-hidden="true" className="text-white/40">·</span>
-                      <span className="text-white group-hover:text-[#FF7A59] transition-colors">
+                      <span aria-hidden="true" className="text-slate-400 dark:text-white/40">·</span>
+                      <span className="text-slate-900 dark:text-white group-hover:text-[#FF5A36] dark:group-hover:text-[#FF7A59] transition-colors">
                         {activeHeroSlide.title}
                       </span>
                     </div>
-                    <p className="text-[11px] sm:text-xs text-slate-200/90 line-clamp-1 mt-0.5">
+                    <p className="text-[11px] sm:text-xs text-slate-700 dark:text-slate-200/90 line-clamp-1 mt-0.5 font-medium">
                       {activeHeroSlide.tagline}
                     </p>
                   </motion.button>
@@ -668,9 +681,9 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
             </motion.div>
 
             {/* Right: Sri Lanka Multi-Banner Stepper & Animated Progress Bars */}
-            <div className="flex items-center justify-between sm:justify-end gap-2.5 self-stretch sm:self-auto">
+            <div className="flex items-center justify-between sm:justify-end gap-2.5 self-stretch sm:self-auto shrink-0">
               <div
-                className="flex items-center gap-1.5 bg-black/45 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-white/15"
+                className="flex items-center gap-1.5 bg-white/85 dark:bg-black/45 backdrop-blur-md px-2.5 py-2 sm:py-1.5 rounded-full border border-white/80 dark:border-white/15 shadow-sm"
                 role="tablist"
                 aria-label="Sri Lanka hero banner scenes"
               >
@@ -685,7 +698,9 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                       aria-label={`Show ${slide.title}`}
                       onClick={() => setHeroSlideIndex(idx)}
                       className={`relative h-1.5 rounded-full overflow-hidden transition-all duration-300 cursor-pointer ${
-                        isActive ? 'w-7 sm:w-9 bg-white/30' : 'w-2 bg-white/40 hover:bg-white/70'
+                        isActive
+                          ? 'w-7 sm:w-9 bg-slate-900/20 dark:bg-white/30'
+                          : 'w-2 bg-slate-900/35 hover:bg-slate-900/65 dark:bg-white/40 dark:hover:bg-white/70'
                       }`}
                     >
                       {isActive && (
@@ -706,12 +721,12 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                 })}
               </div>
 
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   type="button"
                   onClick={() => handleCycleHero(-1)}
                   aria-label="Previous Sri Lanka banner"
-                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/50 hover:bg-black/75 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all cursor-pointer active:scale-95"
+                  className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-white/90 hover:bg-white dark:bg-black/50 dark:hover:bg-black/75 backdrop-blur-md border border-white/80 dark:border-white/20 text-slate-900 dark:text-white flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-sm"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -719,7 +734,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                   type="button"
                   onClick={() => handleCycleHero(1)}
                   aria-label="Next Sri Lanka banner"
-                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/50 hover:bg-black/75 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all cursor-pointer active:scale-95"
+                  className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-white/90 hover:bg-white dark:bg-black/50 dark:hover:bg-black/75 backdrop-blur-md border border-white/80 dark:border-white/20 text-slate-900 dark:text-white flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-sm"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
