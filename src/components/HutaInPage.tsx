@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { EventItem } from '../types';
+import { EventItem, User } from '../types';
 export type { EventItem };
 import { VisitSriLankaSection } from './VisitSriLankaSection';
 import { SriLankaPrayerTimesWidget } from './SriLankaPrayerTimesWidget';
+import { SriLankaTravelBookingSection } from './SriLankaTravelBookingSection';
 import visitSriLankaIcon from '../assets/images/visit_srilanka_icon_3d_1794991123817.jpg';
 import hutaInHeroBg from '../assets/images/huta_in_hero_bg_1794993555484.jpg';
 import sigiriyaHeroBg from '../assets/images/srilanka_heritage_sigiriya_1794991126174.jpg';
@@ -405,6 +406,8 @@ interface HutaInPageProps {
   events?: EventItem[];
   isAdminLoggedIn?: boolean;
   onNavigateToAdminEvents?: () => void;
+  onOpenAdminTravelControl?: () => void;
+  currentUser?: User | null;
 }
 
 export const HutaInPage: React.FC<HutaInPageProps> = ({
@@ -415,6 +418,8 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
   events = [],
   isAdminLoggedIn = false,
   onNavigateToAdminEvents,
+  onOpenAdminTravelControl,
+  currentUser,
 }) => {
   const allEvents = events;
   const displaySpotlight = allEvents.filter((e) => e.isSpotlight);
@@ -573,26 +578,44 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
               <span className="sm:hidden">Back</span>
             </button>
 
-            <motion.button
-              type="button"
-              id="huta-in-visit-sl-jump"
-              whileHover={prefersReducedMotion ? undefined : { scale: 1.03, y: -1 }}
-              whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
-              onClick={() => {
-                const el = document.getElementById('visit-sri-lanka-section');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }}
-              className="inline-flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full bg-black/55 hover:bg-black/75 backdrop-blur-md border border-cyan-400/60 text-white text-xs font-bold shadow-md transition-colors cursor-pointer whitespace-nowrap shrink-0"
-              title="Explore Visit Sri Lanka — Colombo City, Nature, Beaches & Heritage"
-            >
-              <img
-                src={visitSriLankaIcon}
-                alt="Visit Sri Lanka Icon"
-                referrerPolicy="no-referrer"
-                className="w-5 h-5 rounded-full object-cover border border-cyan-400/60"
-              />
-              <span>Visit Sri Lanka</span>
-            </motion.button>
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <motion.button
+                type="button"
+                id="huta-in-travel-book-jump"
+                whileHover={prefersReducedMotion ? undefined : { scale: 1.03, y: -1 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+                onClick={() => {
+                  const el = document.getElementById('travel-booking-system-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#FF5A36]/90 hover:bg-[#FF5A36] backdrop-blur-md border border-white/25 text-white text-[11px] sm:text-xs font-extrabold shadow-md transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                title="Jump to Sri Lanka Travel & Tourism Booking System"
+              >
+                <Plane className="w-3.5 h-3.5" />
+                <span>Book Tours</span>
+              </motion.button>
+
+              <motion.button
+                type="button"
+                id="huta-in-visit-sl-jump"
+                whileHover={prefersReducedMotion ? undefined : { scale: 1.03, y: -1 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+                onClick={() => {
+                  const el = document.getElementById('visit-sri-lanka-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className="inline-flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full bg-black/55 hover:bg-black/75 backdrop-blur-md border border-cyan-400/60 text-white text-xs font-bold shadow-md transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                title="Explore Visit Sri Lanka — Colombo City, Nature, Beaches & Heritage"
+              >
+                <img
+                  src={visitSriLankaIcon}
+                  alt="Visit Sri Lanka Icon"
+                  referrerPolicy="no-referrer"
+                  className="w-5 h-5 rounded-full object-cover border border-cyan-400/60"
+                />
+                <span>Visit Sri Lanka</span>
+              </motion.button>
+            </div>
           </motion.div>
 
           {/* Bottom Row: HUTA IN Wordmark + Rotating Sri Lanka Scene Story & Slide Controls */}
@@ -712,7 +735,15 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
       {/* 3. Visit Sri Lanka Modern Tech Island Showcase */}
       <VisitSriLankaSection onSelectCategory={onSelectCategory} onToast={onToast} />
 
-      {/* 3. Our Categories all in GRID view */}
+      {/* 4. Sri Lanka Travel & Tourism Booking System */}
+      <SriLankaTravelBookingSection
+        currentUser={currentUser}
+        isAdminLoggedIn={isAdminLoggedIn}
+        onOpenAdminTravelControl={onOpenAdminTravelControl}
+        onToast={onToast}
+      />
+
+      {/* 5. Our Categories all in GRID view */}
       <motion.div
         initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -1073,7 +1104,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                       animate={{ opacity: 1, y: 0 }}
                       exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
                       transition={{ duration: 0.24, ease: 'easeOut' }}
-                      className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5"
+                      className="grid grid-cols-2 gap-2.5 sm:gap-5"
                     >
                       {filteredEvents.map((evt, idx) => {
                         const hasRsvp = rsvpIds.includes(evt.id);
@@ -1089,9 +1120,9 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                             onClick={() => setSelectedEventModal(evt)}
                             className="bg-white dark:bg-[#151822] rounded-2xl sm:rounded-3xl overflow-hidden border border-gray-100 dark:border-[#252836] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer group"
                           >
-                            <div className="relative h-44 sm:h-48 w-full overflow-hidden bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0A2540]">
+                            <div className="relative h-28 sm:h-48 w-full overflow-hidden bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0A2540]">
                               <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
-                                <Ticket className="w-16 h-16 text-cyan-300" />
+                                <Ticket className="w-10 h-10 sm:w-16 sm:h-16 text-cyan-300" />
                               </div>
                               {evt.image && (
                                 <img
@@ -1105,36 +1136,36 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                                   className="relative z-[1] w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 />
                               )}
-                              <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/65 via-transparent to-black/20" />
+                              <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/70 via-transparent to-black/25" />
 
                               {/* Ticket Date Stamp Box */}
-                              <div className="absolute top-3 left-3 sm:top-3.5 sm:left-3.5 bg-white dark:bg-[#151822] rounded-xl sm:rounded-2xl shadow-lg border border-gray-100/80 dark:border-[#252836] p-1.5 min-w-[46px] sm:min-w-[50px] text-center z-10">
-                                <span className="block text-[10px] font-black text-[#FF5A36] uppercase tracking-wider leading-none">
+                              <div className="absolute top-2 left-2 sm:top-3.5 sm:left-3.5 bg-white dark:bg-[#151822] rounded-lg sm:rounded-2xl shadow-lg border border-gray-100/80 dark:border-[#252836] px-1.5 py-1 sm:p-1.5 min-w-[36px] sm:min-w-[50px] text-center z-10">
+                                <span className="block text-[8px] sm:text-[10px] font-black text-[#FF5A36] uppercase tracking-wider leading-none">
                                   {evt.month}
                                 </span>
-                                <span className="block text-sm sm:text-base font-black text-gray-900 dark:text-white leading-none mt-1">
+                                <span className="block text-xs sm:text-base font-black text-gray-900 dark:text-white leading-none mt-0.5 sm:mt-1">
                                   {evt.day}
                                 </span>
                               </div>
 
-                              <div className="absolute top-3 right-3 sm:top-3.5 sm:right-3.5 flex items-center gap-1.5 z-10">
+                              <div className="absolute top-2 right-2 sm:top-3.5 sm:right-3.5 flex items-center gap-1.5 z-10">
                                 <button
                                   type="button"
                                   onClick={(e) => handleToggleBookmark(evt.id, e)}
                                   title="Bookmark event"
-                                  className={`p-2 rounded-xl backdrop-blur-md transition-all cursor-pointer ${
+                                  className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl backdrop-blur-md transition-all cursor-pointer ${
                                     isBookmarked
                                       ? 'bg-rose-500 text-white shadow-md'
                                       : 'bg-black/40 hover:bg-black/60 text-white'
                                   }`}
                                 >
-                                  <Heart className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current' : ''}`} />
+                                  <Heart className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isBookmarked ? 'fill-current' : ''}`} />
                                 </button>
                               </div>
 
-                              <div className="absolute bottom-3 left-3 right-3 sm:left-3.5 sm:right-3.5 flex items-center justify-between text-white z-10">
+                              <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3.5 sm:right-3.5 flex items-center justify-between gap-1 text-white z-10">
                                 <span
-                                  className={`text-[11px] font-black px-2.5 py-1 rounded-lg backdrop-blur-md shadow-sm ${
+                                  className={`text-[9px] sm:text-[11px] font-black px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg backdrop-blur-md shadow-sm truncate ${
                                     evt.isFree
                                       ? 'bg-emerald-600 text-white'
                                       : 'bg-[#0A2540]/90 text-white border border-white/20'
@@ -1143,45 +1174,45 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                                   {evt.price}
                                 </span>
 
-                                <span className="text-[11px] font-bold text-gray-200 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-md">
+                                <span className="text-[9px] sm:text-[11px] font-bold text-gray-200 bg-black/45 backdrop-blur-md px-1.5 py-0.5 sm:px-2 rounded-md truncate">
                                   {evt.district}
                                 </span>
                               </div>
                             </div>
 
-                            <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3.5 sm:space-y-4">
-                              <div className="space-y-2 sm:space-y-2.5">
-                                <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
-                                  <span className="text-[#FF5A36] font-bold uppercase tracking-wider text-[11px]">
+                            <div className="p-2.5 sm:p-5 flex-1 flex flex-col justify-between space-y-2 sm:space-y-4">
+                              <div className="space-y-1 sm:space-y-2.5">
+                                <div className="flex items-center justify-between gap-1 text-[10px] sm:text-xs text-gray-500 font-semibold">
+                                  <span className="text-[#FF5A36] font-bold uppercase tracking-wider text-[9px] sm:text-[11px] truncate">
                                     {evt.category}
                                   </span>
-                                  <div className="flex items-center gap-1 text-gray-400">
+                                  <div className="hidden sm:flex items-center gap-1 text-gray-400 shrink-0">
                                     <Clock className="w-3.5 h-3.5" />
                                     <span>{evt.time.split('-')[0].trim()}</span>
                                   </div>
                                 </div>
 
-                                <h3 className="font-extrabold text-base sm:text-lg text-gray-900 dark:text-white leading-snug group-hover:text-[#FF5A36] transition-colors line-clamp-2">
+                                <h3 className="font-extrabold text-xs sm:text-lg text-gray-900 dark:text-white leading-snug group-hover:text-[#FF5A36] transition-colors line-clamp-2">
                                   {evt.title}
                                 </h3>
 
-                                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                                <p className="hidden sm:block text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
                                   {evt.description}
                                 </p>
 
-                                <div className="pt-2.5 sm:pt-3 border-t border-gray-100 dark:border-[#252836] flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
-                                  <div className="flex items-center gap-1.5 truncate max-w-[180px]">
-                                    <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                <div className="pt-1.5 sm:pt-3 border-t border-gray-100 dark:border-[#252836] flex items-center justify-between gap-1 text-[10px] sm:text-xs text-gray-600 dark:text-gray-300">
+                                  <div className="flex items-center gap-1 truncate min-w-0">
+                                    <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400 shrink-0" />
                                     <span className="truncate font-medium">{evt.venue}</span>
                                   </div>
-                                  <div className="flex items-center gap-1 font-bold text-gray-700 dark:text-gray-300 shrink-0">
+                                  <div className="hidden sm:flex items-center gap-1 font-bold text-gray-700 dark:text-gray-300 shrink-0">
                                     <Users className="w-3.5 h-3.5 text-gray-400" />
                                     <span>{evt.attendees}+</span>
                                   </div>
                                 </div>
                               </div>
 
-                              <div className="pt-1 sm:pt-2 flex items-center gap-2">
+                              <div className="pt-0.5 sm:pt-2 flex items-center gap-1.5 sm:gap-2">
                                 <button
                                   type="button"
                                   id={`rsvp-btn-${evt.id}`}
@@ -1189,7 +1220,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                                     e.stopPropagation();
                                     handleToggleRSVP(evt);
                                   }}
-                                  className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                                  className={`flex-1 py-1.5 sm:py-2.5 px-2 sm:px-4 rounded-lg sm:rounded-xl font-bold text-[10px] sm:text-xs flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                                     hasRsvp
                                       ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/50 font-extrabold shadow-sm'
                                       : 'bg-[#FF5A36] hover:bg-[#E04826] active:scale-95 text-white shadow-md shadow-[#FF5A36]/20'
@@ -1197,13 +1228,15 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                                 >
                                   {hasRsvp ? (
                                     <>
-                                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
-                                      <span>RSVP Confirmed</span>
+                                      <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
+                                      <span className="sm:hidden">Confirmed</span>
+                                      <span className="hidden sm:inline">RSVP Confirmed</span>
                                     </>
                                   ) : (
                                     <>
-                                      <Ticket className="w-4 h-4 stroke-[2.5]" />
-                                      <span>Get Passes / RSVP</span>
+                                      <Ticket className="w-3 h-3 sm:w-4 sm:h-4 stroke-[2.5]" />
+                                      <span className="sm:hidden">Get Pass</span>
+                                      <span className="hidden sm:inline">Get Passes / RSVP</span>
                                     </>
                                   )}
                                 </button>
@@ -1212,9 +1245,9 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                                   type="button"
                                   onClick={(e) => handleShare(evt, e)}
                                   title="Share event"
-                                  className="p-2.5 rounded-xl bg-gray-100 dark:bg-[#1E2230] hover:bg-gray-200 dark:hover:bg-[#2A2F42] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+                                  className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-gray-100 dark:bg-[#1E2230] hover:bg-gray-200 dark:hover:bg-[#2A2F42] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer shrink-0"
                                 >
-                                  <Share2 className="w-4 h-4" />
+                                  <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                 </button>
                               </div>
                             </div>

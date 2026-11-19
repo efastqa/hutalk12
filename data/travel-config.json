@@ -1,0 +1,255 @@
+{
+  "id": "main",
+  "packages": [
+    {
+      "highlights": [
+        "Sigiriya Rock Sunrise",
+        "Dambulla Cave Temple",
+        "Pidurangala Panorama"
+      ],
+      "category": "Tour Packages",
+      "destination": "Sigiriya",
+      "title": "Sigiriya Lion Rock & Dambulla Cultural Triangle Tour",
+      "basePriceLkr": 38500,
+      "reviewCount": 184,
+      "shortTitle": "Sigiriya & Cultural Tour",
+      "image": "heritageSigiriya",
+      "id": "pkg_sigiriya_cultural",
+      "childPct": 10,
+      "extraAdultPct": 18,
+      "rating": 4.9,
+      "defaultDays": 2,
+      "isActive": true,
+      "includes": "A/C private vehicle, English-speaking chauffeur-guide & boutique hotel booking",
+      "defaultVehicle": "Private Sedan",
+      "badge": "Top Rated",
+      "dailyAddonLkr": 15000
+    },
+    {
+      "shortTitle": "Kandy & Ella Rail Escape",
+      "badge": "Bestseller",
+      "extraAdultPct": 18,
+      "childPct": 10,
+      "isActive": true,
+      "includes": "Luggage van transfer alongside scenic train ride, station pickup & tea tasting",
+      "defaultDays": 2,
+      "basePriceLkr": 34000,
+      "highlights": [
+        "Nine Arch Bridge",
+        "Scenic Blue Train",
+        "Nuwara Eliya Tea Estate"
+      ],
+      "defaultVehicle": "Luxury KDH Van",
+      "rating": 4.9,
+      "dailyAddonLkr": 14500,
+      "image": "natureHighlands",
+      "category": "Tour Packages",
+      "destination": "Kandy & Ella",
+      "id": "pkg_kandy_ella_rail",
+      "reviewCount": 241,
+      "title": "Kandy to Ella Scenic Train & Nine Arch Highlands Escape"
+    },
+    {
+      "defaultVehicle": "4x4 Safari Jeep",
+      "extraAdultPct": 18,
+      "title": "Yala National Park Block 1 Full-Day Leopard 4x4 Safari",
+      "destination": "Yala",
+      "image": "natureElephants",
+      "category": "Safaris & Wildlife",
+      "reviewCount": 163,
+      "dailyAddonLkr": 18000,
+      "shortTitle": "Yala Leopard 4x4 Safari",
+      "defaultDays": 1,
+      "id": "pkg_yala_leopard_safari",
+      "basePriceLkr": 24500,
+      "rating": 4.8,
+      "highlights": [
+        "Block 1 Leopard Trails",
+        "Sloth Bear & Elephants",
+        "Picnic Breakfast Pack"
+      ],
+      "badge": "Instant Confirm",
+      "isActive": true,
+      "includes": "Private 4x4 open-top Toyota Hilux safari jeep, tracker & morning refreshments",
+      "childPct": 10
+    },
+    {
+      "defaultVehicle": "Private Sedan",
+      "shortTitle": "Mirissa Whales & Galle Fort",
+      "includes": "Morning cruise pass coordination, coastal A/C transport & sunset walking map",
+      "isActive": true,
+      "childPct": 10,
+      "dailyAddonLkr": 14000,
+      "image": "beachesGalleFort",
+      "title": "Mirissa Blue Whale Cruise & Galle Dutch Fort Sunset",
+      "highlights": [
+        "Whale Watching Deck",
+        "Galle Ramparts Walk",
+        "Unawatuna Cove"
+      ],
+      "extraAdultPct": 18,
+      "defaultDays": 1,
+      "reviewCount": 129,
+      "rating": 4.8,
+      "id": "pkg_galle_mirissa_whales",
+      "category": "Tour Packages",
+      "badge": "Southern Coast",
+      "destination": "Galle & Mirissa",
+      "basePriceLkr": 26000
+    },
+    {
+      "title": "Minneriya & Kaudulla Elephant Gathering Jungle Safari",
+      "destination": "Sigiriya",
+      "dailyAddonLkr": 16500,
+      "shortTitle": "Minneriya Elephant Safari",
+      "id": "pkg_minneriya_elephants",
+      "defaultVehicle": "4x4 Safari Jeep",
+      "extraAdultPct": 18,
+      "reviewCount": 98,
+      "childPct": 10,
+      "highlights": [
+        "300+ Wild Elephants",
+        "Lake Reservoir Sunset",
+        "Habarana Village Pickup"
+      ],
+      "image": "natureWaterfall",
+      "isActive": true,
+      "includes": "Dedicated 4x4 safari jeep, chilled water, binoculars & park gate assistance",
+      "basePriceLkr": 21000,
+      "rating": 4.9,
+      "defaultDays": 1,
+      "category": "Safaris & Wildlife",
+      "badge": "Wildlife Pick"
+    },
+    {
+      "shortTitle": "BIA Airport Chauffeur",
+      "reviewCount": 312,
+      "highlights": [
+        "Flight Delay Tracking",
+        "Highway Toll Included",
+        "Colombo / Kandy / Galle"
+      ],
+      "defaultVehicle": "Luxury KDH Van",
+      "badge": "24/7 Pickup",
+      "destination": "Colombo",
+      "category": "Transfers & Chauffeurs",
+      "extraAdultPct": 12,
+      "title": "BIA Airport (CMB) VIP Meet & Private Chauffeur Transfer",
+      "id": "pkg_bia_airport_transfer",
+      "basePriceLkr": 14500,
+      "defaultDays": 1,
+      "isActive": true,
+      "includes": "Meet & greet at Bandaranaike Arrivals, bottled water, SIM help & highway transfer",
+      "image": "colomboCity",
+      "childPct": 0,
+      "rating": 4.9,
+      "dailyAddonLkr": 12500
+    },
+    {
+      "category": "Transfers & Chauffeurs",
+      "basePriceLkr": 56000,
+      "rating": 4.8,
+      "image": "heritageKandyTemple",
+      "destination": "Colombo",
+      "dailyAddonLkr": 14000,
+      "shortTitle": "Island Chauffeur & Van",
+      "defaultVehicle": "Luxury KDH Van",
+      "extraAdultPct": 10,
+      "title": "Multi-Day Sri Lanka Private Chauffeur & Luxury KDH Van",
+      "highlights": [
+        "150 km/day Allowance",
+        "Fuel & Driver Meals",
+        "SLTDA Tourist Driver"
+      ],
+      "reviewCount": 147,
+      "childPct": 0,
+      "badge": "Flexible Route",
+      "defaultDays": 4,
+      "isActive": true,
+      "includes": "A/C luxury Toyota KDH or hybrid sedan, fuel, parking & driver accommodation covered",
+      "id": "pkg_island_chauffeur_van"
+    },
+    {
+      "defaultDays": 2,
+      "category": "Boutique Stays",
+      "defaultVehicle": "Private Sedan",
+      "badge": "Coastal Villa",
+      "extraAdultPct": 20,
+      "dailyAddonLkr": 19500,
+      "basePriceLkr": 42000,
+      "childPct": 10,
+      "image": "beachesNilaveli",
+      "includes": "2 nights ocean-view suite, Sri Lankan breakfast & snorkeling boat drop-off",
+      "isActive": true,
+      "id": "pkg_nilaveli_lagoon_villa",
+      "shortTitle": "Nilaveli Beachfront Stay",
+      "destination": "Trincomalee",
+      "rating": 4.9,
+      "reviewCount": 89,
+      "highlights": [
+        "Private Lagoon Access",
+        "Pigeon Island Snorkel",
+        "Ceylon Seafood Dinner"
+      ],
+      "title": "Nilaveli & Pigeon Island Reef Beachfront Boutique Stay"
+    }
+  ],
+  "vehicleTiers": [
+    {
+      "isActive": true,
+      "name": "Private Sedan",
+      "surchargePerDay": 0,
+      "capacity": "Up to 3 pax"
+    },
+    {
+      "capacity": "Up to 8 pax",
+      "surchargePerDay": 4500,
+      "isActive": true,
+      "name": "Luxury KDH Van"
+    },
+    {
+      "capacity": "Up to 6 pax",
+      "surchargePerDay": 6500,
+      "name": "4x4 Safari Jeep",
+      "isActive": true
+    },
+    {
+      "capacity": "Up to 22 pax",
+      "surchargePerDay": 14000,
+      "name": "VIP Coach",
+      "isActive": true
+    }
+  ],
+  "addons": [
+    {
+      "isActive": true,
+      "label": "SLTDA Certified Tour Guide",
+      "priceLkr": 6500,
+      "id": "guide"
+    },
+    {
+      "id": "rail",
+      "priceLkr": 4800,
+      "isActive": true,
+      "label": "Kandy–Ella Scenic Rail Tickets"
+    },
+    {
+      "label": "Ceylon Breakfast & Dinner Plan",
+      "isActive": true,
+      "id": "meals",
+      "priceLkr": 5500
+    },
+    {
+      "isActive": true,
+      "label": "BIA VIP Airport Meet & Greet",
+      "priceLkr": 4000,
+      "id": "airport"
+    }
+  ],
+  "serviceFeePercent": 0,
+  "globalDiscountPercent": 0,
+  "customTripBaseLkr": 54000,
+  "customTripDailyLkr": 15500,
+  "usdExchangeRateLkr": 300,
+  "updatedAt": "2026-11-19T08:49:13.197Z"
+}

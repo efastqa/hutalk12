@@ -1577,8 +1577,13 @@ export default function App() {
         {currentTab === 'huta_in' && (
           <HutaInPage
             events={events}
+            currentUser={currentUser}
             isAdminLoggedIn={isAdminLoggedIn}
             onNavigateToAdminEvents={handleOpenAdminPortal}
+            onOpenAdminTravelControl={() => {
+              setInitialAdminTab('travel_bookings');
+              handleOpenAdminPortal();
+            }}
             onBackToHome={() => setCurrentTab('marketplace')}
             onOpenPostAd={handleOpenPostAd}
             onSelectCategory={(cat, query) => {

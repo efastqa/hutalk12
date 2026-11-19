@@ -1335,22 +1335,22 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                   transition={{ duration: 0.22, ease: 'easeOut' }}
                   className="mt-4 sm:mt-5 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4"
                 >
-                  <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+                  <div className="md:col-span-2 rounded-xl overflow-hidden border border-gray-200 dark:border-slate-800 bg-gray-200/80 dark:bg-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-px">
                     {[
                       { label: 'Total Land Area', value: '65,610 km²', sub: 'Teardrop Island' },
                       { label: 'Administrative Map', value: '9 Provinces', sub: '25 Districts' },
                       { label: 'UNESCO Treasures', value: '8 Sites', sub: '6 Cultural · 2 Natural' },
                       { label: 'Currency & Time', value: 'LKR (Rs.)', sub: 'UTC +5:30' },
-                      { label: 'Commercial Capital', value: 'Colombo', sub: 'Sri Jayewardenepura Kotte (Official)' },
+                      { label: 'Commercial Capital', value: 'Colombo', sub: 'Official: S.J. Kotte' },
                       { label: 'Highest Peak', value: 'Pidurutalagala', sub: '2,524 meters' },
                       { label: 'Coastline Length', value: '1,340 km', sub: 'Indian Ocean Reefs' },
                       { label: 'Languages', value: 'Sinhala · Tamil', sub: 'English widely spoken' },
                     ].map((stat) => (
                       <div
                         key={stat.label}
-                        className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200/80 dark:border-slate-800 p-2.5 sm:p-3"
+                        className="bg-white dark:bg-[#171B26] px-2.5 py-2 sm:p-3 flex flex-col justify-between"
                       >
-                        <div className="text-[10px] sm:text-[11px] font-semibold text-gray-500 dark:text-slate-400">
+                        <div className="text-[10px] sm:text-[11px] font-semibold text-gray-500 dark:text-slate-400 truncate">
                           {stat.label}
                         </div>
                         <div className="text-xs sm:text-base font-black text-gray-900 dark:text-white mt-0.5 tabular-nums truncate">
@@ -1363,17 +1363,17 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                     ))}
                   </div>
 
-                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200/80 dark:border-slate-800 p-3.5 sm:p-4 flex flex-col justify-between">
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200/80 dark:border-slate-800 p-3 sm:p-4 flex flex-col justify-between">
                     <div>
-                      <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#FF5A36] uppercase tracking-wider">
+                      <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-extrabold text-[#FF5A36] uppercase tracking-wider">
                         <Info className="w-3.5 h-3.5" />
                         <span>Why Sri Lanka Stands Out</span>
                       </div>
-                      <p className="text-xs sm:text-sm text-gray-700 dark:text-slate-300 leading-relaxed mt-2">
+                      <p className="text-xs sm:text-sm text-gray-700 dark:text-slate-300 leading-relaxed mt-1.5 sm:mt-2">
                         Few islands pack tropical beaches, 2,000-meter tea-covered mountains, misty rainforests, big-game safaris (elephants, leopards, blue whales), and ancient multi-faith sacred landmarks within a single scenic loop from Colombo.
                       </p>
                     </div>
-                    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-slate-800 text-[11px] font-semibold text-gray-500 dark:text-slate-400">
+                    <div className="mt-2.5 sm:mt-3 pt-2.5 sm:pt-3 border-t border-gray-100 dark:border-slate-800 text-[11px] font-semibold text-gray-500 dark:text-slate-400">
                       Tip · Combine Colombo + Sigiriya + Kandy/Ella + Mirissa or Trincomalee for a complete island journey.
                     </div>
                   </div>
@@ -1387,38 +1387,38 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
                   transition={{ duration: 0.22, ease: 'easeOut' }}
-                  className="mt-4 sm:mt-5 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4"
+                  className="mt-4 sm:mt-5 grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4"
                 >
-                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
-                    <div className="text-[11px] sm:text-xs font-extrabold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider">
-                      November – April
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-2.5 sm:p-4">
+                    <div className="text-[10px] sm:text-xs font-extrabold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider">
+                      Nov – Apr
                     </div>
-                    <h4 className="font-black text-sm sm:text-base text-gray-900 dark:text-white mt-1">
-                      Colombo, West & South Coast Peak
+                    <h4 className="font-black text-xs sm:text-base text-gray-900 dark:text-white mt-0.5 sm:mt-1 leading-snug">
+                      West & South Coast Peak
                     </h4>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-                      Dry, calm turquoise seas across Bentota, Hikkaduwa, Galle Fort, Unawatuna, and Mirissa. Peak season for blue whale watching and the Central Highlands (Kandy, Nuwara Eliya, Ella).
+                    <p className="text-[11px] sm:text-sm text-gray-600 dark:text-slate-300 mt-1 sm:mt-1.5 leading-snug sm:leading-relaxed">
+                      Calm seas across Bentota, Galle Fort & Mirissa. Peak season for blue whales & Highlands (Kandy, Ella).
                     </p>
                   </div>
-                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
-                    <div className="text-[11px] sm:text-xs font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                      May – September
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-2.5 sm:p-4">
+                    <div className="text-[10px] sm:text-xs font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                      May – Sep
                     </div>
-                    <h4 className="font-black text-sm sm:text-base text-gray-900 dark:text-white mt-1">
-                      East Coast, Trincomalee & Arugam Bay
+                    <h4 className="font-black text-xs sm:text-base text-gray-900 dark:text-white mt-0.5 sm:mt-1 leading-snug">
+                      East Coast & Arugam Bay
                     </h4>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-                      Ideal weather on the East Coast for Pasikudah calm bays, Nilaveli & Pigeon Island snorkeling, Jaffna northern temples, and world-class surf swells at Arugam Bay.
+                    <p className="text-[11px] sm:text-sm text-gray-600 dark:text-slate-300 mt-1 sm:mt-1.5 leading-snug sm:leading-relaxed">
+                      Dry sun on Pasikudah & Nilaveli snorkeling bays, Jaffna shrines, and world-class Arugam Bay surf swells.
                     </p>
                   </div>
-                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
-                    <div className="text-[11px] sm:text-xs font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                  <div className="col-span-2 md:col-span-1 rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-2.5 sm:p-4">
+                    <div className="text-[10px] sm:text-xs font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
                       Year-Round · Cultural Triangle
                     </div>
-                    <h4 className="font-black text-sm sm:text-base text-gray-900 dark:text-white mt-1">
+                    <h4 className="font-black text-xs sm:text-base text-gray-900 dark:text-white mt-0.5 sm:mt-1 leading-snug">
                       Sigiriya, Minneriya & Festivals
                     </h4>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
+                    <p className="text-[11px] sm:text-sm text-gray-600 dark:text-slate-300 mt-1 sm:mt-1.5 leading-snug sm:leading-relaxed">
                       August features Kandy’s iconic Esala Perahera pageant and “The Gathering” of wild Asian elephants at Minneriya National Park.
                     </p>
                   </div>
@@ -1432,29 +1432,29 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
                   transition={{ duration: 0.22, ease: 'easeOut' }}
-                  className="mt-4 sm:mt-5 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4"
+                  className="mt-4 sm:mt-5 grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4"
                 >
-                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
-                    <h4 className="font-black text-sm sm:text-base text-gray-900 dark:text-white">
-                      8 UNESCO World Heritage Sites
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-2.5 sm:p-4">
+                    <h4 className="font-black text-xs sm:text-base text-gray-900 dark:text-white leading-snug">
+                      8 UNESCO Heritage Sites
                     </h4>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-                      Polonnaruwa, Anuradhapura, Sigiriya Lion Rock, Sacred City of Kandy, Galle Fort, Dambulla Cave Temple, Sinharaja Forest Reserve, and Central Highlands.
+                    <p className="text-[11px] sm:text-sm text-gray-600 dark:text-slate-300 mt-1 sm:mt-1.5 leading-snug sm:leading-relaxed">
+                      Polonnaruwa, Anuradhapura, Sigiriya, Sacred Kandy, Galle Fort, Dambulla Cave Temple, Sinharaja & Highlands.
                     </p>
                   </div>
-                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
-                    <h4 className="font-black text-sm sm:text-base text-gray-900 dark:text-white">
-                      Signature Sri Lankan Cuisine
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-2.5 sm:p-4">
+                    <h4 className="font-black text-xs sm:text-base text-gray-900 dark:text-white leading-snug">
+                      Sri Lankan Cuisine
                     </h4>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-                      Rice & vibrant curries slow-cooked with Ceylon cinnamon and coconut milk; crisp egg hoppers, string hoppers, sizzling Kottu Roti, Jaffna crab curry, king coconut, and highland Ceylon Tea.
+                    <p className="text-[11px] sm:text-sm text-gray-600 dark:text-slate-300 mt-1 sm:mt-1.5 leading-snug sm:leading-relaxed">
+                      Ceylon cinnamon curries, egg hoppers, string hoppers, sizzling Kottu Roti, Jaffna crab & highland Ceylon Tea.
                     </p>
                   </div>
-                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
-                    <h4 className="font-black text-sm sm:text-base text-gray-900 dark:text-white">
+                  <div className="col-span-2 md:col-span-1 rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-2.5 sm:p-4">
+                    <h4 className="font-black text-xs sm:text-base text-gray-900 dark:text-white leading-snug">
                       Gems, Spices & Living Crafts
                     </h4>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
+                    <p className="text-[11px] sm:text-sm text-gray-600 dark:text-slate-300 mt-1 sm:mt-1.5 leading-snug sm:leading-relaxed">
                       World-famous for Royal Blue Ceylon Sapphires (Ratnapura), Ambalangoda masks, Kandyan brassware, and Dumbara textiles across local markets.
                     </p>
                   </div>
@@ -1468,32 +1468,32 @@ export const VisitSriLankaSection: React.FC<VisitSriLankaSectionProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
                   transition={{ duration: 0.22, ease: 'easeOut' }}
-                  className="mt-4 sm:mt-5 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4"
+                  className="mt-4 sm:mt-5 grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4"
                 >
-                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
-                    <div className="flex items-center gap-2 font-black text-sm sm:text-base text-gray-900 dark:text-white">
-                      <Train className="w-4 h-4 text-[#FF5A36]" />
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-2.5 sm:p-4">
+                    <div className="flex items-center gap-1.5 font-black text-xs sm:text-base text-gray-900 dark:text-white">
+                      <Train className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FF5A36] shrink-0" />
                       <span>Getting Around</span>
                     </div>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-                      Expressways connect Colombo to Galle/Matara (1.5 hrs) and Kurunegala. Scenic railways serve Colombo–Kandy–Ella and Colombo–Galle alongside islandwide taxis and tuk-tuks.
+                    <p className="text-[11px] sm:text-sm text-gray-600 dark:text-slate-300 mt-1 sm:mt-1.5 leading-snug sm:leading-relaxed">
+                      Expressways link Colombo–Galle (1.5 hrs). Scenic railways run Kandy–Ella & Coast alongside taxis and tuk-tuks.
                     </p>
                   </div>
-                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
-                    <div className="flex items-center gap-2 font-black text-sm sm:text-base text-gray-900 dark:text-white">
-                      <Clock className="w-4 h-4 text-cyan-500" />
-                      <span>Connectivity & Power</span>
+                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-2.5 sm:p-4">
+                    <div className="flex items-center gap-1.5 font-black text-xs sm:text-base text-gray-900 dark:text-white">
+                      <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-500 shrink-0" />
+                      <span>SIM & Power</span>
                     </div>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed">
-                      5G/4G SIMs available 24/7 at Bandaranaike International Airport (CMB). Power is 230V / 50Hz (Type D & Type G). Tap cards & LKR cash are widely accepted.
+                    <p className="text-[11px] sm:text-sm text-gray-600 dark:text-slate-300 mt-1 sm:mt-1.5 leading-snug sm:leading-relaxed">
+                      5G/4G SIMs 24/7 at CMB Airport. Power 230V / 50Hz (Type D & G). Tap cards & LKR cash widely accepted.
                     </p>
                   </div>
-                  <div className="rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-3.5 sm:p-4">
-                    <div className="flex items-center gap-2 font-black text-sm sm:text-base text-gray-900 dark:text-white">
-                      <PhoneCall className="w-4 h-4 text-emerald-500" />
+                  <div className="col-span-2 md:col-span-1 rounded-xl bg-white dark:bg-[#171B26] border border-gray-200 dark:border-slate-800 p-2.5 sm:p-4">
+                    <div className="flex items-center gap-1.5 font-black text-xs sm:text-base text-gray-900 dark:text-white">
+                      <PhoneCall className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500 shrink-0" />
                       <span>Emergency & Tourist Hotlines</span>
                     </div>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-300 mt-1.5 leading-relaxed tabular-nums">
+                    <p className="text-[11px] sm:text-sm text-gray-600 dark:text-slate-300 mt-1 sm:mt-1.5 leading-snug sm:leading-relaxed tabular-nums">
                       Tourist Police: <strong>1912</strong> · Police Emergency: <strong>119</strong> · Suwa Seriya Ambulance: <strong>1990</strong> · Fire & Rescue: <strong>110</strong>.
                     </p>
                   </div>

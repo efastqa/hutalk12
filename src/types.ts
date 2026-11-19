@@ -517,3 +517,104 @@ export interface DonationCause {
   updatedAt: string;
 }
 
+// -------------------------------------------------------------
+// Sri Lanka Travel & Tourism Booking System (HUTA IN)
+// -------------------------------------------------------------
+
+export type TravelPackageCategory =
+  | 'Tour Packages'
+  | 'Safaris & Wildlife'
+  | 'Transfers & Chauffeurs'
+  | 'Boutique Stays';
+
+export type TravelVehicleTier =
+  | 'Private Sedan'
+  | 'Luxury KDH Van'
+  | '4x4 Safari Jeep'
+  | 'VIP Coach';
+
+export type TravelBookingStatus = 'pending' | 'confirmed' | 'cancelled';
+
+export interface TravelBooking {
+  id: string;
+  bookingRef: string;
+  packageId: string;
+  packageTitle: string;
+  category: TravelPackageCategory;
+  destination: string;
+  startDate: string;
+  days: number;
+  adults: number;
+  children: number;
+  pickupLocation: string;
+  vehicleTier: TravelVehicleTier;
+  addons: string[];
+  travelerName: string;
+  travelerPhone: string;
+  travelerEmail?: string;
+  specialRequests?: string;
+  baseAmountLkr?: number;
+  adminAdjustmentLkr?: number;
+  adminAdjustmentNote?: string;
+  assignedDriverName?: string;
+  assignedDriverPhone?: string;
+  adminNotes?: string;
+  totalLkr: number;
+  preferredCurrency?: 'LKR' | 'USD';
+  usdExchangeRate?: number;
+  status: TravelBookingStatus;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TravelPackageConfig {
+  id: string;
+  title: string;
+  shortTitle: string;
+  category: TravelPackageCategory;
+  destination: string;
+  defaultDays: number;
+  basePriceLkr: number;
+  dailyAddonLkr: number;
+  extraAdultPct: number;
+  childPct: number;
+  rating: number;
+  reviewCount: number;
+  defaultVehicle: TravelVehicleTier;
+  image: string;
+  badge: string;
+  highlights: string[];
+  includes: string;
+  isActive: boolean;
+}
+
+export interface TravelVehicleTierConfig {
+  name: TravelVehicleTier;
+  surchargePerDay: number;
+  capacity: string;
+  isActive: boolean;
+}
+
+export interface TravelAddonConfig {
+  id: string;
+  label: string;
+  priceLkr: number;
+  isActive: boolean;
+}
+
+export interface TravelPricingConfig {
+  id: string;
+  packages: TravelPackageConfig[];
+  vehicleTiers: TravelVehicleTierConfig[];
+  addons: TravelAddonConfig[];
+  serviceFeePercent: number;
+  globalDiscountPercent: number;
+  customTripBaseLkr: number;
+  customTripDailyLkr: number;
+  usdExchangeRateLkr?: number;
+  updatedAt: string;
+}
+
+
+

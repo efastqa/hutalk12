@@ -370,6 +370,87 @@ interface DonationCause {
   updatedAt: string;
 }
 
+interface TravelBooking {
+  id: string;
+  bookingRef: string;
+  packageId: string;
+  packageTitle: string;
+  category: 'Tour Packages' | 'Safaris & Wildlife' | 'Transfers & Chauffeurs' | 'Boutique Stays';
+  destination: string;
+  startDate: string;
+  days: number;
+  adults: number;
+  children: number;
+  pickupLocation: string;
+  vehicleTier: 'Private Sedan' | 'Luxury KDH Van' | '4x4 Safari Jeep' | 'VIP Coach';
+  addons: string[];
+  travelerName: string;
+  travelerPhone: string;
+  travelerEmail?: string;
+  specialRequests?: string;
+  baseAmountLkr?: number;
+  adminAdjustmentLkr?: number;
+  adminAdjustmentNote?: string;
+  assignedDriverName?: string;
+  assignedDriverPhone?: string;
+  adminNotes?: string;
+  totalLkr: number;
+  preferredCurrency?: 'LKR' | 'USD';
+  usdExchangeRate?: number;
+  status: 'pending' | 'confirmed' | 'cancelled';
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface TravelPackageConfig {
+  id: string;
+  title: string;
+  shortTitle: string;
+  category: 'Tour Packages' | 'Safaris & Wildlife' | 'Transfers & Chauffeurs' | 'Boutique Stays';
+  destination: string;
+  defaultDays: number;
+  basePriceLkr: number;
+  dailyAddonLkr: number;
+  extraAdultPct: number;
+  childPct: number;
+  rating: number;
+  reviewCount: number;
+  defaultVehicle: 'Private Sedan' | 'Luxury KDH Van' | '4x4 Safari Jeep' | 'VIP Coach';
+  image: string;
+  badge: string;
+  highlights: string[];
+  includes: string;
+  isActive: boolean;
+}
+
+interface TravelVehicleTierConfig {
+  name: 'Private Sedan' | 'Luxury KDH Van' | '4x4 Safari Jeep' | 'VIP Coach';
+  surchargePerDay: number;
+  capacity: string;
+  isActive: boolean;
+}
+
+interface TravelAddonConfig {
+  id: string;
+  label: string;
+  priceLkr: number;
+  isActive: boolean;
+}
+
+interface TravelPricingConfig {
+  id: string;
+  packages: TravelPackageConfig[];
+  vehicleTiers: TravelVehicleTierConfig[];
+  addons: TravelAddonConfig[];
+  serviceFeePercent: number;
+  globalDiscountPercent: number;
+  customTripBaseLkr: number;
+  customTripDailyLkr: number;
+  usdExchangeRateLkr?: number;
+  updatedAt: string;
+}
+
 function resolvePort(): number {
   const portArgIndex = process.argv.indexOf('--port');
   if (portArgIndex !== -1 && process.argv[portArgIndex + 1]) {
@@ -397,6 +478,8 @@ const ESTORES_FILE = path.join(DATA_DIR, 'estores.json');
 const VIDEO_REELS_FILE = path.join(DATA_DIR, 'video-reels.json');
 const BUYER_REQUESTS_FILE = path.join(DATA_DIR, 'buyer-requests.json');
 const DONATIONS_FILE = path.join(DATA_DIR, 'donations.json');
+const TRAVEL_BOOKINGS_FILE = path.join(DATA_DIR, 'travel-bookings.json');
+const TRAVEL_CONFIG_FILE = path.join(DATA_DIR, 'travel-config.json');
 
 interface AdminConfig {
   password?: string;
@@ -629,6 +712,275 @@ function deleteDonationFromFirestore(id: string) {
   deleteDoc(doc(firestoreDb, 'donations', id)).catch((err) => {
     console.warn('[Firestore] delete donation cause error:', err);
   });
+}
+
+function persistTravelBookingToFirestore(booking: TravelBooking) {
+  if (!firestoreDb) return;
+  const clean = sanitizeForFirestoreServer(booking);
+  setDoc(doc(firestoreDb, 'travel_bookings', booking.id), clean, { merge: true }).catch((err) => {
+    console.warn('[Firestore] persist travel booking error:', err);
+  });
+}
+
+function deleteTravelBookingFromFirestore(id: string) {
+  if (!firestoreDb) return;
+  deleteDoc(doc(firestoreDb, 'travel_bookings', id)).catch((err) => {
+    console.warn('[Firestore] delete travel booking error:', err);
+  });
+}
+
+function getStoredTravelBookings(): TravelBooking[] {
+  try {
+    if (fs.existsSync(TRAVEL_BOOKINGS_FILE)) {
+      const data = fs.readFileSync(TRAVEL_BOOKINGS_FILE, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) {
+        return parsed.map((b) => ({
+          ...b,
+          addons: Array.isArray(b.addons) ? b.addons : [],
+          children: typeof b.children === 'number' ? b.children : 0,
+        }));
+      }
+    }
+  } catch (err) {
+    console.error('Error reading travel bookings file', err);
+  }
+  return [];
+}
+
+function saveStoredTravelBookings(bookings: TravelBooking[]) {
+  try {
+    fs.writeFileSync(TRAVEL_BOOKINGS_FILE, JSON.stringify(bookings, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error saving travel bookings file', err);
+  }
+}
+
+const DEFAULT_TRAVEL_CONFIG: TravelPricingConfig = {
+  id: 'main',
+  packages: [
+    {
+      id: 'pkg_sigiriya_cultural',
+      title: 'Sigiriya Lion Rock & Dambulla Cultural Triangle Tour',
+      shortTitle: 'Sigiriya & Cultural Tour',
+      category: 'Tour Packages',
+      destination: 'Sigiriya',
+      defaultDays: 2,
+      basePriceLkr: 38500,
+      dailyAddonLkr: 15000,
+      extraAdultPct: 18,
+      childPct: 10,
+      rating: 4.9,
+      reviewCount: 184,
+      defaultVehicle: 'Private Sedan',
+      image: 'heritageSigiriya',
+      badge: 'Top Rated',
+      highlights: ['Sigiriya Rock Sunrise', 'Dambulla Cave Temple', 'Pidurangala Panorama'],
+      includes: 'A/C private vehicle, English-speaking chauffeur-guide & boutique hotel booking',
+      isActive: true,
+    },
+    {
+      id: 'pkg_kandy_ella_rail',
+      title: 'Kandy to Ella Scenic Train & Nine Arch Highlands Escape',
+      shortTitle: 'Kandy & Ella Rail Escape',
+      category: 'Tour Packages',
+      destination: 'Kandy & Ella',
+      defaultDays: 2,
+      basePriceLkr: 34000,
+      dailyAddonLkr: 14500,
+      extraAdultPct: 18,
+      childPct: 10,
+      rating: 4.9,
+      reviewCount: 241,
+      defaultVehicle: 'Luxury KDH Van',
+      image: 'natureHighlands',
+      badge: 'Bestseller',
+      highlights: ['Nine Arch Bridge', 'Scenic Blue Train', 'Nuwara Eliya Tea Estate'],
+      includes: 'Luggage van transfer alongside scenic train ride, station pickup & tea tasting',
+      isActive: true,
+    },
+    {
+      id: 'pkg_yala_leopard_safari',
+      title: 'Yala National Park Block 1 Full-Day Leopard 4x4 Safari',
+      shortTitle: 'Yala Leopard 4x4 Safari',
+      category: 'Safaris & Wildlife',
+      destination: 'Yala',
+      defaultDays: 1,
+      basePriceLkr: 24500,
+      dailyAddonLkr: 18000,
+      extraAdultPct: 18,
+      childPct: 10,
+      rating: 4.8,
+      reviewCount: 163,
+      defaultVehicle: '4x4 Safari Jeep',
+      image: 'natureElephants',
+      badge: 'Instant Confirm',
+      highlights: ['Block 1 Leopard Trails', 'Sloth Bear & Elephants', 'Picnic Breakfast Pack'],
+      includes: 'Private 4x4 open-top Toyota Hilux safari jeep, tracker & morning refreshments',
+      isActive: true,
+    },
+    {
+      id: 'pkg_galle_mirissa_whales',
+      title: 'Mirissa Blue Whale Cruise & Galle Dutch Fort Sunset',
+      shortTitle: 'Mirissa Whales & Galle Fort',
+      category: 'Tour Packages',
+      destination: 'Galle & Mirissa',
+      defaultDays: 1,
+      basePriceLkr: 26000,
+      dailyAddonLkr: 14000,
+      extraAdultPct: 18,
+      childPct: 10,
+      rating: 4.8,
+      reviewCount: 129,
+      defaultVehicle: 'Private Sedan',
+      image: 'beachesGalleFort',
+      badge: 'Southern Coast',
+      highlights: ['Whale Watching Deck', 'Galle Ramparts Walk', 'Unawatuna Cove'],
+      includes: 'Morning cruise pass coordination, coastal A/C transport & sunset walking map',
+      isActive: true,
+    },
+    {
+      id: 'pkg_minneriya_elephants',
+      title: 'Minneriya & Kaudulla Elephant Gathering Jungle Safari',
+      shortTitle: 'Minneriya Elephant Safari',
+      category: 'Safaris & Wildlife',
+      destination: 'Sigiriya',
+      defaultDays: 1,
+      basePriceLkr: 21000,
+      dailyAddonLkr: 16500,
+      extraAdultPct: 18,
+      childPct: 10,
+      rating: 4.9,
+      reviewCount: 98,
+      defaultVehicle: '4x4 Safari Jeep',
+      image: 'natureWaterfall',
+      badge: 'Wildlife Pick',
+      highlights: ['300+ Wild Elephants', 'Lake Reservoir Sunset', 'Habarana Village Pickup'],
+      includes: 'Dedicated 4x4 safari jeep, chilled water, binoculars & park gate assistance',
+      isActive: true,
+    },
+    {
+      id: 'pkg_bia_airport_transfer',
+      title: 'BIA Airport (CMB) VIP Meet & Private Chauffeur Transfer',
+      shortTitle: 'BIA Airport Chauffeur',
+      category: 'Transfers & Chauffeurs',
+      destination: 'Colombo',
+      defaultDays: 1,
+      basePriceLkr: 14500,
+      dailyAddonLkr: 12500,
+      extraAdultPct: 12,
+      childPct: 0,
+      rating: 4.9,
+      reviewCount: 312,
+      defaultVehicle: 'Luxury KDH Van',
+      image: 'colomboCity',
+      badge: '24/7 Pickup',
+      highlights: ['Flight Delay Tracking', 'Highway Toll Included', 'Colombo / Kandy / Galle'],
+      includes: 'Meet & greet at Bandaranaike Arrivals, bottled water, SIM help & highway transfer',
+      isActive: true,
+    },
+    {
+      id: 'pkg_island_chauffeur_van',
+      title: 'Multi-Day Sri Lanka Private Chauffeur & Luxury KDH Van',
+      shortTitle: 'Island Chauffeur & Van',
+      category: 'Transfers & Chauffeurs',
+      destination: 'Colombo',
+      defaultDays: 4,
+      basePriceLkr: 56000,
+      dailyAddonLkr: 14000,
+      extraAdultPct: 10,
+      childPct: 0,
+      rating: 4.8,
+      reviewCount: 147,
+      defaultVehicle: 'Luxury KDH Van',
+      image: 'heritageKandyTemple',
+      badge: 'Flexible Route',
+      highlights: ['150 km/day Allowance', 'Fuel & Driver Meals', 'SLTDA Tourist Driver'],
+      includes: 'A/C luxury Toyota KDH or hybrid sedan, fuel, parking & driver accommodation covered',
+      isActive: true,
+    },
+    {
+      id: 'pkg_nilaveli_lagoon_villa',
+      title: 'Nilaveli & Pigeon Island Reef Beachfront Boutique Stay',
+      shortTitle: 'Nilaveli Beachfront Stay',
+      category: 'Boutique Stays',
+      destination: 'Trincomalee',
+      defaultDays: 2,
+      basePriceLkr: 42000,
+      dailyAddonLkr: 19500,
+      extraAdultPct: 20,
+      childPct: 10,
+      rating: 4.9,
+      reviewCount: 89,
+      defaultVehicle: 'Private Sedan',
+      image: 'beachesNilaveli',
+      badge: 'Coastal Villa',
+      highlights: ['Private Lagoon Access', 'Pigeon Island Snorkel', 'Ceylon Seafood Dinner'],
+      includes: '2 nights ocean-view suite, Sri Lankan breakfast & snorkeling boat drop-off',
+      isActive: true,
+    },
+  ],
+  vehicleTiers: [
+    { name: 'Private Sedan', surchargePerDay: 0, capacity: 'Up to 3 pax', isActive: true },
+    { name: 'Luxury KDH Van', surchargePerDay: 4500, capacity: 'Up to 8 pax', isActive: true },
+    { name: '4x4 Safari Jeep', surchargePerDay: 6500, capacity: 'Up to 6 pax', isActive: true },
+    { name: 'VIP Coach', surchargePerDay: 14000, capacity: 'Up to 22 pax', isActive: true },
+  ],
+  addons: [
+    { id: 'guide', label: 'SLTDA Certified Tour Guide', priceLkr: 6500, isActive: true },
+    { id: 'rail', label: 'Kandy–Ella Scenic Rail Tickets', priceLkr: 4800, isActive: true },
+    { id: 'meals', label: 'Ceylon Breakfast & Dinner Plan', priceLkr: 5500, isActive: true },
+    { id: 'airport', label: 'BIA VIP Airport Meet & Greet', priceLkr: 4000, isActive: true },
+  ],
+  serviceFeePercent: 0,
+  globalDiscountPercent: 0,
+  customTripBaseLkr: 54000,
+  customTripDailyLkr: 15500,
+  usdExchangeRateLkr: 300,
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
+
+function persistTravelConfigToFirestore(cfg: TravelPricingConfig) {
+  if (!firestoreDb) return;
+  const clean = sanitizeForFirestoreServer(cfg);
+  setDoc(doc(firestoreDb, 'travel_config', 'main'), clean, { merge: true }).catch((err) => {
+    console.warn('[Firestore] persist travel config error:', err);
+  });
+}
+
+function getStoredTravelConfig(): TravelPricingConfig {
+  try {
+    if (fs.existsSync(TRAVEL_CONFIG_FILE)) {
+      const data = fs.readFileSync(TRAVEL_CONFIG_FILE, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (parsed && Array.isArray(parsed.packages) && parsed.packages.length > 0) {
+        return {
+          ...DEFAULT_TRAVEL_CONFIG,
+          ...parsed,
+          id: 'main',
+          packages: parsed.packages,
+          vehicleTiers: Array.isArray(parsed.vehicleTiers) && parsed.vehicleTiers.length > 0
+            ? parsed.vehicleTiers
+            : DEFAULT_TRAVEL_CONFIG.vehicleTiers,
+          addons: Array.isArray(parsed.addons)
+            ? parsed.addons
+            : DEFAULT_TRAVEL_CONFIG.addons,
+        };
+      }
+    }
+  } catch (err) {
+    console.error('Error reading travel config file', err);
+  }
+  saveStoredTravelConfig(DEFAULT_TRAVEL_CONFIG);
+  return { ...DEFAULT_TRAVEL_CONFIG };
+}
+
+function saveStoredTravelConfig(cfg: TravelPricingConfig) {
+  try {
+    fs.writeFileSync(TRAVEL_CONFIG_FILE, JSON.stringify(cfg, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error saving travel config file', err);
+  }
 }
 
 function getStoredReviews(): ListingReview[] {
@@ -1296,6 +1648,8 @@ let eStoresCache = getStoredEStores();
 let videoReelsCache = getStoredVideoReels();
 let buyerRequestsCache = getStoredBuyerRequests();
 let donationsCache = getStoredDonations();
+let travelBookingsCache = getStoredTravelBookings();
+let travelConfigCache = getStoredTravelConfig();
 
 // Lazy initialize Gemini client
 let genAIClient: GoogleGenAI | null = null;
@@ -4558,6 +4912,242 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
     res.json({ success: true });
   });
 
+  // -------------------------------------------------------------
+  // Sri Lanka Travel & Tourism Booking System (Admin-Controlled)
+  // -------------------------------------------------------------
+
+  const isAdminHeaderAuthorized = (req: express.Request): boolean => {
+    const roleHeader = String(req.headers['x-admin-role'] || '').trim().toLowerCase();
+    const passHeader = String(req.headers['x-admin-password'] || '').trim();
+    return roleHeader === 'admin' || (passHeader.length > 0 && passHeader === getAdminPassword());
+  };
+
+  // Public Travel Pricing & Packages Config (read-only for HUTA IN booking form)
+  app.get('/api/travel-config', (req, res) => {
+    res.json(travelConfigCache);
+  });
+
+  // Admin: Full Control over Travel Packages, Vehicle Rates, Add-ons & Service Charges
+  app.put('/api/admin/travel-config', (req, res) => {
+    if (!isAdminHeaderAuthorized(req)) {
+      return res.status(403).json({ error: 'Admin privileges required to edit travel pricing and packages.' });
+    }
+    const body = req.body || {};
+    const updated: TravelPricingConfig = {
+      id: 'main',
+      packages: Array.isArray(body.packages) ? body.packages.slice(0, 60) : travelConfigCache.packages,
+      vehicleTiers: Array.isArray(body.vehicleTiers) ? body.vehicleTiers.slice(0, 15) : travelConfigCache.vehicleTiers,
+      addons: Array.isArray(body.addons) ? body.addons.slice(0, 30) : travelConfigCache.addons,
+      serviceFeePercent: Math.min(50, Math.max(0, Number(body.serviceFeePercent ?? travelConfigCache.serviceFeePercent) || 0)),
+      globalDiscountPercent: Math.min(80, Math.max(0, Number(body.globalDiscountPercent ?? travelConfigCache.globalDiscountPercent) || 0)),
+      customTripBaseLkr: Math.max(0, Number(body.customTripBaseLkr ?? travelConfigCache.customTripBaseLkr) || 0),
+      customTripDailyLkr: Math.max(0, Number(body.customTripDailyLkr ?? travelConfigCache.customTripDailyLkr) || 0),
+      usdExchangeRateLkr: Math.min(
+        2000,
+        Math.max(50, Number(body.usdExchangeRateLkr ?? travelConfigCache.usdExchangeRateLkr ?? 300) || 300)
+      ),
+      updatedAt: new Date().toISOString(),
+    };
+    travelConfigCache = updated;
+    saveStoredTravelConfig(travelConfigCache);
+    persistTravelConfigToFirestore(travelConfigCache);
+    res.json(travelConfigCache);
+  });
+
+  // Block public listing of customer bookings — strictly Admin only
+  app.get('/api/travel-bookings', (req, res) => {
+    if (!isAdminHeaderAuthorized(req)) {
+      return res.status(403).json({ error: 'Restricted: Customer travel bookings are only visible to administrators.' });
+    }
+    const sorted = [...travelBookingsCache].sort(
+      (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    );
+    res.json(sorted);
+  });
+
+  // Admin: View all customer travel bookings
+  app.get('/api/admin/travel-bookings', (req, res) => {
+    if (!isAdminHeaderAuthorized(req)) {
+      return res.status(403).json({ error: 'Admin privileges required to view customer bookings.' });
+    }
+    const sorted = [...travelBookingsCache].sort(
+      (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    );
+    res.json(sorted);
+  });
+
+  // Public customer booking submission endpoint
+  app.post('/api/travel-bookings', (req, res) => {
+    const data = req.body || {};
+    const travelerName = String(data.travelerName || '').trim();
+    const rawPhone = String(data.travelerPhone || '').trim();
+    const packageTitle = String(data.packageTitle || '').trim();
+
+    if (!travelerName || !rawPhone || !packageTitle) {
+      return res.status(400).json({ error: 'Traveler name, phone number, and package title are required.' });
+    }
+
+    const allowedCategories = [
+      'Tour Packages',
+      'Safaris & Wildlife',
+      'Transfers & Chauffeurs',
+      'Boutique Stays',
+    ] as const;
+    const categoryVal = allowedCategories.includes(data.category) ? data.category : 'Tour Packages';
+
+    const allowedVehicles = [
+      'Private Sedan',
+      'Luxury KDH Van',
+      '4x4 Safari Jeep',
+      'VIP Coach',
+    ] as const;
+    const vehicleVal = allowedVehicles.includes(data.vehicleTier) ? data.vehicleTier : 'Luxury KDH Van';
+
+    const statusVal: TravelBooking['status'] =
+      data.status === 'confirmed' || data.status === 'cancelled' ? data.status : 'pending';
+
+    const now = new Date().toISOString();
+    const id = data.id && String(data.id).trim()
+      ? String(data.id).trim().slice(0, 128)
+      : `trv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const bookingRef = data.bookingRef && String(data.bookingRef).trim()
+      ? String(data.bookingRef).trim().toUpperCase().slice(0, 40)
+      : `HUTA-TRV-${Math.floor(10000 + Math.random() * 90000)}`;
+
+    const totalLkr = Math.max(0, Number(data.totalLkr) || 0);
+    const baseAmountLkr = data.baseAmountLkr !== undefined ? Math.max(0, Number(data.baseAmountLkr) || 0) : totalLkr;
+
+    const created: TravelBooking = {
+      id,
+      bookingRef,
+      packageId: String(data.packageId || 'custom_sl_trip').trim().slice(0, 128),
+      packageTitle: packageTitle.slice(0, 200),
+      category: categoryVal,
+      destination: String(data.destination || 'Sri Lanka').trim().slice(0, 120) || 'Sri Lanka',
+      startDate: String(data.startDate || now.slice(0, 10)).trim().slice(0, 32),
+      days: Math.min(30, Math.max(1, Number(data.days) || 1)),
+      adults: Math.min(30, Math.max(1, Number(data.adults) || 2)),
+      children: Math.min(20, Math.max(0, Number(data.children) || 0)),
+      pickupLocation: String(data.pickupLocation || 'Colombo / BIA Airport (CMB)').trim().slice(0, 120),
+      vehicleTier: vehicleVal,
+      addons: Array.isArray(data.addons)
+        ? data.addons.map((a: unknown) => String(a || '').trim()).filter(Boolean).slice(0, 10)
+        : [],
+      travelerName: travelerName.slice(0, 120),
+      travelerPhone: (normalizeSriLankanPhone(rawPhone) || rawPhone).slice(0, 50),
+      travelerEmail: data.travelerEmail ? String(data.travelerEmail).trim().slice(0, 150) : undefined,
+      specialRequests: data.specialRequests ? String(data.specialRequests).trim().slice(0, 1500) : undefined,
+      baseAmountLkr,
+      adminAdjustmentLkr: Number(data.adminAdjustmentLkr) || 0,
+      adminAdjustmentNote: data.adminAdjustmentNote ? String(data.adminAdjustmentNote).trim().slice(0, 300) : undefined,
+      assignedDriverName: data.assignedDriverName ? String(data.assignedDriverName).trim().slice(0, 120) : undefined,
+      assignedDriverPhone: data.assignedDriverPhone ? String(data.assignedDriverPhone).trim().slice(0, 50) : undefined,
+      adminNotes: data.adminNotes ? String(data.adminNotes).trim().slice(0, 1500) : undefined,
+      totalLkr,
+      preferredCurrency: data.preferredCurrency === 'USD' ? 'USD' : 'LKR',
+      usdExchangeRate: Math.min(2000, Math.max(50, Number(data.usdExchangeRate ?? travelConfigCache.usdExchangeRateLkr ?? 300) || 300)),
+      status: statusVal,
+      userId: String(data.userId || 'guest').slice(0, 128),
+      createdAt: data.createdAt || now,
+      updatedAt: now,
+    };
+
+    const existingIdx = travelBookingsCache.findIndex((b) => b.id === id);
+    if (existingIdx !== -1) {
+      travelBookingsCache[existingIdx] = created;
+    } else {
+      travelBookingsCache.unshift(created);
+    }
+    saveStoredTravelBookings(travelBookingsCache);
+    persistTravelBookingToFirestore(created);
+    res.status(201).json(created);
+  });
+
+  const handleAdminUpdateTravelBooking = (req: express.Request, res: express.Response) => {
+    if (!isAdminHeaderAuthorized(req)) {
+      return res.status(403).json({ error: 'Admin privileges required to modify bookings or charges.' });
+    }
+    const idx = travelBookingsCache.findIndex((b) => b.id === req.params.id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'Travel booking not found' });
+    }
+    const current = travelBookingsCache[idx];
+    const body = req.body || {};
+
+    const nextStatus = body.status;
+    const statusVal: TravelBooking['status'] =
+      nextStatus === 'pending' || nextStatus === 'confirmed' || nextStatus === 'cancelled'
+        ? nextStatus
+        : current.status;
+
+    const allowedVehicles = [
+      'Private Sedan',
+      'Luxury KDH Van',
+      '4x4 Safari Jeep',
+      'VIP Coach',
+    ] as const;
+    const vehicleVal = allowedVehicles.includes(body.vehicleTier) ? body.vehicleTier : current.vehicleTier;
+
+    const nextBase = body.baseAmountLkr !== undefined
+      ? Math.max(0, Number(body.baseAmountLkr) || 0)
+      : (current.baseAmountLkr ?? current.totalLkr);
+    const nextAdj = body.adminAdjustmentLkr !== undefined
+      ? Number(body.adminAdjustmentLkr) || 0
+      : (current.adminAdjustmentLkr ?? 0);
+    const nextTotal = body.totalLkr !== undefined
+      ? Math.max(0, Number(body.totalLkr) || 0)
+      : Math.max(0, nextBase + nextAdj);
+
+    const updated: TravelBooking = {
+      ...current,
+      status: statusVal,
+      startDate: typeof body.startDate === 'string' && body.startDate.trim() ? body.startDate.trim().slice(0, 32) : current.startDate,
+      days: body.days !== undefined ? Math.min(30, Math.max(1, Number(body.days) || current.days)) : current.days,
+      pickupLocation: typeof body.pickupLocation === 'string' && body.pickupLocation.trim() ? body.pickupLocation.trim().slice(0, 120) : current.pickupLocation,
+      vehicleTier: vehicleVal,
+      baseAmountLkr: nextBase,
+      adminAdjustmentLkr: nextAdj,
+      adminAdjustmentNote: body.adminAdjustmentNote !== undefined
+        ? (String(body.adminAdjustmentNote || '').trim().slice(0, 300) || undefined)
+        : current.adminAdjustmentNote,
+      totalLkr: nextTotal,
+      assignedDriverName: body.assignedDriverName !== undefined
+        ? (String(body.assignedDriverName || '').trim().slice(0, 120) || undefined)
+        : current.assignedDriverName,
+      assignedDriverPhone: body.assignedDriverPhone !== undefined
+        ? (String(body.assignedDriverPhone || '').trim().slice(0, 50) || undefined)
+        : current.assignedDriverPhone,
+      adminNotes: body.adminNotes !== undefined
+        ? (String(body.adminNotes || '').trim().slice(0, 1500) || undefined)
+        : current.adminNotes,
+      updatedAt: new Date().toISOString(),
+    };
+
+    travelBookingsCache[idx] = updated;
+    saveStoredTravelBookings(travelBookingsCache);
+    persistTravelBookingToFirestore(updated);
+    res.json(updated);
+  };
+
+  app.patch('/api/admin/travel-bookings/:id', handleAdminUpdateTravelBooking);
+  app.patch('/api/travel-bookings/:id', handleAdminUpdateTravelBooking);
+
+  const handleAdminDeleteTravelBooking = (req: express.Request, res: express.Response) => {
+    if (!isAdminHeaderAuthorized(req)) {
+      return res.status(403).json({ error: 'Admin privileges required to delete travel bookings.' });
+    }
+    const idx = travelBookingsCache.findIndex((b) => b.id === req.params.id);
+    if (idx !== -1) {
+      travelBookingsCache.splice(idx, 1);
+      saveStoredTravelBookings(travelBookingsCache);
+    }
+    deleteTravelBookingFromFirestore(req.params.id);
+    res.json({ success: true });
+  };
+
+  app.delete('/api/admin/travel-bookings/:id', handleAdminDeleteTravelBooking);
+  app.delete('/api/travel-bookings/:id', handleAdminDeleteTravelBooking);
+
   // Catch-all for undefined API routes
   app.all('/api/*', (req, res) => {
     res.status(404).json({ error: 'API endpoint not found' });
@@ -4846,6 +5436,28 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
       } catch (e) {
         if (isQuotaExceededError(e)) return;
         console.warn('[Firestore] Initial donations sync warning:', e);
+      }
+
+      try {
+        const cfgSnap = await getDoc(doc(firestoreDb, 'travel_config', 'main'));
+        if (cfgSnap.exists()) {
+          const remoteCfg = cfgSnap.data() as TravelPricingConfig;
+          if (remoteCfg && Array.isArray(remoteCfg.packages) && remoteCfg.packages.length > 0) {
+            travelConfigCache = {
+              ...DEFAULT_TRAVEL_CONFIG,
+              ...remoteCfg,
+              id: 'main',
+            };
+            saveStoredTravelConfig(travelConfigCache);
+            console.log(`[Firestore] Initialized travel pricing config with ${travelConfigCache.packages.length} packages`);
+          }
+        } else {
+          persistTravelConfigToFirestore(travelConfigCache);
+          console.log('[Firestore] Seeded default Sri Lanka travel pricing config to Firestore');
+        }
+      } catch (e) {
+        if (isQuotaExceededError(e)) return;
+        console.warn('[Firestore] Initial travel config sync warning:', e);
       }
     })().catch((err) => {
       console.warn('[Firestore] Initial background sync error:', err);

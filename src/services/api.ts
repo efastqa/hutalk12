@@ -7,9 +7,12 @@ import {
   deleteDoc,
   updateDoc,
   onSnapshot,
+  query,
+  where,
 } from 'firebase/firestore';
 import { db, OperationType, handleFirestoreError } from '../firebase';
-import { Listing, User, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, HotNewsResponse, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem, EStore, EStoreProduct, BuyerRequest, BuyerRequestOffer, BuyerRequestStatus, BuyerRequestUrgency, DonationCause, DonationCategory, DonationUrgency, DonationStatus, DonationPledge, DonationPledgeType } from '../types';
+import { Listing, User, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, HotNewsResponse, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem, EStore, EStoreProduct, BuyerRequest, BuyerRequestOffer, BuyerRequestStatus, BuyerRequestUrgency, DonationCause, DonationCategory, DonationUrgency, DonationStatus, DonationPledge, DonationPledgeType, TravelBooking, TravelPackageCategory, TravelVehicleTier, TravelBookingStatus, TravelPricingConfig } from '../types';
+import { DEFAULT_TRAVEL_CONFIG } from '../utils/travelPricing';
 
 const API_BASE = '/api';
 
@@ -4050,6 +4053,345 @@ For quick inquiries, call or send a message via WhatsApp!`;
     try {
       await fetch(`${API_BASE}/donations/${causeId}`, {
         method: 'DELETE',
+      });
+    } catch {
+      // backend optional
+    }
+  },
+
+  // -------------------------------------------------------------
+  // Sri Lanka Travel & Tourism Booking System (Admin-Controlled)
+  // -------------------------------------------------------------
+
+  async getTravelConfig(): Promise<TravelPricingConfig> {
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const snap = await getDoc(doc(db, 'travel_config', 'main'));
+        if (snap.exists()) {
+          const raw = snap.data() as TravelPricingConfig;
+          if (raw && Array.isArray(raw.packages) && raw.packages.length > 0) {
+            return {
+              ...DEFAULT_TRAVEL_CONFIG,
+              ...raw,
+              id: 'main',
+              packages: raw.packages,
+              vehicleTiers: Array.isArray(raw.vehicleTiers) && raw.vehicleTiers.length > 0
+                ? raw.vehicleTiers
+                : DEFAULT_TRAVEL_CONFIG.vehicleTiers,
+              addons: Array.isArray(raw.addons) ? raw.addons : DEFAULT_TRAVEL_CONFIG.addons,
+            };
+          }
+        }
+      } catch (err) {
+        recordFirestoreError(err);
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/travel-config`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.packages)) {
+          return {
+            ...DEFAULT_TRAVEL_CONFIG,
+            ...data,
+            id: 'main',
+          };
+        }
+      }
+    } catch {
+      // backend optional
+    }
+
+    return DEFAULT_TRAVEL_CONFIG;
+  },
+
+  async saveTravelConfig(config: TravelPricingConfig): Promise<TravelPricingConfig> {
+    if (!api.isAdmin()) {
+      throw new Error('Admin login required to modify travel packages and charges.');
+    }
+    const updated: TravelPricingConfig = {
+      ...config,
+      id: 'main',
+      updatedAt: new Date().toISOString(),
+    };
+    const clean = sanitizeForFirestore(updated) as TravelPricingConfig;
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await setDoc(doc(db, 'travel_config', 'main'), clean);
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          handleFirestoreError(err, OperationType.WRITE, 'travel_config/main');
+        }
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/admin/travel-config`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-role': 'admin',
+        },
+        body: JSON.stringify(clean),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // backend optional
+    }
+
+    return updated;
+  },
+
+  async getAdminTravelBookings(): Promise<TravelBooking[]> {
+    if (!api.isAdmin()) {
+      throw new Error('Restricted: Only Administrators can view customer bookings.');
+    }
+    const map = new Map<string, TravelBooking>();
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const snap = await getDocs(collection(db, 'travel_bookings'));
+        snap.forEach((docSnap) => {
+          const raw = docSnap.data() as TravelBooking;
+          map.set(raw.id || docSnap.id, {
+            ...raw,
+            id: raw.id || docSnap.id,
+            addons: Array.isArray(raw.addons) ? raw.addons : [],
+            children: typeof raw.children === 'number' ? raw.children : 0,
+          });
+        });
+      } catch (err) {
+        recordFirestoreError(err);
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/admin/travel-bookings`, {
+        headers: {
+          'x-admin-role': 'admin',
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          for (const item of data) {
+            if (item && item.id) {
+              const existing = map.get(item.id);
+              const useServer =
+                !existing ||
+                new Date(item.updatedAt || 0).getTime() >= new Date(existing.updatedAt || 0).getTime();
+              if (useServer) {
+                map.set(item.id, {
+                  ...item,
+                  addons: Array.isArray(item.addons) ? item.addons : [],
+                  children: typeof item.children === 'number' ? item.children : 0,
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      // backend optional
+    }
+
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    );
+  },
+
+  async createTravelBooking(input: {
+    packageId: string;
+    packageTitle: string;
+    category: TravelPackageCategory;
+    destination: string;
+    startDate: string;
+    days: number;
+    adults: number;
+    children: number;
+    pickupLocation: string;
+    vehicleTier: TravelVehicleTier;
+    addons: string[];
+    travelerName: string;
+    travelerPhone: string;
+    travelerEmail?: string;
+    specialRequests?: string;
+    totalLkr: number;
+    preferredCurrency?: 'LKR' | 'USD';
+    usdExchangeRate?: number;
+    userId?: string;
+  }): Promise<TravelBooking> {
+    const id = `trv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const bookingRef = `HUTA-TRV-${Math.floor(10000 + Math.random() * 90000)}`;
+    const now = new Date().toISOString();
+    const normalizedPhone = normalizeSriLankanPhone(input.travelerPhone) || String(input.travelerPhone || '').trim();
+    const baseAmountLkr = Math.max(0, Number(input.totalLkr) || 0);
+
+    const booking: TravelBooking = {
+      id,
+      bookingRef,
+      packageId: String(input.packageId || 'custom_sl_trip').trim().slice(0, 128),
+      packageTitle: String(input.packageTitle || '').trim().slice(0, 200),
+      category: input.category || 'Tour Packages',
+      destination: String(input.destination || 'Sri Lanka').trim().slice(0, 120),
+      startDate: String(input.startDate || now.slice(0, 10)).trim().slice(0, 32),
+      days: Math.min(30, Math.max(1, Number(input.days) || 1)),
+      adults: Math.min(30, Math.max(1, Number(input.adults) || 2)),
+      children: Math.min(20, Math.max(0, Number(input.children) || 0)),
+      pickupLocation: String(input.pickupLocation || 'Colombo / BIA Airport (CMB)').trim().slice(0, 120),
+      vehicleTier: input.vehicleTier || 'Luxury KDH Van',
+      addons: (Array.isArray(input.addons) ? input.addons : []).slice(0, 10),
+      travelerName: String(input.travelerName || '').trim().slice(0, 120),
+      travelerPhone: normalizedPhone.slice(0, 50),
+      travelerEmail: input.travelerEmail ? String(input.travelerEmail).trim().slice(0, 150) : undefined,
+      specialRequests: input.specialRequests ? String(input.specialRequests).trim().slice(0, 1500) : undefined,
+      baseAmountLkr,
+      adminAdjustmentLkr: 0,
+      totalLkr: baseAmountLkr,
+      preferredCurrency: input.preferredCurrency === 'USD' ? 'USD' : 'LKR',
+      usdExchangeRate: Math.min(2000, Math.max(50, Number(input.usdExchangeRate) || 300)),
+      status: 'pending',
+      userId: input.userId || api.getCurrentUser()?.id || 'guest',
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const clean = sanitizeForFirestore(booking) as TravelBooking;
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await setDoc(doc(db, 'travel_bookings', id), clean);
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          handleFirestoreError(err, OperationType.CREATE, `travel_bookings/${id}`);
+        }
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/travel-bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clean),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // backend optional
+    }
+
+    return clean;
+  },
+
+  async adminUpdateTravelBooking(
+    booking: TravelBooking,
+    updates: {
+      status?: TravelBookingStatus;
+      startDate?: string;
+      days?: number;
+      pickupLocation?: string;
+      vehicleTier?: TravelVehicleTier;
+      baseAmountLkr?: number;
+      adminAdjustmentLkr?: number;
+      adminAdjustmentNote?: string;
+      totalLkr?: number;
+      assignedDriverName?: string;
+      assignedDriverPhone?: string;
+      adminNotes?: string;
+    }
+  ): Promise<TravelBooking> {
+    if (!api.isAdmin()) {
+      throw new Error('Restricted: Only Administrators can edit customer bookings and charges.');
+    }
+    const updatedAt = new Date().toISOString();
+    const nextBase = updates.baseAmountLkr !== undefined ? Math.max(0, Number(updates.baseAmountLkr) || 0) : (booking.baseAmountLkr ?? booking.totalLkr);
+    const nextAdj = updates.adminAdjustmentLkr !== undefined ? (Number(updates.adminAdjustmentLkr) || 0) : (booking.adminAdjustmentLkr ?? 0);
+    const nextTotal = updates.totalLkr !== undefined ? Math.max(0, Number(updates.totalLkr) || 0) : Math.max(0, nextBase + nextAdj);
+
+    const updatedBooking: TravelBooking = {
+      ...booking,
+      status: updates.status || booking.status,
+      startDate: updates.startDate || booking.startDate,
+      days: updates.days ?? booking.days,
+      pickupLocation: updates.pickupLocation || booking.pickupLocation,
+      vehicleTier: updates.vehicleTier || booking.vehicleTier,
+      baseAmountLkr: nextBase,
+      adminAdjustmentLkr: nextAdj,
+      adminAdjustmentNote: updates.adminAdjustmentNote !== undefined ? updates.adminAdjustmentNote : booking.adminAdjustmentNote,
+      totalLkr: nextTotal,
+      assignedDriverName: updates.assignedDriverName !== undefined ? updates.assignedDriverName : booking.assignedDriverName,
+      assignedDriverPhone: updates.assignedDriverPhone !== undefined ? updates.assignedDriverPhone : booking.assignedDriverPhone,
+      adminNotes: updates.adminNotes !== undefined ? updates.adminNotes : booking.adminNotes,
+      updatedAt,
+    };
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const payload = sanitizeForFirestore({
+          status: updatedBooking.status,
+          startDate: updatedBooking.startDate,
+          days: updatedBooking.days,
+          pickupLocation: updatedBooking.pickupLocation,
+          vehicleTier: updatedBooking.vehicleTier,
+          baseAmountLkr: updatedBooking.baseAmountLkr,
+          adminAdjustmentLkr: updatedBooking.adminAdjustmentLkr,
+          adminAdjustmentNote: updatedBooking.adminAdjustmentNote,
+          totalLkr: updatedBooking.totalLkr,
+          assignedDriverName: updatedBooking.assignedDriverName,
+          assignedDriverPhone: updatedBooking.assignedDriverPhone,
+          adminNotes: updatedBooking.adminNotes,
+          updatedAt,
+        });
+        await updateDoc(doc(db, 'travel_bookings', booking.id), payload);
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          handleFirestoreError(err, OperationType.UPDATE, `travel_bookings/${booking.id}`);
+        }
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/admin/travel-bookings/${booking.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-role': 'admin',
+        },
+        body: JSON.stringify(updates),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // backend optional
+    }
+
+    return updatedBooking;
+  },
+
+  async adminDeleteTravelBooking(bookingId: string): Promise<void> {
+    if (!api.isAdmin()) {
+      throw new Error('Restricted: Only Administrators can delete customer bookings.');
+    }
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await deleteDoc(doc(db, 'travel_bookings', bookingId));
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          handleFirestoreError(err, OperationType.DELETE, `travel_bookings/${bookingId}`);
+        }
+      }
+    }
+
+    try {
+      await fetch(`${API_BASE}/admin/travel-bookings/${bookingId}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-role': 'admin' },
       });
     } catch {
       // backend optional

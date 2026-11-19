@@ -217,6 +217,62 @@
       "properties": {
         "status": { "type": "string" }
       }
+    },
+    "TravelBooking": {
+      "title": "TravelBooking",
+      "description": "Sri Lanka travel tour, safari jeep, chauffeur transfer, or boutique stay booking made on HUTA IN.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "bookingRef": { "type": "string", "maxLength": 40 },
+        "packageId": { "type": "string", "maxLength": 128 },
+        "packageTitle": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "enum": ["Tour Packages", "Safaris & Wildlife", "Transfers & Chauffeurs", "Boutique Stays"] },
+        "destination": { "type": "string", "maxLength": 120 },
+        "startDate": { "type": "string", "maxLength": 32 },
+        "days": { "type": "number" },
+        "adults": { "type": "number" },
+        "children": { "type": "number" },
+        "pickupLocation": { "type": "string", "maxLength": 120 },
+        "vehicleTier": { "type": "string", "enum": ["Private Sedan", "Luxury KDH Van", "4x4 Safari Jeep", "VIP Coach"] },
+        "addons": { "type": "array" },
+        "travelerName": { "type": "string", "maxLength": 120 },
+        "travelerPhone": { "type": "string", "maxLength": 50 },
+        "travelerEmail": { "type": "string", "maxLength": 150 },
+        "specialRequests": { "type": "string", "maxLength": 1500 },
+        "baseAmountLkr": { "type": "number" },
+        "adminAdjustmentLkr": { "type": "number" },
+        "adminAdjustmentNote": { "type": "string", "maxLength": 300 },
+        "assignedDriverName": { "type": "string", "maxLength": 120 },
+        "assignedDriverPhone": { "type": "string", "maxLength": 50 },
+        "adminNotes": { "type": "string", "maxLength": 1500 },
+        "totalLkr": { "type": "number" },
+        "preferredCurrency": { "type": "string", "enum": ["LKR", "USD"] },
+        "usdExchangeRate": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled"] },
+        "userId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "bookingRef", "packageId", "packageTitle", "category", "destination", "startDate", "days", "adults", "pickupLocation", "vehicleTier", "travelerName", "travelerPhone", "totalLkr", "status", "createdAt"]
+    },
+    "TravelConfig": {
+      "title": "TravelConfig",
+      "description": "Admin-managed Sri Lanka travel packages, vehicle tier rates, add-ons, and pricing configuration.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "packages": { "type": "array" },
+        "vehicleTiers": { "type": "array" },
+        "addons": { "type": "array" },
+        "serviceFeePercent": { "type": "number" },
+        "globalDiscountPercent": { "type": "number" },
+        "customTripBaseLkr": { "type": "number" },
+        "customTripDailyLkr": { "type": "number" },
+        "usdExchangeRateLkr": { "type": "number" },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "packages", "vehicleTiers", "addons", "updatedAt"]
     }
   },
   "firestore": {
@@ -259,6 +315,14 @@
     "/donations/{causeId}": {
       "schema": { "$ref": "#/entities/DonationCause" },
       "description": "Verified Sri Lanka hospital, charity, and emergency relief donation causes and pledges."
+    },
+    "/travel_bookings/{bookingId}": {
+      "schema": { "$ref": "#/entities/TravelBooking" },
+      "description": "Sri Lanka travel packages, wildlife safaris, chauffeur transfers, and boutique stay reservations."
+    },
+    "/travel_config/{configId}": {
+      "schema": { "$ref": "#/entities/TravelConfig" },
+      "description": "Admin-managed Sri Lanka travel packages, charges, add-on rates, and vehicle tier fees."
     }
   }
 }

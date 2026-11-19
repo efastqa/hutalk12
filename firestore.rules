@@ -65,6 +65,52 @@ service cloud.firestore {
              (!('pledges' in data) || (data.pledges is list && data.pledges.size() <= 200));
     }
 
+    function isValidTravelBooking(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.bookingRef is string && data.bookingRef.size() > 0 && data.bookingRef.size() <= 40 &&
+             data.packageId is string && data.packageId.size() > 0 && data.packageId.size() <= 128 &&
+             data.packageTitle is string && data.packageTitle.size() > 0 && data.packageTitle.size() <= 200 &&
+             data.category in ['Tour Packages', 'Safaris & Wildlife', 'Transfers & Chauffeurs', 'Boutique Stays'] &&
+             data.destination is string && data.destination.size() > 0 && data.destination.size() <= 120 &&
+             data.startDate is string && data.startDate.size() > 0 && data.startDate.size() <= 32 &&
+             data.days is number && data.days >= 1 && data.days <= 30 &&
+             data.adults is number && data.adults >= 1 && data.adults <= 30 &&
+             (!('children' in data) || (data.children is number && data.children >= 0 && data.children <= 20)) &&
+             data.pickupLocation is string && data.pickupLocation.size() > 0 && data.pickupLocation.size() <= 120 &&
+             data.vehicleTier in ['Private Sedan', 'Luxury KDH Van', '4x4 Safari Jeep', 'VIP Coach'] &&
+             (!('addons' in data) || (data.addons is list && data.addons.size() <= 10)) &&
+             data.travelerName is string && data.travelerName.size() > 0 && data.travelerName.size() <= 120 &&
+             data.travelerPhone is string && data.travelerPhone.size() > 0 && data.travelerPhone.size() <= 50 &&
+             (!('travelerEmail' in data) || (data.travelerEmail is string && data.travelerEmail.size() <= 150)) &&
+             (!('specialRequests' in data) || (data.specialRequests is string && data.specialRequests.size() <= 1500)) &&
+             (!('baseAmountLkr' in data) || (data.baseAmountLkr is number && data.baseAmountLkr >= 0)) &&
+             (!('adminAdjustmentLkr' in data) || data.adminAdjustmentLkr is number) &&
+             (!('adminAdjustmentNote' in data) || (data.adminAdjustmentNote is string && data.adminAdjustmentNote.size() <= 300)) &&
+             (!('assignedDriverName' in data) || (data.assignedDriverName is string && data.assignedDriverName.size() <= 120)) &&
+             (!('assignedDriverPhone' in data) || (data.assignedDriverPhone is string && data.assignedDriverPhone.size() <= 50)) &&
+             (!('adminNotes' in data) || (data.adminNotes is string && data.adminNotes.size() <= 1500)) &&
+             data.totalLkr is number && data.totalLkr >= 0 &&
+             (!('preferredCurrency' in data) || data.preferredCurrency in ['LKR', 'USD']) &&
+             (!('usdExchangeRate' in data) || (data.usdExchangeRate is number && data.usdExchangeRate >= 50 && data.usdExchangeRate <= 2000)) &&
+             data.status in ['pending', 'confirmed', 'cancelled'] &&
+             (!('userId' in data) || (data.userId is string && data.userId.size() <= 128)) &&
+             data.createdAt is string && data.createdAt.size() <= 64 &&
+             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
+    function isValidTravelConfig(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 64 &&
+             data.packages is list && data.packages.size() <= 60 &&
+             data.vehicleTiers is list && data.vehicleTiers.size() <= 15 &&
+             data.addons is list && data.addons.size() <= 30 &&
+             (!('serviceFeePercent' in data) || (data.serviceFeePercent is number && data.serviceFeePercent >= 0 && data.serviceFeePercent <= 50)) &&
+             (!('globalDiscountPercent' in data) || (data.globalDiscountPercent is number && data.globalDiscountPercent >= 0 && data.globalDiscountPercent <= 80)) &&
+             (!('customTripBaseLkr' in data) || (data.customTripBaseLkr is number && data.customTripBaseLkr >= 0)) &&
+             (!('customTripDailyLkr' in data) || (data.customTripDailyLkr is number && data.customTripDailyLkr >= 0)) &&
+             (!('usdExchangeRateLkr' in data) || (data.usdExchangeRateLkr is number && data.usdExchangeRateLkr >= 50 && data.usdExchangeRateLkr <= 2000)) &&
+             data.updatedAt is string && data.updatedAt.size() <= 64;
+    }
+
     // Master Gate helper: Get parent conversation document
     function getConversation(conversationId) {
       return get(/databases/$(database)/documents/conversations/$(conversationId)).data;
@@ -220,6 +266,40 @@ service cloud.firestore {
         (!('status' in incoming()) || incoming().status in ['active', 'fulfilled', 'paused']) &&
         (!('pledges' in incoming()) || (incoming().pledges is list && incoming().pledges.size() <= 200));
       allow delete: if isValidId(causeId);
+    }
+
+    // Sri Lanka Travel & Tourism Booking System (HUTA IN) - Admin Protected
+    match /travel_bookings/{bookingId} {
+      allow get: if isValidId(bookingId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isValidId(bookingId) && isValidTravelBooking(incoming());
+      allow update: if isValidId(bookingId) &&
+        isValidTravelBooking(incoming()) &&
+        incoming().bookingRef == existing().bookingRef &&
+        incoming().userId == existing().userId &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'status',
+          'startDate',
+          'days',
+          'pickupLocation',
+          'vehicleTier',
+          'baseAmountLkr',
+          'adminAdjustmentLkr',
+          'adminAdjustmentNote',
+          'totalLkr',
+          'assignedDriverName',
+          'assignedDriverPhone',
+          'adminNotes',
+          'updatedAt'
+        ]);
+      allow delete: if isValidId(bookingId);
+    }
+
+    // Admin-Controlled Travel Pricing, Packages & Charges Configuration
+    match /travel_config/{configId} {
+      allow get, list: if true;
+      allow create, update: if isValidId(configId) && isValidTravelConfig(incoming());
+      allow delete: if isValidId(configId);
     }
   }
 }

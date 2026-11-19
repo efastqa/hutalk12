@@ -47,6 +47,7 @@ import {
   Video,
   Database,
   Store,
+  Plane,
 } from 'lucide-react';
 import { formatLKR } from './ListingsSection';
 import { api } from '../services/api';
@@ -59,6 +60,7 @@ import { AdminReelsManager } from './AdminReelsManager';
 import { AdminDataBackup } from './AdminDataBackup';
 import { AdminEStoresManager } from './AdminEStoresManager';
 import { AdminPromoSlidesManager } from './AdminPromoSlidesManager';
+import { AdminTravelBookingManager } from './AdminTravelBookingManager';
 
 const compressBannerImage = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -193,7 +195,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onReorderPromoSlides,
   initialFilterTab,
 }) => {
-  type AdminTab = 'all' | 'pending' | 'featured' | 'services' | 'spotlight' | 'hero_ads' | 'promo_slides' | 'reels' | 'estores' | 'reach_analytics' | 'reports' | 'sms_gateway' | 'custom_domain' | 'data_backup';
+  type AdminTab = 'all' | 'pending' | 'featured' | 'services' | 'spotlight' | 'hero_ads' | 'promo_slides' | 'reels' | 'estores' | 'travel_bookings' | 'reach_analytics' | 'reports' | 'sms_gateway' | 'custom_domain' | 'data_backup';
   const [filterTab, setFilterTab] = useState<AdminTab>(
     (initialFilterTab as AdminTab) || 'all'
   );
@@ -1446,6 +1448,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             {localVideoReels.filter((r) => r.isActive !== false).length} Active Live • Click to manage
           </p>
         </div>
+
+        <div
+          id="admin-metric-travel-bookings"
+          onClick={() => setFilterTab('travel_bookings')}
+          className={`p-6 rounded-2xl border transition-all cursor-pointer ${
+            filterTab === 'travel_bookings'
+              ? 'bg-white border-cyan-600 shadow-lg -translate-y-1 ring-2 ring-cyan-500/20'
+              : 'bg-white border-gray-200 hover:border-cyan-300'
+          }`}
+        >
+          <div className="flex items-center justify-between text-cyan-600 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider">Travel & Tour Control</span>
+            <Plane className="w-5 h-5 text-cyan-600" />
+          </div>
+          <div className="text-xl font-extrabold text-gray-900">Admin Only</div>
+          <p className="text-xs text-gray-500 mt-1 font-medium">
+            Bookings, Amount Edits & Tour Charges
+          </p>
+        </div>
       </div>
 
       {/* Admin Strategy: How Admin Benefits from Services */}
@@ -1730,6 +1751,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <Store className="w-3.5 h-3.5" />
               <span>E-Stores & Retail ({localStores.length})</span>
             </button>
+            <button
+              id="admin-filter-travel-bookings-tab"
+              type="button"
+              onClick={() => setFilterTab('travel_bookings')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                filterTab === 'travel_bookings'
+                  ? 'bg-cyan-600 text-white shadow-sm'
+                  : 'bg-cyan-50 text-cyan-800 hover:bg-cyan-100 border border-cyan-200/60'
+              }`}
+            >
+              <Plane className="w-3.5 h-3.5" />
+              <span>Travel Bookings & Charges</span>
+            </button>
           </div>
 
           {filterTab === 'spotlight' && (
@@ -1744,7 +1778,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </button>
           )}
 
-          {filterTab !== 'hero_ads' && filterTab !== 'promo_slides' && filterTab !== 'reels' && filterTab !== 'sms_gateway' && filterTab !== 'custom_domain' && filterTab !== 'data_backup' && filterTab !== 'estores' && (
+          {filterTab !== 'hero_ads' && filterTab !== 'promo_slides' && filterTab !== 'reels' && filterTab !== 'sms_gateway' && filterTab !== 'custom_domain' && filterTab !== 'data_backup' && filterTab !== 'estores' && filterTab !== 'travel_bookings' && (
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
                 <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
@@ -1784,7 +1818,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
 
         {/* Content Section */}
-        {filterTab === 'estores' ? (
+        {filterTab === 'travel_bookings' ? (
+          <div className="p-4 sm:p-6">
+            <AdminTravelBookingManager onToast={onToast} />
+          </div>
+        ) : filterTab === 'estores' ? (
           <div className="p-4 sm:p-6">
             <AdminEStoresManager
               stores={localStores}
