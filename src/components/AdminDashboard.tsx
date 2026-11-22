@@ -136,6 +136,7 @@ interface AdminDashboardProps {
   onCreateEvent?: (created: EventItem) => void;
   onDeleteEvent?: (id: string) => void;
   onToggleSpotlightEvent?: (id: string) => Promise<void>;
+  onRefreshListings?: () => Promise<void>;
   onClearAllListings?: () => Promise<void>;
   onUpdateHeroSettings?: (settings: Partial<HeroAdSettings>) => Promise<void>;
   onCreateHeroAd?: (ad: Partial<HeroAd>) => Promise<void>;
@@ -179,6 +180,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onCreateEvent,
   onDeleteEvent,
   onToggleSpotlightEvent,
+  onRefreshListings,
   onClearAllListings,
   onUpdateHeroSettings,
   onCreateHeroAd,
@@ -238,6 +240,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   // Live Launch & Auto-Approve state
   const [autoApprove, setAutoApprove] = useState(false);
   const [isUpdatingAutoApprove, setIsUpdatingAutoApprove] = useState(false);
+  const [isRefreshingListings, setIsRefreshingListings] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [isClearingAll, setIsClearingAll] = useState(false);
 
@@ -1813,6 +1816,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <option value="Kalutara">Kalutara</option>
                 <option value="Kurunegala">Kurunegala</option>
               </select>
+
+              {onRefreshListings && (
+                <button
+                  type="button"
+                  disabled={isRefreshingListings}
+                  onClick={async () => {
+                    setIsRefreshingListings(true);
+                    try {
+                      await onRefreshListings();
+                      if (onToast) onToast('Listings synced from server & Firestore.', 'info');
+                    } catch {
+                      if (onToast) onToast('Failed to refresh listings.', 'error');
+                    } finally {
+                      setIsRefreshingListings(false);
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 text-xs font-bold text-gray-700 transition-colors whitespace-nowrap shrink-0 cursor-pointer disabled:opacity-50"
+                  title="Sync latest submitted advertisements"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 text-[#FF5A36] ${isRefreshingListings ? 'animate-spin' : ''}`} />
+                  <span>Sync</span>
+                </button>
+              )}
             </div>
           )}
         </div>

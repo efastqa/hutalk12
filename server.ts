@@ -93,6 +93,8 @@ interface Listing {
   status: 'approved' | 'pending' | 'rejected';
   isFeatured: boolean;
   date: string;
+  createdAt?: string;
+  updatedAt?: string;
   userId: string;
   views: number;
   whatsappClicks?: number;
@@ -1833,6 +1835,78 @@ async function startServer() {
     }
   });
 
+  const sortListingsNewestFirst = (list: Listing[]): Listing[] =>
+    [...list].sort(
+      (a, b) =>
+        new Date(b.createdAt || b.date || 0).getTime() -
+        new Date(a.createdAt || a.date || 0).getTime()
+    );
+
+  const listingStreamClients = new Set<express.Response>();
+
+  const broadcastListingsUpdate = (
+    eventType: 'init' | 'upsert' | 'status' | 'delete' | 'clear' | 'sync',
+    listing?: Listing,
+    deletedId?: string
+  ) => {
+    if (listingStreamClients.size === 0) return;
+    const payload = JSON.stringify({
+      type: eventType,
+      listing: listing || null,
+      deletedId: deletedId || null,
+      listings: sortListingsNewestFirst(listingsCache),
+      syncedAt: new Date().toISOString(),
+    });
+    const frame = `event: listings\ndata: ${payload}\n\n`;
+    for (const clientRes of Array.from(listingStreamClients)) {
+      try {
+        clientRes.write(frame);
+      } catch {
+        listingStreamClients.delete(clientRes);
+      }
+    }
+  };
+
+  // Real-time Server-Sent Events (SSE) stream so Admin Panel & Marketplace reflect new/updated ads instantaneously
+  app.get('/api/listings/stream', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    if (typeof (res as any).flushHeaders === 'function') {
+      (res as any).flushHeaders();
+    }
+
+    listingStreamClients.add(res);
+    const initPayload = JSON.stringify({
+      type: 'init',
+      listing: null,
+      deletedId: null,
+      listings: sortListingsNewestFirst(listingsCache),
+      syncedAt: new Date().toISOString(),
+    });
+    try {
+      res.write(`retry: 3000\nevent: listings\ndata: ${initPayload}\n\n`);
+    } catch {
+      listingStreamClients.delete(res);
+      return;
+    }
+
+    const heartbeat = setInterval(() => {
+      try {
+        res.write(`: keepalive ${Date.now()}\n\n`);
+      } catch {
+        clearInterval(heartbeat);
+        listingStreamClients.delete(res);
+      }
+    }, 25000);
+
+    req.on('close', () => {
+      clearInterval(heartbeat);
+      listingStreamClients.delete(res);
+    });
+  });
+
   // GET /api/listings
   app.get('/api/listings', (req, res) => {
     const { status, category, location, search, minPrice, maxPrice, sort, userId } = req.query;
@@ -1884,7 +1958,11 @@ async function startServer() {
       result.sort((a, b) => b.price - a.price);
     } else {
       // newest first
-      result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      result.sort(
+        (a, b) =>
+          new Date(b.createdAt || b.date || 0).getTime() -
+          new Date(a.createdAt || a.date || 0).getTime()
+      );
     }
 
     res.json(result);
@@ -1975,6 +2053,7 @@ async function startServer() {
     // Check if listing with this ID already exists in cache
     const existingIndex = listingsCache.findIndex(l => l.id === finalId);
 
+    const nowIso = new Date().toISOString();
     const newListing: Listing = {
       id: finalId,
       title: finalTitle,
@@ -1988,7 +2067,9 @@ async function startServer() {
       description: finalDescription,
       status: (adminCfg.autoApprove || Boolean(req.body.isAdminLoggedIn) || req.body.status === 'approved') ? 'approved' : 'pending',
       isFeatured: Boolean(req.body.isFeatured),
-      date: new Date().toISOString().split('T')[0],
+      date: nowIso.split('T')[0],
+      createdAt: req.body.createdAt ? String(req.body.createdAt) : nowIso,
+      updatedAt: nowIso,
       userId: userId ? String(userId) : 'guest',
       views: Number(req.body.views) || 0,
       ...(serviceTrade ? { serviceTrade: String(serviceTrade).trim() } : {}),
@@ -2031,6 +2112,7 @@ async function startServer() {
 
     saveStoredListings(listingsCache);
     persistListingToFirestore(newListing);
+    broadcastListingsUpdate('upsert', newListing);
     res.status(201).json(newListing);
   });
 
@@ -2062,6 +2144,7 @@ async function startServer() {
       const dist = String(district || location || 'Colombo').trim();
       const rawImgs = Array.isArray(images) ? images.map(String).filter(Boolean) : [];
       const primaryImg = rawImgs[0] || (image ? String(image) : 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80');
+      const nowUpsertIso = new Date().toISOString();
       const upserted: Listing = {
         id: req.params.id,
         title: title !== undefined ? String(title).trim() : 'Listing',
@@ -2075,7 +2158,9 @@ async function startServer() {
         description: description !== undefined ? String(description).trim() : '',
         isFeatured: Boolean(isFeatured),
         status: status || 'approved',
-        date: new Date().toISOString().split('T')[0],
+        date: nowUpsertIso.split('T')[0],
+        createdAt: req.body.createdAt ? String(req.body.createdAt) : nowUpsertIso,
+        updatedAt: nowUpsertIso,
         userId: req.body.userId || 'guest',
         views: Number(req.body.views) || 0,
         serviceTrade: serviceTrade !== undefined ? String(serviceTrade).trim() : undefined,
@@ -2088,6 +2173,7 @@ async function startServer() {
       listingsCache.unshift(upserted);
       saveStoredListings(listingsCache);
       persistListingToFirestore(upserted);
+      broadcastListingsUpdate('upsert', upserted);
       return res.json(upserted);
     }
 
@@ -2153,10 +2239,12 @@ async function startServer() {
       storageCapacity: req.body.storageCapacity !== undefined ? (req.body.storageCapacity ? String(req.body.storageCapacity).trim() : undefined) : current.storageCapacity,
       jobType: req.body.jobType !== undefined ? (req.body.jobType ? String(req.body.jobType).trim() : undefined) : current.jobType,
       salaryPeriod: req.body.salaryPeriod !== undefined ? (req.body.salaryPeriod ? String(req.body.salaryPeriod).trim() : undefined) : current.salaryPeriod,
+      updatedAt: new Date().toISOString(),
     };
 
     saveStoredListings(listingsCache);
     persistListingToFirestore(listingsCache[index]);
+    broadcastListingsUpdate('upsert', listingsCache[index]);
     res.json(listingsCache[index]);
   });
 
@@ -2167,8 +2255,10 @@ async function startServer() {
       return res.status(404).json({ error: 'Listing not found' });
     }
     listingsCache[index].isVerifiedPro = !listingsCache[index].isVerifiedPro;
+    listingsCache[index].updatedAt = new Date().toISOString();
     saveStoredListings(listingsCache);
     persistListingToFirestore(listingsCache[index]);
+    broadcastListingsUpdate('status', listingsCache[index]);
     res.json(listingsCache[index]);
   });
 
@@ -2184,8 +2274,10 @@ async function startServer() {
       listingsCache[index].verificationNotes = String(verificationNotes).trim();
     }
     listingsCache[index].verificationStatus = 'verified_with_customer';
+    listingsCache[index].updatedAt = new Date().toISOString();
     saveStoredListings(listingsCache);
     persistListingToFirestore(listingsCache[index]);
+    broadcastListingsUpdate('status', listingsCache[index]);
     res.json(listingsCache[index]);
   });
 
@@ -2205,8 +2297,10 @@ async function startServer() {
     if (status && ['approved', 'pending', 'rejected'].includes(status)) {
       listingsCache[index].status = status;
     }
+    listingsCache[index].updatedAt = new Date().toISOString();
     saveStoredListings(listingsCache);
     persistListingToFirestore(listingsCache[index]);
+    broadcastListingsUpdate('status', listingsCache[index]);
     res.json(listingsCache[index]);
   });
 
@@ -2222,8 +2316,10 @@ async function startServer() {
       listingsCache[index].verificationNotes = String(verificationNotes).trim();
     }
     listingsCache[index].verificationStatus = 'deltas_found';
+    listingsCache[index].updatedAt = new Date().toISOString();
     saveStoredListings(listingsCache);
     persistListingToFirestore(listingsCache[index]);
+    broadcastListingsUpdate('status', listingsCache[index]);
     res.json(listingsCache[index]);
   });
 
@@ -2234,8 +2330,10 @@ async function startServer() {
       return res.status(404).json({ error: 'Listing not found' });
     }
     listingsCache[index].isFeatured = !listingsCache[index].isFeatured;
+    listingsCache[index].updatedAt = new Date().toISOString();
     saveStoredListings(listingsCache);
     persistListingToFirestore(listingsCache[index]);
+    broadcastListingsUpdate('status', listingsCache[index]);
     res.json(listingsCache[index]);
   });
 
@@ -2263,8 +2361,10 @@ async function startServer() {
       return res.status(400).json({ error: 'Invalid availability status' });
     }
     listingsCache[index].availabilityStatus = availabilityStatus;
+    listingsCache[index].updatedAt = new Date().toISOString();
     saveStoredListings(listingsCache);
     persistListingToFirestore(listingsCache[index]);
+    broadcastListingsUpdate('status', listingsCache[index]);
     res.json(listingsCache[index]);
   });
 
@@ -2373,6 +2473,7 @@ async function startServer() {
     listingsCache.splice(index, 1);
     saveStoredListings(listingsCache);
     deleteListingFromFirestore(req.params.id);
+    broadcastListingsUpdate('delete', undefined, req.params.id);
     res.json({ success: true, message: 'Listing deleted' });
   });
 
@@ -2682,6 +2783,7 @@ async function startServer() {
   app.post('/api/admin/clear-all-listings', (req, res) => {
     listingsCache = [];
     saveStoredListings(listingsCache);
+    broadcastListingsUpdate('clear');
     res.json({ success: true, message: 'All listings removed for fresh launch', count: 0 });
   });
 
@@ -5301,11 +5403,91 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
       try {
         const snap = await getDocs(collection(firestoreDb, 'listings'));
         if (!snap.empty) {
-          const remoteListings: Listing[] = [];
-          snap.forEach((d) => remoteListings.push(d.data() as Listing));
-          listingsCache = remoteListings;
+          const listingMap = new Map<string, Listing>();
+          listingsCache.forEach((l) => {
+            if (l && l.id) listingMap.set(l.id, l);
+          });
+          snap.forEach((d) => {
+            const remote = { ...(d.data() as Listing), id: (d.data() as Listing)?.id || d.id };
+            const existing = listingMap.get(remote.id);
+            const remoteTs = new Date(remote.updatedAt || remote.createdAt || remote.date || 0).getTime();
+            const existingTs = existing
+              ? new Date(existing.updatedAt || existing.createdAt || existing.date || 0).getTime()
+              : -1;
+            if (!existing || remoteTs >= existingTs) {
+              listingMap.set(remote.id, remote);
+            }
+          });
+          listingsCache = sortListingsNewestFirst(Array.from(listingMap.values()));
           saveStoredListings(listingsCache);
           console.log(`[Firestore] Initialized server cache with ${listingsCache.length} shared listings`);
+          broadcastListingsUpdate('sync');
+        }
+
+        // Keep server cache & SSE Listings stream live-synced with any external Firestore writes
+        try {
+          onSnapshot(
+            collection(firestoreDb, 'listings'),
+            (liveSnap) => {
+              let changed = false;
+              let latestListing: Listing | undefined;
+              let removedId: string | undefined;
+              const cacheMap = new Map<string, Listing>();
+              listingsCache.forEach((l) => {
+                if (l && l.id) cacheMap.set(l.id, l);
+              });
+
+              for (const change of liveSnap.docChanges()) {
+                const docId = change.doc.id;
+                if (change.type === 'removed') {
+                  if (cacheMap.delete(docId)) {
+                    changed = true;
+                    removedId = docId;
+                  }
+                } else {
+                  const raw = change.doc.data() as Listing;
+                  const normalized: Listing = { ...raw, id: raw.id || docId };
+                  const existing = cacheMap.get(normalized.id);
+                  const existingTs = existing
+                    ? new Date(existing.updatedAt || existing.createdAt || existing.date || 0).getTime()
+                    : 0;
+                  const incomingTs = new Date(
+                    normalized.updatedAt || normalized.createdAt || normalized.date || 0
+                  ).getTime();
+                  if (
+                    !existing ||
+                    incomingTs > existingTs ||
+                    existing.status !== normalized.status ||
+                    existing.isFeatured !== normalized.isFeatured ||
+                    existing.isVerifiedPro !== normalized.isVerifiedPro
+                  ) {
+                    cacheMap.set(normalized.id, normalized);
+                    latestListing = normalized;
+                    changed = true;
+                  }
+                }
+              }
+
+              if (changed) {
+                listingsCache = sortListingsNewestFirst(Array.from(cacheMap.values()));
+                saveStoredListings(listingsCache);
+                broadcastListingsUpdate(
+                  removedId && !latestListing ? 'delete' : 'sync',
+                  latestListing,
+                  removedId
+                );
+              }
+            },
+            (err) => {
+              if (!isQuotaExceededError(err)) {
+                console.warn('[Firestore] Live listings listener warning:', err);
+              }
+            }
+          );
+        } catch (listenErr) {
+          if (!isQuotaExceededError(listenErr)) {
+            console.warn('[Firestore] Could not attach live listings listener:', listenErr);
+          }
         }
       } catch (e) {
         if (isQuotaExceededError(e)) {

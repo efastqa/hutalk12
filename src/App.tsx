@@ -387,7 +387,10 @@ export default function App() {
       loadSriLankaNews(false);
     }, 5 * 60 * 1000);
 
-    // Subscribe to live video stories, promo slides, buyer requests & donation causes updates
+    // Subscribe to live listings, video stories, promo slides, buyer requests & donation causes updates
+    const unsubListings = api.subscribeToListings((liveListings) => {
+      setListings(liveListings);
+    });
     const unsubReels = api.subscribeToVideoReels((reels) => {
       setVideoReels(reels);
     });
@@ -412,12 +415,24 @@ export default function App() {
 
     return () => {
       window.clearInterval(newsInterval);
+      unsubListings();
       unsubReels();
       unsubPromoSlides();
       unsubBuyerRequests();
       unsubDonations();
     };
   }, []);
+
+  // Ensure Admin Portal always shows latest pending & approved ads when opened
+  useEffect(() => {
+    if (currentTab === 'admin_dashboard') {
+      api.getListings({ status: 'all' }).then((data) => {
+        if (Array.isArray(data)) {
+          setListings(data);
+        }
+      }).catch(() => {});
+    }
+  }, [currentTab]);
 
   const loadSriLankaNews = async (forceRefresh = false) => {
     setIsLoadingHotNews(true);
@@ -1065,7 +1080,7 @@ export default function App() {
           userId: currentUser ? currentUser.id : 'guest',
         });
         api.addGuestListingId(created.id);
-        setListings((prev) => [created, ...prev]);
+        setListings((prev) => [created, ...prev.filter((item) => item.id !== created.id)]);
 
         if (created.status === 'approved') {
           showToast('Advertisement published live immediately!', 'success');
@@ -1765,6 +1780,10 @@ export default function App() {
                 const msg = err instanceof Error ? err.message : 'Failed to toggle spotlight';
                 showToast(msg, 'error');
               }
+            }}
+            onRefreshListings={async () => {
+              const latest = await api.getListings({ status: 'all' });
+              setListings(latest);
             }}
             onClearAllListings={async () => {
               try {

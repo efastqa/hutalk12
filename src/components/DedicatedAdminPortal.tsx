@@ -64,6 +64,7 @@ interface DedicatedAdminPortalProps {
   onCreateEvent?: (created: EventItem) => void;
   onDeleteEvent?: (id: string) => void;
   onToggleSpotlightEvent?: (id: string) => Promise<void>;
+  onRefreshListings?: () => Promise<void>;
   onClearAllListings?: () => Promise<void>;
 }
 
@@ -107,6 +108,7 @@ export const DedicatedAdminPortal: React.FC<DedicatedAdminPortalProps> = ({
   onCreateEvent,
   onDeleteEvent,
   onToggleSpotlightEvent,
+  onRefreshListings,
   onClearAllListings,
 }) => {
   // Authentication State for unauthenticated login screen
@@ -549,6 +551,7 @@ export const DedicatedAdminPortal: React.FC<DedicatedAdminPortalProps> = ({
           onCreateEvent={onCreateEvent}
           onDeleteEvent={onDeleteEvent}
           onToggleSpotlightEvent={onToggleSpotlightEvent}
+          onRefreshListings={onRefreshListings}
           onClearAllListings={onClearAllListings}
         />
       </main>

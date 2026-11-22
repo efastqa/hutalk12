@@ -95,17 +95,84 @@ export const api = {
   /**
    * Subscribe to live real-time listing updates across all devices & deployments
    */
-  subscribeToListings(callback: (listings: Listing[]) => void): () => void {
+  subscribeToListings(
+    callback: (listings: Listing[]) => void,
+    onStatusChange?: (status: 'live' | 'reconnecting' | 'offline') => void
+  ): () => void {
     let fallbackTimer: ReturnType<typeof setInterval> | null = null;
+    let eventSource: EventSource | null = null;
+    let unsubFirestore: (() => void) | null = null;
+    let sseConnected = false;
+    let fsConnected = false;
+    let disposed = false;
+
+    const sseMap = new Map<string, Listing>();
+    const fsMap = new Map<string, Listing>();
+    const deletedIds = new Set<string>();
+
+    const sortListings = (list: Listing[]) =>
+      [...list].sort(
+        (a, b) =>
+          new Date(b.createdAt || b.date || 0).getTime() -
+          new Date(a.createdAt || a.date || 0).getTime()
+      );
+
+    const normalizeListing = (raw: Listing, fallbackId?: string): Listing => ({
+      ...raw,
+      id: raw.id || fallbackId || '',
+    });
+
+    const updateStatus = () => {
+      if (disposed || !onStatusChange) return;
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        onStatusChange('offline');
+        return;
+      }
+      onStatusChange(sseConnected || fsConnected ? 'live' : 'reconnecting');
+    };
+
+    const emitMerged = () => {
+      if (disposed) return;
+      const merged = new Map<string, Listing>();
+
+      for (const [id, item] of sseMap.entries()) {
+        if (!deletedIds.has(id)) {
+          merged.set(id, item);
+        }
+      }
+
+      for (const [id, fsItem] of fsMap.entries()) {
+        if (deletedIds.has(id)) continue;
+        const sseItem = merged.get(id);
+        if (!sseItem) {
+          merged.set(id, fsItem);
+          continue;
+        }
+        const fsUpdated = new Date(fsItem.updatedAt || fsItem.createdAt || fsItem.date || 0).getTime();
+        const sseUpdated = new Date(sseItem.updatedAt || sseItem.createdAt || sseItem.date || 0).getTime();
+        if (fsUpdated > sseUpdated) {
+          merged.set(id, fsItem);
+        }
+      }
+
+      callback(sortListings(Array.from(merged.values())));
+    };
+
     const fetchRestListings = async (): Promise<Listing[]> => {
       try {
-        const res = await fetch(`${API_BASE}/listings`);
+        const res = await fetch(`${API_BASE}/listings?status=all`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data)) {
-            return [...data].sort(
-              (a, b) => new Date(b.createdAt || b.date || 0).getTime() - new Date(a.createdAt || a.date || 0).getTime()
-            );
+            sseMap.clear();
+            for (const item of data) {
+              if (item && item.id) {
+                deletedIds.delete(item.id);
+                sseMap.set(item.id, normalizeListing(item));
+              }
+            }
+            emitMerged();
+            return sortListings(data);
           }
         }
       } catch {
@@ -115,58 +182,194 @@ export const api = {
     };
 
     const startRestFallback = () => {
-      if (fallbackTimer) return;
-      fetchRestListings().then(callback).catch(() => {});
+      if (fallbackTimer || disposed) return;
+      fetchRestListings().catch(() => {});
       fallbackTimer = setInterval(() => {
-        fetchRestListings().then(callback).catch(() => {});
-      }, 30000);
+        if (!sseConnected && !fsConnected) {
+          fetchRestListings().catch(() => {});
+        }
+      }, 15000);
     };
 
-    if (isFirestoreQuotaActive()) {
+    updateStatus();
+
+    // 1. Primary Real-Time Server-Sent Events (SSE) stream (instant <100ms updates to Admin Panel & Marketplace)
+    if (typeof window !== 'undefined' && typeof EventSource !== 'undefined') {
+      try {
+        eventSource = new EventSource(`${API_BASE}/listings/stream`);
+
+        const handleSsePayload = (rawData: string) => {
+          if (disposed) return;
+          try {
+            const payload = JSON.parse(rawData) as {
+              type?: string;
+              listing?: Listing | null;
+              deletedId?: string | null;
+              listings?: Listing[];
+            };
+
+            if (payload.type === 'clear') {
+              sseMap.clear();
+              fsMap.clear();
+            }
+
+            if (payload.deletedId) {
+              deletedIds.add(payload.deletedId);
+              sseMap.delete(payload.deletedId);
+              fsMap.delete(payload.deletedId);
+            }
+
+            if (Array.isArray(payload.listings)) {
+              const incomingIds = new Set<string>();
+              sseMap.clear();
+              for (const rawItem of payload.listings) {
+                if (rawItem && rawItem.id) {
+                  incomingIds.add(rawItem.id);
+                  deletedIds.delete(rawItem.id);
+                  sseMap.set(rawItem.id, normalizeListing(rawItem));
+                }
+              }
+              if (payload.type === 'init' || payload.type === 'delete') {
+                for (const existingFsId of Array.from(fsMap.keys())) {
+                  if (!incomingIds.has(existingFsId) && payload.deletedId === existingFsId) {
+                    fsMap.delete(existingFsId);
+                  }
+                }
+              }
+            } else if (payload.listing && payload.listing.id) {
+              deletedIds.delete(payload.listing.id);
+              sseMap.set(payload.listing.id, normalizeListing(payload.listing));
+            }
+
+            sseConnected = true;
+            updateStatus();
+            emitMerged();
+          } catch {
+            // ignore malformed event frame
+          }
+        };
+
+        eventSource.addEventListener('listings', (ev) => {
+          handleSsePayload((ev as MessageEvent).data);
+        });
+        eventSource.onmessage = (ev) => {
+          handleSsePayload(ev.data);
+        };
+        eventSource.onopen = () => {
+          sseConnected = true;
+          updateStatus();
+        };
+        eventSource.onerror = () => {
+          sseConnected = false;
+          updateStatus();
+        };
+      } catch {
+        startRestFallback();
+      }
+    } else {
       startRestFallback();
-      return () => {
-        if (fallbackTimer) clearInterval(fallbackTimer);
-      };
     }
 
-    try {
-      const colRef = collection(db, 'listings');
-      const unsub = onSnapshot(
-        colRef,
-        (snapshot) => {
-          const items: Listing[] = [];
-          snapshot.forEach((docSnap) => {
-            items.push(docSnap.data() as Listing);
-          });
-          // Sort newest first
-          items.sort((a, b) => new Date(b.createdAt || b.date || 0).getTime() - new Date(a.createdAt || a.date || 0).getTime());
-          callback(items);
-        },
-        (err) => {
-          const msg = err?.message || String(err);
-          if (msg.includes('Disconnecting idle stream') || msg.includes('CANCELLED')) {
-            return;
+    // 2. Real-Time Cloud Firestore listener (cross-container / direct Firestore writes)
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const colRef = collection(db, 'listings');
+        unsubFirestore = onSnapshot(
+          colRef,
+          (snapshot) => {
+            if (disposed) return;
+            for (const change of snapshot.docChanges()) {
+              if (change.type === 'removed') {
+                const removedId = change.doc.id;
+                deletedIds.add(removedId);
+                fsMap.delete(removedId);
+                sseMap.delete(removedId);
+              }
+            }
+
+            fsMap.clear();
+            snapshot.forEach((docSnap) => {
+              const normalized = normalizeListing(docSnap.data() as Listing, docSnap.id);
+              if (normalized.id) {
+                deletedIds.delete(normalized.id);
+                fsMap.set(normalized.id, normalized);
+              }
+            });
+
+            fsConnected = true;
+            updateStatus();
+            if (fsMap.size > 0 || sseMap.size > 0) {
+              emitMerged();
+            }
+          },
+          (err) => {
+            const msg = err?.message || String(err);
+            if (msg.includes('Disconnecting idle stream') || msg.includes('CANCELLED')) {
+              return;
+            }
+            fsConnected = false;
+            recordFirestoreError(err);
+            updateStatus();
+            if (!sseConnected) {
+              startRestFallback();
+            }
           }
-          recordFirestoreError(err);
-          // Gracefully fall back to REST API without hammering Firestore
+        );
+      } catch (err) {
+        fsConnected = false;
+        recordFirestoreError(err);
+        updateStatus();
+        if (!sseConnected) {
           startRestFallback();
         }
-      );
-      return () => {
-        try {
-          unsub();
-        } catch {
-          // ignore
-        }
-        if (fallbackTimer) clearInterval(fallbackTimer);
-      };
-    } catch (err) {
-      recordFirestoreError(err);
+      }
+    } else {
       startRestFallback();
-      return () => {
-        if (fallbackTimer) clearInterval(fallbackTimer);
-      };
     }
+
+    // Resync automatically on reconnect or tab focus
+    const handleOnline = () => {
+      updateStatus();
+      fetchRestListings().catch(() => {});
+    };
+    const handleOffline = () => {
+      updateStatus();
+    };
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetchRestListings().catch(() => {});
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+    }
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibility);
+    }
+
+    return () => {
+      disposed = true;
+      try {
+        if (eventSource) eventSource.close();
+      } catch {
+        // ignore
+      }
+      try {
+        if (unsubFirestore) unsubFirestore();
+      } catch {
+        // ignore
+      }
+      if (fallbackTimer) clearInterval(fallbackTimer);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      }
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibility);
+      }
+    };
   },
 
   async getListings(params?: {
@@ -215,13 +418,22 @@ export const api = {
       if (params?.sort) searchParams.set('sort', params.sort);
       if (params?.userId) searchParams.set('userId', params.userId);
 
-      const res = await fetch(`${API_BASE}/listings?${searchParams.toString()}`);
+      const res = await fetch(`${API_BASE}/listings?${searchParams.toString()}`, { cache: 'no-store' });
       if (res.ok) {
         const apiListings = await res.json();
         if (Array.isArray(apiListings)) {
           for (const l of apiListings) {
-            if (l && l.id && !listingMap.has(l.id)) {
-              listingMap.set(l.id, l);
+            if (l && l.id) {
+              const existing = listingMap.get(l.id);
+              if (!existing) {
+                listingMap.set(l.id, l);
+              } else {
+                const apiTs = new Date(l.updatedAt || l.createdAt || l.date || 0).getTime();
+                const fsTs = new Date(existing.updatedAt || existing.createdAt || existing.date || 0).getTime();
+                if (apiTs >= fsTs) {
+                  listingMap.set(l.id, l);
+                }
+              }
             }
           }
         }
