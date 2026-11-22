@@ -1165,7 +1165,7 @@ export const EStorePage: React.FC<EStorePageProps> = ({
           {/* Universal Banner Display (Clean & identical to PC layout on all devices with zero text clashing) */}
           <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-emerald-500/30 bg-[#0A111E] aspect-[2171/724]">
             <img
-              src="/assets/aistudio/Sri_Lanka_Online_Grocery_Marketplace_fde947ca.png"
+              src="/assets/aistudio/Sri_Lanka_Online_Grocery_Marketplace_fde947ca.jpg"
               alt="Sri Lanka E-Stores and Online Merchant Marketplace"
               className="w-full h-full object-cover select-none pointer-events-none"
             />

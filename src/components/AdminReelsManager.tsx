@@ -34,7 +34,7 @@ interface AdminReelsManagerProps {
 const DEMO_INSPECTION_REELS: Partial<VideoReelItem>[] = [
   {
     title: 'DJI 4K Drone Flight & Gimbal Test',
-    videoUrl: '/uploads/videos/anim-video-1790102854586-d1bwkp.mp4',
+    videoUrl: '/videos/motion-loop-2.mp4',
     posterImage: 'https://images.unsplash.com/photo-1527977966376-1c8408f9f108?auto=format&fit=crop&w=600&q=80',
     category: 'Electronics',
     price: 45000,
