@@ -13,7 +13,7 @@ service cloud.firestore {
     }
 
     function isValidId(id) {
-      return id is string && id.size() > 0 && id.size() <= 128;
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[A-Za-z0-9_.:@-]+$');
     }
 
     function incoming() {
@@ -24,15 +24,99 @@ service cloud.firestore {
       return resource.data;
     }
 
-    // Listing validation
+    // Listing validation (supports guest + signed-in sellers)
     function isValidListing(data) {
       return data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
              data.category is string && data.category.size() > 0 && data.category.size() <= 100 &&
-             data.price is number &&
+             data.price is number && data.price >= 0 &&
              data.phone is string && data.phone.size() > 0 && data.phone.size() <= 50 &&
              data.location is string && data.location.size() > 0 && data.location.size() <= 100 &&
+             (!('status' in data) || data.status in ['approved', 'pending', 'rejected']) &&
              (!('district' in data) || (data.district is string && data.district.size() <= 100)) &&
-             (!('description' in data) || (data.description is string && data.description.size() <= 20000));
+             (!('description' in data) || (data.description is string && data.description.size() <= 20000)) &&
+             (!('images' in data) || (data.images is list && data.images.size() <= 10)) &&
+             (!('views' in data) || (data.views is number && data.views >= 0));
+    }
+
+    function isValidListingUpdate(data) {
+      return (!('title' in data) || (data.title is string && data.title.size() > 0 && data.title.size() <= 200)) &&
+             (!('category' in data) || (data.category is string && data.category.size() > 0 && data.category.size() <= 100)) &&
+             (!('price' in data) || (data.price is number && data.price >= 0)) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() > 0 && data.phone.size() <= 50)) &&
+             (!('location' in data) || (data.location is string && data.location.size() > 0 && data.location.size() <= 100)) &&
+             (!('status' in data) || data.status in ['approved', 'pending', 'rejected']) &&
+             (!('availabilityStatus' in data) || data.availabilityStatus in ['available', 'reserved', 'sold']) &&
+             (!('district' in data) || (data.district is string && data.district.size() <= 100)) &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 20000)) &&
+             (!('images' in data) || (data.images is list && data.images.size() <= 10)) &&
+             (!('views' in data) || (data.views is number && data.views >= 0));
+    }
+
+    function isValidEvent(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 100 &&
+             data.district is string && data.district.size() > 0 && data.district.size() <= 100 &&
+             data.location is string && data.location.size() > 0 && data.location.size() <= 200 &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 4000)) &&
+             (!('attendees' in data) || (data.attendees is number && data.attendees >= 0));
+    }
+
+    function isValidHeroContainer(data) {
+      return (('ads' in data && data.ads is list && data.ads.size() <= 40) ||
+              ('slides' in data && data.slides is list && data.slides.size() <= 40) ||
+              ('settings' in data && data.settings is map) ||
+              ('title' in data && data.title is string && data.title.size() > 0 && data.title.size() <= 200));
+    }
+
+    function isValidVideoReel(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             (!('videoUrl' in data) || (data.videoUrl is string && data.videoUrl.size() <= 2000)) &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 100)) &&
+             (!('price' in data) || (data.price is number && data.price >= 0)) &&
+             (!('views' in data) || (data.views is number && data.views >= 0));
+    }
+
+    function isValidEStore(data) {
+      return data.storeName is string && data.storeName.size() > 0 && data.storeName.size() <= 160 &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 100 &&
+             data.district is string && data.district.size() > 0 && data.district.size() <= 100 &&
+             (!('tagline' in data) || (data.tagline is string && data.tagline.size() <= 300)) &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 4000)) &&
+             (!('products' in data) || (data.products is list && data.products.size() <= 80));
+    }
+
+    function isValidReview(data) {
+      return data.listingId is string && data.listingId.size() > 0 && data.listingId.size() <= 128 &&
+             data.authorName is string && data.authorName.size() > 0 && data.authorName.size() <= 100 &&
+             data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+             (!('comment' in data) || (data.comment is string && data.comment.size() <= 2000));
+    }
+
+    function isValidReport(data) {
+      return data.listingId is string && data.listingId.size() > 0 && data.listingId.size() <= 128 &&
+             data.listingTitle is string && data.listingTitle.size() > 0 && data.listingTitle.size() <= 200 &&
+             data.reason in ['fraud_scam', 'incorrect_price', 'already_sold', 'duplicate', 'prohibited_item', 'other'] &&
+             data.status in ['pending', 'reviewed', 'resolved', 'dismissed'] &&
+             (!('details' in data) || (data.details is string && data.details.size() <= 2000));
+    }
+
+    function isValidUserRecord(data) {
+      return (!('username' in data) || (data.username is string && data.username.size() > 0 && data.username.size() <= 100)) &&
+             (!('fullname' in data) || (data.fullname is string && data.fullname.size() <= 120)) &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 150)) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 50)) &&
+             (!('password' in data) || (data.password is string && data.password.size() <= 256)) &&
+             (!('twoFactorEnabled' in data) || data.twoFactorEnabled is bool) &&
+             (!('twoFactorMethod' in data) || data.twoFactorMethod in ['sms', 'authenticator']) &&
+             (!('twoFactorRecoveryCodes' in data) || (data.twoFactorRecoveryCodes is list && data.twoFactorRecoveryCodes.size() <= 20));
+    }
+
+    function isValidAdminConfig(data) {
+      return (!('autoApprove' in data) || data.autoApprove is bool) &&
+             (!('twoFactorEnabled' in data) || data.twoFactorEnabled is bool) &&
+             (!('password' in data) || (data.password is string && data.password.size() > 0 && data.password.size() <= 128)) &&
+             (!('twoFactorPhone' in data) || (data.twoFactorPhone is string && data.twoFactorPhone.size() <= 50)) &&
+             (!('twoFactorMethod' in data) || data.twoFactorMethod in ['sms', 'authenticator']);
     }
 
     function isValidBuyerRequest(data) {
@@ -46,7 +130,7 @@ service cloud.firestore {
              (!('location' in data) || (data.location is string && data.location.size() <= 120)) &&
              (!('buyerName' in data) || (data.buyerName is string && data.buyerName.size() <= 100)) &&
              (!('description' in data) || (data.description is string && data.description.size() <= 3000)) &&
-             (!('offers' in data) || data.offers is list);
+             (!('offers' in data) || (data.offers is list && data.offers.size() <= 100));
     }
 
     function isValidDonationCause(data) {
@@ -149,63 +233,82 @@ service cloud.firestore {
 
     // Connection Health Check Collection
     match /test/{docId} {
-      allow read, write: if true;
+      allow read, write: if isValidId(docId);
     }
 
     // Marketplace Listings
     match /listings/{listingId} {
       allow get, list: if true;
-      allow create, update, delete: if isValidId(listingId);
+      allow create: if isValidId(listingId) && isValidListing(incoming());
+      allow update: if isValidId(listingId) && isValidListingUpdate(incoming());
+      allow delete: if isValidId(listingId);
     }
 
     // Marketplace Community Events
     match /events/{eventId} {
       allow get, list: if true;
-      allow create, update, delete: if isValidId(eventId);
+      allow create: if isValidId(eventId) && isValidEvent(incoming());
+      allow update: if isValidId(eventId) &&
+        (!('title' in incoming()) || (incoming().title is string && incoming().title.size() > 0 && incoming().title.size() <= 200)) &&
+        (!('description' in incoming()) || (incoming().description is string && incoming().description.size() <= 4000));
+      allow delete: if isValidId(eventId);
     }
 
-    // Promotional Hero Banners & Settings
+    // Promotional Hero Banners & Promo Slides Settings
     match /hero_ads/{heroAdId} {
       allow get, list: if true;
-      allow create, update, delete: if isValidId(heroAdId);
+      allow create, update: if isValidId(heroAdId) && isValidHeroContainer(incoming());
+      allow delete: if isValidId(heroAdId);
     }
 
     // Video Stories & Inspection Reels
     match /video_reels/{reelId} {
       allow get, list: if true;
-      allow create, update, delete: if isValidId(reelId);
+      allow create: if isValidId(reelId) && isValidVideoReel(incoming());
+      allow update: if isValidId(reelId) &&
+        (!('title' in incoming()) || (incoming().title is string && incoming().title.size() > 0 && incoming().title.size() <= 200)) &&
+        (!('views' in incoming()) || (incoming().views is number && incoming().views >= 0));
+      allow delete: if isValidId(reelId);
     }
 
     // Sri Lankan E-Stores & Online Merchant Directory
     match /estores/{storeId} {
       allow get, list: if true;
-      allow create, update, delete: if isValidId(storeId);
+      allow create: if isValidId(storeId) && isValidEStore(incoming());
+      allow update: if isValidId(storeId) &&
+        (!('storeName' in incoming()) || (incoming().storeName is string && incoming().storeName.size() > 0 && incoming().storeName.size() <= 160)) &&
+        (!('products' in incoming()) || (incoming().products is list && incoming().products.size() <= 80));
+      allow delete: if isValidId(storeId);
     }
 
     // Administrative Configuration & Moderation
     match /admin_config/{configId} {
       allow get, list: if true;
-      allow create, update, delete: if isValidId(configId);
+      allow create, update: if isValidId(configId) && isValidAdminConfig(incoming());
+      allow delete: if isValidId(configId);
     }
 
     // Marketplace Users & Verification
     match /users/{userId} {
       allow get, list: if true;
-      allow create: if isValidId(userId);
-      allow update: if isValidId(userId);
+      allow create, update: if isValidId(userId) && isValidUserRecord(incoming());
       allow delete: if isValidId(userId);
     }
 
     // Customer Reviews & Seller Ratings
     match /reviews/{reviewId} {
       allow get, list: if true;
-      allow create, update, delete: if isValidId(reviewId);
+      allow create, update: if isValidId(reviewId) && isValidReview(incoming());
+      allow delete: if isValidId(reviewId);
     }
 
     // Customer Reports & Trust Safety Flags
     match /reports/{reportId} {
       allow get, list: if true;
-      allow create, update, delete: if isValidId(reportId);
+      allow create: if isValidId(reportId) && isValidReport(incoming());
+      allow update: if isValidId(reportId) &&
+        (!('status' in incoming()) || incoming().status in ['pending', 'reviewed', 'resolved', 'dismissed']);
+      allow delete: if isValidId(reportId);
     }
 
     // Conversations Collection

@@ -17,13 +17,20 @@
         "status": { "type": "string", "enum": ["approved", "pending", "rejected"] },
         "isFeatured": { "type": "boolean" },
         "views": { "type": "number" },
-        "verifiedPro": { "type": "boolean" },
-        "videoUrl": { "type": "string" },
+        "verificationNotes": { "type": "string", "maxLength": 1000 },
+        "verificationStatus": { "type": "string", "enum": ["unverified", "verified_with_customer", "deltas_found"] },
+        "availabilityStatus": { "type": "string", "enum": ["available", "reserved", "sold"] },
+        "sellerName": { "type": "string", "maxLength": 120 },
+        "sellerRating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "whatsappClicks": { "type": "number" },
+        "phoneClicks": { "type": "number" },
+        "images": { "type": "array" },
         "userId": { "type": "string", "maxLength": 128 },
         "createdAt": { "type": "string", "maxLength": 64 },
         "updatedAt": { "type": "string", "maxLength": 64 }
       },
-      "required": ["id", "title", "category", "price", "phone", "location", "district", "status"]
+      "required": ["id", "title", "category", "price", "phone", "location", "status"]
     },
     "User": {
       "title": "User",
@@ -32,16 +39,24 @@
       "properties": {
         "id": { "type": "string", "maxLength": 128 },
         "username": { "type": "string", "maxLength": 100 },
+        "fullname": { "type": "string", "maxLength": 120 },
         "phone": { "type": "string", "maxLength": 50 },
-        "email": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 150 },
         "role": { "type": "string", "enum": ["user", "admin"] },
+        "password": { "type": "string", "maxLength": 256 },
         "passwordHash": { "type": "string", "maxLength": 256 },
         "securityQuestion": { "type": "string", "maxLength": 200 },
         "securityAnswer": { "type": "string", "maxLength": 200 },
+        "twoFactorEnabled": { "type": "boolean" },
+        "twoFactorMethod": { "type": "string", "enum": ["sms", "authenticator"] },
+        "twoFactorPhone": { "type": "string", "maxLength": 50 },
+        "twoFactorRecoveryCodes": { "type": "array" },
         "isVerified": { "type": "boolean" },
-        "createdAt": { "type": "string", "maxLength": 64 }
+        "created": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
       },
-      "required": ["id", "username", "role", "passwordHash"]
+      "required": ["id"]
     },
     "Event": {
       "title": "Event",
@@ -58,12 +73,12 @@
         "time": { "type": "string", "maxLength": 100 },
         "location": { "type": "string", "maxLength": 200 },
         "venue": { "type": "string", "maxLength": 200 },
-        "image": { "type": "string", "maxLength": 1000 },
+        "image": { "type": "string", "maxLength": 2000 },
         "badge": { "type": "string", "maxLength": 100 },
         "price": { "type": "string", "maxLength": 100 },
         "isFree": { "type": "boolean" },
         "attendees": { "type": "number" },
-        "description": { "type": "string", "maxLength": 2000 },
+        "description": { "type": "string", "maxLength": 4000 },
         "organizer": { "type": "string", "maxLength": 100 },
         "isSpotlight": { "type": "boolean" }
       },
@@ -71,25 +86,28 @@
     },
     "HeroAd": {
       "title": "HeroAd",
-      "description": "Hero banner promotion item and configuration.",
+      "description": "Hero banner promotion item or configuration container (main, promo_slides).",
       "type": "object",
       "properties": {
         "id": { "type": "string", "maxLength": 128 },
+        "settings": { "type": "object" },
+        "ads": { "type": "array" },
+        "slides": { "type": "array" },
         "badge": { "type": "string", "maxLength": 100 },
         "title": { "type": "string", "maxLength": 200 },
         "highlightText": { "type": "string", "maxLength": 200 },
         "subtitle": { "type": "string", "maxLength": 500 },
         "ctaText": { "type": "string", "maxLength": 100 },
-        "ctaAction": { "type": "string", "maxLength": 100 },
+        "ctaAction": { "type": "string", "maxLength": 500 },
         "bgImage": { "type": "string" },
         "bgVideo": { "type": "string" },
         "mediaType": { "type": "string", "enum": ["image", "video"] },
         "gradientTheme": { "type": "string", "maxLength": 50 },
         "animationType": { "type": "string", "maxLength": 50 },
         "isActive": { "type": "boolean" },
-        "createdAt": { "type": "string", "maxLength": 64 }
-      },
-      "required": ["id", "title", "isActive"]
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      }
     },
     "PromoSlide": {
       "title": "PromoSlide",
@@ -110,17 +128,105 @@
       },
       "required": ["id", "title", "imageUrl", "isActive"]
     },
+    "VideoReel": {
+      "title": "VideoReel",
+      "description": "Short product walkthrough video story / inspection reel.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "videoUrl": { "type": "string", "maxLength": 2000 },
+        "posterImage": { "type": "string" },
+        "category": { "type": "string", "maxLength": 100 },
+        "price": { "type": "number" },
+        "location": { "type": "string", "maxLength": 120 },
+        "district": { "type": "string", "maxLength": 100 },
+        "sellerName": { "type": "string", "maxLength": 120 },
+        "phone": { "type": "string", "maxLength": 50 },
+        "isVerified": { "type": "boolean" },
+        "specsSummary": { "type": "string", "maxLength": 500 },
+        "listingId": { "type": "string", "maxLength": 128 },
+        "isActive": { "type": "boolean" },
+        "views": { "type": "number" },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "title"]
+    },
+    "EStore": {
+      "title": "EStore",
+      "description": "Sri Lankan online merchant storefront and product catalog.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "storeName": { "type": "string", "maxLength": 160 },
+        "tagline": { "type": "string", "maxLength": 300 },
+        "description": { "type": "string", "maxLength": 4000 },
+        "category": { "type": "string", "maxLength": 100 },
+        "district": { "type": "string", "maxLength": 100 },
+        "websiteUrl": { "type": "string", "maxLength": 500 },
+        "whatsapp": { "type": "string", "maxLength": 50 },
+        "phone": { "type": "string", "maxLength": 50 },
+        "email": { "type": "string", "maxLength": 150 },
+        "logo": { "type": "string" },
+        "bannerImage": { "type": "string" },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "isVerifiedMerchant": { "type": "boolean" },
+        "deliveryInfo": { "type": "string", "maxLength": 400 },
+        "returnPolicy": { "type": "string", "maxLength": 400 },
+        "foundedYear": { "type": "string", "maxLength": 16 },
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "products": { "type": "array" },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "storeName", "category", "district"]
+    },
+    "ListingReview": {
+      "title": "ListingReview",
+      "description": "Buyer rating and review on a marketplace listing.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "listingId": { "type": "string", "maxLength": 128 },
+        "authorName": { "type": "string", "maxLength": 100 },
+        "rating": { "type": "number" },
+        "comment": { "type": "string", "maxLength": 2000 },
+        "verifiedBuyer": { "type": "boolean" },
+        "date": { "type": "string", "maxLength": 32 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "listingId", "authorName", "rating"]
+    },
+    "ListingReport": {
+      "title": "ListingReport",
+      "description": "Trust and safety user report on a marketplace listing.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "listingId": { "type": "string", "maxLength": 128 },
+        "listingTitle": { "type": "string", "maxLength": 200 },
+        "reason": { "type": "string", "enum": ["fraud_scam", "incorrect_price", "already_sold", "duplicate", "prohibited_item", "other"] },
+        "details": { "type": "string", "maxLength": 2000 },
+        "reporterContact": { "type": "string", "maxLength": 120 },
+        "status": { "type": "string", "enum": ["pending", "reviewed", "resolved", "dismissed"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "listingId", "listingTitle", "reason", "status"]
+    },
     "AdminConfig": {
       "title": "AdminConfig",
-      "description": "Platform settings including moderation and password security.",
+      "description": "Platform settings including moderation, 2FA, and password configuration.",
       "type": "object",
       "properties": {
         "id": { "type": "string", "maxLength": 128 },
         "autoApprove": { "type": "boolean" },
+        "password": { "type": "string", "maxLength": 128 },
         "adminPasswordHash": { "type": "string", "maxLength": 256 },
+        "twoFactorEnabled": { "type": "boolean" },
+        "twoFactorPhone": { "type": "string", "maxLength": 50 },
+        "twoFactorMethod": { "type": "string", "enum": ["sms", "authenticator"] },
         "updatedAt": { "type": "string", "maxLength": 64 }
-      },
-      "required": ["id"]
+      }
     },
     "Conversation": {
       "title": "Conversation",
@@ -294,7 +400,23 @@
     },
     "/hero_ads/{heroAdId}": {
       "schema": { "$ref": "#/entities/HeroAd" },
-      "description": "Promotional hero banners collection."
+      "description": "Promotional hero banners and promo slides configuration documents."
+    },
+    "/video_reels/{reelId}": {
+      "schema": { "$ref": "#/entities/VideoReel" },
+      "description": "Short video stories and inspection reels."
+    },
+    "/estores/{storeId}": {
+      "schema": { "$ref": "#/entities/EStore" },
+      "description": "Sri Lankan online merchant storefronts and product catalogs."
+    },
+    "/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/ListingReview" },
+      "description": "Customer reviews and seller ratings for listings."
+    },
+    "/reports/{reportId}": {
+      "schema": { "$ref": "#/entities/ListingReport" },
+      "description": "Trust and safety user flags on listings."
     },
     "/admin_config/{configId}": {
       "schema": { "$ref": "#/entities/AdminConfig" },

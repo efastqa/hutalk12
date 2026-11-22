@@ -184,6 +184,49 @@ async function fitListingWithinFirestoreBudget(
   return sanitizeForFirestore(candidate);
 }
 
+async function fitEStoreWithinFirestoreBudget(
+  store: Record<string, any>,
+  uploadFn?: (imgData: string, name?: string) => Promise<{ url?: string }>,
+  maxBytes = 820000
+): Promise<Record<string, any>> {
+  const candidate: Record<string, any> = sanitizeForFirestore(store);
+  if (estimateJsonBytes(candidate) <= maxBytes) {
+    return candidate;
+  }
+
+  const shrinkOrUpload = async (val: any, tag: string, maxDim: number): Promise<any> => {
+    if (typeof val !== 'string' || !val.startsWith('data:image/')) return val;
+    const compact = await shrinkDataUrlInBrowser(val, maxDim, 0.56);
+    if (compact.length <= 75000) return compact;
+    if (uploadFn) {
+      try {
+        const uploaded = await uploadFn(compact, `${tag}.jpg`);
+        if (uploaded?.url) return uploaded.url;
+      } catch {
+        // upload unavailable
+      }
+    }
+    return await shrinkDataUrlInBrowser(compact, Math.min(360, maxDim), 0.4);
+  };
+
+  if (candidate.logo) {
+    candidate.logo = await shrinkOrUpload(candidate.logo, `estore-${candidate.id || 'shop'}-logo`, 400);
+  }
+  if (candidate.bannerImage) {
+    candidate.bannerImage = await shrinkOrUpload(candidate.bannerImage, `estore-${candidate.id || 'shop'}-banner`, 720);
+  }
+  if (Array.isArray(candidate.products)) {
+    for (let i = 0; i < candidate.products.length && estimateJsonBytes(candidate) > maxBytes; i++) {
+      const prod = candidate.products[i];
+      if (prod && prod.image) {
+        prod.image = await shrinkOrUpload(prod.image, `estore-${candidate.id || 'shop'}-p${i}`, 480);
+      }
+    }
+  }
+
+  return sanitizeForFirestore(candidate);
+}
+
 // Prevent repeated Firestore hits during daily free-tier quota exhaustion (10-min cooldown)
 let firestoreQuotaCooldownUntil = 0;
 
@@ -3126,9 +3169,13 @@ For quick inquiries, call or send a message via WhatsApp!`;
       listingId: data.listingId,
     };
 
+    let firestoreSaved = false;
+    let apiSaved = false;
+
     if (!isFirestoreQuotaActive()) {
       try {
         await setDoc(doc(db, 'video_reels', id), sanitizeForFirestore(newReel));
+        firestoreSaved = true;
       } catch (fsErr) {
         if (!recordFirestoreError(fsErr)) {
           console.warn('[VideoReels] Firestore set error:', fsErr);
@@ -3138,13 +3185,18 @@ For quick inquiries, call or send a message via WhatsApp!`;
 
     // Sync to Express server API
     try {
-      await fetch(`${API_BASE}/video-reels`, {
+      const res = await fetch(`${API_BASE}/video-reels`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newReel),
       });
+      if (res.ok) apiSaved = true;
     } catch {
       // Standalone
+    }
+
+    if (!firestoreSaved && !apiSaved) {
+      throw new Error('Could not save video story to the database. Please try again.');
     }
 
     // Update local cache
@@ -3239,8 +3291,14 @@ For quick inquiries, call or send a message via WhatsApp!`;
   // -------------------------------------------------------------
 
   async getEStores(): Promise<EStore[]> {
-    const rawDeleted = localStorage.getItem('huta_deleted_estores');
-    const deletedIds: string[] = rawDeleted ? JSON.parse(rawDeleted) : [];
+    let deletedIds: string[] = [];
+    try {
+      const rawDeleted = localStorage.getItem('huta_deleted_estores');
+      const parsed = rawDeleted ? JSON.parse(rawDeleted) : [];
+      deletedIds = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      deletedIds = [];
+    }
 
     // Clean up previous default/sample store IDs so they never appear
     const sampleIdsToRemove = [
@@ -3375,9 +3433,18 @@ For quick inquiries, call or send a message via WhatsApp!`;
       createdAt: new Date().toISOString(),
     };
 
+    const budgetedStore = (await fitEStoreWithinFirestoreBudget(
+      newStore,
+      (imgData, name) => api.uploadImage(imgData, name)
+    )) as EStore;
+
+    let firestoreSaved = false;
+    let apiSaved = false;
+
     if (!isFirestoreQuotaActive()) {
       try {
-        await setDoc(doc(db, 'estores', id), sanitizeForFirestore(newStore));
+        await setDoc(doc(db, 'estores', id), sanitizeForFirestore(budgetedStore));
+        firestoreSaved = true;
       } catch (fsErr) {
         if (!recordFirestoreError(fsErr)) {
           console.warn('[EStores] Firestore set error:', fsErr);
@@ -3387,30 +3454,44 @@ For quick inquiries, call or send a message via WhatsApp!`;
 
     // Save to Express backend API
     try {
-      await fetch(`${API_BASE}/estores`, {
+      const res = await fetch(`${API_BASE}/estores`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newStore),
+        body: JSON.stringify(budgetedStore),
       });
+      if (res.ok) apiSaved = true;
     } catch {
       // Standalone
+    }
+
+    if (!firestoreSaved && !apiSaved) {
+      throw new Error('Could not register E-Store in the database. Please reduce image sizes or try again.');
     }
 
     // Update cache
     try {
       const cached = localStorage.getItem('huta_estores_cache');
       const list: EStore[] = cached ? JSON.parse(cached) : [];
-      const updated = [newStore, ...list.filter((s) => s.id !== id)];
+      const updated = [budgetedStore, ...list.filter((s) => s.id !== id)];
       localStorage.setItem('huta_estores_cache', JSON.stringify(updated));
     } catch {}
 
-    return newStore;
+    return budgetedStore;
   },
 
   async updateEStore(id: string, data: Partial<EStore>): Promise<EStore> {
+    const budgetedUpdate = (await fitEStoreWithinFirestoreBudget(
+      { ...data, id },
+      (imgData, name) => api.uploadImage(imgData, name)
+    )) as Partial<EStore>;
+
+    let firestoreSaved = false;
+    let apiSaved = false;
+
     if (!isFirestoreQuotaActive()) {
       try {
-        await setDoc(doc(db, 'estores', id), sanitizeForFirestore(data), { merge: true });
+        await setDoc(doc(db, 'estores', id), sanitizeForFirestore(budgetedUpdate), { merge: true });
+        firestoreSaved = true;
       } catch (fsErr) {
         if (!recordFirestoreError(fsErr)) {
           console.warn('[EStores] Firestore update error:', fsErr);
@@ -3419,26 +3500,31 @@ For quick inquiries, call or send a message via WhatsApp!`;
     }
 
     try {
-      await fetch(`${API_BASE}/estores/${id}`, {
+      const res = await fetch(`${API_BASE}/estores/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(budgetedUpdate),
       });
+      if (res.ok) apiSaved = true;
     } catch {
       // Standalone
+    }
+
+    if (!firestoreSaved && !apiSaved) {
+      throw new Error('Could not update E-Store in the database. Please try again.');
     }
 
     try {
       const cached = localStorage.getItem('huta_estores_cache');
       if (cached) {
         const list: EStore[] = JSON.parse(cached);
-        const updated = list.map((s) => (s.id === id ? { ...s, ...data } : s));
+        const updated = list.map((s) => (s.id === id ? { ...s, ...budgetedUpdate } : s));
         localStorage.setItem('huta_estores_cache', JSON.stringify(updated));
       }
     } catch {}
 
     const store = await this.getEStoreById(id);
-    return store || (data as EStore);
+    return store || (budgetedUpdate as EStore);
   },
 
   async deleteEStore(id: string): Promise<{ success: boolean }> {
@@ -3907,9 +3993,13 @@ For quick inquiries, call or send a message via WhatsApp!`;
 
     const clean = sanitizeForFirestore(newReq) as BuyerRequest;
 
+    let firestoreSaved = false;
+    let apiSaved = false;
+
     if (!isFirestoreQuotaActive()) {
       try {
         await setDoc(doc(db, 'buyer_requests', id), clean);
+        firestoreSaved = true;
       } catch (err) {
         if (!recordFirestoreError(err)) {
           handleFirestoreError(err, OperationType.CREATE, `buyer_requests/${id}`);
@@ -3924,12 +4014,17 @@ For quick inquiries, call or send a message via WhatsApp!`;
         body: JSON.stringify(clean),
       });
       if (res.ok) {
+        apiSaved = true;
         const saved = await res.json();
         this.addGuestBuyerRequestId(saved.id || clean.id);
         return saved;
       }
     } catch {
       // backend optional
+    }
+
+    if (!firestoreSaved && !apiSaved) {
+      throw new Error('Could not post buyer request right now. Please try again.');
     }
 
     this.addGuestBuyerRequestId(clean.id);
@@ -4470,9 +4565,13 @@ For quick inquiries, call or send a message via WhatsApp!`;
 
     const clean = sanitizeForFirestore(newCause) as DonationCause;
 
+    let firestoreSaved = false;
+    let apiSaved = false;
+
     if (!isFirestoreQuotaActive()) {
       try {
         await setDoc(doc(db, 'donations', id), clean);
+        firestoreSaved = true;
       } catch (err) {
         if (!recordFirestoreError(err)) {
           handleFirestoreError(err, OperationType.CREATE, `donations/${id}`);
@@ -4487,12 +4586,17 @@ For quick inquiries, call or send a message via WhatsApp!`;
         body: JSON.stringify(clean),
       });
       if (res.ok) {
+        apiSaved = true;
         const saved = await res.json();
         this.addGuestDonationCauseId(saved.id || clean.id);
         return saved;
       }
     } catch {
       // backend optional
+    }
+
+    if (!firestoreSaved && !apiSaved) {
+      throw new Error('Could not submit donation appeal right now. Please try again.');
     }
 
     this.addGuestDonationCauseId(clean.id);

@@ -4524,18 +4524,25 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
   app.get('/sitemap.xml', (req, res) => {
     const cleanDomain = getSafeCustomDomain(process.env.CUSTOM_DOMAIN);
     const baseUrl = `https://${cleanDomain}`;
-    const approvedListings = listingsCache.filter(l => l.status === 'approved');
+    const approvedListings = listingsCache.filter((l) => l.status === 'approved');
+    const escapeXml = (str: string) =>
+      String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
-    xml += `  <url>\n    <loc>${baseUrl}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
+    xml += `  <url>\n    <loc>${escapeXml(baseUrl)}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
 
-    const categories = ['Vehicles', 'Electronics', 'Property', 'Services', 'Home & Garden', 'Fashion', 'Gemstone & Jewelry'];
-    categories.forEach(cat => {
-      xml += `  <url>\n    <loc>${baseUrl}/?category=${encodeURIComponent(cat)}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+    const publicSections = ['estore', 'huta_in', 'hot_news', 'donate', 'buyer_requests'];
+    publicSections.forEach((tab) => {
+      xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/?tab=${encodeURIComponent(tab)}`)}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
     });
 
-    approvedListings.slice(0, 200).forEach(listing => {
-      xml += `  <url>\n    <loc>${baseUrl}/?ad=${listing.id}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+    const categories = ['Vehicles', 'Electronics', 'Property', 'Services', 'Home & Garden', 'Fashion', 'Gemstone & Jewelry'];
+    categories.forEach((cat) => {
+      xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/?category=${encodeURIComponent(cat)}`)}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+    });
+
+    approvedListings.slice(0, 200).forEach((listing) => {
+      xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/?ad=${encodeURIComponent(listing.id)}`)}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
     });
 
     xml += `</urlset>`;
@@ -4603,7 +4610,31 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
   app.put('/api/estores/:id', (req, res) => {
     const idx = eStoresCache.findIndex((s) => s.id === req.params.id);
     if (idx === -1) {
-      return res.status(404).json({ error: 'E-Store not found' });
+      if (!req.body || (!req.body.storeName && !Array.isArray(req.body.products))) {
+        return res.status(404).json({ error: 'E-Store not found' });
+      }
+      const created: EStore = {
+        storeName: 'Sri Lanka Online Store',
+        tagline: 'Authentic Sri Lankan products & online shopping',
+        description: '',
+        category: 'Fashion & Apparel',
+        district: 'Colombo',
+        websiteUrl: 'https://huta.lk',
+        whatsapp: '0775260765',
+        logo: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=400&q=80',
+        rating: 5.0,
+        reviewCount: 1,
+        isVerifiedMerchant: true,
+        deliveryInfo: 'Islandwide Cash on Delivery (COD) Available',
+        createdAt: new Date().toISOString(),
+        ...req.body,
+        id: req.params.id,
+        products: Array.isArray(req.body.products) ? req.body.products : [],
+      };
+      eStoresCache.unshift(created);
+      saveStoredEStores(eStoresCache);
+      persistEStoreToFirestore(created);
+      return res.json(created);
     }
     const updated: EStore = {
       ...eStoresCache[idx],

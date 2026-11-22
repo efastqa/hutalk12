@@ -21,5 +21,13 @@
 8. **Unauthorized Message List**: Third party querying `/conversations/{convId}/messages`.
 9. **Message Tampering (Update)**: Attempting to update a sent message text.
 10. **Message Deletion Attack**: Attempting to delete messages from the subcollection.
-11. **ID Poisoning Attack**: Passing a 2KB garbage string as `conversationId`.
+11. **ID Poisoning Attack**: Passing a 2KB garbage string or path-traversal characters as `conversationId` or document ID.
 12. **Blank Text Payload**: Creating a message with empty string `text: ""` violating minLength.
+
+## 3. Marketplace & Domain Collection Schema Invariants
+- All document IDs across `listings`, `events`, `hero_ads`, `video_reels`, `estores`, `reviews`, `reports`, `buyer_requests`, `donations`, `travel_bookings`, `travel_config`, `users`, and `admin_config` MUST match `^[A-Za-z0-9_.:@-]+$` and be <= 128 characters (`isValidId`).
+- `listings`: Enforces bounded strings (`title <= 200`, `category <= 100`, `phone <= 50`, `location <= 100`, `description <= 20000`), non-negative numeric `price`, `status` enum (`approved`, `pending`, `rejected`), `availabilityStatus` enum (`available`, `reserved`, `sold`), and `images` array cap (`<= 10`).
+- `estores`, `video_reels`, `events`, `hero_ads`: Enforce bounded names/titles/descriptions and bounded nested lists (`products <= 80`, `ads <= 40`, `slides <= 40`) to prevent oversized write abuse while preserving public directory & admin workflows.
+- `reviews` & `reports`: Enforce rating range (`1..5`), bounded comment/details (`<= 2000`), and strict `reason` / `status` enums.
+- `buyer_requests`, `donations`, `travel_bookings`, `travel_config`: Enforce enum checks, positive bounds on budgets/days/adults, and list caps (`pledges <= 200`, `offers <= 100`).
+
