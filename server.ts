@@ -589,9 +589,51 @@ function sanitizeForFirestoreServer(obj: any): any {
   return clean;
 }
 
+function saveBase64ImageToUploadsSync(dataUrl: string, idPrefix: string): string | null {
+  try {
+    const match = String(dataUrl).match(/^data:([a-zA-Z0-9\/\+\-]+);base64,(.+)$/);
+    if (!match) return null;
+    const mime = match[1].toLowerCase();
+    const ext = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : mime.includes('gif') ? 'gif' : 'jpg';
+    const buffer = Buffer.from(match[2], 'base64');
+    const targetDir = path.join(process.cwd(), 'public', 'uploads', 'images');
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    const cleanFileName = `${idPrefix}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${ext}`;
+    fs.writeFileSync(path.join(targetDir, cleanFileName), buffer);
+    return `/uploads/images/${cleanFileName}`;
+  } catch {
+    return null;
+  }
+}
+
+function fitListingForFirestoreServer(clean: Record<string, any>, maxBytes = 850000): Record<string, any> {
+  const bytes = (obj: unknown) => Buffer.byteLength(JSON.stringify(obj), 'utf8');
+  if (bytes(clean) <= maxBytes) return clean;
+
+  const copy: Record<string, any> = { ...clean };
+  if (Array.isArray(copy.images)) {
+    const imgs = [...copy.images];
+    for (let i = imgs.length - 1; i >= 0 && bytes(copy) > maxBytes; i--) {
+      if (typeof imgs[i] === 'string' && imgs[i].startsWith('data:image/')) {
+        const savedUrl = saveBase64ImageToUploadsSync(imgs[i], `ad-${copy.id || 'img'}-${i}`);
+        if (savedUrl) {
+          imgs[i] = savedUrl;
+        } else if (i > 0) {
+          imgs.splice(i, 1);
+        }
+        copy.images = imgs;
+        copy.image = imgs[0] || copy.image;
+      }
+    }
+  }
+  return copy;
+}
+
 function persistListingToFirestore(listing: Listing) {
   if (!firestoreDb) return;
-  const clean = sanitizeForFirestoreServer(listing);
+  const clean = fitListingForFirestoreServer(sanitizeForFirestoreServer(listing));
   setDoc(doc(firestoreDb, 'listings', listing.id), clean).catch((err) => {
     console.warn('[Firestore] persist listing error:', err);
   });
@@ -2065,7 +2107,9 @@ async function startServer() {
       image: finalImage,
       images: finalImages,
       description: finalDescription,
-      status: (adminCfg.autoApprove || Boolean(req.body.isAdminLoggedIn) || req.body.status === 'approved') ? 'approved' : 'pending',
+      status: (req.body.status === 'pending' || req.body.status === 'approved')
+        ? req.body.status
+        : (adminCfg.autoApprove ? 'approved' : 'pending'),
       isFeatured: Boolean(req.body.isFeatured),
       date: nowIso.split('T')[0],
       createdAt: req.body.createdAt ? String(req.body.createdAt) : nowIso,

@@ -1076,7 +1076,6 @@ export default function App() {
       } else {
         const created = await api.createListing({
           ...adData,
-          isAdminLoggedIn: Boolean(isAdminLoggedIn),
           userId: currentUser ? currentUser.id : 'guest',
         });
         api.addGuestListingId(created.id);

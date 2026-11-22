@@ -59,6 +59,131 @@ export function sanitizeForFirestore<T extends Record<string, any>>(obj: T): Rec
   return clean;
 }
 
+function estimateJsonBytes(value: unknown): number {
+  try {
+    const json = JSON.stringify(value);
+    if (typeof TextEncoder !== 'undefined') {
+      return new TextEncoder().encode(json).length;
+    }
+    return json.length * 2;
+  } catch {
+    return 0;
+  }
+}
+
+async function shrinkDataUrlInBrowser(dataUrl: string, maxDim: number, quality: number): Promise<string> {
+  if (typeof document === 'undefined' || !dataUrl.startsWith('data:image/')) {
+    return dataUrl;
+  }
+  return new Promise((resolve) => {
+    try {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          let targetW = img.naturalWidth || img.width || maxDim;
+          let targetH = img.naturalHeight || img.height || maxDim;
+          if (targetW > maxDim || targetH > maxDim) {
+            if (targetW > targetH) {
+              targetH = Math.round((targetH * maxDim) / targetW);
+              targetW = maxDim;
+            } else {
+              targetW = Math.round((targetW * maxDim) / targetH);
+              targetH = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, targetW);
+          canvas.height = Math.max(1, targetH);
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(dataUrl);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const reencoded = canvas.toDataURL('image/jpeg', quality);
+          resolve(reencoded && reencoded.length > 300 && reencoded.length < dataUrl.length ? reencoded : dataUrl);
+        } catch {
+          resolve(dataUrl);
+        }
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    } catch {
+      resolve(dataUrl);
+    }
+  });
+}
+
+async function fitListingWithinFirestoreBudget(
+  listing: Record<string, any>,
+  uploadFn?: (imgData: string, name?: string) => Promise<{ url?: string }>,
+  maxBytes = 820000
+): Promise<Record<string, any>> {
+  const candidate: Record<string, any> = sanitizeForFirestore(listing);
+  if (estimateJsonBytes(candidate) <= maxBytes) {
+    return candidate;
+  }
+
+  const images: string[] = Array.isArray(candidate.images)
+    ? [...candidate.images]
+    : candidate.image
+    ? [String(candidate.image)]
+    : [];
+
+  // Step 1: Re-compress oversized embedded data:image strings down proportionally in browser canvas
+  if (images.length > 0) {
+    const perImageBudget = Math.max(55000, Math.floor((maxBytes - 80000) / Math.max(1, images.length + 1)));
+    const steps: Array<{ maxDim: number; quality: number }> = [
+      { maxDim: 600, quality: 0.6 },
+      { maxDim: 480, quality: 0.48 },
+      { maxDim: 360, quality: 0.38 },
+    ];
+    for (let i = 0; i < images.length; i++) {
+      let current = images[i];
+      if (typeof current === 'string' && current.startsWith('data:image/') && current.length > perImageBudget) {
+        for (const step of steps) {
+          current = await shrinkDataUrlInBrowser(current, step.maxDim, step.quality);
+          if (current.length <= perImageBudget) break;
+        }
+        images[i] = current;
+      }
+    }
+    candidate.images = images;
+    candidate.image = images[0] || candidate.image;
+  }
+
+  if (estimateJsonBytes(candidate) <= maxBytes) {
+    return candidate;
+  }
+
+  // Step 2: Offload trailing base64 photos to server /uploads/images/ if still above Firestore's 1 MiB ceiling
+  for (let i = images.length - 1; i >= 0 && estimateJsonBytes(candidate) > maxBytes; i--) {
+    const img = images[i];
+    if (typeof img === 'string' && img.startsWith('data:image/')) {
+      let replacementUrl = '';
+      if (uploadFn) {
+        try {
+          const uploaded = await uploadFn(img, `ad-img-${candidate.id || 'item'}-${i}.jpg`);
+          if (uploaded?.url) {
+            replacementUrl = uploaded.url;
+          }
+        } catch {
+          // upload unavailable
+        }
+      }
+      if (replacementUrl) {
+        images[i] = replacementUrl;
+      } else if (i > 0) {
+        // Keep cover image at index 0; drop overflow trailing duplicate/giant raw blobs only as last resort
+        images.splice(i, 1);
+      } else {
+        images[0] = 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80';
+      }
+      candidate.images = images;
+      candidate.image = images[0] || candidate.image;
+    }
+  }
+
+  return sanitizeForFirestore(candidate);
+}
+
 // Prevent repeated Firestore hits during daily free-tier quota exhaustion (10-min cooldown)
 let firestoreQuotaCooldownUntil = 0;
 
@@ -298,9 +423,7 @@ export const api = {
 
             fsConnected = true;
             updateStatus();
-            if (fsMap.size > 0 || sseMap.size > 0) {
-              emitMerged();
-            }
+            emitMerged();
           },
           (err) => {
             const msg = err?.message || String(err);
@@ -526,10 +649,7 @@ export const api = {
   async createListing(data: Partial<Listing> & { isAdminLoggedIn?: boolean }): Promise<Listing> {
     const adminConfig = await api.getAdminConfig().catch(() => ({ autoApprove: false }));
     const autoApprove = adminConfig.autoApprove !== undefined ? Boolean(adminConfig.autoApprove) : false;
-    const isAdmin = Boolean((data as any)?.isAdminLoggedIn) ||
-      (typeof api.isAdmin === 'function' ? api.isAdmin() : false) ||
-      (typeof api.isAdminLoggedIn === 'function' ? api.isAdminLoggedIn() : false);
-    const initialStatus = (data.status === 'approved' || isAdmin || autoApprove) ? 'approved' : 'pending';
+    const initialStatus = (data.status === 'approved' || autoApprove) ? 'approved' : 'pending';
 
     const id = data.id || `ad-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const now = new Date().toISOString();
@@ -580,6 +700,7 @@ export const api = {
     if (data.vehicleMileage !== undefined && data.vehicleMileage !== '') rawListing.vehicleMileage = data.vehicleMileage;
     if (data.fuelType) rawListing.fuelType = data.fuelType;
     if (data.transmission) rawListing.transmission = data.transmission;
+    if (data.rentalDriverOption) rawListing.rentalDriverOption = data.rentalDriverOption;
     if (data.electronicsSubcategory) rawListing.electronicsSubcategory = data.electronicsSubcategory;
     if (data.storageCapacity) rawListing.storageCapacity = data.storageCapacity;
     if (data.jobType) rawListing.jobType = data.jobType;
@@ -604,14 +725,13 @@ export const api = {
       }
     }
 
-    // Ensure images are preserved durably across all server instances and Firestore
+    // Ensure images stay compact and safely within Cloud Firestore's 1 MiB document ceiling
     if (Array.isArray(rawListing.images) && rawListing.images.length > 0) {
       const processedImages: string[] = [];
       for (let i = 0; i < rawListing.images.length; i++) {
         const img = rawListing.images[i];
         if (img && typeof img === 'string') {
           if (img.startsWith('data:image')) {
-            // Background cache to server disk if available, but keep data URL for durable cross-container availability
             api.uploadImage(img, `ad-img-${id}-${i}.jpg`).catch(() => {});
           }
           processedImages.push(img);
@@ -628,45 +748,64 @@ export const api = {
       rawListing.images = [rawListing.image];
     }
 
-    const newListing = sanitizeForFirestore(rawListing) as Listing;
+    const newListing = (await fitListingWithinFirestoreBudget(
+      rawListing,
+      (imgData, name) => api.uploadImage(imgData, name)
+    )) as Listing;
 
-    // 1. Write to shared Cloud Firestore (reflects on Vercel + Cloud Run immediately)
+    let firestoreSaved = false;
+    let apiSaved = false;
+    let savedFromApi: Listing | null = null;
+    let lastErrorMessage = '';
+
+    // 1. Write to shared Cloud Firestore (reflects across all devices & deployments immediately)
     try {
       await setDoc(doc(db, 'listings', id), newListing);
+      firestoreSaved = true;
     } catch (fsErr) {
+      lastErrorMessage = fsErr instanceof Error ? fsErr.message : String(fsErr);
+      recordFirestoreError(fsErr);
       console.warn('Failed to write listing to Firestore directly:', fsErr);
     }
 
-    // 2. Also notify backend API if running
+    // 2. Also persist via backend REST API (triggers instant SSE broadcast to Admin Panel)
     try {
       const res = await fetch(`${API_BASE}/listings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...newListing,
-          isAdminLoggedIn: isAdmin,
-        }),
+        body: JSON.stringify(newListing),
       });
       if (res.ok) {
-        const saved = await res.json();
-        if (!api.getCurrentUser()) {
-          api.addGuestListingId(saved.id || newListing.id);
+        const parsed = await res.json().catch(() => null);
+        if (parsed && parsed.id) {
+          savedFromApi = parsed;
+          apiSaved = true;
         }
-        return saved;
       } else {
         const errJson = await res.json().catch(() => ({}));
+        lastErrorMessage = errJson?.error || `Server returned status ${res.status}`;
         console.warn('Backend API /listings rejected:', res.status, errJson);
       }
-    } catch {
-      // Backend not reached (Vercel standalone)
+    } catch (netErr) {
+      if (!lastErrorMessage) {
+        lastErrorMessage = netErr instanceof Error ? netErr.message : 'Network error';
+      }
     }
 
-    // If user is guest or creating an ad, remember on this device so they can easily edit
+    if (!firestoreSaved && !apiSaved) {
+      throw new Error(
+        lastErrorMessage
+          ? `Could not publish advertisement (${lastErrorMessage}). Please try again or reduce photo size.`
+          : 'Could not save advertisement to the server or cloud database. Please check your connection and try again.'
+      );
+    }
+
+    const finalSaved = savedFromApi || newListing;
     if (!api.getCurrentUser()) {
-      api.addGuestListingId(newListing.id);
+      api.addGuestListingId(finalSaved.id);
     }
 
-    return newListing;
+    return finalSaved;
   },
 
   getGuestListingIds(): string[] {
@@ -701,12 +840,21 @@ export const api = {
 
   async updateListing(id: string, data: Partial<Listing>): Promise<Listing> {
     const updatedAt = new Date().toISOString();
-    const updates = sanitizeForFirestore({ ...data, updatedAt });
+    const updates = await fitListingWithinFirestoreBudget(
+      { ...data, updatedAt },
+      (imgData, name) => api.uploadImage(imgData, name)
+    );
+
+    let firestoreSaved = false;
+    let apiSaved = false;
+    let savedFromApi: Listing | null = null;
 
     // 1. Update in Firestore
     try {
       await setDoc(doc(db, 'listings', id), updates, { merge: true });
+      firestoreSaved = true;
     } catch (fsErr) {
+      recordFirestoreError(fsErr);
       console.warn('Firestore update listing error:', fsErr);
     }
 
@@ -718,10 +866,19 @@ export const api = {
         body: JSON.stringify(updates),
       });
       if (res.ok) {
-        return res.json();
+        savedFromApi = await res.json().catch(() => null);
+        apiSaved = Boolean(savedFromApi);
       }
     } catch {
       // Standalone
+    }
+
+    if (!firestoreSaved && !apiSaved) {
+      throw new Error('Could not update advertisement in the database. Please try again.');
+    }
+
+    if (savedFromApi) {
+      return savedFromApi;
     }
 
     try {

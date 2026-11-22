@@ -67,38 +67,62 @@ const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
   'Pets & Animals': catPetsImg,
 };
 
-const compressImage = async (file: File): Promise<string> => {
-  // 1. Try modern createImageBitmap with max 800px and 0.75 JPEG quality for fast, lightweight durable storage
-  try {
-    if (typeof window !== 'undefined' && 'createImageBitmap' in window) {
-      const bitmap = await createImageBitmap(file);
-      const maxDim = 800;
-      let width = bitmap.width;
-      let height = bitmap.height;
-      if (width > 0 && height > 0) {
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, width);
-        canvas.height = Math.max(1, height);
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(bitmap, 0, 0, width, height);
-          bitmap.close();
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
-          if (dataUrl && dataUrl.length > 500) {
-            return dataUrl;
-          }
-        }
+const encodeCanvasWithinBudget = (
+  source: ImageBitmap | HTMLImageElement,
+  naturalW: number,
+  naturalH: number
+): string => {
+  const steps: Array<{ maxDim: number; quality: number }> = [
+    { maxDim: 720, quality: 0.68 },
+    { maxDim: 560, quality: 0.56 },
+    { maxDim: 440, quality: 0.48 },
+  ];
+
+  let best = '';
+  for (const step of steps) {
+    let targetW = naturalW || 800;
+    let targetH = naturalH || 600;
+    if (targetW > step.maxDim || targetH > step.maxDim) {
+      if (targetW > targetH) {
+        targetH = Math.round((targetH * step.maxDim) / targetW);
+        targetW = step.maxDim;
+      } else {
+        targetW = Math.round((targetW * step.maxDim) / targetH);
+        targetH = step.maxDim;
       }
-      bitmap.close();
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, targetW);
+    canvas.height = Math.max(1, targetH);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) continue;
+    ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', step.quality);
+    if (dataUrl && dataUrl.length > 500) {
+      best = dataUrl;
+      if (dataUrl.length <= 115000) {
+        return dataUrl;
+      }
+    }
+  }
+  return best;
+};
+
+// Robust client-side image compression for instant preview & lightweight Firestore storage
+const compressImage = async (file: File, _maxDim = 720): Promise<string> => {
+  // 1. Try modern createImageBitmap first (faster and lower memory on mobile)
+  try {
+    if (typeof createImageBitmap === 'function') {
+      const bitmap = await createImageBitmap(file);
+      if (bitmap && bitmap.width > 0 && bitmap.height > 0) {
+        const compressed = encodeCanvasWithinBudget(bitmap, bitmap.width, bitmap.height);
+        bitmap.close();
+        if (compressed) {
+          return compressed;
+        }
+      } else if (bitmap) {
+        bitmap.close();
+      }
     }
   } catch (err) {
     console.warn('createImageBitmap conversion failed, falling back to FileReader:', err);
@@ -114,34 +138,17 @@ const compressImage = async (file: File): Promise<string> => {
         if (!result) return resolve('');
         const img = new Image();
         img.onerror = () => {
-          resolve(result);
+          // Only allow small raw images (< 180 KB) if browser canvas cannot decode format
+          resolve(result.length <= 180000 ? result : '');
         };
         img.onload = () => {
           try {
             const width = img.naturalWidth || img.width || 800;
             const height = img.naturalHeight || img.height || 600;
-            const maxDim = 800;
-            let targetW = width;
-            let targetH = height;
-            if (targetW > maxDim || targetH > maxDim) {
-              if (targetW > targetH) {
-                targetH = Math.round((targetH * maxDim) / targetW);
-                targetW = maxDim;
-              } else {
-                targetW = Math.round((targetW * maxDim) / targetH);
-                targetH = maxDim;
-              }
-            }
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.max(1, targetW);
-            canvas.height = Math.max(1, targetH);
-            const ctx = canvas.getContext('2d');
-            if (!ctx) return resolve(result);
-            ctx.drawImage(img, 0, 0, targetW, targetH);
-            const compressed = canvas.toDataURL('image/jpeg', 0.75);
-            resolve(compressed && compressed.length > 500 ? compressed : result);
+            const compressed = encodeCanvasWithinBudget(img, width, height);
+            resolve(compressed || (result.length <= 180000 ? result : ''));
           } catch {
-            resolve(result);
+            resolve(result.length <= 180000 ? result : '');
           }
         };
         img.src = result;
@@ -816,7 +823,10 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
 
         setUploadStatusText(`Compressing photo ${i + 1} of ${filesToProcess.length}...`);
         const compressedBase64 = await compressImage(file);
-        if (!compressedBase64) continue;
+        if (!compressedBase64) {
+          onToast(`Could not process "${file.name}". Try JPG or PNG format.`, 'error');
+          continue;
+        }
 
         // Keep compressed base64 directly on listing so it is 100% durable across server instances & Firestore
         const finalUrl = compressedBase64;
@@ -1067,7 +1077,6 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
           jobType: jobType || undefined,
           salaryPeriod: salaryPeriod || undefined,
         } : {}),
-        ...(isAdminLoggedIn ? { isAdminLoggedIn: true } : {}),
         ...(editingListing ? {
           status: editingListing.status,
           isFeatured: editingListing.isFeatured,
@@ -2659,6 +2668,14 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
                       All new advertisements are reviewed by our team to maintain a fraud-free marketplace. You will receive an immediate confirmation once submitted.
                     </span>
                   </div>
+                </div>
+              )}
+
+              {/* Submission Error Summary near Submit CTA */}
+              {errors.general && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-2 text-xs text-red-700 font-medium">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                  <span>{errors.general}</span>
                 </div>
               )}
 
