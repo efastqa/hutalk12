@@ -47,6 +47,7 @@ import catEducationImg from '../assets/images/cat_education_1794777624140.jpg';
 import catPetsImg from '../assets/images/cat_pets_1794777624936.jpg';
 
 const MAX_IMAGES = 8;
+const MAX_IMAGE_FILE_MB = 15;
 
 const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
   Vehicles: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80',
@@ -100,7 +101,7 @@ const encodeCanvasWithinBudget = (
     const dataUrl = canvas.toDataURL('image/jpeg', step.quality);
     if (dataUrl && dataUrl.length > 500) {
       best = dataUrl;
-      if (dataUrl.length <= 115000) {
+      if (dataUrl.length <= 95000) {
         return dataUrl;
       }
     }
@@ -807,7 +808,9 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
       return;
     }
 
-    const filesToProcess = (Array.from(files) as File[]).slice(0, remainingSlots);
+    const selectedFiles = Array.from(files) as File[];
+    const wasTruncated = selectedFiles.length > remainingSlots;
+    const filesToProcess = selectedFiles.slice(0, remainingSlots);
     setIsUploadingImages(true);
     setUploadStatusText(`Preparing ${filesToProcess.length} photo${filesToProcess.length > 1 ? 's' : ''}...`);
 
@@ -816,8 +819,8 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
 
       for (let i = 0; i < filesToProcess.length; i++) {
         const file = filesToProcess[i];
-        if (file.size > 15 * 1024 * 1024) {
-          onToast(`Skipped "${file.name}" (File exceeds 15MB size limit)`, 'error');
+        if (file.size > MAX_IMAGE_FILE_MB * 1024 * 1024) {
+          onToast(`Skipped "${file.name}" (File exceeds ${MAX_IMAGE_FILE_MB}MB size limit)`, 'error');
           continue;
         }
 
@@ -837,7 +840,11 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
 
       if (newUrls.length > 0) {
         setImages((prev) => [...prev, ...newUrls].slice(0, MAX_IMAGES));
-        onToast(`Added ${newUrls.length} photo${newUrls.length > 1 ? 's' : ''} successfully!`, 'success');
+        if (wasTruncated) {
+          onToast(`Added ${newUrls.length} photo${newUrls.length > 1 ? 's' : ''} (maximum ${MAX_IMAGES} photos per ad).`, 'info');
+        } else {
+          onToast(`Added ${newUrls.length} photo${newUrls.length > 1 ? 's' : ''} successfully!`, 'success');
+        }
         // Clear any image validation error
         if (errors.images) {
           setErrors((prev) => ({ ...prev, images: '' }));
@@ -2383,11 +2390,16 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
 
               {/* Advertisement Photos Manager (Original Images, 1st & 2nd photo order, Add & Delete options) */}
               <div className="pt-1">
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    <Images className="w-3.5 h-3.5 text-[#FF5A36]" />
-                    <span>Attached Original Photos ({images.length}/{MAX_IMAGES})</span>
-                  </label>
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      <Images className="w-3.5 h-3.5 text-[#FF5A36]" />
+                      <span>Attached Original Photos ({images.length}/{MAX_IMAGES})</span>
+                    </label>
+                    <p className="text-[11px] text-gray-500 mt-0.5">
+                      Up to {MAX_IMAGES} photos • Max {MAX_IMAGE_FILE_MB} MB per file (auto-optimized for fast loading)
+                    </p>
+                  </div>
                   <div className="flex items-center gap-2">
                     {images.length > 0 && (
                       <button
@@ -2413,14 +2425,24 @@ export const PostAdModal: React.FC<PostAdModalProps> = ({
 
                 {/* Upload Buttons & URL Input */}
                 <div className="flex flex-col sm:flex-row gap-2 mb-3">
-                  <label className="cursor-pointer flex items-center justify-center gap-2 border-2 border-dashed border-[#FF5A36]/60 hover:border-[#FF5A36] rounded-xl py-2.5 px-4 text-xs font-bold text-gray-800 hover:text-[#FF5A36] transition-colors bg-orange-50/40 hover:bg-orange-50">
+                  <label
+                    className={`flex items-center justify-center gap-2 border-2 border-dashed rounded-xl py-2.5 px-4 text-xs font-bold transition-colors ${
+                      images.length >= MAX_IMAGES
+                        ? 'border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'cursor-pointer border-[#FF5A36]/60 hover:border-[#FF5A36] text-gray-800 hover:text-[#FF5A36] bg-orange-50/40 hover:bg-orange-50'
+                    }`}
+                  >
                     {isUploadingImages ? (
                       <Loader2 className="w-4 h-4 animate-spin text-[#FF5A36]" />
                     ) : (
-                      <UploadCloud className="w-4 h-4 text-[#FF5A36]" />
+                      <UploadCloud className={`w-4 h-4 ${images.length >= MAX_IMAGES ? 'text-gray-400' : 'text-[#FF5A36]'}`} />
                     )}
                     <span>
-                      {isUploadingImages ? (uploadStatusText || 'Compressing & Adding...') : '+ Upload Photos from Device (Multi-Select)'}
+                      {isUploadingImages
+                        ? (uploadStatusText || 'Compressing & Adding...')
+                        : images.length >= MAX_IMAGES
+                        ? `Photo Limit Reached (${MAX_IMAGES}/${MAX_IMAGES})`
+                        : '+ Upload Photos from Device (Multi-Select)'}
                     </span>
                     <input
                       type="file"
