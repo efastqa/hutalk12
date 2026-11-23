@@ -50,6 +50,16 @@ import { EStore, EStoreProduct, User, CartItem } from '../types';
 import { api } from '../services/api';
 import { EStoreSmartCart } from './EStoreSmartCart';
 import { FloatingWhatsAppButton } from './FloatingWhatsAppButton';
+import estoreCategoryShowcaseImg from '../assets/images/estore_category_showcase_1795443698141.jpg';
+import allEstoreMerchantsImg from '../assets/images/all_estore_merchants_1794485763558.jpg';
+import groceriesPantryImg from '../assets/images/groceries_pantry_estore_1794485763297.jpg';
+import ceylonTeaSpicesImg from '../assets/images/ceylon_tea_spices_estore_1794485764076.jpg';
+import fashionApparelImg from '../assets/images/fashion_apparel_estore_1794485765034.jpg';
+import techGadgetsImg from '../assets/images/tech_gadgets_estore_1794485764173.jpg';
+import beautyCosmeticsImg from '../assets/images/beauty_cosmetics_estore_1794485765211.jpg';
+import handmadeCraftsImg from '../assets/images/handmade_crafts_estore_1794485766859.jpg';
+import homeLivingImg from '../assets/images/home_living_estore_1794485766782.jpg';
+import gourmetFoodsImg from '../assets/images/gourmet_foods_estore_1794485766599.jpg';
 
 // Image compression helper for fast client-side upload & data URL conversion
 async function compressImageFile(file: File, maxDim = 800, quality = 0.82): Promise<string> {
@@ -364,7 +374,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-emerald-500/20 via-teal-500/10 to-transparent',
     activeRing: 'ring-2 ring-emerald-500 shadow-md shadow-emerald-500/20',
     badgeStyle: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
-    image: '/src/assets/images/all_estore_merchants_1794485763558.jpg',
+    image: allEstoreMerchantsImg,
   },
   {
     id: 'Groceries & Daily Essentials',
@@ -375,7 +385,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-emerald-500/20 via-emerald-500/10 to-transparent',
     activeRing: 'ring-2 ring-emerald-500 shadow-md shadow-emerald-500/20',
     badgeStyle: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300',
-    image: '/src/assets/images/groceries_pantry_estore_1794485763297.jpg',
+    image: groceriesPantryImg,
   },
   {
     id: 'Ceylon Tea & Spices',
@@ -386,7 +396,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-amber-500/20 via-amber-500/10 to-transparent',
     activeRing: 'ring-2 ring-amber-500 shadow-md shadow-amber-500/20',
     badgeStyle: 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300',
-    image: '/src/assets/images/ceylon_tea_spices_estore_1794485764076.jpg',
+    image: ceylonTeaSpicesImg,
   },
   {
     id: 'Fashion & Apparel',
@@ -397,7 +407,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-purple-500/20 via-purple-500/10 to-transparent',
     activeRing: 'ring-2 ring-purple-500 shadow-md shadow-purple-500/20',
     badgeStyle: 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300',
-    image: '/src/assets/images/fashion_apparel_estore_1794485765034.jpg',
+    image: fashionApparelImg,
   },
   {
     id: 'Tech & Gadgets',
@@ -408,7 +418,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-blue-500/20 via-blue-500/10 to-transparent',
     activeRing: 'ring-2 ring-blue-500 shadow-md shadow-blue-500/20',
     badgeStyle: 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300',
-    image: '/src/assets/images/tech_gadgets_estore_1794485764173.jpg',
+    image: techGadgetsImg,
   },
   {
     id: 'Beauty & Cosmetics',
@@ -419,7 +429,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-rose-500/20 via-rose-500/10 to-transparent',
     activeRing: 'ring-2 ring-rose-500 shadow-md shadow-rose-500/20',
     badgeStyle: 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300',
-    image: '/src/assets/images/beauty_cosmetics_estore_1794485765211.jpg',
+    image: beautyCosmeticsImg,
   },
   {
     id: 'Handmade & Crafts',
@@ -430,7 +440,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-orange-500/20 via-orange-500/10 to-transparent',
     activeRing: 'ring-2 ring-orange-500 shadow-md shadow-orange-500/20',
     badgeStyle: 'bg-orange-100 text-orange-800 dark:bg-orange-950/80 dark:text-orange-300',
-    image: '/src/assets/images/handmade_crafts_estore_1794485766859.jpg',
+    image: handmadeCraftsImg,
   },
   {
     id: 'Home & Living',
@@ -441,7 +451,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-teal-500/20 via-teal-500/10 to-transparent',
     activeRing: 'ring-2 ring-teal-500 shadow-md shadow-teal-500/20',
     badgeStyle: 'bg-teal-100 text-teal-800 dark:bg-teal-950/80 dark:text-teal-300',
-    image: '/src/assets/images/home_living_estore_1794485766782.jpg',
+    image: homeLivingImg,
   },
   {
     id: 'Gourmet Foods',
@@ -452,7 +462,7 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     gradient: 'from-amber-600/20 via-amber-600/10 to-transparent',
     activeRing: 'ring-2 ring-amber-600 shadow-md shadow-amber-600/20',
     badgeStyle: 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300',
-    image: '/src/assets/images/gourmet_foods_estore_1794485766599.jpg',
+    image: gourmetFoodsImg,
   },
 ];
 
@@ -1448,6 +1458,41 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                     </button>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Single Featured Quality Image for Explore Sri Lanka E-Stores by Category */}
+            <div className="mt-3 relative rounded-xl overflow-hidden border border-gray-200/80 dark:border-[#252836] bg-emerald-50 dark:bg-[#10141F] shadow-xs">
+              <div className="relative h-44 sm:h-56 md:h-64 w-full overflow-hidden">
+                <img
+                  src={estoreCategoryShowcaseImg}
+                  alt="Explore Sri Lanka E-Stores by Category — Ceylon Tea, Organic Spices, Batik Fashion, Tech Gadgets, Ayurvedic Cosmetics & Handmade Crafts"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover object-center brightness-[1.03] contrast-[1.02]"
+                />
+                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 via-black/30 to-transparent pointer-events-none" />
+                <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+                  <div>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/90 text-white text-[10px] font-extrabold uppercase tracking-wide shadow-xs mb-1">
+                      <Sparkles className="w-3 h-3" />
+                      <span>Islandwide E-Store Showcase</span>
+                    </span>
+                    <p className="text-xs sm:text-sm font-bold text-white drop-shadow-sm">
+                      {selectedCategory === 'All'
+                        ? 'Ceylon Tea, Batik Fashion, Tech Gadgets, Ayurvedic Wellness & Artisanal Goods'
+                        : `Filtered Category: ${selectedCategory}`}
+                    </p>
+                  </div>
+                  {selectedCategory !== 'All' && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategory('All')}
+                      className="self-start sm:self-auto px-3 py-1.5 rounded-lg bg-white/95 hover:bg-white text-gray-900 text-[11px] font-bold shadow-sm transition-colors cursor-pointer"
+                    >
+                      Show All Categories
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
