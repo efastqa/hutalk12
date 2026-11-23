@@ -195,6 +195,40 @@ service cloud.firestore {
              data.updatedAt is string && data.updatedAt.size() <= 64;
     }
 
+    function isValidSocietyRequest(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.beneficiaryName is string && data.beneficiaryName.size() > 0 && data.beneficiaryName.size() <= 120 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.category in [
+               'Medical Help',
+               'Education Help',
+               'Emergency & Disaster Relief',
+               'Food & Family Support',
+               'Disability & Elder Care',
+               'Livelihood & Tools Aid',
+               'Other Community Need'
+             ] &&
+             data.district is string && data.district.size() > 0 && data.district.size() <= 100 &&
+             (!('location' in data) || (data.location is string && data.location.size() <= 160)) &&
+             data.urgency in ['critical', 'urgent', 'ongoing'] &&
+             data.status in ['open', 'partially_helped', 'fulfilled'] &&
+             data.contactPhone is string && data.contactPhone.size() > 0 && data.contactPhone.size() <= 50 &&
+             data.story is string && data.story.size() > 0 && data.story.size() <= 5000 &&
+             (!('neededAmountLkr' in data) || (data.neededAmountLkr is number && data.neededAmountLkr >= 0)) &&
+             (!('receivedAmountLkr' in data) || (data.receivedAmountLkr is number && data.receivedAmountLkr >= 0)) &&
+             (!('whatsappPhone' in data) || (data.whatsappPhone is string && data.whatsappPhone.size() <= 50)) &&
+             (!('neededItemsSummary' in data) || (data.neededItemsSummary is string && data.neededItemsSummary.size() <= 500)) &&
+             (!('bankOrPayDetails' in data) || (data.bankOrPayDetails is string && data.bankOrPayDetails.size() <= 1000)) &&
+             (!('proofVerifiedNote' in data) || (data.proofVerifiedNote is string && data.proofVerifiedNote.size() <= 500)) &&
+             (!('images' in data) || (data.images is list && data.images.size() <= 6)) &&
+             (!('proofs' in data) || (data.proofs is list && data.proofs.size() <= 6)) &&
+             (!('offers' in data) || (data.offers is list && data.offers.size() <= 200)) &&
+             (!('offersCount' in data) || (data.offersCount is number && data.offersCount >= 0)) &&
+             (!('userId' in data) || (data.userId is string && data.userId.size() <= 128)) &&
+             data.createdAt is string && data.createdAt.size() <= 64 &&
+             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
     // Master Gate helper: Get parent conversation document
     function getConversation(conversationId) {
       return get(/databases/$(database)/documents/conversations/$(conversationId)).data;
@@ -403,6 +437,17 @@ service cloud.firestore {
       allow get, list: if true;
       allow create, update: if isValidId(configId) && isValidTravelConfig(incoming());
       allow delete: if isValidId(configId);
+    }
+
+    // HUTA IN "Society" Community Medical, Education & Relief Help Hub
+    match /society_requests/{requestId} {
+      allow get, list: if true;
+      allow create: if isValidId(requestId) && isValidSocietyRequest(incoming());
+      allow update: if isValidId(requestId) &&
+        isValidSocietyRequest(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().createdAt == existing().createdAt;
+      allow delete: if isValidId(requestId);
     }
   }
 }

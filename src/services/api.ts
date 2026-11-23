@@ -11,7 +11,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { db, OperationType, handleFirestoreError } from '../firebase';
-import { Listing, User, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, HotNewsResponse, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem, EStore, EStoreProduct, BuyerRequest, BuyerRequestOffer, BuyerRequestStatus, BuyerRequestUrgency, DonationCause, DonationCategory, DonationUrgency, DonationStatus, DonationPledge, DonationPledgeType, TravelBooking, TravelPackageCategory, TravelVehicleTier, TravelBookingStatus, TravelPricingConfig } from '../types';
+import { Listing, User, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, HotNewsResponse, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem, EStore, EStoreProduct, BuyerRequest, BuyerRequestOffer, BuyerRequestStatus, BuyerRequestUrgency, DonationCause, DonationCategory, DonationUrgency, DonationStatus, DonationPledge, DonationPledgeType, TravelBooking, TravelPackageCategory, TravelVehicleTier, TravelBookingStatus, TravelPricingConfig, SocietyHelpCategory, SocietyHelpUrgency, SocietyHelpStatus, SocietyProofType, SocietyProofDocument, SocietyHelpOffer, SocietyHelpRequest } from '../types';
 import { DEFAULT_TRAVEL_CONFIG } from '../utils/travelPricing';
 
 const API_BASE = '/api';
@@ -220,6 +220,74 @@ async function fitEStoreWithinFirestoreBudget(
       const prod = candidate.products[i];
       if (prod && prod.image) {
         prod.image = await shrinkOrUpload(prod.image, `estore-${candidate.id || 'shop'}-p${i}`, 480);
+      }
+    }
+  }
+
+  return sanitizeForFirestore(candidate);
+}
+
+async function fitSocietyRequestWithinFirestoreBudget(
+  requestItem: Record<string, any>,
+  uploadFn?: (imgData: string, name?: string) => Promise<{ url?: string }>,
+  maxBytes = 820000
+): Promise<Record<string, any>> {
+  const candidate: Record<string, any> = sanitizeForFirestore(requestItem);
+
+  const optimizeUrl = async (val: any, tag: string, maxDim: number): Promise<any> => {
+    if (typeof val !== 'string' || !val.startsWith('data:image/')) return val;
+    const compact = await shrinkDataUrlInBrowser(val, maxDim, 0.65);
+    if (uploadFn) {
+      try {
+        const uploaded = await uploadFn(compact, `${tag}.jpg`);
+        if (uploaded?.url) return uploaded.url;
+      } catch {
+        // fallback to in-doc compressed jpeg
+      }
+    }
+    if (compact.length <= 85000) return compact;
+    return await shrinkDataUrlInBrowser(compact, Math.min(480, maxDim), 0.45);
+  };
+
+  if (Array.isArray(candidate.images)) {
+    for (let i = 0; i < candidate.images.length; i++) {
+      candidate.images[i] = await optimizeUrl(
+        candidate.images[i],
+        `soc-${candidate.id || 'appeal'}-img${i}`,
+        840
+      );
+    }
+  }
+  if (Array.isArray(candidate.proofs)) {
+    for (let i = 0; i < candidate.proofs.length; i++) {
+      const p = candidate.proofs[i];
+      if (p && p.imageUrl) {
+        p.imageUrl = await optimizeUrl(
+          p.imageUrl,
+          `soc-${candidate.id || 'appeal'}-proof${i}`,
+          960
+        );
+      }
+    }
+  }
+
+  if (estimateJsonBytes(candidate) <= maxBytes) {
+    return sanitizeForFirestore(candidate);
+  }
+
+  // Aggressive pass if user added many photos offline without upload endpoint
+  if (Array.isArray(candidate.images)) {
+    for (let i = 0; i < candidate.images.length && estimateJsonBytes(candidate) > maxBytes; i++) {
+      if (typeof candidate.images[i] === 'string' && candidate.images[i].startsWith('data:image/')) {
+        candidate.images[i] = await shrinkDataUrlInBrowser(candidate.images[i], 420, 0.38);
+      }
+    }
+  }
+  if (Array.isArray(candidate.proofs)) {
+    for (let i = 0; i < candidate.proofs.length && estimateJsonBytes(candidate) > maxBytes; i++) {
+      const p = candidate.proofs[i];
+      if (p && typeof p.imageUrl === 'string' && p.imageUrl.startsWith('data:image/')) {
+        p.imageUrl = await shrinkDataUrlInBrowser(p.imageUrl, 520, 0.42);
       }
     }
   }
@@ -5054,6 +5122,698 @@ For quick inquiries, call or send a message via WhatsApp!`;
       await fetch(`${API_BASE}/admin/travel-bookings/${bookingId}`, {
         method: 'DELETE',
         headers: { 'x-admin-role': 'admin' },
+      });
+    } catch {
+      // backend optional
+    }
+  },
+
+  // -------------------------------------------------------------
+  // HUTA IN "Society" Community Help Hub (Medical, Education, Proof)
+  // -------------------------------------------------------------
+
+  getGuestSocietyIds(): string[] {
+    try {
+      const raw = localStorage.getItem('huta_guest_society_ids');
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  },
+
+  addGuestSocietyId(id: string): void {
+    try {
+      const ids = this.getGuestSocietyIds();
+      if (!ids.includes(id)) {
+        ids.unshift(id);
+        localStorage.setItem('huta_guest_society_ids', JSON.stringify(ids.slice(0, 60)));
+      }
+    } catch {
+      // ignore
+    }
+  },
+
+  subscribeToSocietyRequests(
+    callback: (requests: SocietyHelpRequest[]) => void,
+    onStatusChange?: (status: 'live' | 'reconnecting' | 'offline') => void
+  ): () => void {
+    let fallbackTimer: ReturnType<typeof setInterval> | null = null;
+    let eventSource: EventSource | null = null;
+    let unsubFirestore: (() => void) | null = null;
+    let sseConnected = false;
+    let fsConnected = false;
+    let disposed = false;
+
+    const sseMap = new Map<string, SocietyHelpRequest>();
+    const fsMap = new Map<string, SocietyHelpRequest>();
+    const deletedIds = new Set<string>();
+
+    const urgencyRank: Record<string, number> = { critical: 0, urgent: 1, ongoing: 2 };
+    const statusRank: Record<string, number> = { open: 0, partially_helped: 1, fulfilled: 2 };
+    const sortRequests = (list: SocietyHelpRequest[]) =>
+      [...list].sort((a, b) => {
+        const sDiff = (statusRank[a.status] ?? 3) - (statusRank[b.status] ?? 3);
+        if (sDiff !== 0) return sDiff;
+        const uDiff = (urgencyRank[a.urgency] ?? 3) - (urgencyRank[b.urgency] ?? 3);
+        if (uDiff !== 0) return uDiff;
+        return new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime();
+      });
+
+    const normalizeItem = (raw: SocietyHelpRequest, fallbackId?: string): SocietyHelpRequest => {
+      const images = Array.isArray(raw.images) ? raw.images.filter((i) => typeof i === 'string').slice(0, 6) : [];
+      const proofs = Array.isArray(raw.proofs)
+        ? raw.proofs.filter((p) => p && typeof p.imageUrl === 'string').slice(0, 6)
+        : [];
+      const offers = Array.isArray(raw.offers) ? raw.offers.slice(0, 200) : [];
+      const computedReceived = offers.reduce((acc, o) => acc + Math.max(0, Number(o.amountLkr) || 0), 0);
+      return {
+        ...raw,
+        id: raw.id || fallbackId || '',
+        images,
+        proofs,
+        offers,
+        offersCount: typeof raw.offersCount === 'number' ? raw.offersCount : offers.length,
+        receivedAmountLkr:
+          typeof raw.receivedAmountLkr === 'number'
+            ? Math.max(raw.receivedAmountLkr, computedReceived)
+            : computedReceived,
+      };
+    };
+
+    const updateStatus = () => {
+      if (disposed || !onStatusChange) return;
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        onStatusChange('offline');
+        return;
+      }
+      onStatusChange(sseConnected || fsConnected ? 'live' : 'reconnecting');
+    };
+
+    const emitMerged = () => {
+      if (disposed) return;
+      const merged = new Map<string, SocietyHelpRequest>();
+
+      for (const [id, item] of sseMap.entries()) {
+        if (!deletedIds.has(id)) {
+          merged.set(id, item);
+        }
+      }
+
+      for (const [id, fsItem] of fsMap.entries()) {
+        if (deletedIds.has(id)) continue;
+        const sseItem = merged.get(id);
+        if (!sseItem) {
+          merged.set(id, fsItem);
+          continue;
+        }
+        const fsUpdated = new Date(fsItem.updatedAt || fsItem.createdAt || 0).getTime();
+        const sseUpdated = new Date(sseItem.updatedAt || sseItem.createdAt || 0).getTime();
+        if (
+          fsUpdated > sseUpdated ||
+          (fsUpdated === sseUpdated && (fsItem.offersCount || 0) > (sseItem.offersCount || 0))
+        ) {
+          merged.set(id, fsItem);
+        }
+      }
+
+      callback(sortRequests(Array.from(merged.values())));
+    };
+
+    const fetchRest = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/society-requests`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            sseMap.clear();
+            for (const item of data) {
+              if (item && item.id) {
+                deletedIds.delete(item.id);
+                sseMap.set(item.id, normalizeItem(item));
+              }
+            }
+            emitMerged();
+          }
+        }
+      } catch {
+        // backend optional
+      }
+    };
+
+    const startRestFallback = () => {
+      if (fallbackTimer || disposed) return;
+      fetchRest().catch(() => {});
+      fallbackTimer = setInterval(() => {
+        if (!sseConnected && !fsConnected) {
+          fetchRest().catch(() => {});
+        }
+      }, 15000);
+    };
+
+    updateStatus();
+
+    if (typeof window !== 'undefined' && typeof EventSource !== 'undefined') {
+      try {
+        eventSource = new EventSource(`${API_BASE}/society-requests/stream`);
+
+        const handleSsePayload = (rawData: string) => {
+          if (disposed) return;
+          try {
+            const payload = JSON.parse(rawData) as {
+              type?: string;
+              requestItem?: SocietyHelpRequest | null;
+              deletedId?: string | null;
+              requests?: SocietyHelpRequest[];
+            };
+
+            if (payload.deletedId) {
+              deletedIds.add(payload.deletedId);
+              sseMap.delete(payload.deletedId);
+              fsMap.delete(payload.deletedId);
+            }
+
+            if (Array.isArray(payload.requests)) {
+              sseMap.clear();
+              for (const rawItem of payload.requests) {
+                if (rawItem && rawItem.id) {
+                  deletedIds.delete(rawItem.id);
+                  sseMap.set(rawItem.id, normalizeItem(rawItem));
+                }
+              }
+            } else if (payload.requestItem && payload.requestItem.id) {
+              deletedIds.delete(payload.requestItem.id);
+              sseMap.set(payload.requestItem.id, normalizeItem(payload.requestItem));
+            }
+
+            sseConnected = true;
+            updateStatus();
+            emitMerged();
+          } catch {
+            // ignore malformed frame
+          }
+        };
+
+        eventSource.addEventListener('society', (ev) => {
+          handleSsePayload((ev as MessageEvent).data);
+        });
+        eventSource.onmessage = (ev) => {
+          handleSsePayload(ev.data);
+        };
+        eventSource.onopen = () => {
+          sseConnected = true;
+          updateStatus();
+        };
+        eventSource.onerror = () => {
+          sseConnected = false;
+          updateStatus();
+        };
+      } catch {
+        startRestFallback();
+      }
+    } else {
+      startRestFallback();
+    }
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        unsubFirestore = onSnapshot(
+          collection(db, 'society_requests'),
+          (snapshot) => {
+            if (disposed) return;
+            for (const change of snapshot.docChanges()) {
+              if (change.type === 'removed') {
+                deletedIds.add(change.doc.id);
+                fsMap.delete(change.doc.id);
+                sseMap.delete(change.doc.id);
+              }
+            }
+
+            fsMap.clear();
+            snapshot.forEach((docSnap) => {
+              const normalized = normalizeItem(docSnap.data() as SocietyHelpRequest, docSnap.id);
+              if (normalized.id) {
+                deletedIds.delete(normalized.id);
+                fsMap.set(normalized.id, normalized);
+              }
+            });
+
+            fsConnected = true;
+            updateStatus();
+            emitMerged();
+          },
+          (err) => {
+            handleFirestoreError(err, OperationType.LIST, 'society_requests');
+            recordFirestoreError(err);
+            fsConnected = false;
+            updateStatus();
+            if (!sseConnected) startRestFallback();
+          }
+        );
+      } catch (err) {
+        handleFirestoreError(err, OperationType.LIST, 'society_requests');
+        recordFirestoreError(err);
+        fsConnected = false;
+        updateStatus();
+        if (!sseConnected) startRestFallback();
+      }
+    }
+
+    const handleOnline = () => {
+      updateStatus();
+      fetchRest().catch(() => {});
+    };
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetchRest().catch(() => {});
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', updateStatus);
+    }
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibility);
+    }
+
+    return () => {
+      disposed = true;
+      if (fallbackTimer) clearInterval(fallbackTimer);
+      if (eventSource) {
+        try {
+          eventSource.close();
+        } catch {
+          // ignore
+        }
+      }
+      if (unsubFirestore) {
+        try {
+          unsubFirestore();
+        } catch {
+          // ignore
+        }
+      }
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', updateStatus);
+      }
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibility);
+      }
+    };
+  },
+
+  async getSocietyRequests(): Promise<SocietyHelpRequest[]> {
+    const map = new Map<string, SocietyHelpRequest>();
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        const snap = await getDocs(collection(db, 'society_requests'));
+        snap.forEach((docSnap) => {
+          const raw = docSnap.data() as SocietyHelpRequest;
+          const id = raw.id || docSnap.id;
+          map.set(id, {
+            ...raw,
+            id,
+            images: Array.isArray(raw.images) ? raw.images : [],
+            proofs: Array.isArray(raw.proofs) ? raw.proofs : [],
+            offers: Array.isArray(raw.offers) ? raw.offers : [],
+            offersCount: typeof raw.offersCount === 'number' ? raw.offersCount : (Array.isArray(raw.offers) ? raw.offers.length : 0),
+            receivedAmountLkr: typeof raw.receivedAmountLkr === 'number' ? raw.receivedAmountLkr : 0,
+          });
+        });
+      } catch (err) {
+        handleFirestoreError(err, OperationType.LIST, 'society_requests');
+        recordFirestoreError(err);
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/society-requests`, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          for (const item of data) {
+            if (item && item.id) {
+              const existing = map.get(item.id);
+              const existingTs = existing ? new Date(existing.updatedAt || existing.createdAt || 0).getTime() : 0;
+              const incomingTs = new Date(item.updatedAt || item.createdAt || 0).getTime();
+              if (!existing || incomingTs >= existingTs) {
+                map.set(item.id, item);
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      // backend optional
+    }
+
+    const urgencyRank: Record<string, number> = { critical: 0, urgent: 1, ongoing: 2 };
+    const statusRank: Record<string, number> = { open: 0, partially_helped: 1, fulfilled: 2 };
+    return Array.from(map.values()).sort((a, b) => {
+      const sDiff = (statusRank[a.status] ?? 3) - (statusRank[b.status] ?? 3);
+      if (sDiff !== 0) return sDiff;
+      const uDiff = (urgencyRank[a.urgency] ?? 3) - (urgencyRank[b.urgency] ?? 3);
+      if (uDiff !== 0) return uDiff;
+      return new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime();
+    });
+  },
+
+  async createSocietyRequest(input: {
+    beneficiaryName: string;
+    title: string;
+    category: SocietyHelpCategory;
+    district: string;
+    location: string;
+    urgency: SocietyHelpUrgency;
+    neededAmountLkr?: number;
+    neededItemsSummary?: string;
+    story: string;
+    contactPhone: string;
+    whatsappPhone?: string;
+    bankOrPayDetails?: string;
+    images: string[];
+    proofs: SocietyProofDocument[];
+    proofVerifiedNote?: string;
+    userId?: string;
+  }): Promise<SocietyHelpRequest> {
+    const id = `soc_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const now = new Date().toISOString();
+    const districtVal = String(input.district || 'Colombo').trim().slice(0, 100) || 'Colombo';
+    const normalizedPhone = normalizeSriLankanPhone(input.contactPhone) || String(input.contactPhone).trim();
+    const normalizedWa = input.whatsappPhone
+      ? normalizeSriLankanPhone(input.whatsappPhone) || String(input.whatsappPhone).trim()
+      : normalizedPhone;
+
+    const rawItem: SocietyHelpRequest = {
+      id,
+      beneficiaryName: String(input.beneficiaryName || '').trim().slice(0, 120),
+      title: String(input.title || '').trim().slice(0, 200),
+      category: input.category || 'Medical Help',
+      district: districtVal,
+      location: String(input.location || districtVal).trim().slice(0, 160),
+      urgency: input.urgency || 'urgent',
+      status: 'open',
+      neededAmountLkr:
+        input.neededAmountLkr && Number(input.neededAmountLkr) > 0
+          ? Math.max(0, Number(input.neededAmountLkr))
+          : undefined,
+      receivedAmountLkr: 0,
+      neededItemsSummary: input.neededItemsSummary
+        ? String(input.neededItemsSummary).trim().slice(0, 500)
+        : undefined,
+      story: String(input.story || '').trim().slice(0, 5000),
+      contactPhone: normalizedPhone.slice(0, 50),
+      whatsappPhone: normalizedWa.slice(0, 50),
+      bankOrPayDetails: input.bankOrPayDetails
+        ? String(input.bankOrPayDetails).trim().slice(0, 1000)
+        : undefined,
+      images: (Array.isArray(input.images) ? input.images : []).slice(0, 6),
+      proofs: (Array.isArray(input.proofs) ? input.proofs : []).slice(0, 6),
+      proofVerifiedNote: input.proofVerifiedNote
+        ? String(input.proofVerifiedNote).trim().slice(0, 500)
+        : undefined,
+      offersCount: 0,
+      offers: [],
+      userId: input.userId || api.getCurrentUser()?.id || 'guest',
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const clean = (await fitSocietyRequestWithinFirestoreBudget(
+      rawItem,
+      (imgData, name) => api.uploadImage(imgData, name)
+    )) as SocietyHelpRequest;
+
+    let firestoreSaved = false;
+    let apiSaved = false;
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await setDoc(doc(db, 'society_requests', id), clean);
+        firestoreSaved = true;
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          handleFirestoreError(err, OperationType.CREATE, `society_requests/${id}`);
+        }
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/society-requests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clean),
+      });
+      if (res.ok) {
+        apiSaved = true;
+        const saved = await res.json();
+        this.addGuestSocietyId(saved.id || clean.id);
+        return saved;
+      }
+    } catch {
+      // backend optional
+    }
+
+    if (!firestoreSaved && !apiSaved) {
+      throw new Error('Could not submit Society help appeal right now. Please try again.');
+    }
+
+    this.addGuestSocietyId(clean.id);
+    return clean;
+  },
+
+  async updateSocietyRequest(
+    existingItem: SocietyHelpRequest,
+    updates: {
+      beneficiaryName?: string;
+      title?: string;
+      category?: SocietyHelpCategory;
+      district?: string;
+      location?: string;
+      urgency?: SocietyHelpUrgency;
+      status?: SocietyHelpStatus;
+      neededAmountLkr?: number | null;
+      neededItemsSummary?: string;
+      story?: string;
+      contactPhone?: string;
+      whatsappPhone?: string;
+      bankOrPayDetails?: string;
+      images?: string[];
+      proofs?: SocietyProofDocument[];
+      proofVerifiedNote?: string;
+    }
+  ): Promise<SocietyHelpRequest> {
+    const now = new Date().toISOString();
+    const districtVal =
+      updates.district !== undefined
+        ? String(updates.district).trim().slice(0, 100) || existingItem.district
+        : existingItem.district;
+    const contactPhoneVal =
+      updates.contactPhone !== undefined
+        ? (normalizeSriLankanPhone(updates.contactPhone) || String(updates.contactPhone).trim()).slice(0, 50)
+        : existingItem.contactPhone;
+
+    const mergedRaw: SocietyHelpRequest = {
+      ...existingItem,
+      beneficiaryName:
+        updates.beneficiaryName !== undefined
+          ? String(updates.beneficiaryName).trim().slice(0, 120) || existingItem.beneficiaryName
+          : existingItem.beneficiaryName,
+      title:
+        updates.title !== undefined
+          ? String(updates.title).trim().slice(0, 200) || existingItem.title
+          : existingItem.title,
+      category: updates.category || existingItem.category,
+      district: districtVal,
+      location:
+        updates.location !== undefined
+          ? String(updates.location).trim().slice(0, 160)
+          : existingItem.location,
+      urgency: updates.urgency || existingItem.urgency,
+      status: updates.status || existingItem.status,
+      neededAmountLkr:
+        updates.neededAmountLkr === null
+          ? undefined
+          : updates.neededAmountLkr !== undefined
+          ? Math.max(0, Number(updates.neededAmountLkr) || 0) || undefined
+          : existingItem.neededAmountLkr,
+      neededItemsSummary:
+        updates.neededItemsSummary !== undefined
+          ? String(updates.neededItemsSummary).trim().slice(0, 500) || undefined
+          : existingItem.neededItemsSummary,
+      story:
+        updates.story !== undefined
+          ? String(updates.story).trim().slice(0, 5000) || existingItem.story
+          : existingItem.story,
+      contactPhone: contactPhoneVal,
+      whatsappPhone:
+        updates.whatsappPhone !== undefined
+          ? (normalizeSriLankanPhone(updates.whatsappPhone) || String(updates.whatsappPhone).trim()).slice(0, 50) || undefined
+          : existingItem.whatsappPhone,
+      bankOrPayDetails:
+        updates.bankOrPayDetails !== undefined
+          ? String(updates.bankOrPayDetails).trim().slice(0, 1000) || undefined
+          : existingItem.bankOrPayDetails,
+      proofVerifiedNote:
+        updates.proofVerifiedNote !== undefined
+          ? String(updates.proofVerifiedNote).trim().slice(0, 500) || undefined
+          : existingItem.proofVerifiedNote,
+      images: updates.images ? updates.images.slice(0, 6) : existingItem.images,
+      proofs: updates.proofs ? updates.proofs.slice(0, 6) : existingItem.proofs,
+      updatedAt: now,
+    };
+
+    const clean = (await fitSocietyRequestWithinFirestoreBudget(
+      mergedRaw,
+      (imgData, name) => api.uploadImage(imgData, name)
+    )) as SocietyHelpRequest;
+
+    let firestoreSaved = false;
+    let apiSaved = false;
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await setDoc(doc(db, 'society_requests', existingItem.id), clean);
+        firestoreSaved = true;
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          handleFirestoreError(err, OperationType.UPDATE, `society_requests/${existingItem.id}`);
+        }
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/society-requests/${existingItem.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clean),
+      });
+      if (res.ok) {
+        apiSaved = true;
+        const saved = await res.json();
+        this.addGuestSocietyId(saved.id || clean.id);
+        return saved;
+      }
+    } catch {
+      // backend optional
+    }
+
+    if (!firestoreSaved && !apiSaved) {
+      throw new Error('Could not update Society appeal right now. Please try again.');
+    }
+
+    this.addGuestSocietyId(clean.id);
+    return clean;
+  },
+
+  async addSocietyHelpOffer(
+    item: SocietyHelpRequest,
+    offerInput: {
+      helperName: string;
+      helperPhone?: string;
+      helperDistrict?: string;
+      helpType: 'funds' | 'supplies' | 'service_volunteer';
+      amountLkr?: number;
+      itemsNote?: string;
+      message?: string;
+    }
+  ): Promise<SocietyHelpRequest> {
+    const newOffer: SocietyHelpOffer = {
+      id: `help_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      helperName: String(offerInput.helperName || '').trim().slice(0, 100),
+      helperPhone: offerInput.helperPhone
+        ? (normalizeSriLankanPhone(offerInput.helperPhone) || String(offerInput.helperPhone).trim()).slice(0, 50)
+        : undefined,
+      helperDistrict: offerInput.helperDistrict
+        ? String(offerInput.helperDistrict).trim().slice(0, 80)
+        : undefined,
+      helpType: offerInput.helpType || 'supplies',
+      amountLkr: Math.max(0, Number(offerInput.amountLkr) || 0),
+      itemsNote: offerInput.itemsNote ? String(offerInput.itemsNote).trim().slice(0, 240) : undefined,
+      message: offerInput.message ? String(offerInput.message).trim().slice(0, 500) : undefined,
+      createdAt: new Date().toISOString(),
+    };
+
+    const currentOffers = Array.isArray(item.offers) ? item.offers : [];
+    const updatedOffers = [newOffer, ...currentOffers].slice(0, 200);
+    const receivedAmountLkr = updatedOffers.reduce((acc, o) => acc + Math.max(0, Number(o.amountLkr) || 0), 0);
+    const nextStatus: SocietyHelpStatus =
+      item.status === 'fulfilled'
+        ? 'fulfilled'
+        : item.neededAmountLkr && receivedAmountLkr >= item.neededAmountLkr
+        ? 'fulfilled'
+        : updatedOffers.length > 0 && item.status === 'open'
+        ? 'partially_helped'
+        : item.status;
+
+    const now = new Date().toISOString();
+    const updatedItem: SocietyHelpRequest = {
+      ...item,
+      offers: updatedOffers,
+      offersCount: updatedOffers.length,
+      receivedAmountLkr,
+      status: nextStatus,
+      updatedAt: now,
+    };
+
+    const cleanFull = sanitizeForFirestore(updatedItem) as SocietyHelpRequest;
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await updateDoc(
+          doc(db, 'society_requests', item.id),
+          sanitizeForFirestore({
+            offers: updatedOffers,
+            offersCount: updatedOffers.length,
+            receivedAmountLkr,
+            status: nextStatus,
+            updatedAt: now,
+          })
+        );
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          try {
+            await setDoc(doc(db, 'society_requests', item.id), cleanFull, { merge: true });
+          } catch (innerErr) {
+            handleFirestoreError(innerErr, OperationType.UPDATE, `society_requests/${item.id}`);
+          }
+        }
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/society-requests/${item.id}/offers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newOffer),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // backend optional
+    }
+
+    return updatedItem;
+  },
+
+  async deleteSocietyRequest(requestId: string): Promise<void> {
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await deleteDoc(doc(db, 'society_requests', requestId));
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          handleFirestoreError(err, OperationType.DELETE, `society_requests/${requestId}`);
+        }
+      }
+    }
+
+    try {
+      await fetch(`${API_BASE}/society-requests/${requestId}`, {
+        method: 'DELETE',
       });
     } catch {
       // backend optional

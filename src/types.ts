@@ -616,5 +616,72 @@ export interface TravelPricingConfig {
   updatedAt: string;
 }
 
+// -------------------------------------------------------------
+// HUTA IN "Society" — Community Medical, Education & Relief Help Hub
+// -------------------------------------------------------------
 
+export type SocietyHelpCategory =
+  | 'Medical Help'
+  | 'Education Help'
+  | 'Emergency & Disaster Relief'
+  | 'Food & Family Support'
+  | 'Disability & Elder Care'
+  | 'Livelihood & Tools Aid'
+  | 'Other Community Need';
 
+export type SocietyHelpUrgency = 'critical' | 'urgent' | 'ongoing';
+export type SocietyHelpStatus = 'open' | 'partially_helped' | 'fulfilled';
+
+export type SocietyProofType =
+  | 'Medical Report / Prescription'
+  | 'Hospital Bill / Estimate'
+  | 'School / University Fee Notice'
+  | 'Grama Niladhari / Official Letter'
+  | 'Utility / Rent Bill'
+  | 'Other Proof Document';
+
+export interface SocietyProofDocument {
+  id: string;
+  proofType: SocietyProofType;
+  label: string;
+  imageUrl: string;
+  uploadedAt: string;
+}
+
+export interface SocietyHelpOffer {
+  id: string;
+  helperName: string;
+  helperPhone?: string;
+  helperDistrict?: string;
+  helpType: 'funds' | 'supplies' | 'service_volunteer';
+  amountLkr?: number;
+  itemsNote?: string;
+  message?: string;
+  createdAt: string;
+}
+
+export interface SocietyHelpRequest {
+  id: string;
+  beneficiaryName: string;
+  title: string;
+  category: SocietyHelpCategory;
+  district: string;
+  location: string;
+  urgency: SocietyHelpUrgency;
+  status: SocietyHelpStatus;
+  neededAmountLkr?: number;
+  receivedAmountLkr: number;
+  neededItemsSummary?: string;
+  story: string;
+  contactPhone: string;
+  whatsappPhone?: string;
+  bankOrPayDetails?: string;
+  images: string[];
+  proofs: SocietyProofDocument[];
+  proofVerifiedNote?: string;
+  offersCount: number;
+  offers: SocietyHelpOffer[];
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}

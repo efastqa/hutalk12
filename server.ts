@@ -373,6 +373,69 @@ interface DonationCause {
   updatedAt: string;
 }
 
+type SocietyHelpCategory =
+  | 'Medical Help'
+  | 'Education Help'
+  | 'Emergency & Disaster Relief'
+  | 'Food & Family Support'
+  | 'Disability & Elder Care'
+  | 'Livelihood & Tools Aid'
+  | 'Other Community Need';
+
+type SocietyProofType =
+  | 'Medical Report / Prescription'
+  | 'Hospital Bill / Estimate'
+  | 'School / University Fee Notice'
+  | 'Grama Niladhari / Official Letter'
+  | 'Utility / Rent Bill'
+  | 'Other Proof Document';
+
+interface SocietyProofDocument {
+  id: string;
+  proofType: SocietyProofType;
+  label: string;
+  imageUrl: string;
+  uploadedAt: string;
+}
+
+interface SocietyHelpOffer {
+  id: string;
+  helperName: string;
+  helperPhone?: string;
+  helperDistrict?: string;
+  helpType: 'funds' | 'supplies' | 'service_volunteer';
+  amountLkr?: number;
+  itemsNote?: string;
+  message?: string;
+  createdAt: string;
+}
+
+interface SocietyHelpRequest {
+  id: string;
+  beneficiaryName: string;
+  title: string;
+  category: SocietyHelpCategory;
+  district: string;
+  location: string;
+  urgency: 'critical' | 'urgent' | 'ongoing';
+  status: 'open' | 'partially_helped' | 'fulfilled';
+  neededAmountLkr?: number;
+  receivedAmountLkr: number;
+  neededItemsSummary?: string;
+  story: string;
+  contactPhone: string;
+  whatsappPhone?: string;
+  bankOrPayDetails?: string;
+  images: string[];
+  proofs: SocietyProofDocument[];
+  proofVerifiedNote?: string;
+  offersCount: number;
+  offers: SocietyHelpOffer[];
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface TravelBooking {
   id: string;
   bookingRef: string;
@@ -481,6 +544,7 @@ const ESTORES_FILE = path.join(DATA_DIR, 'estores.json');
 const VIDEO_REELS_FILE = path.join(DATA_DIR, 'video-reels.json');
 const BUYER_REQUESTS_FILE = path.join(DATA_DIR, 'buyer-requests.json');
 const DONATIONS_FILE = path.join(DATA_DIR, 'donations.json');
+const SOCIETY_REQUESTS_FILE = path.join(DATA_DIR, 'society-requests.json');
 const TRAVEL_BOOKINGS_FILE = path.join(DATA_DIR, 'travel-bookings.json');
 const TRAVEL_CONFIG_FILE = path.join(DATA_DIR, 'travel-config.json');
 
@@ -756,6 +820,21 @@ function deleteDonationFromFirestore(id: string) {
   if (!firestoreDb) return;
   deleteDoc(doc(firestoreDb, 'donations', id)).catch((err) => {
     console.warn('[Firestore] delete donation cause error:', err);
+  });
+}
+
+function persistSocietyRequestToFirestore(reqItem: SocietyHelpRequest) {
+  if (!firestoreDb) return;
+  const clean = sanitizeForFirestoreServer(reqItem);
+  setDoc(doc(firestoreDb, 'society_requests', reqItem.id), clean, { merge: true }).catch((err) => {
+    console.warn('[Firestore] persist society request error:', err);
+  });
+}
+
+function deleteSocietyRequestFromFirestore(id: string) {
+  if (!firestoreDb) return;
+  deleteDoc(doc(firestoreDb, 'society_requests', id)).catch((err) => {
+    console.warn('[Firestore] delete society request error:', err);
   });
 }
 
@@ -1682,6 +1761,71 @@ function saveStoredDonations(causes: DonationCause[]) {
   }
 }
 
+function normalizeSocietyRequestItem(raw: any): SocietyHelpRequest {
+  const images = Array.isArray(raw?.images) ? raw.images.filter((i: any) => typeof i === 'string').slice(0, 6) : [];
+  const proofs = Array.isArray(raw?.proofs)
+    ? raw.proofs
+        .filter((p: any) => p && typeof p.imageUrl === 'string')
+        .slice(0, 6)
+    : [];
+  const offers = Array.isArray(raw?.offers) ? raw.offers.slice(0, 200) : [];
+  const computedReceived = offers.reduce(
+    (sum: number, o: SocietyHelpOffer) => sum + Math.max(0, Number(o.amountLkr) || 0),
+    0
+  );
+  return {
+    ...raw,
+    id: String(raw?.id || ''),
+    beneficiaryName: String(raw?.beneficiaryName || '').slice(0, 120),
+    title: String(raw?.title || '').slice(0, 200),
+    category: raw?.category || 'Medical Help',
+    district: String(raw?.district || 'Colombo').slice(0, 100),
+    location: String(raw?.location || raw?.district || '').slice(0, 160),
+    urgency: raw?.urgency === 'critical' || raw?.urgency === 'ongoing' ? raw.urgency : 'urgent',
+    status: raw?.status === 'partially_helped' || raw?.status === 'fulfilled' ? raw.status : 'open',
+    neededAmountLkr:
+      typeof raw?.neededAmountLkr === 'number' && raw.neededAmountLkr >= 0
+        ? raw.neededAmountLkr
+        : undefined,
+    receivedAmountLkr:
+      typeof raw?.receivedAmountLkr === 'number'
+        ? Math.max(raw.receivedAmountLkr, computedReceived)
+        : computedReceived,
+    story: String(raw?.story || '').slice(0, 5000),
+    contactPhone: String(raw?.contactPhone || '').slice(0, 50),
+    images,
+    proofs,
+    offersCount: typeof raw?.offersCount === 'number' ? raw.offersCount : offers.length,
+    offers,
+    userId: String(raw?.userId || 'guest').slice(0, 128),
+    createdAt: String(raw?.createdAt || new Date().toISOString()),
+    updatedAt: String(raw?.updatedAt || raw?.createdAt || new Date().toISOString()),
+  };
+}
+
+function getStoredSocietyRequests(): SocietyHelpRequest[] {
+  try {
+    if (fs.existsSync(SOCIETY_REQUESTS_FILE)) {
+      const data = fs.readFileSync(SOCIETY_REQUESTS_FILE, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) {
+        return parsed.map(normalizeSocietyRequestItem).filter((item) => item.id && item.title);
+      }
+    }
+  } catch (err) {
+    console.error('Error reading society requests file', err);
+  }
+  return [];
+}
+
+function saveStoredSocietyRequests(items: SocietyHelpRequest[]) {
+  try {
+    fs.writeFileSync(SOCIETY_REQUESTS_FILE, JSON.stringify(items, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error saving society requests file', err);
+  }
+}
+
 let listingsCache = getStoredListings();
 let usersCache = getStoredUsers();
 let eventsCache = getStoredEvents();
@@ -1693,6 +1837,7 @@ let eStoresCache = getStoredEStores();
 let videoReelsCache = getStoredVideoReels();
 let buyerRequestsCache = getStoredBuyerRequests();
 let donationsCache = getStoredDonations();
+let societyRequestsCache = getStoredSocietyRequests();
 let travelBookingsCache = getStoredTravelBookings();
 let travelConfigCache = getStoredTravelConfig();
 
@@ -5168,6 +5313,400 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
   });
 
   // -------------------------------------------------------------
+  // HUTA IN "Society" Community Medical, Education & Relief Hub
+  // -------------------------------------------------------------
+
+  const ALLOWED_SOCIETY_CATEGORIES: SocietyHelpCategory[] = [
+    'Medical Help',
+    'Education Help',
+    'Emergency & Disaster Relief',
+    'Food & Family Support',
+    'Disability & Elder Care',
+    'Livelihood & Tools Aid',
+    'Other Community Need',
+  ];
+
+  const ALLOWED_PROOF_TYPES: SocietyProofType[] = [
+    'Medical Report / Prescription',
+    'Hospital Bill / Estimate',
+    'School / University Fee Notice',
+    'Grama Niladhari / Official Letter',
+    'Utility / Rent Bill',
+    'Other Proof Document',
+  ];
+
+  const sortSocietyList = (list: SocietyHelpRequest[]): SocietyHelpRequest[] => {
+    const urgencyRank: Record<string, number> = { critical: 0, urgent: 1, ongoing: 2 };
+    const statusRank: Record<string, number> = { open: 0, partially_helped: 1, fulfilled: 2 };
+    return [...list].sort((a, b) => {
+      const sDiff = (statusRank[a.status] ?? 3) - (statusRank[b.status] ?? 3);
+      if (sDiff !== 0) return sDiff;
+      const uDiff = (urgencyRank[a.urgency] ?? 3) - (urgencyRank[b.urgency] ?? 3);
+      if (uDiff !== 0) return uDiff;
+      return new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime();
+    });
+  };
+
+  const societyStreamClients = new Set<express.Response>();
+
+  const broadcastSocietyUpdate = (
+    eventType: 'init' | 'upsert' | 'offer' | 'delete' | 'sync',
+    requestItem?: SocietyHelpRequest,
+    deletedId?: string
+  ) => {
+    if (societyStreamClients.size === 0) return;
+    const payload = JSON.stringify({
+      type: eventType,
+      requestItem: requestItem || null,
+      deletedId: deletedId || null,
+      requests: sortSocietyList(societyRequestsCache),
+      syncedAt: new Date().toISOString(),
+    });
+    const frame = `event: society\ndata: ${payload}\n\n`;
+    for (const clientRes of Array.from(societyStreamClients)) {
+      try {
+        clientRes.write(frame);
+      } catch {
+        societyStreamClients.delete(clientRes);
+      }
+    }
+  };
+
+  app.get('/api/society-requests/stream', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    if (typeof (res as any).flushHeaders === 'function') {
+      (res as any).flushHeaders();
+    }
+
+    societyStreamClients.add(res);
+    const initPayload = JSON.stringify({
+      type: 'init',
+      requestItem: null,
+      deletedId: null,
+      requests: sortSocietyList(societyRequestsCache),
+      syncedAt: new Date().toISOString(),
+    });
+    try {
+      res.write(`retry: 3000\nevent: society\ndata: ${initPayload}\n\n`);
+    } catch {
+      societyStreamClients.delete(res);
+      return;
+    }
+
+    const heartbeat = setInterval(() => {
+      try {
+        res.write(`: keepalive ${Date.now()}\n\n`);
+      } catch {
+        clearInterval(heartbeat);
+        societyStreamClients.delete(res);
+      }
+    }, 25000);
+
+    req.on('close', () => {
+      clearInterval(heartbeat);
+      societyStreamClients.delete(res);
+    });
+  });
+
+  app.get('/api/society-requests', (req, res) => {
+    const { category, district, status, proofOnly, search } = req.query;
+    let result = [...societyRequestsCache];
+
+    if (category && category !== 'All') {
+      result = result.filter((r) => r.category.toLowerCase() === String(category).toLowerCase());
+    }
+    if (district && district !== 'All Sri Lanka') {
+      const distLow = String(district).toLowerCase();
+      result = result.filter(
+        (r) => r.district.toLowerCase() === distLow || r.location.toLowerCase().includes(distLow)
+      );
+    }
+    if (status && status !== 'all') {
+      result = result.filter((r) => r.status === String(status));
+    }
+    if (proofOnly === 'true' || proofOnly === '1') {
+      result = result.filter((r) => Array.isArray(r.proofs) && r.proofs.length > 0);
+    }
+    if (search) {
+      const q = String(search).toLowerCase().trim();
+      result = result.filter(
+        (r) =>
+          r.title.toLowerCase().includes(q) ||
+          r.beneficiaryName.toLowerCase().includes(q) ||
+          r.story.toLowerCase().includes(q) ||
+          r.location.toLowerCase().includes(q) ||
+          (r.neededItemsSummary || '').toLowerCase().includes(q)
+      );
+    }
+
+    res.json(sortSocietyList(result));
+  });
+
+  app.post('/api/society-requests', (req, res) => {
+    const data = req.body || {};
+    const beneficiaryName = String(data.beneficiaryName || '').trim();
+    const title = String(data.title || '').trim();
+    const story = String(data.story || '').trim();
+    const contactPhone = String(data.contactPhone || '').trim();
+
+    if (!beneficiaryName || !title || !story || !contactPhone) {
+      return res.status(400).json({
+        error: 'Beneficiary name, appeal headline, story/details, and contact phone are required.',
+      });
+    }
+
+    const now = new Date().toISOString();
+    const id =
+      typeof data.id === 'string' && /^[A-Za-z0-9_.:@-]{1,128}$/.test(data.id)
+        ? data.id
+        : `soc_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+    const categoryVal = ALLOWED_SOCIETY_CATEGORIES.includes(data.category)
+      ? data.category
+      : 'Medical Help';
+    const urgencyVal =
+      data.urgency === 'critical' || data.urgency === 'ongoing' ? data.urgency : 'urgent';
+    const statusVal =
+      data.status === 'partially_helped' || data.status === 'fulfilled' ? data.status : 'open';
+
+    const images = Array.isArray(data.images)
+      ? data.images
+          .filter((img: unknown) => typeof img === 'string' && img.trim().length > 0)
+          .slice(0, 6)
+      : [];
+
+    const proofs: SocietyProofDocument[] = Array.isArray(data.proofs)
+      ? data.proofs
+          .filter((p: any) => p && typeof p.imageUrl === 'string' && p.imageUrl.trim().length > 0)
+          .slice(0, 6)
+          .map((p: any, idx: number) => ({
+            id: String(p.id || `proof_${Date.now()}_${idx}`).slice(0, 80),
+            proofType: ALLOWED_PROOF_TYPES.includes(p.proofType) ? p.proofType : 'Other Proof Document',
+            label: String(p.label || p.proofType || 'Supporting Proof').trim().slice(0, 120),
+            imageUrl: String(p.imageUrl).trim(),
+            uploadedAt: String(p.uploadedAt || now).slice(0, 64),
+          }))
+      : [];
+
+    const offers: SocietyHelpOffer[] = Array.isArray(data.offers) ? data.offers.slice(0, 200) : [];
+    const neededAmountLkr =
+      data.neededAmountLkr !== undefined && data.neededAmountLkr !== '' && Number(data.neededAmountLkr) > 0
+        ? Math.max(0, Number(data.neededAmountLkr))
+        : undefined;
+
+    const created: SocietyHelpRequest = normalizeSocietyRequestItem({
+      id,
+      beneficiaryName: beneficiaryName.slice(0, 120),
+      title: title.slice(0, 200),
+      category: categoryVal,
+      district: String(data.district || 'Colombo').trim().slice(0, 100) || 'Colombo',
+      location: String(data.location || data.district || 'Sri Lanka').trim().slice(0, 160),
+      urgency: urgencyVal,
+      status: statusVal,
+      neededAmountLkr,
+      receivedAmountLkr: offers.reduce((acc, o) => acc + Math.max(0, Number(o.amountLkr) || 0), 0),
+      neededItemsSummary: data.neededItemsSummary ? String(data.neededItemsSummary).trim().slice(0, 500) : undefined,
+      story: story.slice(0, 5000),
+      contactPhone: contactPhone.slice(0, 50),
+      whatsappPhone: data.whatsappPhone ? String(data.whatsappPhone).trim().slice(0, 50) : undefined,
+      bankOrPayDetails: data.bankOrPayDetails ? String(data.bankOrPayDetails).trim().slice(0, 1000) : undefined,
+      images,
+      proofs,
+      proofVerifiedNote: data.proofVerifiedNote ? String(data.proofVerifiedNote).trim().slice(0, 500) : undefined,
+      offersCount: offers.length,
+      offers,
+      userId: String(data.userId || 'guest').slice(0, 128),
+      createdAt: data.createdAt || now,
+      updatedAt: now,
+    });
+
+    const existingIdx = societyRequestsCache.findIndex((r) => r.id === id);
+    if (existingIdx !== -1) {
+      societyRequestsCache[existingIdx] = created;
+    } else {
+      societyRequestsCache.unshift(created);
+    }
+    saveStoredSocietyRequests(societyRequestsCache);
+    persistSocietyRequestToFirestore(created);
+    broadcastSocietyUpdate('upsert', created);
+    res.status(201).json(created);
+  });
+
+  app.put('/api/society-requests/:id', (req, res) => {
+    const idx = societyRequestsCache.findIndex((r) => r.id === req.params.id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'Society appeal not found.' });
+    }
+    const existing = societyRequestsCache[idx];
+    const data = req.body || {};
+    const now = new Date().toISOString();
+
+    const categoryVal = ALLOWED_SOCIETY_CATEGORIES.includes(data.category)
+      ? data.category
+      : existing.category;
+    const urgencyVal =
+      data.urgency === 'critical' || data.urgency === 'urgent' || data.urgency === 'ongoing'
+        ? data.urgency
+        : existing.urgency;
+    const statusVal =
+      data.status === 'open' || data.status === 'partially_helped' || data.status === 'fulfilled'
+        ? data.status
+        : existing.status;
+
+    const images = Array.isArray(data.images)
+      ? data.images
+          .filter((img: unknown) => typeof img === 'string' && img.trim().length > 0)
+          .slice(0, 6)
+      : existing.images;
+
+    const proofs: SocietyProofDocument[] = Array.isArray(data.proofs)
+      ? data.proofs
+          .filter((p: any) => p && typeof p.imageUrl === 'string' && p.imageUrl.trim().length > 0)
+          .slice(0, 6)
+          .map((p: any, pIdx: number) => ({
+            id: String(p.id || `proof_${Date.now()}_${pIdx}`).slice(0, 80),
+            proofType: ALLOWED_PROOF_TYPES.includes(p.proofType) ? p.proofType : 'Other Proof Document',
+            label: String(p.label || p.proofType || 'Supporting Proof').trim().slice(0, 120),
+            imageUrl: String(p.imageUrl).trim(),
+            uploadedAt: String(p.uploadedAt || now).slice(0, 64),
+          }))
+      : existing.proofs;
+
+    const updated: SocietyHelpRequest = normalizeSocietyRequestItem({
+      ...existing,
+      beneficiaryName:
+        typeof data.beneficiaryName === 'string' && data.beneficiaryName.trim()
+          ? data.beneficiaryName.trim().slice(0, 120)
+          : existing.beneficiaryName,
+      title:
+        typeof data.title === 'string' && data.title.trim()
+          ? data.title.trim().slice(0, 200)
+          : existing.title,
+      category: categoryVal,
+      district:
+        typeof data.district === 'string' && data.district.trim()
+          ? data.district.trim().slice(0, 100)
+          : existing.district,
+      location:
+        typeof data.location === 'string'
+          ? data.location.trim().slice(0, 160)
+          : existing.location,
+      urgency: urgencyVal,
+      status: statusVal,
+      neededAmountLkr:
+        data.neededAmountLkr === null || data.neededAmountLkr === ''
+          ? undefined
+          : data.neededAmountLkr !== undefined
+          ? Math.max(0, Number(data.neededAmountLkr) || 0)
+          : existing.neededAmountLkr,
+      neededItemsSummary:
+        data.neededItemsSummary !== undefined
+          ? String(data.neededItemsSummary || '').trim().slice(0, 500) || undefined
+          : existing.neededItemsSummary,
+      story:
+        typeof data.story === 'string' && data.story.trim()
+          ? data.story.trim().slice(0, 5000)
+          : existing.story,
+      contactPhone:
+        typeof data.contactPhone === 'string' && data.contactPhone.trim()
+          ? data.contactPhone.trim().slice(0, 50)
+          : existing.contactPhone,
+      whatsappPhone:
+        data.whatsappPhone !== undefined
+          ? String(data.whatsappPhone || '').trim().slice(0, 50) || undefined
+          : existing.whatsappPhone,
+      bankOrPayDetails:
+        data.bankOrPayDetails !== undefined
+          ? String(data.bankOrPayDetails || '').trim().slice(0, 1000) || undefined
+          : existing.bankOrPayDetails,
+      proofVerifiedNote:
+        data.proofVerifiedNote !== undefined
+          ? String(data.proofVerifiedNote || '').trim().slice(0, 500) || undefined
+          : existing.proofVerifiedNote,
+      images,
+      proofs,
+      updatedAt: now,
+    });
+
+    societyRequestsCache[idx] = updated;
+    saveStoredSocietyRequests(societyRequestsCache);
+    persistSocietyRequestToFirestore(updated);
+    broadcastSocietyUpdate('upsert', updated);
+    res.json(updated);
+  });
+
+  app.post('/api/society-requests/:id/offers', (req, res) => {
+    const idx = societyRequestsCache.findIndex((r) => r.id === req.params.id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'Society appeal not found.' });
+    }
+    const data = req.body || {};
+    const helperName = String(data.helperName || '').trim();
+    if (!helperName) {
+      return res.status(400).json({ error: 'Helper name is required.' });
+    }
+
+    const helpType =
+      data.helpType === 'funds' || data.helpType === 'service_volunteer'
+        ? data.helpType
+        : 'supplies';
+    const amountLkr = Math.max(0, Number(data.amountLkr) || 0);
+    const newOffer: SocietyHelpOffer = {
+      id: data.id || `help_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      helperName: helperName.slice(0, 100),
+      helperPhone: data.helperPhone ? String(data.helperPhone).trim().slice(0, 50) : undefined,
+      helperDistrict: data.helperDistrict ? String(data.helperDistrict).trim().slice(0, 80) : undefined,
+      helpType,
+      amountLkr,
+      itemsNote: data.itemsNote ? String(data.itemsNote).trim().slice(0, 240) : undefined,
+      message: data.message ? String(data.message).trim().slice(0, 500) : undefined,
+      createdAt: data.createdAt || new Date().toISOString(),
+    };
+
+    const current = societyRequestsCache[idx];
+    const currentOffers = Array.isArray(current.offers) ? current.offers : [];
+    const updatedOffers = [newOffer, ...currentOffers.filter((o) => o.id !== newOffer.id)].slice(0, 200);
+    const receivedAmountLkr = updatedOffers.reduce((acc, o) => acc + Math.max(0, Number(o.amountLkr) || 0), 0);
+    const nextStatus =
+      current.status === 'fulfilled'
+        ? 'fulfilled'
+        : current.neededAmountLkr && receivedAmountLkr >= current.neededAmountLkr
+        ? 'fulfilled'
+        : updatedOffers.length > 0 && current.status === 'open'
+        ? 'partially_helped'
+        : current.status;
+
+    const updated = normalizeSocietyRequestItem({
+      ...current,
+      offers: updatedOffers,
+      offersCount: updatedOffers.length,
+      receivedAmountLkr,
+      status: nextStatus,
+      updatedAt: new Date().toISOString(),
+    });
+
+    societyRequestsCache[idx] = updated;
+    saveStoredSocietyRequests(societyRequestsCache);
+    persistSocietyRequestToFirestore(updated);
+    broadcastSocietyUpdate('offer', updated);
+    res.status(201).json(updated);
+  });
+
+  app.delete('/api/society-requests/:id', (req, res) => {
+    const idx = societyRequestsCache.findIndex((r) => r.id === req.params.id);
+    if (idx !== -1) {
+      societyRequestsCache.splice(idx, 1);
+      saveStoredSocietyRequests(societyRequestsCache);
+    }
+    deleteSocietyRequestFromFirestore(req.params.id);
+    broadcastSocietyUpdate('delete', undefined, req.params.id);
+    res.json({ success: true });
+  });
+
+  // -------------------------------------------------------------
   // Sri Lanka Travel & Tourism Booking System (Admin-Controlled)
   // -------------------------------------------------------------
 
@@ -5860,6 +6399,89 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
       } catch (e) {
         if (isQuotaExceededError(e)) return;
         console.warn('[Firestore] Initial travel config sync warning:', e);
+      }
+
+      try {
+        const socSnap = await getDocs(collection(firestoreDb, 'society_requests'));
+        if (!socSnap.empty) {
+          const remoteItems: SocietyHelpRequest[] = [];
+          socSnap.forEach((d) => {
+            remoteItems.push(normalizeSocietyRequestItem({ ...d.data(), id: d.id }));
+          });
+          const socMap = new Map<string, SocietyHelpRequest>();
+          societyRequestsCache.forEach((item) => socMap.set(item.id, item));
+          remoteItems.forEach((item) => {
+            const existing = socMap.get(item.id);
+            const existingTs = existing ? new Date(existing.updatedAt || existing.createdAt || 0).getTime() : 0;
+            const incomingTs = new Date(item.updatedAt || item.createdAt || 0).getTime();
+            if (!existing || incomingTs >= existingTs) {
+              socMap.set(item.id, item);
+            }
+          });
+          societyRequestsCache = Array.from(socMap.values());
+          saveStoredSocietyRequests(societyRequestsCache);
+          console.log(`[Firestore] Initialized server society requests cache with ${societyRequestsCache.length} community appeals`);
+        } else if (societyRequestsCache.length > 0) {
+          for (const item of societyRequestsCache) {
+            persistSocietyRequestToFirestore(item);
+          }
+        }
+
+        try {
+          onSnapshot(
+            collection(firestoreDb, 'society_requests'),
+            (snap) => {
+              let changed = false;
+              let latestItem: SocietyHelpRequest | undefined;
+              let removedId: string | undefined;
+              const cacheMap = new Map<string, SocietyHelpRequest>();
+              societyRequestsCache.forEach((item) => cacheMap.set(item.id, item));
+
+              for (const change of snap.docChanges()) {
+                const docId = change.doc.id;
+                if (change.type === 'removed') {
+                  if (cacheMap.delete(docId)) {
+                    changed = true;
+                    removedId = docId;
+                  }
+                } else {
+                  const normalized = normalizeSocietyRequestItem({ ...change.doc.data(), id: docId });
+                  const existing = cacheMap.get(normalized.id);
+                  const existingTs = existing ? new Date(existing.updatedAt || existing.createdAt || 0).getTime() : 0;
+                  const incomingTs = new Date(normalized.updatedAt || normalized.createdAt || 0).getTime();
+                  if (
+                    !existing ||
+                    incomingTs > existingTs ||
+                    existing.status !== normalized.status ||
+                    (existing.offersCount || 0) !== (normalized.offersCount || 0)
+                  ) {
+                    cacheMap.set(normalized.id, normalized);
+                    latestItem = normalized;
+                    changed = true;
+                  }
+                }
+              }
+
+              if (changed) {
+                societyRequestsCache = Array.from(cacheMap.values());
+                saveStoredSocietyRequests(societyRequestsCache);
+                broadcastSocietyUpdate(removedId && !latestItem ? 'delete' : 'sync', latestItem, removedId);
+              }
+            },
+            (err) => {
+              if (!isQuotaExceededError(err)) {
+                console.warn('[Firestore] Live society listener warning:', err);
+              }
+            }
+          );
+        } catch (listenErr) {
+          if (!isQuotaExceededError(listenErr)) {
+            console.warn('[Firestore] Could not attach live society listener:', listenErr);
+          }
+        }
+      } catch (e) {
+        if (isQuotaExceededError(e)) return;
+        console.warn('[Firestore] Initial society requests sync warning:', e);
       }
     })().catch((err) => {
       console.warn('[Firestore] Initial background sync error:', err);

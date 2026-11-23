@@ -30,4 +30,4 @@
 - `estores`, `video_reels`, `events`, `hero_ads`: Enforce bounded names/titles/descriptions and bounded nested lists (`products <= 80`, `ads <= 40`, `slides <= 40`) to prevent oversized write abuse while preserving public directory & admin workflows.
 - `reviews` & `reports`: Enforce rating range (`1..5`), bounded comment/details (`<= 2000`), and strict `reason` / `status` enums.
 - `buyer_requests`, `donations`, `travel_bookings`, `travel_config`: Enforce enum checks, positive bounds on budgets/days/adults, and list caps (`pledges <= 200`, `offers <= 100`).
-
+- `society_requests`: Enforces `isValidId`, bounded strings (`beneficiaryName <= 120`, `title <= 200`, `story <= 5000`, `bankOrPayDetails <= 1000`, `contactPhone <= 50`), strict `category` / `urgency` / `status` enums, non-negative `neededAmountLkr` & `receivedAmountLkr`, bounded attachment arrays (`images <= 6`, `proofs <= 6`, `offers <= 200`), and immutable `id`/`createdAt` after creation.

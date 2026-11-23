@@ -5,6 +5,7 @@ export type { EventItem };
 import { VisitSriLankaSection } from './VisitSriLankaSection';
 import { SriLankaPrayerTimesWidget } from './SriLankaPrayerTimesWidget';
 import { SriLankaTravelBookingSection } from './SriLankaTravelBookingSection';
+import { HutaInSocietySection } from './HutaInSocietySection';
 import { FloatingWhatsAppButton } from './FloatingWhatsAppButton';
 import visitSriLankaIcon from '../assets/images/visit_srilanka_icon_3d_1794991123817.jpg';
 import hutaInColomboDaylightBg from '../assets/images/hot_news_colombo_daylight_1795079034857.jpg';
@@ -57,6 +58,7 @@ import {
   ShieldCheck,
   Landmark,
   Gem,
+  HeartHandshake,
 } from 'lucide-react';
 
 export interface HutaCategoryItem {
@@ -444,6 +446,8 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
   const [rsvpIds, setRsvpIds] = useState<string[]>([]);
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [selectedEventModal, setSelectedEventModal] = useState<EventItem | null>(null);
+  const [activeSectionTab, setActiveSectionTab] = useState<'all' | 'society' | 'travel' | 'events'>('all');
+  const [isSocietyModalOpen, setIsSocietyModalOpen] = useState(false);
 
   // Multi-Changing Sri Lanka Hero Banner State
   const prefersReducedMotion = useReducedMotion();
@@ -592,15 +596,41 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
               <span className="sm:hidden">Back</span>
             </button>
 
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap justify-end">
+              <motion.button
+                type="button"
+                id="huta-in-society-jump"
+                whileHover={prefersReducedMotion ? undefined : { scale: 1.03, y: -1 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+                onClick={() => {
+                  setActiveSectionTab('society');
+                  window.setTimeout(() => {
+                    const el = document.getElementById('huta-in-society-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 60);
+                }}
+                className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 min-h-[40px] rounded-full border text-[11px] sm:text-xs font-extrabold shadow-md transition-colors cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
+                  activeSectionTab === 'society'
+                    ? 'bg-rose-600 border-white text-white'
+                    : 'bg-white/95 hover:bg-white dark:bg-black/60 dark:hover:bg-black/80 border-rose-300/60 dark:border-rose-500/40 text-rose-700 dark:text-rose-300'
+                }`}
+                title="Open Society — Medical, Education & Relief Help Hub"
+              >
+                <HeartHandshake className="w-3.5 h-3.5 shrink-0" />
+                <span>Society</span>
+              </motion.button>
+
               <motion.button
                 type="button"
                 id="huta-in-travel-book-jump"
                 whileHover={prefersReducedMotion ? undefined : { scale: 1.03, y: -1 }}
                 whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
                 onClick={() => {
-                  const el = document.getElementById('travel-booking-system-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  setActiveSectionTab('all');
+                  window.setTimeout(() => {
+                    const el = document.getElementById('travel-booking-system-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 60);
                 }}
                 className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 min-h-[40px] rounded-full bg-[#FF5A36] hover:bg-[#E04826] border border-white/40 text-white text-[11px] sm:text-xs font-extrabold shadow-md transition-colors cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 title="Jump to Sri Lanka Travel & Tourism Booking System"
@@ -615,8 +645,11 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
                 whileHover={prefersReducedMotion ? undefined : { scale: 1.03, y: -1 }}
                 whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
                 onClick={() => {
-                  const el = document.getElementById('visit-sri-lanka-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  setActiveSectionTab('all');
+                  window.setTimeout(() => {
+                    const el = document.getElementById('visit-sri-lanka-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 60);
                 }}
                 className="inline-flex items-center gap-1.5 sm:gap-2 pl-1.5 pr-2.5 sm:pr-3 py-1.5 min-h-[40px] rounded-full bg-white/90 hover:bg-white dark:bg-black/55 dark:hover:bg-black/75 backdrop-blur-md border border-cyan-500/40 text-slate-900 dark:text-white text-[11px] sm:text-xs font-bold shadow-sm transition-colors cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                 title="Explore Visit Sri Lanka — Colombo City, Nature, Beaches & Heritage"
@@ -717,18 +750,74 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
       {/* 2. Compact Live Sri Lanka Prayer Times Strip */}
       <SriLankaPrayerTimesWidget />
 
-      {/* 3. Visit Sri Lanka Modern Tech Island Showcase */}
-      <VisitSriLankaSection onSelectCategory={onSelectCategory} onToast={onToast} />
+      {/* HUTA IN Section Switcher Bar */}
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 mt-4 sm:mt-6">
+        <div
+          role="tablist"
+          aria-label="HUTA IN sections"
+          className="bg-white dark:bg-[#151822] border border-gray-200/80 dark:border-[#252836] rounded-2xl p-1.5 flex items-center gap-1.5 overflow-x-auto scrollbar-none shadow-sm"
+        >
+          {(
+            [
+              { id: 'all', label: 'All HUTA IN', icon: Sparkles },
+              { id: 'society', label: 'Society (Medical & Education Help)', icon: HeartHandshake },
+              { id: 'travel', label: 'Travel & Visit Sri Lanka', icon: Plane },
+              { id: 'events', label: 'Categories & Events', icon: Calendar },
+            ] as const
+          ).map((tab) => {
+            const TabIcon = tab.icon;
+            const isSelected = activeSectionTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                id={`huta-in-tab-${tab.id}`}
+                aria-selected={isSelected}
+                onClick={() => setActiveSectionTab(tab.id)}
+                className={`inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 min-h-[42px] rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
+                  isSelected
+                    ? tab.id === 'society'
+                      ? 'bg-rose-600 text-white shadow-sm'
+                      : 'bg-[#0A2540] dark:bg-[#FF5A36] text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                }`}
+              >
+                <TabIcon className="w-4 h-4 shrink-0" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-      {/* 4. Sri Lanka Travel & Tourism Booking System */}
-      <SriLankaTravelBookingSection
-        currentUser={currentUser}
-        isAdminLoggedIn={isAdminLoggedIn}
-        onOpenAdminTravelControl={onOpenAdminTravelControl}
-        onToast={onToast}
-      />
+      {/* 3. HUTA IN "Society" Community Help & Proof Verification Hub */}
+      {(activeSectionTab === 'all' || activeSectionTab === 'society') && (
+        <HutaInSocietySection
+          currentUser={currentUser}
+          isAdminLoggedIn={isAdminLoggedIn}
+          onToast={onToast}
+          onModalOpenChange={setIsSocietyModalOpen}
+        />
+      )}
 
-      {/* 5. Our Categories all in GRID view */}
+      {/* 4. Visit Sri Lanka & Travel Booking Sections */}
+      {(activeSectionTab === 'all' || activeSectionTab === 'travel') && (
+        <>
+          <VisitSriLankaSection onSelectCategory={onSelectCategory} onToast={onToast} />
+
+          <SriLankaTravelBookingSection
+            currentUser={currentUser}
+            isAdminLoggedIn={isAdminLoggedIn}
+            onOpenAdminTravelControl={onOpenAdminTravelControl}
+            onToast={onToast}
+          />
+        </>
+      )}
+
+      {/* 5. Our Categories all in GRID view + Upcoming Festivals & Events */}
+      {(activeSectionTab === 'all' || activeSectionTab === 'events') && (
+      <>
       <motion.div
         initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -1449,6 +1538,8 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
           </aside>
         </div>
       </motion.div>
+      </>
+      )}
 
       {/* 5. Interactive Event Details Modal */}
       <AnimatePresence>
@@ -1607,7 +1698,7 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
         label="HUTA IN WhatsApp"
         sublabel="Tours, Events & Local Help"
         message="Hello HUTA IN Team, I need assistance with Sri Lanka tours, events, or local services on HUTA.lk!"
-        hidden={Boolean(selectedEventModal)}
+        hidden={Boolean(selectedEventModal || isSocietyModalOpen)}
       />
     </div>
   );

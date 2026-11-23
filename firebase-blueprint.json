@@ -379,6 +379,37 @@
         "updatedAt": { "type": "string", "maxLength": 64 }
       },
       "required": ["id", "packages", "vehicleTiers", "addons", "updatedAt"]
+    },
+    "SocietyHelpRequest": {
+      "title": "SocietyHelpRequest",
+      "description": "Individual medical, education, food, or emergency relief help appeal with photos and supporting proof documents in HUTA IN Society.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "beneficiaryName": { "type": "string", "maxLength": 120 },
+        "title": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "enum": ["Medical Help", "Education Help", "Emergency & Disaster Relief", "Food & Family Support", "Disability & Elder Care", "Livelihood & Tools Aid", "Other Community Need"] },
+        "district": { "type": "string", "maxLength": 100 },
+        "location": { "type": "string", "maxLength": 160 },
+        "urgency": { "type": "string", "enum": ["critical", "urgent", "ongoing"] },
+        "status": { "type": "string", "enum": ["open", "partially_helped", "fulfilled"] },
+        "neededAmountLkr": { "type": "number" },
+        "receivedAmountLkr": { "type": "number" },
+        "neededItemsSummary": { "type": "string", "maxLength": 500 },
+        "story": { "type": "string", "maxLength": 5000 },
+        "contactPhone": { "type": "string", "maxLength": 50 },
+        "whatsappPhone": { "type": "string", "maxLength": 50 },
+        "bankOrPayDetails": { "type": "string", "maxLength": 1000 },
+        "images": { "type": "array" },
+        "proofs": { "type": "array" },
+        "proofVerifiedNote": { "type": "string", "maxLength": 500 },
+        "offersCount": { "type": "number" },
+        "offers": { "type": "array" },
+        "userId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "beneficiaryName", "title", "category", "district", "urgency", "status", "story", "contactPhone", "createdAt"]
     }
   },
   "firestore": {
@@ -445,6 +476,10 @@
     "/travel_config/{configId}": {
       "schema": { "$ref": "#/entities/TravelConfig" },
       "description": "Admin-managed Sri Lanka travel packages, charges, add-on rates, and vehicle tier fees."
+    },
+    "/society_requests/{requestId}": {
+      "schema": { "$ref": "#/entities/SocietyHelpRequest" },
+      "description": "HUTA IN Society individual medical, education, and relief help appeals with images and proof documents."
     }
   }
 }
