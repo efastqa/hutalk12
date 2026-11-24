@@ -36,6 +36,7 @@ import {
   SocietyHelpUrgency,
   SocietyProofDocument,
   SocietyProofType,
+  SocietyReviewStatus,
   User,
 } from '../types';
 import { api } from '../services/api';
@@ -116,6 +117,35 @@ function formatDateShort(iso?: string): string {
 
 function normalizePhoneDigits(phone?: string): string {
   return String(phone || '').replace(/[^0-9]/g, '');
+}
+
+function getReviewStatusMeta(reviewStatus?: SocietyReviewStatus, updatedAfterReview?: boolean) {
+  if (reviewStatus === 'verified_proof') {
+    return {
+      label: 'Proof Verified by Admin',
+      color: 'text-emerald-700 dark:text-emerald-400',
+      dot: 'bg-emerald-500',
+    };
+  }
+  if (reviewStatus === 'approved') {
+    return {
+      label: 'Reviewed & Approved',
+      color: 'text-sky-700 dark:text-sky-400',
+      dot: 'bg-sky-500',
+    };
+  }
+  if (reviewStatus === 'rejected') {
+    return {
+      label: 'Hidden by Admin Review',
+      color: 'text-rose-700 dark:text-rose-400',
+      dot: 'bg-rose-500',
+    };
+  }
+  return {
+    label: updatedAfterReview ? 'Updated · Pending Re-Review' : 'Pending Admin Review',
+    color: 'text-amber-700 dark:text-amber-400',
+    dot: 'bg-amber-500',
+  };
 }
 
 function getWhatsAppHref(phone?: string, title?: string): string {
@@ -386,6 +416,9 @@ export const HutaInSocietySection: React.FC<HutaInSocietySectionProps> = ({
 
   const filteredRequests = useMemo(() => {
     return requests.filter((req) => {
+      const isVisibleToViewer =
+        req.reviewStatus !== 'rejected' || isAdminLoggedIn || canManageRequest(req);
+      if (!isVisibleToViewer) return false;
       if (statusFilter === 'active' && req.status === 'fulfilled') return false;
       if (statusFilter === 'fulfilled' && req.status !== 'fulfilled') return false;
       if (activeCategory !== 'All' && req.category !== activeCategory) return false;
@@ -418,12 +451,13 @@ export const HutaInSocietySection: React.FC<HutaInSocietySectionProps> = ({
       }
       return true;
     });
-  }, [requests, statusFilter, activeCategory, districtFilter, proofOnly, searchQuery]);
+  }, [requests, statusFilter, activeCategory, districtFilter, proofOnly, searchQuery, isAdminLoggedIn, currentUser, guestOwnedIds, unlockedEditIds]);
 
   const stats = useMemo(() => {
-    const activeCount = requests.filter((r) => r.status !== 'fulfilled').length;
-    const withProofCount = requests.filter((r) => Array.isArray(r.proofs) && r.proofs.length > 0).length;
-    const totalOffers = requests.reduce((sum, r) => sum + (r.offersCount || 0), 0);
+    const publicPool = requests.filter((r) => r.reviewStatus !== 'rejected');
+    const activeCount = publicPool.filter((r) => r.status !== 'fulfilled').length;
+    const withProofCount = publicPool.filter((r) => Array.isArray(r.proofs) && r.proofs.length > 0).length;
+    const totalOffers = publicPool.reduce((sum, r) => sum + (r.offersCount || 0), 0);
     return { activeCount, withProofCount, totalOffers };
   }, [requests]);
 
@@ -597,7 +631,12 @@ export const HutaInSocietySection: React.FC<HutaInSocietySectionProps> = ({
         });
         setRequests((prev) => [updated, ...prev.filter((r) => r.id !== updated.id)]);
         setGuestOwnedIds(api.getGuestSocietyIds());
-        onToast?.('Society appeal details & proofs updated live!', 'success');
+        onToast?.(
+          isAdminLoggedIn
+            ? 'Society appeal details & proofs updated live!'
+            : 'Details & proofs updated live and queued for Admin verification!',
+          'success'
+        );
       } else {
         const created = await api.createSocietyRequest({
           beneficiaryName: formBeneficiaryName.trim(),
@@ -619,7 +658,7 @@ export const HutaInSocietySection: React.FC<HutaInSocietySectionProps> = ({
         });
         setRequests((prev) => [created, ...prev.filter((r) => r.id !== created.id)]);
         setGuestOwnedIds(api.getGuestSocietyIds());
-        onToast?.('Your Society help appeal is now live for community support!', 'success');
+        onToast?.('Your Society help appeal is live and submitted for Admin review!', 'success');
       }
       setIsFormModalOpen(false);
       setEditingRequest(null);
@@ -662,11 +701,15 @@ export const HutaInSocietySection: React.FC<HutaInSocietySectionProps> = ({
   };
 
   const handleDeleteAppeal = async (reqId: string) => {
+    if (!isAdminLoggedIn) {
+      onToast?.('Only HUTA Admin can permanently delete Society appeals after review.', 'error');
+      return;
+    }
     try {
       await api.deleteSocietyRequest(reqId);
       setRequests((prev) => prev.filter((r) => r.id !== reqId));
       if (selectedRequestId === reqId) setSelectedRequestId(null);
-      onToast?.('Society appeal removed.', 'info');
+      onToast?.('Society appeal permanently deleted by Admin.', 'info');
     } catch (err: any) {
       onToast?.(err?.message || 'Could not remove appeal.', 'error');
     }
@@ -1060,6 +1103,16 @@ export const HutaInSocietySection: React.FC<HutaInSocietySectionProps> = ({
                         </span>
                       </div>
 
+                      {(() => {
+                        const reviewMeta = getReviewStatusMeta(req.reviewStatus, req.updatedAfterReview);
+                        return (
+                          <div className={`text-[11px] font-bold flex items-center gap-1.5 ${reviewMeta.color}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${reviewMeta.dot}`} />
+                            <span>{reviewMeta.label}</span>
+                          </div>
+                        );
+                      })()}
+
                       <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">
                         {req.story}
                       </p>
@@ -1131,7 +1184,7 @@ export const HutaInSocietySection: React.FC<HutaInSocietySectionProps> = ({
                         </a>
                       </div>
 
-                      {isOwnerOrAdmin && (
+                      {(isOwnerOrAdmin || isAdminLoggedIn) && (
                         <div className="flex items-center justify-between gap-2 text-xs pt-0.5">
                           <button
                             type="button"
@@ -1141,14 +1194,21 @@ export const HutaInSocietySection: React.FC<HutaInSocietySectionProps> = ({
                             <Pencil className="w-3.5 h-3.5" />
                             <span>Update Details / Proof</span>
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteAppeal(req.id)}
-                            className="inline-flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>Remove</span>
-                          </button>
+                          {isAdminLoggedIn ? (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteAppeal(req.id)}
+                              className="inline-flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Admin Delete</span>
+                            </button>
+                          ) : (
+                            <span className="text-[11px] text-gray-400 dark:text-gray-500 inline-flex items-center gap-1">
+                              <ShieldCheck className="w-3 h-3" />
+                              <span>Admin moderated</span>
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1205,18 +1265,48 @@ export const HutaInSocietySection: React.FC<HutaInSocietySectionProps> = ({
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedRequestId(null);
-                    setShowPhoneUnlockBox(false);
-                  }}
-                  aria-label="Close details"
-                  className="p-2.5 min-h-[42px] min-w-[42px] rounded-xl bg-gray-100 dark:bg-[#1E2230] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white flex items-center justify-center cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {isAdminLoggedIn && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteAppeal(selectedRequest.id)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[42px] rounded-xl bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs font-bold hover:bg-rose-100 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Admin Delete</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedRequestId(null);
+                      setShowPhoneUnlockBox(false);
+                    }}
+                    aria-label="Close details"
+                    className="p-2.5 min-h-[42px] min-w-[42px] rounded-xl bg-gray-100 dark:bg-[#1E2230] text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white flex items-center justify-center cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
+
+              {/* Admin Review Status Banner */}
+              {(() => {
+                const reviewMeta = getReviewStatusMeta(selectedRequest.reviewStatus, selectedRequest.updatedAfterReview);
+                return (
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#1B1F2E] border border-gray-200 dark:border-[#2A2F42] flex flex-col gap-1 text-xs">
+                    <div className={`font-extrabold flex items-center gap-2 ${reviewMeta.color}`}>
+                      <span className={`w-2 h-2 rounded-full ${reviewMeta.dot}`} />
+                      <span>{reviewMeta.label}</span>
+                    </div>
+                    {selectedRequest.adminReviewNote && (
+                      <div className="text-gray-600 dark:text-gray-300">
+                        Admin Note: {selectedRequest.adminReviewNote}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Requester Self-Update Bar */}
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1B1F2E] border border-gray-200 dark:border-[#2A2F42] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
@@ -1614,6 +1704,11 @@ export const HutaInSocietySection: React.FC<HutaInSocietySectionProps> = ({
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     Share clear details, photos, and supporting proof documents (hospital prescriptions, fee letters, GN letters) so donors can trust and help quickly.
                   </p>
+                  {editingRequest && !isAdminLoggedIn && (
+                    <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mt-1.5">
+                      Transparency policy: Requesters can update details, add proof documents, or mark this appeal Fulfilled anytime. Only HUTA Admin can permanently delete appeals after review, and any edited details/proofs are queued for Admin re-review.
+                    </p>
+                  )}
                 </div>
                 <button
                   type="button"

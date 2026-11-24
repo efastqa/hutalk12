@@ -48,6 +48,7 @@ import {
   Database,
   Store,
   Plane,
+  HeartHandshake,
 } from 'lucide-react';
 import { formatLKR } from './ListingsSection';
 import { api } from '../services/api';
@@ -61,6 +62,7 @@ import { AdminDataBackup } from './AdminDataBackup';
 import { AdminEStoresManager } from './AdminEStoresManager';
 import { AdminPromoSlidesManager } from './AdminPromoSlidesManager';
 import { AdminTravelBookingManager } from './AdminTravelBookingManager';
+import { AdminSocietyManager } from './AdminSocietyManager';
 
 const compressBannerImage = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -197,7 +199,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onReorderPromoSlides,
   initialFilterTab,
 }) => {
-  type AdminTab = 'all' | 'pending' | 'featured' | 'services' | 'spotlight' | 'hero_ads' | 'promo_slides' | 'reels' | 'estores' | 'travel_bookings' | 'reach_analytics' | 'reports' | 'sms_gateway' | 'custom_domain' | 'data_backup';
+  type AdminTab = 'all' | 'pending' | 'featured' | 'services' | 'spotlight' | 'hero_ads' | 'promo_slides' | 'reels' | 'estores' | 'travel_bookings' | 'society' | 'reach_analytics' | 'reports' | 'sms_gateway' | 'custom_domain' | 'data_backup';
   const [filterTab, setFilterTab] = useState<AdminTab>(
     (initialFilterTab as AdminTab) || 'all'
   );
@@ -208,6 +210,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   }, [initialFilterTab]);
   const [localVideoReels, setLocalVideoReels] = useState<VideoReelItem[]>(videoReels || []);
   const [localStores, setLocalStores] = useState<EStore[]>(stores || []);
+  const [pendingSocietyCount, setPendingSocietyCount] = useState<number>(0);
+
+  useEffect(() => {
+    const unsub = api.subscribeToSocietyRequests((items) => {
+      const pending = items.filter(
+        (r) => !r.reviewStatus || r.reviewStatus === 'pending_review' || r.updatedAfterReview
+      ).length;
+      setPendingSocietyCount(pending);
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     if (stores !== undefined) {
@@ -1767,6 +1780,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <Plane className="w-3.5 h-3.5" />
               <span>Travel Bookings & Charges</span>
             </button>
+            <button
+              id="admin-filter-society-tab"
+              type="button"
+              onClick={() => setFilterTab('society')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                filterTab === 'society'
+                  ? 'bg-rose-600 text-white shadow-sm'
+                  : 'bg-rose-50 text-rose-800 hover:bg-rose-100 border border-rose-200/60'
+              }`}
+            >
+              <HeartHandshake className="w-3.5 h-3.5" />
+              <span>
+                Society Help & Proofs{pendingSocietyCount > 0 ? ` (${pendingSocietyCount})` : ''}
+              </span>
+            </button>
           </div>
 
           {filterTab === 'spotlight' && (
@@ -1781,7 +1809,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </button>
           )}
 
-          {filterTab !== 'hero_ads' && filterTab !== 'promo_slides' && filterTab !== 'reels' && filterTab !== 'sms_gateway' && filterTab !== 'custom_domain' && filterTab !== 'data_backup' && filterTab !== 'estores' && filterTab !== 'travel_bookings' && (
+          {filterTab !== 'hero_ads' && filterTab !== 'promo_slides' && filterTab !== 'reels' && filterTab !== 'sms_gateway' && filterTab !== 'custom_domain' && filterTab !== 'data_backup' && filterTab !== 'estores' && filterTab !== 'travel_bookings' && filterTab !== 'society' && (
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
                 <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
@@ -1844,7 +1872,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
 
         {/* Content Section */}
-        {filterTab === 'travel_bookings' ? (
+        {filterTab === 'society' ? (
+          <div className="p-4 sm:p-6">
+            <AdminSocietyManager onToast={onToast} />
+          </div>
+        ) : filterTab === 'travel_bookings' ? (
           <div className="p-4 sm:p-6">
             <AdminTravelBookingManager onToast={onToast} />
           </div>

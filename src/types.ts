@@ -631,6 +631,11 @@ export type SocietyHelpCategory =
 
 export type SocietyHelpUrgency = 'critical' | 'urgent' | 'ongoing';
 export type SocietyHelpStatus = 'open' | 'partially_helped' | 'fulfilled';
+export type SocietyReviewStatus =
+  | 'pending_review'
+  | 'approved'
+  | 'verified_proof'
+  | 'rejected';
 
 export type SocietyProofType =
   | 'Medical Report / Prescription'
@@ -669,6 +674,10 @@ export interface SocietyHelpRequest {
   location: string;
   urgency: SocietyHelpUrgency;
   status: SocietyHelpStatus;
+  reviewStatus?: SocietyReviewStatus;
+  adminReviewNote?: string;
+  reviewedAt?: string;
+  updatedAfterReview?: boolean;
   neededAmountLkr?: number;
   receivedAmountLkr: number;
   neededItemsSummary?: string;

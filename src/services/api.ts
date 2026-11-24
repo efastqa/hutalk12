@@ -11,7 +11,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { db, OperationType, handleFirestoreError } from '../firebase';
-import { Listing, User, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, HotNewsResponse, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem, EStore, EStoreProduct, BuyerRequest, BuyerRequestOffer, BuyerRequestStatus, BuyerRequestUrgency, DonationCause, DonationCategory, DonationUrgency, DonationStatus, DonationPledge, DonationPledgeType, TravelBooking, TravelPackageCategory, TravelVehicleTier, TravelBookingStatus, TravelPricingConfig, SocietyHelpCategory, SocietyHelpUrgency, SocietyHelpStatus, SocietyProofType, SocietyProofDocument, SocietyHelpOffer, SocietyHelpRequest } from '../types';
+import { Listing, User, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, HotNewsResponse, ListingReview, ListingReport, SmsGatewayStatus, CustomDomainStatus, AdminConfig, TwoFactorChallenge, VideoReelItem, EStore, EStoreProduct, BuyerRequest, BuyerRequestOffer, BuyerRequestStatus, BuyerRequestUrgency, DonationCause, DonationCategory, DonationUrgency, DonationStatus, DonationPledge, DonationPledgeType, TravelBooking, TravelPackageCategory, TravelVehicleTier, TravelBookingStatus, TravelPricingConfig, SocietyHelpCategory, SocietyHelpUrgency, SocietyHelpStatus, SocietyReviewStatus, SocietyProofType, SocietyProofDocument, SocietyHelpOffer, SocietyHelpRequest } from '../types';
 import { DEFAULT_TRAVEL_CONFIG } from '../utils/travelPricing';
 
 const API_BASE = '/api';
@@ -5187,9 +5187,18 @@ For quick inquiries, call or send a message via WhatsApp!`;
         : [];
       const offers = Array.isArray(raw.offers) ? raw.offers.slice(0, 200) : [];
       const computedReceived = offers.reduce((acc, o) => acc + Math.max(0, Number(o.amountLkr) || 0), 0);
+      const rawReviewStatus = raw.reviewStatus;
+      const reviewStatus: SocietyReviewStatus =
+        rawReviewStatus === 'approved' ||
+        rawReviewStatus === 'verified_proof' ||
+        rawReviewStatus === 'rejected'
+          ? rawReviewStatus
+          : 'pending_review';
       return {
         ...raw,
         id: raw.id || fallbackId || '',
+        reviewStatus,
+        updatedAfterReview: Boolean(raw.updatedAfterReview),
         images,
         proofs,
         offers,
@@ -5516,6 +5525,8 @@ For quick inquiries, call or send a message via WhatsApp!`;
       location: String(input.location || districtVal).trim().slice(0, 160),
       urgency: input.urgency || 'urgent',
       status: 'open',
+      reviewStatus: 'pending_review',
+      updatedAfterReview: false,
       neededAmountLkr:
         input.neededAmountLkr && Number(input.neededAmountLkr) > 0
           ? Math.max(0, Number(input.neededAmountLkr))
@@ -5616,53 +5627,99 @@ For quick inquiries, call or send a message via WhatsApp!`;
         ? (normalizeSriLankanPhone(updates.contactPhone) || String(updates.contactPhone).trim()).slice(0, 50)
         : existingItem.contactPhone;
 
+    const nextBeneficiaryName =
+      updates.beneficiaryName !== undefined
+        ? String(updates.beneficiaryName).trim().slice(0, 120) || existingItem.beneficiaryName
+        : existingItem.beneficiaryName;
+    const nextTitle =
+      updates.title !== undefined
+        ? String(updates.title).trim().slice(0, 200) || existingItem.title
+        : existingItem.title;
+    const nextCategory = updates.category || existingItem.category;
+    const nextLocation =
+      updates.location !== undefined
+        ? String(updates.location).trim().slice(0, 160)
+        : existingItem.location;
+    const nextNeededAmountLkr =
+      updates.neededAmountLkr === null
+        ? undefined
+        : updates.neededAmountLkr !== undefined
+        ? Math.max(0, Number(updates.neededAmountLkr) || 0) || undefined
+        : existingItem.neededAmountLkr;
+    const nextNeededItemsSummary =
+      updates.neededItemsSummary !== undefined
+        ? String(updates.neededItemsSummary).trim().slice(0, 500) || undefined
+        : existingItem.neededItemsSummary;
+    const nextStory =
+      updates.story !== undefined
+        ? String(updates.story).trim().slice(0, 5000) || existingItem.story
+        : existingItem.story;
+    const nextWhatsappPhone =
+      updates.whatsappPhone !== undefined
+        ? (normalizeSriLankanPhone(updates.whatsappPhone) || String(updates.whatsappPhone).trim()).slice(0, 50) || undefined
+        : existingItem.whatsappPhone;
+    const nextBankOrPayDetails =
+      updates.bankOrPayDetails !== undefined
+        ? String(updates.bankOrPayDetails).trim().slice(0, 1000) || undefined
+        : existingItem.bankOrPayDetails;
+    const nextProofVerifiedNote =
+      updates.proofVerifiedNote !== undefined
+        ? String(updates.proofVerifiedNote).trim().slice(0, 500) || undefined
+        : existingItem.proofVerifiedNote;
+    const nextImages = updates.images ? updates.images.slice(0, 6) : existingItem.images;
+    const nextProofs = updates.proofs ? updates.proofs.slice(0, 6) : existingItem.proofs;
+
+    const isAdminCaller = api.isAdmin();
+    const detailsOrProofsChanged =
+      nextBeneficiaryName !== existingItem.beneficiaryName ||
+      nextTitle !== existingItem.title ||
+      nextCategory !== existingItem.category ||
+      districtVal !== existingItem.district ||
+      nextLocation !== existingItem.location ||
+      nextNeededAmountLkr !== existingItem.neededAmountLkr ||
+      nextNeededItemsSummary !== existingItem.neededItemsSummary ||
+      nextStory !== existingItem.story ||
+      contactPhoneVal !== existingItem.contactPhone ||
+      nextWhatsappPhone !== existingItem.whatsappPhone ||
+      nextBankOrPayDetails !== existingItem.bankOrPayDetails ||
+      nextProofVerifiedNote !== existingItem.proofVerifiedNote ||
+      JSON.stringify(nextImages) !== JSON.stringify(existingItem.images || []) ||
+      JSON.stringify(nextProofs) !== JSON.stringify(existingItem.proofs || []);
+
+    const wasPreviouslyReviewed =
+      existingItem.reviewStatus === 'approved' ||
+      existingItem.reviewStatus === 'verified_proof' ||
+      existingItem.reviewStatus === 'rejected';
+
+    const nextReviewStatus: SocietyReviewStatus =
+      !isAdminCaller && detailsOrProofsChanged && wasPreviouslyReviewed
+        ? 'pending_review'
+        : existingItem.reviewStatus || 'pending_review';
+    const nextUpdatedAfterReview =
+      !isAdminCaller && detailsOrProofsChanged && wasPreviouslyReviewed
+        ? true
+        : Boolean(existingItem.updatedAfterReview);
+
     const mergedRaw: SocietyHelpRequest = {
       ...existingItem,
-      beneficiaryName:
-        updates.beneficiaryName !== undefined
-          ? String(updates.beneficiaryName).trim().slice(0, 120) || existingItem.beneficiaryName
-          : existingItem.beneficiaryName,
-      title:
-        updates.title !== undefined
-          ? String(updates.title).trim().slice(0, 200) || existingItem.title
-          : existingItem.title,
-      category: updates.category || existingItem.category,
+      beneficiaryName: nextBeneficiaryName,
+      title: nextTitle,
+      category: nextCategory,
       district: districtVal,
-      location:
-        updates.location !== undefined
-          ? String(updates.location).trim().slice(0, 160)
-          : existingItem.location,
+      location: nextLocation,
       urgency: updates.urgency || existingItem.urgency,
       status: updates.status || existingItem.status,
-      neededAmountLkr:
-        updates.neededAmountLkr === null
-          ? undefined
-          : updates.neededAmountLkr !== undefined
-          ? Math.max(0, Number(updates.neededAmountLkr) || 0) || undefined
-          : existingItem.neededAmountLkr,
-      neededItemsSummary:
-        updates.neededItemsSummary !== undefined
-          ? String(updates.neededItemsSummary).trim().slice(0, 500) || undefined
-          : existingItem.neededItemsSummary,
-      story:
-        updates.story !== undefined
-          ? String(updates.story).trim().slice(0, 5000) || existingItem.story
-          : existingItem.story,
+      reviewStatus: nextReviewStatus,
+      updatedAfterReview: nextUpdatedAfterReview,
+      neededAmountLkr: nextNeededAmountLkr,
+      neededItemsSummary: nextNeededItemsSummary,
+      story: nextStory,
       contactPhone: contactPhoneVal,
-      whatsappPhone:
-        updates.whatsappPhone !== undefined
-          ? (normalizeSriLankanPhone(updates.whatsappPhone) || String(updates.whatsappPhone).trim()).slice(0, 50) || undefined
-          : existingItem.whatsappPhone,
-      bankOrPayDetails:
-        updates.bankOrPayDetails !== undefined
-          ? String(updates.bankOrPayDetails).trim().slice(0, 1000) || undefined
-          : existingItem.bankOrPayDetails,
-      proofVerifiedNote:
-        updates.proofVerifiedNote !== undefined
-          ? String(updates.proofVerifiedNote).trim().slice(0, 500) || undefined
-          : existingItem.proofVerifiedNote,
-      images: updates.images ? updates.images.slice(0, 6) : existingItem.images,
-      proofs: updates.proofs ? updates.proofs.slice(0, 6) : existingItem.proofs,
+      whatsappPhone: nextWhatsappPhone,
+      bankOrPayDetails: nextBankOrPayDetails,
+      proofVerifiedNote: nextProofVerifiedNote,
+      images: nextImages,
+      proofs: nextProofs,
       updatedAt: now,
     };
 
@@ -5686,9 +5743,13 @@ For quick inquiries, call or send a message via WhatsApp!`;
     }
 
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (isAdminCaller) {
+        headers['x-admin-role'] = 'admin';
+      }
       const res = await fetch(`${API_BASE}/society-requests/${existingItem.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(clean),
       });
       if (res.ok) {
@@ -5707,6 +5768,82 @@ For quick inquiries, call or send a message via WhatsApp!`;
 
     this.addGuestSocietyId(clean.id);
     return clean;
+  },
+
+  async adminReviewSocietyRequest(
+    existingItem: SocietyHelpRequest,
+    reviewUpdates: {
+      reviewStatus: SocietyReviewStatus;
+      status?: SocietyHelpStatus;
+      proofVerifiedNote?: string;
+      adminReviewNote?: string;
+    }
+  ): Promise<SocietyHelpRequest> {
+    if (!api.isAdmin()) {
+      throw new Error('Restricted: Only Administrators can review or moderate Society appeals.');
+    }
+    const now = new Date().toISOString();
+    const updatedItem: SocietyHelpRequest = {
+      ...existingItem,
+      reviewStatus: reviewUpdates.reviewStatus,
+      status: reviewUpdates.status || existingItem.status,
+      proofVerifiedNote:
+        reviewUpdates.proofVerifiedNote !== undefined
+          ? String(reviewUpdates.proofVerifiedNote).trim().slice(0, 500) || undefined
+          : existingItem.proofVerifiedNote,
+      adminReviewNote:
+        reviewUpdates.adminReviewNote !== undefined
+          ? String(reviewUpdates.adminReviewNote).trim().slice(0, 1000) || undefined
+          : existingItem.adminReviewNote,
+      reviewedAt: now,
+      updatedAfterReview: false,
+      updatedAt: now,
+    };
+
+    const cleanFull = sanitizeForFirestore(updatedItem) as SocietyHelpRequest;
+
+    if (!isFirestoreQuotaActive()) {
+      try {
+        await updateDoc(
+          doc(db, 'society_requests', existingItem.id),
+          sanitizeForFirestore({
+            reviewStatus: updatedItem.reviewStatus,
+            status: updatedItem.status,
+            proofVerifiedNote: updatedItem.proofVerifiedNote ?? '',
+            adminReviewNote: updatedItem.adminReviewNote ?? '',
+            reviewedAt: now,
+            updatedAfterReview: false,
+            updatedAt: now,
+          })
+        );
+      } catch (err) {
+        if (!recordFirestoreError(err)) {
+          try {
+            await setDoc(doc(db, 'society_requests', existingItem.id), cleanFull, { merge: true });
+          } catch (innerErr) {
+            handleFirestoreError(innerErr, OperationType.UPDATE, `society_requests/${existingItem.id}`);
+          }
+        }
+      }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/admin/society-requests/${existingItem.id}/review`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-role': 'admin',
+        },
+        body: JSON.stringify(reviewUpdates),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // backend optional
+    }
+
+    return updatedItem;
   },
 
   async addSocietyHelpOffer(
@@ -5801,6 +5938,9 @@ For quick inquiries, call or send a message via WhatsApp!`;
   },
 
   async deleteSocietyRequest(requestId: string): Promise<void> {
+    if (!api.isAdmin()) {
+      throw new Error('Restricted: Only HUTA Admin can permanently delete Society appeals.');
+    }
     if (!isFirestoreQuotaActive()) {
       try {
         await deleteDoc(doc(db, 'society_requests', requestId));
@@ -5812,10 +5952,17 @@ For quick inquiries, call or send a message via WhatsApp!`;
     }
 
     try {
-      await fetch(`${API_BASE}/society-requests/${requestId}`, {
+      const res = await fetch(`${API_BASE}/admin/society-requests/${requestId}`, {
         method: 'DELETE',
+        headers: { 'x-admin-role': 'admin' },
       });
-    } catch {
+      if (!res.ok && res.status === 403) {
+        throw new Error('Restricted: Only HUTA Admin can permanently delete Society appeals.');
+      }
+    } catch (err: any) {
+      if (err?.message?.includes('Restricted:')) {
+        throw err;
+      }
       // backend optional
     }
   },

@@ -410,6 +410,8 @@ interface SocietyHelpOffer {
   createdAt: string;
 }
 
+type SocietyReviewStatus = 'pending_review' | 'approved' | 'verified_proof' | 'rejected';
+
 interface SocietyHelpRequest {
   id: string;
   beneficiaryName: string;
@@ -419,6 +421,10 @@ interface SocietyHelpRequest {
   location: string;
   urgency: 'critical' | 'urgent' | 'ongoing';
   status: 'open' | 'partially_helped' | 'fulfilled';
+  reviewStatus?: SocietyReviewStatus;
+  adminReviewNote?: string;
+  reviewedAt?: string;
+  updatedAfterReview?: boolean;
   neededAmountLkr?: number;
   receivedAmountLkr: number;
   neededItemsSummary?: string;
@@ -1773,6 +1779,13 @@ function normalizeSocietyRequestItem(raw: any): SocietyHelpRequest {
     (sum: number, o: SocietyHelpOffer) => sum + Math.max(0, Number(o.amountLkr) || 0),
     0
   );
+  const rawReviewStatus = raw?.reviewStatus;
+  const reviewStatus: SocietyReviewStatus =
+    rawReviewStatus === 'approved' ||
+    rawReviewStatus === 'verified_proof' ||
+    rawReviewStatus === 'rejected'
+      ? rawReviewStatus
+      : 'pending_review';
   return {
     ...raw,
     id: String(raw?.id || ''),
@@ -1783,6 +1796,10 @@ function normalizeSocietyRequestItem(raw: any): SocietyHelpRequest {
     location: String(raw?.location || raw?.district || '').slice(0, 160),
     urgency: raw?.urgency === 'critical' || raw?.urgency === 'ongoing' ? raw.urgency : 'urgent',
     status: raw?.status === 'partially_helped' || raw?.status === 'fulfilled' ? raw.status : 'open',
+    reviewStatus,
+    adminReviewNote: raw?.adminReviewNote ? String(raw.adminReviewNote).slice(0, 1000) : undefined,
+    reviewedAt: raw?.reviewedAt ? String(raw.reviewedAt).slice(0, 64) : undefined,
+    updatedAfterReview: Boolean(raw?.updatedAfterReview),
     neededAmountLkr:
       typeof raw?.neededAmountLkr === 'number' && raw.neededAmountLkr >= 0
         ? raw.neededAmountLkr
@@ -5312,6 +5329,12 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
     res.json({ success: true });
   });
 
+  const isAdminHeaderAuthorized = (req: express.Request): boolean => {
+    const roleHeader = String(req.headers['x-admin-role'] || '').trim().toLowerCase();
+    const passHeader = String(req.headers['x-admin-password'] || '').trim();
+    return roleHeader === 'admin' || (passHeader.length > 0 && passHeader === getAdminPassword());
+  };
+
   // -------------------------------------------------------------
   // HUTA IN "Society" Community Medical, Education & Relief Hub
   // -------------------------------------------------------------
@@ -5497,6 +5520,15 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
         ? Math.max(0, Number(data.neededAmountLkr))
         : undefined;
 
+    const isAdminReq = isAdminHeaderAuthorized(req);
+    const reviewStatusVal: SocietyReviewStatus =
+      isAdminReq &&
+      (data.reviewStatus === 'approved' ||
+        data.reviewStatus === 'verified_proof' ||
+        data.reviewStatus === 'rejected')
+        ? data.reviewStatus
+        : 'pending_review';
+
     const created: SocietyHelpRequest = normalizeSocietyRequestItem({
       id,
       beneficiaryName: beneficiaryName.slice(0, 120),
@@ -5506,6 +5538,13 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
       location: String(data.location || data.district || 'Sri Lanka').trim().slice(0, 160),
       urgency: urgencyVal,
       status: statusVal,
+      reviewStatus: reviewStatusVal,
+      adminReviewNote:
+        isAdminReq && data.adminReviewNote
+          ? String(data.adminReviewNote).trim().slice(0, 1000)
+          : undefined,
+      reviewedAt: isAdminReq && reviewStatusVal !== 'pending_review' ? now : undefined,
+      updatedAfterReview: false,
       neededAmountLkr,
       receivedAmountLkr: offers.reduce((acc, o) => acc + Math.max(0, Number(o.amountLkr) || 0), 0),
       neededItemsSummary: data.neededItemsSummary ? String(data.neededItemsSummary).trim().slice(0, 500) : undefined,
@@ -5575,59 +5614,124 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
           }))
       : existing.proofs;
 
+    const isAdminReq = isAdminHeaderAuthorized(req);
+    const nextBeneficiaryName =
+      typeof data.beneficiaryName === 'string' && data.beneficiaryName.trim()
+        ? data.beneficiaryName.trim().slice(0, 120)
+        : existing.beneficiaryName;
+    const nextTitle =
+      typeof data.title === 'string' && data.title.trim()
+        ? data.title.trim().slice(0, 200)
+        : existing.title;
+    const nextDistrict =
+      typeof data.district === 'string' && data.district.trim()
+        ? data.district.trim().slice(0, 100)
+        : existing.district;
+    const nextLocation =
+      typeof data.location === 'string'
+        ? data.location.trim().slice(0, 160)
+        : existing.location;
+    const nextNeededAmountLkr =
+      data.neededAmountLkr === null || data.neededAmountLkr === ''
+        ? undefined
+        : data.neededAmountLkr !== undefined
+        ? Math.max(0, Number(data.neededAmountLkr) || 0)
+        : existing.neededAmountLkr;
+    const nextNeededItemsSummary =
+      data.neededItemsSummary !== undefined
+        ? String(data.neededItemsSummary || '').trim().slice(0, 500) || undefined
+        : existing.neededItemsSummary;
+    const nextStory =
+      typeof data.story === 'string' && data.story.trim()
+        ? data.story.trim().slice(0, 5000)
+        : existing.story;
+    const nextContactPhone =
+      typeof data.contactPhone === 'string' && data.contactPhone.trim()
+        ? data.contactPhone.trim().slice(0, 50)
+        : existing.contactPhone;
+    const nextWhatsappPhone =
+      data.whatsappPhone !== undefined
+        ? String(data.whatsappPhone || '').trim().slice(0, 50) || undefined
+        : existing.whatsappPhone;
+    const nextBankOrPayDetails =
+      data.bankOrPayDetails !== undefined
+        ? String(data.bankOrPayDetails || '').trim().slice(0, 1000) || undefined
+        : existing.bankOrPayDetails;
+    const nextProofVerifiedNote =
+      data.proofVerifiedNote !== undefined
+        ? String(data.proofVerifiedNote || '').trim().slice(0, 500) || undefined
+        : existing.proofVerifiedNote;
+
+    const detailsOrProofsEdited =
+      nextBeneficiaryName !== existing.beneficiaryName ||
+      nextTitle !== existing.title ||
+      categoryVal !== existing.category ||
+      nextDistrict !== existing.district ||
+      nextLocation !== existing.location ||
+      nextNeededAmountLkr !== existing.neededAmountLkr ||
+      nextNeededItemsSummary !== existing.neededItemsSummary ||
+      nextStory !== existing.story ||
+      nextContactPhone !== existing.contactPhone ||
+      nextWhatsappPhone !== existing.whatsappPhone ||
+      nextBankOrPayDetails !== existing.bankOrPayDetails ||
+      nextProofVerifiedNote !== existing.proofVerifiedNote ||
+      JSON.stringify(images) !== JSON.stringify(existing.images || []) ||
+      JSON.stringify(proofs) !== JSON.stringify(existing.proofs || []);
+
+    const wasPreviouslyReviewed =
+      existing.reviewStatus === 'approved' ||
+      existing.reviewStatus === 'verified_proof' ||
+      existing.reviewStatus === 'rejected';
+
+    let nextReviewStatus: SocietyReviewStatus = existing.reviewStatus || 'pending_review';
+    let nextUpdatedAfterReview = Boolean(existing.updatedAfterReview);
+    let nextAdminReviewNote = existing.adminReviewNote;
+    let nextReviewedAt = existing.reviewedAt;
+
+    if (isAdminReq) {
+      if (
+        data.reviewStatus === 'pending_review' ||
+        data.reviewStatus === 'approved' ||
+        data.reviewStatus === 'verified_proof' ||
+        data.reviewStatus === 'rejected'
+      ) {
+        nextReviewStatus = data.reviewStatus;
+        nextReviewedAt = now;
+        nextUpdatedAfterReview = false;
+      }
+      if (data.adminReviewNote !== undefined) {
+        nextAdminReviewNote = String(data.adminReviewNote || '').trim().slice(0, 1000) || undefined;
+      }
+    } else if (detailsOrProofsEdited && wasPreviouslyReviewed) {
+      nextReviewStatus = 'pending_review';
+      nextUpdatedAfterReview = true;
+    }
+
     const updated: SocietyHelpRequest = normalizeSocietyRequestItem({
       ...existing,
-      beneficiaryName:
-        typeof data.beneficiaryName === 'string' && data.beneficiaryName.trim()
-          ? data.beneficiaryName.trim().slice(0, 120)
-          : existing.beneficiaryName,
-      title:
-        typeof data.title === 'string' && data.title.trim()
-          ? data.title.trim().slice(0, 200)
-          : existing.title,
+      beneficiaryName: nextBeneficiaryName,
+      title: nextTitle,
       category: categoryVal,
-      district:
-        typeof data.district === 'string' && data.district.trim()
-          ? data.district.trim().slice(0, 100)
-          : existing.district,
-      location:
-        typeof data.location === 'string'
-          ? data.location.trim().slice(0, 160)
-          : existing.location,
+      district: nextDistrict,
+      location: nextLocation,
       urgency: urgencyVal,
       status: statusVal,
-      neededAmountLkr:
-        data.neededAmountLkr === null || data.neededAmountLkr === ''
-          ? undefined
-          : data.neededAmountLkr !== undefined
-          ? Math.max(0, Number(data.neededAmountLkr) || 0)
-          : existing.neededAmountLkr,
-      neededItemsSummary:
-        data.neededItemsSummary !== undefined
-          ? String(data.neededItemsSummary || '').trim().slice(0, 500) || undefined
-          : existing.neededItemsSummary,
-      story:
-        typeof data.story === 'string' && data.story.trim()
-          ? data.story.trim().slice(0, 5000)
-          : existing.story,
-      contactPhone:
-        typeof data.contactPhone === 'string' && data.contactPhone.trim()
-          ? data.contactPhone.trim().slice(0, 50)
-          : existing.contactPhone,
-      whatsappPhone:
-        data.whatsappPhone !== undefined
-          ? String(data.whatsappPhone || '').trim().slice(0, 50) || undefined
-          : existing.whatsappPhone,
-      bankOrPayDetails:
-        data.bankOrPayDetails !== undefined
-          ? String(data.bankOrPayDetails || '').trim().slice(0, 1000) || undefined
-          : existing.bankOrPayDetails,
-      proofVerifiedNote:
-        data.proofVerifiedNote !== undefined
-          ? String(data.proofVerifiedNote || '').trim().slice(0, 500) || undefined
-          : existing.proofVerifiedNote,
+      reviewStatus: nextReviewStatus,
+      adminReviewNote: nextAdminReviewNote,
+      reviewedAt: nextReviewedAt,
+      updatedAfterReview: nextUpdatedAfterReview,
+      neededAmountLkr: nextNeededAmountLkr,
+      neededItemsSummary: nextNeededItemsSummary,
+      story: nextStory,
+      contactPhone: nextContactPhone,
+      whatsappPhone: nextWhatsappPhone,
+      bankOrPayDetails: nextBankOrPayDetails,
+      proofVerifiedNote: nextProofVerifiedNote,
       images,
       proofs,
+      offers: existing.offers,
+      offersCount: existing.offers?.length || existing.offersCount || 0,
+      receivedAmountLkr: existing.receivedAmountLkr,
       updatedAt: now,
     });
 
@@ -5695,7 +5799,63 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
     res.status(201).json(updated);
   });
 
-  app.delete('/api/society-requests/:id', (req, res) => {
+  // Admin-Only: Review, Verify Proof, Approve, Reject/Hide, or Mark Fulfilled
+  app.patch('/api/admin/society-requests/:id/review', (req, res) => {
+    if (!isAdminHeaderAuthorized(req)) {
+      return res.status(403).json({ error: 'Only Administrators can review or moderate Society appeals.' });
+    }
+    const idx = societyRequestsCache.findIndex((r) => r.id === req.params.id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'Society appeal not found.' });
+    }
+    const existing = societyRequestsCache[idx];
+    const body = req.body || {};
+    const now = new Date().toISOString();
+
+    const nextReviewStatus: SocietyReviewStatus =
+      body.reviewStatus === 'pending_review' ||
+      body.reviewStatus === 'approved' ||
+      body.reviewStatus === 'verified_proof' ||
+      body.reviewStatus === 'rejected'
+        ? body.reviewStatus
+        : existing.reviewStatus || 'pending_review';
+
+    const nextStatus =
+      body.status === 'open' || body.status === 'partially_helped' || body.status === 'fulfilled'
+        ? body.status
+        : existing.status;
+
+    const updated = normalizeSocietyRequestItem({
+      ...existing,
+      reviewStatus: nextReviewStatus,
+      status: nextStatus,
+      proofVerifiedNote:
+        body.proofVerifiedNote !== undefined
+          ? String(body.proofVerifiedNote || '').trim().slice(0, 500) || undefined
+          : existing.proofVerifiedNote,
+      adminReviewNote:
+        body.adminReviewNote !== undefined
+          ? String(body.adminReviewNote || '').trim().slice(0, 1000) || undefined
+          : existing.adminReviewNote,
+      reviewedAt: now,
+      updatedAfterReview: false,
+      updatedAt: now,
+    });
+
+    societyRequestsCache[idx] = updated;
+    saveStoredSocietyRequests(societyRequestsCache);
+    persistSocietyRequestToFirestore(updated);
+    broadcastSocietyUpdate('upsert', updated);
+    res.json(updated);
+  });
+
+  // Admin-Only Permanent Delete (requesters cannot permanently delete appeals once posted)
+  const handleAdminDeleteSocietyRequest = (req: express.Request, res: express.Response) => {
+    if (!isAdminHeaderAuthorized(req)) {
+      return res.status(403).json({
+        error: 'Only HUTA Admin can permanently delete Society appeals after review.',
+      });
+    }
     const idx = societyRequestsCache.findIndex((r) => r.id === req.params.id);
     if (idx !== -1) {
       societyRequestsCache.splice(idx, 1);
@@ -5704,17 +5864,14 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
     deleteSocietyRequestFromFirestore(req.params.id);
     broadcastSocietyUpdate('delete', undefined, req.params.id);
     res.json({ success: true });
-  });
+  };
+
+  app.delete('/api/society-requests/:id', handleAdminDeleteSocietyRequest);
+  app.delete('/api/admin/society-requests/:id', handleAdminDeleteSocietyRequest);
 
   // -------------------------------------------------------------
   // Sri Lanka Travel & Tourism Booking System (Admin-Controlled)
   // -------------------------------------------------------------
-
-  const isAdminHeaderAuthorized = (req: express.Request): boolean => {
-    const roleHeader = String(req.headers['x-admin-role'] || '').trim().toLowerCase();
-    const passHeader = String(req.headers['x-admin-password'] || '').trim();
-    return roleHeader === 'admin' || (passHeader.length > 0 && passHeader === getAdminPassword());
-  };
 
   // Public Travel Pricing & Packages Config (read-only for HUTA IN booking form)
   app.get('/api/travel-config', (req, res) => {

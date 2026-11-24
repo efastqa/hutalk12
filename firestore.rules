@@ -212,6 +212,10 @@ service cloud.firestore {
              (!('location' in data) || (data.location is string && data.location.size() <= 160)) &&
              data.urgency in ['critical', 'urgent', 'ongoing'] &&
              data.status in ['open', 'partially_helped', 'fulfilled'] &&
+             (!('reviewStatus' in data) || data.reviewStatus in ['pending_review', 'approved', 'verified_proof', 'rejected']) &&
+             (!('adminReviewNote' in data) || (data.adminReviewNote is string && data.adminReviewNote.size() <= 1000)) &&
+             (!('reviewedAt' in data) || (data.reviewedAt is string && data.reviewedAt.size() <= 64)) &&
+             (!('updatedAfterReview' in data) || data.updatedAfterReview is bool) &&
              data.contactPhone is string && data.contactPhone.size() > 0 && data.contactPhone.size() <= 50 &&
              data.story is string && data.story.size() > 0 && data.story.size() <= 5000 &&
              (!('neededAmountLkr' in data) || (data.neededAmountLkr is number && data.neededAmountLkr >= 0)) &&
