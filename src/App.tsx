@@ -1434,6 +1434,11 @@ export default function App() {
           onLocationChange={setSelectedLocation}
           activeCategory={selectedCategory}
           onOpenAppStore={() => setIsAppStoreOpen(true)}
+          onOpenVisitSriLanka={() => {
+            setHutaInFocus('travel');
+            setCurrentTab('huta_in');
+          }}
+          isVisitSriLankaActive={currentTab === 'huta_in' && hutaInFocus === 'travel'}
           myAdsCount={myAdsCount}
         />
       )}

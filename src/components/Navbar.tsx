@@ -3,7 +3,6 @@ import { motion } from 'motion/react';
 import {
   Plus,
   MapPin,
-  Sparkles,
   User as UserIcon,
   LayoutGrid,
   Car,
@@ -14,6 +13,7 @@ import {
   Store,
   Flame,
   HeartHandshake,
+  Compass,
 } from 'lucide-react';
 import { ViewTab, User } from '../types';
 import { ThemeToggle } from './ThemeToggle';
@@ -25,6 +25,8 @@ interface NavbarProps {
   onOpenPostAd?: () => void;
   onOpenUserAuth?: () => void;
   onOpenAppStore?: () => void;
+  onOpenVisitSriLanka?: () => void;
+  isVisitSriLankaActive?: boolean;
   currentUser?: User | { name?: string; fullname?: string; username?: string; email?: string } | null;
   selectedLocation?: string;
   onLocationChange?: (location: string) => void;
@@ -50,6 +52,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenPostAd,
   onOpenUserAuth,
   onOpenAppStore,
+  onOpenVisitSriLanka,
+  isVisitSriLankaActive = false,
   currentUser,
   selectedLocation = 'All Sri Lanka',
   onLocationChange,
@@ -177,67 +181,96 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </motion.div>
 
-        {/* E-Store Button in Phone View (next to HUTA.lk) */}
-        <button
-          type="button"
-          onClick={() => {
-            onSelectTab('estore');
-            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-          }}
-          title="Browse Sri Lanka E-Stores and Online Merchant Marketplace"
-          className={`inline-flex sm:hidden items-center gap-1 px-2 py-1 rounded-xl text-[11px] font-black transition-all cursor-pointer shadow-2xs border whitespace-nowrap shrink-0 ${
-            currentTab === 'estore'
-              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-              : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-500/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 active:scale-95'
-          }`}
-        >
-          <Store className="w-3 h-3 text-current shrink-0" />
-          <span className="font-black tracking-tight">E-Store</span>
-          <span className="bg-emerald-500 text-white text-[8px] font-black px-1 py-0.2 rounded-full uppercase leading-none">
-            New
-          </span>
-        </button>
+        {/* Mobile & Tablet (< lg) Compact Icon + Micro-Name Quick Shortcuts */}
+        <div className="inline-flex lg:hidden items-center gap-1 shrink-0" role="group" aria-label="Quick sections">
+          <button
+            type="button"
+            id="nav-mobile-estore-btn"
+            onClick={() => {
+              onSelectTab('estore');
+              window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            }}
+            title="Sri Lanka E-Stores & Online Shops"
+            aria-label="Sri Lanka E-Stores"
+            className={`min-w-[38px] sm:min-w-[44px] px-1.5 sm:px-2 py-1 rounded-xl inline-flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer shadow-2xs border shrink-0 active:scale-95 ${
+              currentTab === 'estore'
+                ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-500/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
+            }`}
+          >
+            <Store className="w-3.5 h-3.5 text-current shrink-0" />
+            <span className="text-[8px] sm:text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
+              E-Store
+            </span>
+          </button>
 
-        {/* Hot News Quick Button in Mobile & Tablet View (< lg) */}
-        <button
-          type="button"
-          id="nav-mobile-hot-news-btn"
-          onClick={() => {
-            onSelectTab('hot_news');
-            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-          }}
-          title="Open Sri Lanka Live Hot News"
-          className={`inline-flex lg:hidden items-center gap-1 px-2 py-1 rounded-xl text-xs font-black transition-all cursor-pointer shadow-2xs border whitespace-nowrap shrink-0 ${
-            currentTab === 'hot_news'
-              ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
-              : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-500/25 hover:bg-rose-100 dark:hover:bg-rose-900/40 active:scale-95'
-          }`}
-        >
-          <Flame className="w-3.5 h-3.5 text-current shrink-0" />
-          <span className="hidden sm:inline font-black tracking-tight">Hot News</span>
-          <span className="sm:hidden font-black tracking-tight">News</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse shrink-0" />
-        </button>
+          <button
+            type="button"
+            id="nav-mobile-hot-news-btn"
+            onClick={() => {
+              onSelectTab('hot_news');
+              window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            }}
+            title="Sri Lanka Live Hot News"
+            aria-label="Hot News"
+            className={`min-w-[38px] sm:min-w-[44px] px-1.5 sm:px-2 py-1 rounded-xl inline-flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer shadow-2xs border shrink-0 active:scale-95 ${
+              currentTab === 'hot_news'
+                ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                : 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border-rose-500/25 hover:bg-rose-100 dark:hover:bg-rose-900/40'
+            }`}
+          >
+            <Flame className="w-3.5 h-3.5 text-current shrink-0" />
+            <span className="text-[8px] sm:text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
+              Hot News
+            </span>
+          </button>
 
-        {/* Donate Icon Button next to Hot News (Mobile & Tablet < lg) */}
-        <button
-          type="button"
-          id="nav-mobile-donate-btn"
-          onClick={() => {
-            onSelectTab('donate');
-            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-          }}
-          aria-label="Donate to Sri Lanka Hospitals & Urgent Causes"
-          title="Donate to Sri Lanka's Most Needed Hospitals & Causes"
-          className={`inline-flex lg:hidden items-center gap-1 px-2 py-1 rounded-xl text-xs font-black transition-all cursor-pointer shadow-2xs border whitespace-nowrap shrink-0 ${
-            currentTab === 'donate'
-              ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
-              : 'bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border-teal-500/25 hover:bg-teal-100 dark:hover:bg-teal-900/40 active:scale-95'
-          }`}
-        >
-          <HeartHandshake className="w-3.5 h-3.5 text-current shrink-0" />
-          <span className="hidden sm:inline font-black tracking-tight">Donate</span>
-        </button>
+          <button
+            type="button"
+            id="nav-mobile-donate-btn"
+            onClick={() => {
+              onSelectTab('donate');
+              window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            }}
+            title="Donate to Sri Lanka Hospitals & Urgent Causes"
+            aria-label="Donate Sri Lanka"
+            className={`min-w-[38px] sm:min-w-[44px] px-1.5 sm:px-2 py-1 rounded-xl inline-flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer shadow-2xs border shrink-0 active:scale-95 ${
+              currentTab === 'donate'
+                ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
+                : 'bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border-teal-500/25 hover:bg-teal-100 dark:hover:bg-teal-900/40'
+            }`}
+          >
+            <HeartHandshake className="w-3.5 h-3.5 text-current shrink-0" />
+            <span className="text-[8px] sm:text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
+              Donate
+            </span>
+          </button>
+
+          <button
+            type="button"
+            id="nav-mobile-visit-sl-btn"
+            onClick={() => {
+              if (onOpenVisitSriLanka) {
+                onOpenVisitSriLanka();
+              } else {
+                onSelectTab('huta_in');
+              }
+              window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            }}
+            title="Visit Sri Lanka — Travel & Tours"
+            aria-label="Visit Sri Lanka"
+            className={`min-w-[38px] sm:min-w-[44px] px-1.5 sm:px-2 py-1 rounded-xl inline-flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer shadow-2xs border shrink-0 active:scale-95 ${
+              isVisitSriLankaActive
+                ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
+                : 'bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 border-sky-500/25 hover:bg-sky-100 dark:hover:bg-sky-900/40'
+            }`}
+          >
+            <Compass className="w-3.5 h-3.5 text-current shrink-0" />
+            <span className="text-[8px] sm:text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
+              Visit SL
+            </span>
+          </button>
+        </div>
 
         {/* Location Dropdown */}
         {onLocationChange && (
@@ -342,20 +375,20 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <a
-            href="?tab=estore"
+            href="/estores"
             target="_blank"
             rel="noopener noreferrer"
-            title="Open Sri Lanka E-Stores and Online Merchant Marketplace in a New Tab"
-            className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1 cursor-pointer no-underline whitespace-nowrap shrink-0 ${
+            title="Sri Lanka E-Stores & Online Shops (Opens in New Tab)"
+            aria-label="Sri Lanka E-Stores"
+            className={`min-w-[44px] px-2 py-1 rounded-xl transition-all inline-flex flex-col items-center justify-center gap-0.5 cursor-pointer no-underline shrink-0 border ${
               currentTab === 'estore'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-emerald-500/20'
+                ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                : 'bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border-emerald-500/25'
             }`}
           >
             <Store className="w-3.5 h-3.5 shrink-0" />
-            <span>E-Store</span>
-            <span className="bg-emerald-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider leading-none">
-              New
+            <span className="text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
+              E-Store
             </span>
           </a>
 
@@ -377,15 +410,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             type="button"
             onClick={() => onSelectTab('hot_news')}
-            className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
+            title="Sri Lanka Hot News"
+            aria-label="Hot News"
+            className={`min-w-[44px] px-2 py-1 rounded-xl transition-all inline-flex flex-col items-center justify-center gap-0.5 cursor-pointer shrink-0 border ${
               currentTab === 'hot_news'
-                ? 'bg-rose-600 text-white shadow-xs'
-                : 'text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+                ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                : 'bg-rose-50/80 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 border-rose-500/25'
             }`}
           >
             <Flame className="w-3.5 h-3.5 shrink-0" />
-            <span>Hot News</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse shrink-0" />
+            <span className="text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
+              Hot News
+            </span>
           </button>
 
           <button
@@ -393,14 +429,41 @@ export const Navbar: React.FC<NavbarProps> = ({
             id="nav-desktop-donate-btn"
             onClick={() => onSelectTab('donate')}
             title="Donate to Sri Lanka's Most Needed Hospitals & Causes"
-            className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
+            aria-label="Donate Sri Lanka"
+            className={`min-w-[44px] px-2 py-1 rounded-xl transition-all inline-flex flex-col items-center justify-center gap-0.5 cursor-pointer shrink-0 border ${
               currentTab === 'donate'
-                ? 'bg-teal-600 text-white shadow-xs'
-                : 'text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 hover:bg-teal-50 dark:hover:bg-teal-950/40'
+                ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
+                : 'bg-teal-50/80 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/50 border-teal-500/25'
             }`}
           >
             <HeartHandshake className="w-3.5 h-3.5 shrink-0" />
-            <span>Donate</span>
+            <span className="text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
+              Donate
+            </span>
+          </button>
+
+          <button
+            type="button"
+            id="nav-desktop-visit-sl-btn"
+            onClick={() => {
+              if (onOpenVisitSriLanka) {
+                onOpenVisitSriLanka();
+              } else {
+                onSelectTab('huta_in');
+              }
+            }}
+            title="Visit Sri Lanka — Travel & Tours"
+            aria-label="Visit Sri Lanka"
+            className={`min-w-[44px] px-2 py-1 rounded-xl transition-all inline-flex flex-col items-center justify-center gap-0.5 cursor-pointer shrink-0 border ${
+              isVisitSriLankaActive
+                ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
+                : 'bg-sky-50/80 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 hover:bg-sky-100 dark:hover:bg-sky-900/50 border-sky-500/25'
+            }`}
+          >
+            <Compass className="w-3.5 h-3.5 shrink-0" />
+            <span className="text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
+              Visit SL
+            </span>
           </button>
 
           <button
@@ -439,7 +502,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="w-5 h-5 rounded-full bg-[#FF5A36]/15 text-[#FF5A36] flex items-center justify-center text-[10px] font-bold shrink-0">
                     {initial}
                   </div>
-                  <span className="max-w-[78px] xl:max-w-[100px] truncate">{displayName}</span>
+                  <span className="hidden sm:inline max-w-[78px] xl:max-w-[100px] truncate">{displayName}</span>
                 </button>
               );
             })()
