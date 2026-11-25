@@ -17,6 +17,18 @@ import {
   setLogLevel,
 } from 'firebase/firestore';
 import firebaseConfig from './firebase-applet-config.json';
+import {
+  SRI_LANKA_DISTRICTS_SEO,
+  SEO_CATEGORIES,
+  TOP_MATRIX_CATEGORY_SLUGS,
+  buildListingSeoPath,
+  buildEStoreSeoPath,
+  buildDistrictCategorySeoPath,
+  parseSeoRoute,
+  buildSeoMetaPayload,
+  getCategorySeo,
+  getDistrictSeo,
+} from './src/utils/seo';
 
 try {
   setLogLevel('silent');
@@ -4678,33 +4690,70 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
 
   app.get('/robots.txt', (req, res) => {
     const cleanDomain = getSafeCustomDomain(process.env.CUSTOM_DOMAIN);
-    const domain = `https://${cleanDomain}`;
+    const domain = process.env.APP_URL?.replace(/\/+$/, '') || `https://${cleanDomain}`;
     res.type('text/plain');
-    res.send(`User-agent: *\nAllow: /\n\nSitemap: ${domain}/sitemap.xml\n`);
+    res.send(
+      `User-agent: *\nAllow: /\nDisallow: /nashan\nDisallow: /api/\n\nSitemap: ${domain}/sitemap.xml\n`
+    );
   });
 
   app.get('/sitemap.xml', (req, res) => {
     const cleanDomain = getSafeCustomDomain(process.env.CUSTOM_DOMAIN);
-    const baseUrl = `https://${cleanDomain}`;
+    const baseUrl = process.env.APP_URL?.replace(/\/+$/, '') || `https://${cleanDomain}`;
     const approvedListings = listingsCache.filter((l) => l.status === 'approved');
     const escapeXml = (str: string) =>
       String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+    const pushUrl = (locPath: string, changefreq: string, priority: string) =>
+      `  <url>\n    <loc>${escapeXml(`${baseUrl}${locPath}`)}</loc>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>\n`;
+
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
-    xml += `  <url>\n    <loc>${escapeXml(baseUrl)}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
+    xml += pushUrl('/', 'daily', '1.0');
 
-    const publicSections = ['estore', 'huta_in', 'hot_news', 'donate', 'buyer_requests'];
-    publicSections.forEach((tab) => {
-      xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/?tab=${encodeURIComponent(tab)}`)}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
+    // Clean Pillar & Hub URLs
+    const pillarPaths = [
+      '/estores',
+      '/huta-in',
+      '/travel',
+      '/society',
+      '/news',
+      '/donate',
+      '/looking-for',
+      '/categories',
+      '/districts',
+    ];
+    pillarPaths.forEach((p) => {
+      xml += pushUrl(p, 'daily', '0.9');
     });
 
-    const categories = ['Vehicles', 'Electronics', 'Property', 'Services', 'Home & Garden', 'Fashion', 'Gemstone & Jewelry'];
-    categories.forEach((cat) => {
-      xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/?category=${encodeURIComponent(cat)}`)}</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+    // All 25 Sri Lankan District SEO Pages
+    SRI_LANKA_DISTRICTS_SEO.forEach((dist) => {
+      xml += pushUrl(`/${dist.slug}`, 'daily', '0.85');
     });
 
-    approvedListings.slice(0, 200).forEach((listing) => {
-      xml += `  <url>\n    <loc>${escapeXml(`${baseUrl}/?ad=${encodeURIComponent(listing.id)}`)}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n`;
+    // All Island-Wide Category SEO Pages
+    SEO_CATEGORIES.forEach((cat) => {
+      xml += pushUrl(`/${cat.slug}`, 'daily', '0.85');
+    });
+
+    // 25-District × Top Categories SEO Matrix (e.g. /colombo/vehicles, /kandy/property)
+    SRI_LANKA_DISTRICTS_SEO.forEach((dist) => {
+      TOP_MATRIX_CATEGORY_SLUGS.forEach((catSlug) => {
+        const catObj = getCategorySeo(catSlug);
+        if (catObj) {
+          xml += pushUrl(buildDistrictCategorySeoPath(dist.name, catObj.name), 'daily', '0.8');
+        }
+      });
+    });
+
+    // Active Sri Lanka E-Stores
+    eStoresCache.slice(0, 200).forEach((store) => {
+      xml += pushUrl(buildEStoreSeoPath(store), 'weekly', '0.75');
+    });
+
+    // Active Approved Listings with Clean Slug URLs
+    approvedListings.slice(0, 400).forEach((listing) => {
+      xml += pushUrl(buildListingSeoPath(listing), 'weekly', '0.7');
     });
 
     xml += `</urlset>`;
@@ -6111,11 +6160,124 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
   });
 
   // -------------------------------------------------------------
+  // Dynamic Server-Side SEO HTML Renderer (Dev & Production)
+  // -------------------------------------------------------------
+  const escapeHtmlAttr = (val: string) =>
+    String(val || '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+  const escapeHtmlText = (val: string) =>
+    String(val || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+  const injectDynamicSeoHtml = (htmlTemplate: string, req: express.Request): string => {
+    try {
+      const host = req.get('x-forwarded-host') || req.get('host');
+      const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
+      const fallbackDomain = getSafeCustomDomain(process.env.CUSTOM_DOMAIN);
+      const origin = process.env.APP_URL?.replace(/\/+$/, '') || (host ? `${proto}://${host}` : `https://${fallbackDomain}`);
+
+      const qIdx = req.originalUrl.indexOf('?');
+      const searchPart = qIdx !== -1 ? req.originalUrl.slice(qIdx) : '';
+      const route = parseSeoRoute(req.path, searchPart);
+
+      const approvedListings = listingsCache.filter((l) => l.status === 'approved');
+      let matchedListing = route.listingId
+        ? listingsCache.find((l) => l.id === route.listingId) || null
+        : null;
+      let matchedStore = route.storeId
+        ? eStoresCache.find((s) => s.id === route.storeId) || null
+        : null;
+
+      let matchingSample: typeof approvedListings = [];
+      let matchingCount = 0;
+      if (!matchedListing && !matchedStore && route.tab === 'marketplace' && (route.district || route.category)) {
+        const distObj = route.district ? getDistrictSeo(route.district) : undefined;
+        const catObj = route.category ? getCategorySeo(route.category) : undefined;
+        matchingSample = approvedListings.filter((item) => {
+          if (distObj) {
+            const loc = (item.district || item.location || '').toLowerCase();
+            if (loc !== distObj.name.toLowerCase()) return false;
+          }
+          if (catObj) {
+            const itemCat = (item.category || '').toLowerCase();
+            const cName = catObj.name.toLowerCase();
+            if (!itemCat.includes(cName) && cName !== itemCat) return false;
+          }
+          return true;
+        });
+        matchingCount = matchingSample.length;
+      }
+
+      const seoMeta = buildSeoMetaPayload({
+        origin,
+        route,
+        listing: matchedListing as any,
+        store: matchedStore as any,
+        matchingListingsCount: matchingCount,
+        matchingListingsSample: matchingSample as any,
+        storesCount: eStoresCache.length,
+      });
+
+      const safeTitle = escapeHtmlText(seoMeta.title);
+      const safeDesc = escapeHtmlAttr(seoMeta.description);
+      const safeUrl = escapeHtmlAttr(seoMeta.canonicalUrl);
+      const safeImg = escapeHtmlAttr(seoMeta.ogImage);
+      const safeRobots = escapeHtmlAttr(seoMeta.robots);
+      const safeOgType = escapeHtmlAttr(seoMeta.ogType);
+      const safeJsonLd = JSON.stringify(seoMeta.jsonLd).replace(/</g, '\\u003c');
+
+      return htmlTemplate
+        .replace(/<title>[\s\S]*?<\/title>/i, `<title>${safeTitle}</title>`)
+        .replace(/<meta\s+name="description"\s+content="[^"]*"\s*\/?>/i, `<meta name="description" content="${safeDesc}" />`)
+        .replace(/<meta\s+name="robots"\s+content="[^"]*"\s*\/?>/i, `<meta name="robots" content="${safeRobots}" />`)
+        .replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i, `<link rel="canonical" href="${safeUrl}" />`)
+        .replace(/<meta\s+property="og:url"\s+content="[^"]*"\s*\/?>/i, `<meta property="og:url" content="${safeUrl}" />`)
+        .replace(/<meta\s+property="og:title"\s+content="[^"]*"\s*\/?>/i, `<meta property="og:title" content="${escapeHtmlAttr(seoMeta.title)}" />`)
+        .replace(/<meta\s+property="og:description"\s+content="[^"]*"\s*\/?>/i, `<meta property="og:description" content="${safeDesc}" />`)
+        .replace(/<meta\s+property="og:type"\s+content="[^"]*"\s*\/?>/i, `<meta property="og:type" content="${safeOgType}" />`)
+        .replace(/<meta\s+property="og:image"\s+content="[^"]*"\s*\/?>/i, `<meta property="og:image" content="${safeImg}" />`)
+        .replace(/<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?>/i, `<meta name="twitter:title" content="${escapeHtmlAttr(seoMeta.title)}" />`)
+        .replace(/<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?>/i, `<meta name="twitter:description" content="${safeDesc}" />`)
+        .replace(/<meta\s+name="twitter:image"\s+content="[^"]*"\s*\/?>/i, `<meta name="twitter:image" content="${safeImg}" />`)
+        .replace(/<script\s+type="application\/ld\+json">[\s\S]*?<\/script>/i, `<script type="application/ld+json">${safeJsonLd}</script>`);
+    } catch (err) {
+      console.warn('[SEO] Meta injection fallback:', err);
+      return htmlTemplate;
+    }
+  };
+
+  const isHtmlNavigationRequest = (req: express.Request): boolean => {
+    if (req.method !== 'GET') return false;
+    const p = req.path.toLowerCase();
+    if (
+      p.startsWith('/api/') ||
+      p.startsWith('/@') ||
+      p.startsWith('/src/') ||
+      p.startsWith('/node_modules/') ||
+      p.startsWith('/assets/') ||
+      p.startsWith('/uploads/') ||
+      p.startsWith('/videos/') ||
+      p === '/robots.txt' ||
+      p === '/sitemap.xml' ||
+      /\.[a-z0-9]{1,6}$/i.test(p)
+    ) {
+      return false;
+    }
+    const accept = (req.headers.accept || '').toLowerCase();
+    return accept.includes('text/html') || accept.includes('*/*') || accept === '';
+  };
+
+  // -------------------------------------------------------------
   // Vite Dev Server / Production Static Serving
   // -------------------------------------------------------------
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');
-    const isHmrDisabled = process.env.DISABLE_HMR === 'true';
     const vite = await createViteServer({
       server: {
         middlewareMode: true,
@@ -6123,11 +6285,26 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
       },
       appType: 'spa',
     });
+
+    app.use(async (req, res, next) => {
+      if (!isHtmlNavigationRequest(req)) return next();
+      try {
+        const indexPath = path.join(process.cwd(), 'index.html');
+        const rawHtml = fs.readFileSync(indexPath, 'utf-8');
+        const transformedHtml = await vite.transformIndexHtml(req.originalUrl, rawHtml);
+        const seoHtml = injectDynamicSeoHtml(transformedHtml, req);
+        res.status(200).set({ 'Content-Type': 'text/html', 'Cache-Control': 'no-store' }).end(seoHtml);
+      } catch (e) {
+        next(e);
+      }
+    });
+
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(
       express.static(distPath, {
+        index: false,
         setHeaders: (res, filePath) => {
           if (
             filePath.endsWith('index.html') ||
@@ -6142,7 +6319,14 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
     );
     app.get('*', (req, res) => {
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-      res.sendFile(path.join(distPath, 'index.html'));
+      const indexPath = path.join(distPath, 'index.html');
+      try {
+        const rawHtml = fs.readFileSync(indexPath, 'utf-8');
+        const seoHtml = injectDynamicSeoHtml(rawHtml, req);
+        res.status(200).type('text/html').send(seoHtml);
+      } catch {
+        res.sendFile(indexPath);
+      }
     });
   }
 

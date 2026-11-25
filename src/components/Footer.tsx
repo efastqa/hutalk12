@@ -2,6 +2,7 @@ import React from 'react';
 import { ShieldCheck, MapPin, PhoneCall, HelpCircle, Heart, Smartphone, Mail } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { PolicyTab } from './LegalPoliciesModal';
+import { buildDistrictCategorySeoPath } from '../utils/seo';
 
 interface FooterProps {
   onSelectCategory: (cat: string) => void;
@@ -9,7 +10,7 @@ interface FooterProps {
   onOpenPostAd: () => void;
   onOpenAdminLogin?: () => void;
   onOpenAppStore?: () => void;
-  onSelectTab?: (tab: 'marketplace' | 'estore' | 'huta_in' | 'categories' | 'hot_news' | 'donate' | 'buyer_requests') => void;
+  onSelectTab?: (tab: 'marketplace' | 'estore' | 'huta_in' | 'categories' | 'districts' | 'hot_news' | 'donate' | 'buyer_requests') => void;
   currentTab?: string;
   onOpenPolicy?: (tab: PolicyTab) => void;
 }
@@ -95,16 +96,17 @@ export const Footer: React.FC<FooterProps> = ({
               <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
                 {['Vehicles', 'Auto Parts', 'Cars for Rent', 'Property', 'Boardings & Annexes', 'Holiday Homes', 'Agriculture & Farming', 'Weddings & Events'].map((cat) => (
                   <li key={cat}>
-                    <button
-                      type="button"
-                      onClick={() => {
+                    <a
+                      href={buildDistrictCategorySeoPath('All Sri Lanka', cat)}
+                      onClick={(e) => {
+                        e.preventDefault();
                         onSelectCategory(cat);
                         window.scrollTo({ top: 400, behavior: 'smooth' });
                       }}
                       className="hover:text-[#FF5A36] transition-colors cursor-pointer"
                     >
                       {cat} in Sri Lanka
-                    </button>
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -120,18 +122,33 @@ export const Footer: React.FC<FooterProps> = ({
               <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
                 {['Colombo', 'Gampaha', 'Kandy', 'Galle', 'Kurunegala'].map((loc) => (
                   <li key={loc}>
-                    <button
-                      type="button"
-                      onClick={() => {
+                    <a
+                      href={buildDistrictCategorySeoPath(loc, 'All')}
+                      onClick={(e) => {
+                        e.preventDefault();
                         onSelectLocation(loc);
                         window.scrollTo({ top: 400, behavior: 'smooth' });
                       }}
                       className="hover:text-[#FF5A36] transition-colors cursor-pointer"
                     >
                       Ads in {loc}
-                    </button>
+                    </a>
                   </li>
                 ))}
+                {onSelectTab && (
+                  <li className="pt-1">
+                    <a
+                      href="/districts"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onSelectTab('districts');
+                      }}
+                      className="font-bold text-[#FF5A36] hover:underline cursor-pointer"
+                    >
+                      All 25 Districts &amp; Categories →
+                    </a>
+                  </li>
+                )}
               </ul>
             </div>
           )}
@@ -164,12 +181,16 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li>
                 <a
-                  href="?tab=estore"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="/estores"
+                  onClick={(e) => {
+                    if (onSelectTab) {
+                      e.preventDefault();
+                      onSelectTab('estore');
+                    }
+                  }}
                   className="hover:text-emerald-500 transition-colors font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 cursor-pointer no-underline"
                 >
-                  <span>🛍️ Sri Lanka E-Stores & Online Merchants ↗</span>
+                  <span>Sri Lanka E-Stores &amp; Online Merchants</span>
                 </a>
               </li>
               {onSelectTab && (

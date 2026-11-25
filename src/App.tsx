@@ -34,42 +34,39 @@ import { AppStoreModal } from './components/AppStoreModal';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { VideoReelsSection } from './components/VideoReelsSection';
 import { LegalPoliciesModal, PolicyTab } from './components/LegalPoliciesModal';
+import { DistrictCategoryDirectory, DistrictCategorySeoBanner } from './components/DistrictCategoryDirectory';
 import { testConnection } from './firebase';
+import {
+  parseSeoRoute,
+  buildListingSeoPath,
+  buildEStoreSeoPath,
+  buildTabSeoPath,
+  buildSeoMetaPayload,
+  applyClientSeoMeta,
+  ParsedSeoRoute,
+} from './utils/seo';
 import { MapPin, Sparkles, PlusCircle, Calendar, ArrowRight, Star, Compass, MessageSquarePlus } from 'lucide-react';
 
-function getInitialTab(): ViewTab {
+function getInitialParsedRoute(): ParsedSeoRoute {
   try {
     const hostname = window.location.hostname.toLowerCase();
-    const pathname = window.location.pathname.toLowerCase();
-    const params = new URLSearchParams(window.location.search);
-    const tab = params.get('tab');
-
-    // 1. Model A Subdomain detection: admin.huta.lk or admin.*
     if (hostname.startsWith('admin.') || hostname === 'admin.huta.lk') {
-      return 'admin_dashboard';
+      return { tab: 'admin_dashboard' };
     }
-
-    // 2. Secured Dedicated Admin Route detection: /nashan or /nashan/* (replaces /admin for safety)
-    if (pathname === '/nashan' || pathname.startsWith('/nashan/')) {
-      return 'admin_dashboard';
+    if (window.location.hash === '#estore') {
+      return { tab: 'estore' };
     }
-
-    if (tab === 'estore') return 'estore';
-    if (tab === 'huta_in') return 'huta_in';
-    if (tab === 'hot_news') return 'hot_news';
-    if (tab === 'donate') return 'donate';
-    if (tab === 'buyer_requests') return 'buyer_requests';
-    if (tab === 'categories') return 'categories';
-    if (tab === 'user_dashboard') return 'user_dashboard';
-    if (tab === 'more') return 'more';
-    if (window.location.hash === '#estore') return 'estore';
-  } catch {}
-  return 'marketplace';
+    return parseSeoRoute(window.location.pathname, window.location.search);
+  } catch {
+    return { tab: 'marketplace' };
+  }
 }
 
 export default function App() {
-  // Navigation & View State (supports ?tab=estore in new browser tabs)
-  const [currentTab, setCurrentTab] = useState<ViewTab>(getInitialTab);
+  const initialRoute = useMemo(() => getInitialParsedRoute(), []);
+
+  // Navigation & View State (supports clean SEO paths & legacy ?tab= params)
+  const [currentTab, setCurrentTab] = useState<ViewTab>(initialRoute.tab);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
   const [listingsViewMode, setListingsViewMode] = useState<'grid' | 'map'>('grid');
@@ -113,7 +110,15 @@ export default function App() {
   const [donationLiveStatus, setDonationLiveStatus] = useState<'live' | 'reconnecting' | 'offline'>('reconnecting');
   const [openBuyerRequestPostModal, setOpenBuyerRequestPostModal] = useState<boolean>(false);
   const [targetEStoreForView, setTargetEStoreForView] = useState<EStore | null>(null);
-  const [hutaInFocus, setHutaInFocus] = useState<'all' | 'society' | 'travel' | 'events' | undefined>(undefined);
+  const [pendingListingIdFromUrl, setPendingListingIdFromUrl] = useState<string | null>(
+    () => initialRoute.listingId || null
+  );
+  const [pendingStoreIdFromUrl, setPendingStoreIdFromUrl] = useState<string | null>(
+    () => initialRoute.storeId || null
+  );
+  const [hutaInFocus, setHutaInFocus] = useState<'all' | 'society' | 'travel' | 'events' | undefined>(
+    () => initialRoute.hutaInFocus
+  );
   const [promoSlides, setPromoSlides] = useState<PromoSlide[]>(() => {
     try {
       const cached = localStorage.getItem('huta_promo_slides_cache');
@@ -175,8 +180,12 @@ export default function App() {
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [selectedLocation, setSelectedLocation] = useState<string>('All Sri Lanka');
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    () => initialRoute.category || 'All'
+  );
+  const [selectedLocation, setSelectedLocation] = useState<string>(
+    () => initialRoute.district || 'All Sri Lanka'
+  );
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('recommended');
@@ -241,42 +250,89 @@ export default function App() {
     }
   }, [compareIds]);
 
-  // Keep browser URL query and path in sync with currentTab (Secured dedicated /nashan routing)
+  // Resolve deep-linked Listing (/ad/:slug--id or ?ad=) once listings load
+  useEffect(() => {
+    if (!pendingListingIdFromUrl) return;
+    if (listings.length > 0) {
+      const match = listings.find((l) => l.id === pendingListingIdFromUrl);
+      if (match) {
+        setSelectedListing(match);
+        setPendingListingIdFromUrl(null);
+      } else if (!isLoading) {
+        setPendingListingIdFromUrl(null);
+      }
+    } else if (!isLoading) {
+      setPendingListingIdFromUrl(null);
+    }
+  }, [pendingListingIdFromUrl, listings, isLoading]);
+
+  // Resolve deep-linked E-Store (/estore/:slug--id or ?store=) once stores load
+  useEffect(() => {
+    if (!pendingStoreIdFromUrl) return;
+    if (eStores.length > 0) {
+      const match = eStores.find((s) => s.id === pendingStoreIdFromUrl);
+      if (match) {
+        setTargetEStoreForView(match);
+        setPendingStoreIdFromUrl(null);
+      } else if (!isLoading) {
+        setPendingStoreIdFromUrl(null);
+      }
+    } else if (!isLoading) {
+      setPendingStoreIdFromUrl(null);
+    }
+  }, [pendingStoreIdFromUrl, eStores, isLoading]);
+
+  // Keep clean SEO browser URL in sync with active view, listing, E-Store, or district/category
   useEffect(() => {
     try {
+      if (pendingListingIdFromUrl || pendingStoreIdFromUrl) return;
+
       const url = new URL(window.location.href);
+      let targetPath = '/';
+
       if (currentTab === 'admin_dashboard') {
-        url.searchParams.delete('tab');
-        url.searchParams.delete('admin');
-        if (!url.pathname.startsWith('/nashan') && !url.hostname.startsWith('admin.')) {
-          url.pathname = '/nashan';
-        }
-      } else if (currentTab === 'marketplace') {
-        url.searchParams.delete('tab');
-        if (
-          url.pathname === '/nashan' ||
-          url.pathname.startsWith('/nashan/') ||
-          url.pathname === '/admin' ||
-          url.pathname.startsWith('/admin/')
-        ) {
-          url.pathname = '/';
-        }
+        targetPath =
+          url.hostname.startsWith('admin.') ? url.pathname : '/nashan';
+      } else if (selectedListing) {
+        targetPath = buildListingSeoPath(selectedListing);
+      } else if (currentTab === 'estore' && targetEStoreForView) {
+        targetPath = buildEStoreSeoPath(targetEStoreForView);
+      } else if (currentTab === 'huta_in') {
+        targetPath = buildTabSeoPath('huta_in', { hutaInFocus });
       } else {
-        url.searchParams.set('tab', currentTab);
-        if (
-          url.pathname === '/nashan' ||
-          url.pathname.startsWith('/nashan/') ||
-          url.pathname === '/admin' ||
-          url.pathname.startsWith('/admin/')
-        ) {
-          url.pathname = '/';
-        }
+        targetPath = buildTabSeoPath(currentTab, {
+          selectedLocation,
+          selectedCategory,
+        });
       }
-      window.history.replaceState({}, '', url.toString());
+
+      url.searchParams.delete('tab');
+      url.searchParams.delete('admin');
+      url.searchParams.delete('ad');
+      url.searchParams.delete('store');
+      url.searchParams.delete('category');
+      url.searchParams.delete('district');
+      url.searchParams.delete('location');
+      url.pathname = targetPath;
+
+      const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+      const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      if (nextUrl !== currentUrl) {
+        window.history.replaceState({}, '', nextUrl);
+      }
     } catch {
       // ignore
     }
-  }, [currentTab]);
+  }, [
+    currentTab,
+    selectedLocation,
+    selectedCategory,
+    selectedListing,
+    targetEStoreForView,
+    hutaInFocus,
+    pendingListingIdFromUrl,
+    pendingStoreIdFromUrl,
+  ]);
 
   // Reset scroll cleanly to top whenever switching main view tabs so top banners are never tucked under the fixed navbar
   useEffect(() => {
@@ -297,32 +353,46 @@ export default function App() {
     const handlePopState = () => {
       try {
         const hostname = window.location.hostname.toLowerCase();
-        const pathname = window.location.pathname.toLowerCase();
-        const params = new URLSearchParams(window.location.search);
-
-        if (
-          hostname.startsWith('admin.') ||
-          hostname === 'admin.huta.lk' ||
-          pathname === '/nashan' ||
-          pathname.startsWith('/nashan/')
-        ) {
+        if (hostname.startsWith('admin.') || hostname === 'admin.huta.lk') {
           setCurrentTab('admin_dashboard');
           return;
         }
+        const parsed = parseSeoRoute(window.location.pathname, window.location.search);
+        setCurrentTab(parsed.tab);
+        setSelectedCategory(parsed.category || 'All');
+        setSelectedLocation(parsed.district || 'All Sri Lanka');
+        setHutaInFocus(parsed.hutaInFocus);
 
-        const rawTab = params.get('tab');
-        const tab: ViewTab =
-          rawTab && rawTab !== 'admin' && rawTab !== 'admin_dashboard'
-            ? (rawTab as ViewTab)
-            : 'marketplace';
-        setCurrentTab(tab);
+        if (parsed.listingId) {
+          const found = listings.find((l) => l.id === parsed.listingId);
+          if (found) {
+            setSelectedListing(found);
+          } else {
+            setPendingListingIdFromUrl(parsed.listingId);
+          }
+        } else {
+          setSelectedListing(null);
+          setPendingListingIdFromUrl(null);
+        }
+
+        if (parsed.storeId) {
+          const foundStore = eStores.find((s) => s.id === parsed.storeId);
+          if (foundStore) {
+            setTargetEStoreForView(foundStore);
+          } else {
+            setPendingStoreIdFromUrl(parsed.storeId);
+          }
+        } else {
+          setTargetEStoreForView(null);
+          setPendingStoreIdFromUrl(null);
+        }
       } catch {
         // ignore
       }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [listings, eStores]);
 
   // Derive compared listings objects
   const compareListings = useMemo(() => {
@@ -900,7 +970,51 @@ export default function App() {
     }
 
     return result;
-  }, [listings, currentTab, selectedCategory, selectedLocation, searchTerm, minPrice, maxPrice, sortBy, verifiedOnly]);
+  }, [listings, currentTab, selectedCategory, selectedLocation, searchTerm, minPrice, maxPrice, sortBy, verifiedOnly, currentUser]);
+
+  // Live dynamic SEO meta tags, canonical link, and Schema.org JSON-LD updater
+  useEffect(() => {
+    try {
+      const origin = window.location.origin;
+      const route: ParsedSeoRoute = {
+        tab: currentTab,
+        district: selectedLocation !== 'All Sri Lanka' ? selectedLocation : undefined,
+        category: selectedCategory !== 'All' ? selectedCategory : undefined,
+        listingId: selectedListing?.id,
+        storeId: targetEStoreForView?.id,
+        hutaInFocus,
+      };
+      const payload = buildSeoMetaPayload({
+        origin,
+        route,
+        listing: selectedListing,
+        store: currentTab === 'estore' ? targetEStoreForView : null,
+        matchingListingsCount: filteredListings.length,
+        matchingListingsSample: filteredListings.slice(0, 8),
+        storesCount: eStores.length,
+      });
+      applyClientSeoMeta(payload);
+    } catch {
+      // ignore
+    }
+  }, [
+    currentTab,
+    selectedLocation,
+    selectedCategory,
+    selectedListing,
+    targetEStoreForView,
+    hutaInFocus,
+    filteredListings,
+    eStores.length,
+  ]);
+
+  const handleSelectedStoreChange = useCallback(
+    (store: EStore | null) => {
+      if (pendingStoreIdFromUrl && !store) return;
+      setTargetEStoreForView((prev) => (prev?.id === store?.id ? prev : store));
+    },
+    [pendingStoreIdFromUrl]
+  );
 
   const hasActiveFilters = Boolean(
     searchTerm.trim() ||
@@ -1244,15 +1358,36 @@ export default function App() {
     showToast('Admin session ended.', 'info');
   };
 
-  // Share Link
-  const handleCopyShareLink = (listing: Listing) => {
-    const text = `${listing.title} - ${listing.location} on HUTA Sri Lanka Marketplace. Tel: ${listing.phone}`;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text);
-      showToast('Listing details copied to clipboard!', 'success');
-    } else {
-      showToast(text, 'info');
+  // Share Link (Uses clean SEO /ad/<slug>--<id> URL with OpenGraph preview)
+  const handleCopyShareLink = async (listing: Listing) => {
+    const shareUrl = `${window.location.origin}${buildListingSeoPath(listing)}`;
+    const priceLabel =
+      Number(listing.price) > 0 ? `Rs ${Number(listing.price).toLocaleString('en-LK')}` : 'Contact Seller';
+    const text = `${listing.title} (${priceLabel}) — ${listing.location}, Sri Lanka\n${shareUrl}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${listing.title} | HUTA.LK`,
+          text: `${listing.title} in ${listing.location}`,
+          url: shareUrl,
+        });
+        return;
+      } catch {
+        // User cancelled or share unsupported; fall back to clipboard copy
+      }
     }
+
+    if (navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Share link copied! Anyone opening it sees the full ad preview.', 'success');
+        return;
+      } catch {
+        // fallback toast
+      }
+    }
+    showToast(shareUrl, 'info');
   };
 
   // Compute number of ads belonging to current user or posted from this device
@@ -1397,8 +1532,30 @@ export default function App() {
                     </button>
                   );
                 })}
+                <a
+                  href="/districts"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setCurrentTab('districts');
+                  }}
+                  className="px-3 py-1.5 rounded-xl whitespace-nowrap font-extrabold bg-[#FF5A36]/10 hover:bg-[#FF5A36] text-[#FF5A36] hover:text-white border border-[#FF5A36]/25 transition-all shrink-0 cursor-pointer"
+                >
+                  All 25 Districts →
+                </a>
               </div>
             </div>
+
+            {/* District × Category SEO Breadcrumb & Summary Banner */}
+            <DistrictCategorySeoBanner
+              selectedDistrict={selectedLocation}
+              selectedCategory={selectedCategory}
+              matchingCount={filteredListings.length}
+              onSelectDistrictCategory={(dist, cat) => {
+                setSelectedLocation(dist || 'All Sri Lanka');
+                setSelectedCategory(cat || 'All');
+              }}
+              onOpenAllDistricts={() => setCurrentTab('districts')}
+            />
 
             {/* Classified Advertisements Grid & Interactive Map */}
             <ListingsSection
@@ -1604,6 +1761,7 @@ export default function App() {
             onToast={showToast}
             currentUser={currentUser}
             initialSelectedStore={targetEStoreForView}
+            onSelectedStoreChange={handleSelectedStoreChange}
             isAdminLoggedIn={isAdminLoggedIn}
           />
         )}
@@ -1679,6 +1837,19 @@ export default function App() {
             }}
             onOpenHotNews={() => setCurrentTab('hot_news')}
             listings={listings}
+          />
+        )}
+
+        {currentTab === 'districts' && (
+          <DistrictCategoryDirectory
+            listings={listings}
+            onSelectDistrictCategory={(dist, cat) => {
+              setSelectedLocation(dist || 'All Sri Lanka');
+              setSelectedCategory(cat || 'All');
+              setSearchTerm('');
+              setCurrentTab('marketplace');
+            }}
+            onBackToMarketplace={() => setCurrentTab('marketplace')}
           />
         )}
 

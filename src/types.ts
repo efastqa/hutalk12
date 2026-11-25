@@ -140,6 +140,7 @@ export type ViewTab =
   | 'donate'
   | 'buyer_requests'
   | 'categories'
+  | 'districts'
   | 'user_dashboard'
   | 'admin_dashboard'
   | 'more'

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { parseSeoRoute } from '../utils/seo';
 import {
   Store,
   ExternalLink,
@@ -45,6 +46,9 @@ import {
   Zap,
   Send,
   CreditCard,
+  Car,
+  HeartPulse,
+  BookOpen,
 } from 'lucide-react';
 import { EStore, EStoreProduct, User, CartItem } from '../types';
 import { api } from '../services/api';
@@ -60,6 +64,9 @@ import beautyCosmeticsImg from '../assets/images/beauty_cosmetics_estore_1794485
 import handmadeCraftsImg from '../assets/images/handmade_crafts_estore_1794485766859.jpg';
 import homeLivingImg from '../assets/images/home_living_estore_1794485766782.jpg';
 import gourmetFoodsImg from '../assets/images/gourmet_foods_estore_1794485766599.jpg';
+import automotiveSparesImg from '../assets/images/automotive_spares_estore_1795589342306.jpg';
+import healthWellnessImg from '../assets/images/health_wellness_estore_1795589342683.jpg';
+import booksStationeryImg from '../assets/images/books_stationery_estore_1795589342679.jpg';
 
 // Image compression helper for fast client-side upload & data URL conversion
 async function compressImageFile(file: File, maxDim = 800, quality = 0.82): Promise<string> {
@@ -333,6 +340,7 @@ interface EStorePageProps {
   onToast: (msg: string, type?: 'success' | 'info' | 'error') => void;
   currentUser: User | null;
   initialSelectedStore?: EStore | null;
+  onSelectedStoreChange?: (store: EStore | null) => void;
   isAdminLoggedIn?: boolean;
 }
 
@@ -350,12 +358,17 @@ const CATEGORIES = [
   'Handmade & Crafts',
   'Home & Living',
   'Gourmet Foods',
+  'Automotive & Spares',
+  'Health & Wellness',
+  'Books & Stationery',
 ];
 
 export interface EStoreCategoryMeta {
   id: string;
   shortName: string;
   tagline: string;
+  cornerTag: string;
+  frameStyle: string;
   icon: React.ComponentType<{ className?: string }>;
   accentColor: string;
   gradient: string;
@@ -369,6 +382,8 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     id: 'All',
     shortName: 'All Categories',
     tagline: 'All verified Sri Lankan web shops',
+    cornerTag: 'ALL SHOPS',
+    frameStyle: 'bg-[#FFF5F7] dark:bg-[#1B1418] border-[#FBCFD8] dark:border-rose-500/25',
     icon: Store,
     accentColor: 'text-emerald-600 dark:text-emerald-400',
     gradient: 'from-emerald-500/20 via-teal-500/10 to-transparent',
@@ -380,6 +395,8 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     id: 'Groceries & Daily Essentials',
     shortName: 'Groceries & Pantry',
     tagline: 'Pantry staples, organic produce & daily goods',
+    cornerTag: 'FARM FRESH',
+    frameStyle: 'bg-[#F2FBF6] dark:bg-[#111D18] border-[#BEEAD2] dark:border-emerald-500/25',
     icon: ShoppingBag,
     accentColor: 'text-emerald-600 dark:text-emerald-400',
     gradient: 'from-emerald-500/20 via-emerald-500/10 to-transparent',
@@ -391,6 +408,8 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     id: 'Ceylon Tea & Spices',
     shortName: 'Ceylon Tea & Spices',
     tagline: 'Pure Ceylon single origin tea & spices',
+    cornerTag: 'AROMATIC PICK',
+    frameStyle: 'bg-[#FFFCF0] dark:bg-[#1D1B12] border-[#FCE6A6] dark:border-amber-500/25',
     icon: Sparkles,
     accentColor: 'text-amber-600 dark:text-amber-400',
     gradient: 'from-amber-500/20 via-amber-500/10 to-transparent',
@@ -402,6 +421,8 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     id: 'Fashion & Apparel',
     shortName: 'Fashion & Apparel',
     tagline: 'Batik, linen wear, clothing & jewelry',
+    cornerTag: 'BATIK & STYLE',
+    frameStyle: 'bg-[#F2F8FF] dark:bg-[#121A26] border-[#C6DFFF] dark:border-sky-500/25',
     icon: Tag,
     accentColor: 'text-purple-600 dark:text-purple-400',
     gradient: 'from-purple-500/20 via-purple-500/10 to-transparent',
@@ -413,6 +434,8 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     id: 'Tech & Gadgets',
     shortName: 'Tech & Gadgets',
     tagline: 'Smartphones, computers, audio & gear',
+    cornerTag: 'TOP TECH',
+    frameStyle: 'bg-[#F5F7FF] dark:bg-[#141724] border-[#CFD8FF] dark:border-indigo-500/25',
     icon: Zap,
     accentColor: 'text-blue-600 dark:text-blue-400',
     gradient: 'from-blue-500/20 via-blue-500/10 to-transparent',
@@ -424,6 +447,8 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     id: 'Beauty & Cosmetics',
     shortName: 'Beauty & Cosmetics',
     tagline: 'Ayurvedic wellness, skincare & fragrances',
+    cornerTag: 'AYURVEDIC',
+    frameStyle: 'bg-[#FFF5F8] dark:bg-[#1E1419] border-[#FCD1E0] dark:border-pink-500/25',
     icon: Star,
     accentColor: 'text-rose-600 dark:text-rose-400',
     gradient: 'from-rose-500/20 via-rose-500/10 to-transparent',
@@ -435,6 +460,8 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     id: 'Handmade & Crafts',
     shortName: 'Handmade & Crafts',
     tagline: 'Artisanal handlooms, masks & woodcraft',
+    cornerTag: 'ARTISAN PICK',
+    frameStyle: 'bg-[#FFF8F2] dark:bg-[#1E1713] border-[#FCD9BE] dark:border-orange-500/25',
     icon: Gift,
     accentColor: 'text-orange-600 dark:text-orange-400',
     gradient: 'from-orange-500/20 via-orange-500/10 to-transparent',
@@ -446,6 +473,8 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     id: 'Home & Living',
     shortName: 'Home & Living',
     tagline: 'Decor, kitchenware, furniture & lighting',
+    cornerTag: 'HOME DECOR',
+    frameStyle: 'bg-[#F2FBF9] dark:bg-[#111D1B] border-[#BCECE2] dark:border-teal-500/25',
     icon: Home,
     accentColor: 'text-teal-600 dark:text-teal-400',
     gradient: 'from-teal-500/20 via-teal-500/10 to-transparent',
@@ -457,12 +486,53 @@ export const ESTORE_CATEGORY_METAS: EStoreCategoryMeta[] = [
     id: 'Gourmet Foods',
     shortName: 'Gourmet Foods',
     tagline: 'Artisanal bakes, sweets, confectionery & bites',
+    cornerTag: 'BAKED FRESH',
+    frameStyle: 'bg-[#FFFAF0] dark:bg-[#1D1912] border-[#FDE2B8] dark:border-amber-500/25',
     icon: Utensils,
     accentColor: 'text-amber-700 dark:text-amber-400',
     gradient: 'from-amber-600/20 via-amber-600/10 to-transparent',
     activeRing: 'ring-2 ring-amber-600 shadow-md shadow-amber-600/20',
     badgeStyle: 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300',
     image: gourmetFoodsImg,
+  },
+  {
+    id: 'Automotive & Spares',
+    shortName: 'Automotive & Spares',
+    tagline: 'Genuine spares, oils, tyres & car gear',
+    cornerTag: 'GENUINE PARTS',
+    frameStyle: 'bg-[#F4F7FA] dark:bg-[#141922] border-[#CFDCEB] dark:border-slate-500/25',
+    icon: Car,
+    accentColor: 'text-slate-700 dark:text-slate-300',
+    gradient: 'from-slate-500/20 via-slate-500/10 to-transparent',
+    activeRing: 'ring-2 ring-slate-600 shadow-md shadow-slate-500/20',
+    badgeStyle: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200',
+    image: automotiveSparesImg,
+  },
+  {
+    id: 'Health & Wellness',
+    shortName: 'Health & Wellness',
+    tagline: 'Herbal supplements, honey & organic care',
+    cornerTag: 'NATURAL CARE',
+    frameStyle: 'bg-[#F4FAF4] dark:bg-[#121D13] border-[#C5E8C7] dark:border-green-500/25',
+    icon: HeartPulse,
+    accentColor: 'text-green-600 dark:text-green-400',
+    gradient: 'from-green-500/20 via-green-500/10 to-transparent',
+    activeRing: 'ring-2 ring-green-500 shadow-md shadow-green-500/20',
+    badgeStyle: 'bg-green-100 text-green-800 dark:bg-green-950/80 dark:text-green-300',
+    image: healthWellnessImg,
+  },
+  {
+    id: 'Books & Stationery',
+    shortName: 'Books & Stationery',
+    tagline: 'Books, journals, pens & workspace goods',
+    cornerTag: 'STUDY & DESK',
+    frameStyle: 'bg-[#F7F4FF] dark:bg-[#171422] border-[#DDD2FF] dark:border-violet-500/25',
+    icon: BookOpen,
+    accentColor: 'text-violet-600 dark:text-violet-400',
+    gradient: 'from-violet-500/20 via-violet-500/10 to-transparent',
+    activeRing: 'ring-2 ring-violet-500 shadow-md shadow-violet-500/20',
+    badgeStyle: 'bg-violet-100 text-violet-800 dark:bg-violet-950/80 dark:text-violet-300',
+    image: booksStationeryImg,
   },
 ];
 
@@ -489,6 +559,7 @@ export const EStorePage: React.FC<EStorePageProps> = ({
   onToast,
   currentUser,
   initialSelectedStore = null,
+  onSelectedStoreChange,
   isAdminLoggedIn = false,
 }) => {
   // Check admin access
@@ -515,8 +586,8 @@ export const EStorePage: React.FC<EStorePageProps> = ({
   const [selectedDistrict, setSelectedDistrict] = useState<string>('All Sri Lanka');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Category visual view mode: 'strip' (horizontal card rail) or 'grid' (all niches grid)
-  const [categoryDisplayMode, setCategoryDisplayMode] = useState<'strip' | 'grid'>('strip');
+  // Category visual view mode: defaults to clean 4-col 'grid' boutique showcase with optional 'strip' slider
+  const [categoryDisplayMode, setCategoryDisplayMode] = useState<'strip' | 'grid'>('grid');
   const categoryScrollRef = useRef<HTMLDivElement>(null);
 
   const scrollCategories = (direction: 'left' | 'right') => {
@@ -692,16 +763,29 @@ export const EStorePage: React.FC<EStorePageProps> = ({
     }
   };
 
-  // Auto-open modal or store from URL (e.g. ?tab=estore#register or ?tab=estore&store=123)
+  // Sync external initialSelectedStore updates
+  useEffect(() => {
+    if (initialSelectedStore && initialSelectedStore.id !== selectedStore?.id) {
+      setSelectedStore(initialSelectedStore);
+    }
+  }, [initialSelectedStore]);
+
+  // Notify parent when selected store changes so URL & SEO metadata stay updated
+  useEffect(() => {
+    if (onSelectedStoreChange) {
+      onSelectedStoreChange(selectedStore);
+    }
+  }, [selectedStore, onSelectedStoreChange]);
+
+  // Auto-open modal or store from clean URL (/estore/:slug--id or ?store=123)
   useEffect(() => {
     try {
       if (window.location.hash === '#register') {
         setIsRegisterModalOpen(true);
       }
-      const params = new URLSearchParams(window.location.search);
-      const storeId = params.get('store');
-      if (storeId) {
-        const match = stores.find((s) => s.id === storeId);
+      const parsed = parseSeoRoute(window.location.pathname, window.location.search);
+      if (parsed.storeId) {
+        const match = stores.find((s) => s.id === parsed.storeId);
         if (match) setSelectedStore(match);
       }
     } catch {}
@@ -1393,9 +1477,9 @@ export const EStorePage: React.FC<EStorePageProps> = ({
               <div>
                 <div className="flex items-center gap-2 mb-0.5 sm:mb-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
                   <Store className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>9 Store Categories</span>
+                  <span>11 Store Categories</span>
                   <span aria-hidden="true" className="text-gray-300 dark:text-gray-600">·</span>
-                  <span className="text-gray-500 dark:text-gray-400 font-medium">
+                  <span className="text-gray-500 dark:text-gray-400 font-medium tabular-nums">
                     {stores.length} verified sellers
                   </span>
                 </div>
@@ -1403,7 +1487,7 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                   Explore Sri Lanka E-Stores by Category
                 </h2>
                 <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Click a category to filter stores and product catalogs
+                  Click a category card to filter Sri Lankan E-Stores and product catalogs
                 </p>
               </div>
 
@@ -1412,8 +1496,21 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                 <div className="inline-flex items-center p-1 rounded-xl bg-gray-100 dark:bg-[#1E2230] border border-gray-200 dark:border-[#2D303E]">
                   <button
                     type="button"
+                    onClick={() => setCategoryDisplayMode('grid')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                      categoryDisplayMode === 'grid'
+                        ? 'bg-white dark:bg-[#151822] text-emerald-600 dark:text-emerald-400 shadow-2xs font-extrabold'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                    title="Boutique 4-column category grid"
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    <span>All Categories</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setCategoryDisplayMode('strip')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
                       categoryDisplayMode === 'strip'
                         ? 'bg-white dark:bg-[#151822] text-emerald-600 dark:text-emerald-400 shadow-2xs font-extrabold'
                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -1422,19 +1519,6 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                   >
                     <List className="w-3.5 h-3.5" />
                     <span>Slider</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCategoryDisplayMode('grid')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                      categoryDisplayMode === 'grid'
-                        ? 'bg-white dark:bg-[#151822] text-emerald-600 dark:text-emerald-400 shadow-2xs font-extrabold'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                    }`}
-                    title="All categories grid"
-                  >
-                    <LayoutGrid className="w-3.5 h-3.5" />
-                    <span>Grid View</span>
                   </button>
                 </div>
 
@@ -1463,20 +1547,19 @@ export const EStorePage: React.FC<EStorePageProps> = ({
 
             {/* Single Featured Quality Image for Explore Sri Lanka E-Stores by Category */}
             <div className="mt-3 relative rounded-xl overflow-hidden border border-gray-200/80 dark:border-[#252836] bg-emerald-50 dark:bg-[#10141F] shadow-xs">
-              <div className="relative h-44 sm:h-56 md:h-64 w-full overflow-hidden">
+              <div className="relative h-36 sm:h-48 md:h-52 w-full overflow-hidden">
                 <img
                   src={estoreCategoryShowcaseImg}
                   alt="Explore Sri Lanka E-Stores by Category — Ceylon Tea, Organic Spices, Batik Fashion, Tech Gadgets, Ayurvedic Cosmetics & Handmade Crafts"
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover object-center brightness-[1.03] contrast-[1.02]"
                 />
-                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 via-black/30 to-transparent pointer-events-none" />
+                <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/75 via-black/30 to-transparent pointer-events-none" />
                 <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
                   <div>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/90 text-white text-[10px] font-extrabold uppercase tracking-wide shadow-xs mb-1">
-                      <Sparkles className="w-3 h-3" />
-                      <span>Islandwide E-Store Showcase</span>
-                    </span>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
+                      Islandwide E-Store Showcase
+                    </p>
                     <p className="text-xs sm:text-sm font-bold text-white drop-shadow-sm">
                       {selectedCategory === 'All'
                         ? 'Ceylon Tea, Batik Fashion, Tech Gadgets, Ayurvedic Wellness & Artisanal Goods'
@@ -1496,17 +1579,12 @@ export const EStorePage: React.FC<EStorePageProps> = ({
               </div>
             </div>
 
-            {/* Category Cards Showcase with Matching Photography */}
-            <div className="pt-3">
-              {categoryDisplayMode === 'strip' ? (
-                /* Slider / Strip Rail (Compact cards) */
-                <div
-                  ref={categoryScrollRef}
-                  className="flex items-stretch gap-2.5 sm:gap-3 overflow-x-auto pb-2.5 pt-1 scroll-smooth scrollbar-thin"
-                >
+            {/* Boutique Pastel-Framed Square Category Cards (Matches clean 4-col photo format) */}
+            <div className="pt-3.5">
+              {categoryDisplayMode === 'grid' ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                   {ESTORE_CATEGORY_METAS.map((catMeta) => {
                     const isActive = selectedCategory === catMeta.id;
-                    const IconComponent = catMeta.icon;
                     const count = categoryCounts[catMeta.id] || { stores: 0, products: 0 };
 
                     return (
@@ -1514,14 +1592,16 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                         key={catMeta.id}
                         type="button"
                         onClick={() => setSelectedCategory(catMeta.id)}
-                        className={`min-w-[155px] sm:min-w-[185px] max-w-[195px] shrink-0 rounded-xl border text-left flex flex-col justify-between transition-all duration-300 group cursor-pointer relative overflow-hidden ${
+                        className={`rounded-2xl border p-2.5 sm:p-3 text-center flex flex-col transition-all duration-200 group cursor-pointer hover:-translate-y-0.5 hover:shadow-md ${
+                          catMeta.frameStyle
+                        } ${
                           isActive
-                            ? 'bg-white dark:bg-[#151822] border-emerald-500 shadow-md shadow-emerald-500/15 ring-2 ring-emerald-500/40'
-                            : 'bg-white dark:bg-[#151822] hover:bg-gray-50/70 dark:hover:bg-[#181B26] border-gray-200/80 dark:border-[#252836] hover:border-emerald-300 dark:hover:border-emerald-700/70 hover:shadow-sm'
+                            ? 'ring-2 ring-emerald-500 border-emerald-500 shadow-md shadow-emerald-500/15'
+                            : 'shadow-2xs'
                         }`}
                       >
-                        {/* Image Window */}
-                        <div className="relative h-20 sm:h-24 w-full overflow-hidden bg-slate-900">
+                        {/* Clean Bright Photo Frame */}
+                        <div className="relative aspect-[4/3] sm:aspect-square w-full rounded-xl overflow-hidden bg-white dark:bg-[#1A1D29] shadow-2xs">
                           <img
                             src={catMeta.image}
                             alt={catMeta.shortName}
@@ -1532,59 +1612,40 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                               (e.currentTarget as HTMLImageElement).style.opacity = '0';
                             }}
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10 pointer-events-none" />
-
-                          {/* Top floating icon + count */}
-                          <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-1 z-10 pointer-events-none">
-                            <div className="w-6 h-6 rounded-md bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center shadow-xs">
-                              <IconComponent className="w-3 h-3 text-white" />
-                            </div>
-                            <span className="px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md border border-white/20 text-[9px] font-extrabold text-white">
-                              {count.stores} {count.stores === 1 ? 'Store' : 'Stores'}
-                            </span>
-                          </div>
-
-                          {/* Title on image */}
-                          <div className="absolute bottom-1.5 left-2 right-2 z-10 pointer-events-none">
-                            <h3 className="text-white font-bold text-[11px] sm:text-xs tracking-tight drop-shadow-sm truncate">
-                              {catMeta.shortName}
-                            </h3>
-                          </div>
+                          {/* Single Top-Right Tag */}
+                          <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-[#C81E3A] text-white text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wide shadow-xs whitespace-nowrap pointer-events-none">
+                            {isActive ? 'ACTIVE' : catMeta.cornerTag}
+                          </span>
                         </div>
 
-                        {/* Card Content Body */}
-                        <div className="p-2 sm:p-2.5 flex flex-col justify-between flex-1 space-y-1.5">
-                          <p className="text-[10px] text-gray-500 dark:text-gray-400 line-clamp-1">
-                            {catMeta.tagline}
+                        {/* Centered Title & Tabular Count Below Photo */}
+                        <div className="pt-2.5 pb-0.5 px-1">
+                          <h3 className="text-xs sm:text-[14px] font-extrabold text-gray-900 dark:text-white tracking-tight truncate">
+                            {catMeta.shortName}
+                          </h3>
+                          <p
+                            className={`text-[11px] sm:text-xs font-medium tabular-nums mt-0.5 truncate ${
+                              isActive
+                                ? 'text-emerald-700 dark:text-emerald-400 font-bold'
+                                : 'text-gray-500 dark:text-gray-400'
+                            }`}
+                          >
+                            {count.stores} {count.stores === 1 ? 'store' : 'stores'} · {count.products}{' '}
+                            {count.products === 1 ? 'item' : 'items'}
                           </p>
-
-                          <div className="pt-1.5 border-t border-gray-100 dark:border-[#252836] flex items-center justify-between text-[10px] font-semibold">
-                            <span className="text-gray-600 dark:text-gray-400">
-                              {count.products} Items
-                            </span>
-                            {isActive ? (
-                              <span className="inline-flex items-center gap-0.5 font-bold text-emerald-600 dark:text-emerald-400">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                                <span>Active</span>
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-0.5 text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                                <span>Explore</span>
-                                <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                              </span>
-                            )}
-                          </div>
                         </div>
                       </button>
                     );
                   })}
                 </div>
               ) : (
-                /* Compact Grid View (Smaller cards across mobile, tablet & desktop) */
-                <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2 pt-1">
+                /* Horizontal Slider View (Same Boutique Pastel-Framed Card Format) */
+                <div
+                  ref={categoryScrollRef}
+                  className="flex items-stretch gap-3 overflow-x-auto pb-2.5 pt-1 scroll-smooth scrollbar-thin"
+                >
                   {ESTORE_CATEGORY_METAS.map((catMeta) => {
                     const isActive = selectedCategory === catMeta.id;
-                    const IconComponent = catMeta.icon;
                     const count = categoryCounts[catMeta.id] || { stores: 0, products: 0 };
 
                     return (
@@ -1592,14 +1653,15 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                         key={catMeta.id}
                         type="button"
                         onClick={() => setSelectedCategory(catMeta.id)}
-                        className={`rounded-xl border text-left flex flex-col justify-between transition-all duration-200 group cursor-pointer relative overflow-hidden ${
+                        className={`min-w-[168px] sm:min-w-[205px] max-w-[215px] shrink-0 rounded-2xl border p-2.5 text-center flex flex-col transition-all duration-200 group cursor-pointer hover:-translate-y-0.5 hover:shadow-md ${
+                          catMeta.frameStyle
+                        } ${
                           isActive
-                            ? 'bg-white dark:bg-[#151822] border-emerald-500 shadow-md shadow-emerald-500/15 ring-2 ring-emerald-500/40'
-                            : 'bg-white dark:bg-[#151822] hover:bg-gray-50/70 dark:hover:bg-[#181B26] border-gray-200/80 dark:border-[#252836] hover:border-emerald-300 dark:hover:border-emerald-700/70 hover:shadow-sm'
+                            ? 'ring-2 ring-emerald-500 border-emerald-500 shadow-md shadow-emerald-500/15'
+                            : 'shadow-2xs'
                         }`}
                       >
-                        {/* Compact Image Window */}
-                        <div className="relative h-14 sm:h-16 w-full overflow-hidden bg-slate-900">
+                        <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-white dark:bg-[#1A1D29] shadow-2xs">
                           <img
                             src={catMeta.image}
                             alt={catMeta.shortName}
@@ -1610,36 +1672,25 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                               (e.currentTarget as HTMLImageElement).style.opacity = '0';
                             }}
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10 pointer-events-none" />
-
-                          {/* Top Badges */}
-                          <div className="absolute top-1.5 left-1.5 right-1.5 flex items-center justify-between gap-1 z-10 pointer-events-none">
-                            <div className="w-5 h-5 rounded bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center">
-                              <IconComponent className="w-2.5 h-2.5 text-white" />
-                            </div>
-                            <span className="px-1 py-0.2 rounded bg-black/60 backdrop-blur-md border border-white/20 text-[9px] font-bold text-white">
-                              {count.stores}
-                            </span>
-                          </div>
-
-                          {/* Title on image */}
-                          <div className="absolute bottom-1 left-1.5 right-1.5 z-10 pointer-events-none">
-                            <h3 className="text-white font-bold text-[10px] sm:text-[11px] leading-tight tracking-tight drop-shadow-sm truncate">
-                              {catMeta.shortName}
-                            </h3>
-                          </div>
+                          <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-[#C81E3A] text-white text-[9px] font-extrabold uppercase tracking-wide shadow-xs whitespace-nowrap pointer-events-none">
+                            {isActive ? 'ACTIVE' : catMeta.cornerTag}
+                          </span>
                         </div>
 
-                        {/* Compact Footer */}
-                        <div className="px-2 py-1.5 flex items-center justify-between text-[9px] sm:text-[10px]">
-                          <span className="text-gray-600 dark:text-gray-400 font-medium truncate">
-                            {count.products} Items
-                          </span>
-                          {isActive ? (
-                            <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                          ) : (
-                            <ChevronRight className="w-3 h-3 text-gray-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                          )}
+                        <div className="pt-2.5 pb-0.5 px-1">
+                          <h3 className="text-xs sm:text-[14px] font-extrabold text-gray-900 dark:text-white tracking-tight truncate">
+                            {catMeta.shortName}
+                          </h3>
+                          <p
+                            className={`text-[11px] font-medium tabular-nums mt-0.5 truncate ${
+                              isActive
+                                ? 'text-emerald-700 dark:text-emerald-400 font-bold'
+                                : 'text-gray-500 dark:text-gray-400'
+                            }`}
+                          >
+                            {count.stores} {count.stores === 1 ? 'store' : 'stores'} · {count.products}{' '}
+                            {count.products === 1 ? 'item' : 'items'}
+                          </p>
                         </div>
                       </button>
                     );
