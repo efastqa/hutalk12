@@ -14,6 +14,7 @@ import {
   Flame,
   HeartHandshake,
   Compass,
+  Users,
 } from 'lucide-react';
 import { ViewTab, User } from '../types';
 import { ThemeToggle } from './ThemeToggle';
@@ -27,6 +28,8 @@ interface NavbarProps {
   onOpenAppStore?: () => void;
   onOpenVisitSriLanka?: () => void;
   isVisitSriLankaActive?: boolean;
+  onOpenSociety?: () => void;
+  isSocietyActive?: boolean;
   currentUser?: User | { name?: string; fullname?: string; username?: string; email?: string } | null;
   selectedLocation?: string;
   onLocationChange?: (location: string) => void;
@@ -54,6 +57,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAppStore,
   onOpenVisitSriLanka,
   isVisitSriLankaActive = false,
+  onOpenSociety,
+  isSocietyActive = false,
   currentUser,
   selectedLocation = 'All Sri Lanka',
   onLocationChange,
@@ -145,9 +150,9 @@ export const Navbar: React.FC<NavbarProps> = ({
       }`}
     >
       {/* Main Brand & Actions Header */}
-      <div className="max-w-[1560px] mx-auto px-3 sm:px-5 lg:px-4 xl:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+      <div className="max-w-[1560px] mx-auto px-2 sm:px-5 lg:px-4 xl:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-1 sm:gap-2">
         {/* Brand Logo & Location */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
         <motion.div
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -155,9 +160,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             if (onSelectCategory) onSelectCategory('All');
             onSelectTab('marketplace');
           }}
-          className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group select-none py-1 shrink-0 whitespace-nowrap"
+          className="flex items-center gap-1 sm:gap-2 cursor-pointer group select-none py-1 shrink-0 whitespace-nowrap"
         >
-          <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white dark:bg-[#151822] border-2 border-gray-200/90 dark:border-white/10 flex items-center justify-center p-1 sm:p-1.5 shadow-md group-hover:border-[#FF5A36] group-hover:shadow-[0_0_20px_rgba(255,90,54,0.3)] transition-all duration-300 shrink-0">
+          <div className="relative w-7 h-7 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white dark:bg-[#151822] border-2 border-gray-200/90 dark:border-white/10 flex items-center justify-center p-1 sm:p-1.5 shadow-md group-hover:border-[#FF5A36] group-hover:shadow-[0_0_20px_rgba(255,90,54,0.3)] transition-all duration-300 shrink-0">
             <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-sm">
               <rect width="100" height="100" rx="20" className="fill-gray-900 dark:fill-[#181920]" />
               <rect x="20" y="16" width="18" height="68" rx="9" fill="#FF5A36" />
@@ -168,21 +173,21 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           <div className="flex flex-col leading-none justify-center">
             <div className="flex items-baseline">
-              <span className="text-base sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
+              <span className="text-[15px] sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
                 HUTA
               </span>
-              <span className="text-base sm:text-2xl font-black text-[#FF5A36] tracking-tight ml-0.5">
+              <span className="text-[15px] sm:text-2xl font-black text-[#FF5A36] tracking-tight ml-0.5">
                 .lk
               </span>
             </div>
-            <span className="text-[8px] sm:text-[10px] text-gray-500 dark:text-gray-400 font-extrabold uppercase tracking-widest mt-0.5">
+            <span className="text-[7px] sm:text-[10px] text-gray-500 dark:text-gray-400 font-extrabold uppercase tracking-widest mt-0.5">
               SRI LANKA
             </span>
           </div>
         </motion.div>
 
         {/* Mobile & Tablet (< lg) Compact Icon + Micro-Name Quick Shortcuts */}
-        <div className="inline-flex lg:hidden items-center gap-1 shrink-0" role="group" aria-label="Quick sections">
+        <div className="inline-flex lg:hidden items-center gap-[3px] sm:gap-1 shrink-0" role="group" aria-label="Quick sections">
           <button
             type="button"
             id="nav-mobile-estore-btn"
@@ -192,14 +197,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}
             title="Sri Lanka E-Stores & Online Shops"
             aria-label="Sri Lanka E-Stores"
-            className={`min-w-[38px] sm:min-w-[44px] px-1.5 sm:px-2 py-1 rounded-xl inline-flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer shadow-2xs border shrink-0 active:scale-95 ${
+            className={`min-w-[33px] sm:min-w-[44px] px-1 sm:px-2 py-1 rounded-xl inline-flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer shadow-2xs border shrink-0 active:scale-95 ${
               currentTab === 'estore'
                 ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                 : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-500/25 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
             }`}
           >
             <Store className="w-3.5 h-3.5 text-current shrink-0" />
-            <span className="text-[8px] sm:text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
+            <span className="text-[7.5px] sm:text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
               E-Store
             </span>
           </button>
@@ -213,14 +218,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}
             title="Sri Lanka Live Hot News"
             aria-label="Hot News"
-            className={`min-w-[38px] sm:min-w-[44px] px-1.5 sm:px-2 py-1 rounded-xl inline-flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer shadow-2xs border shrink-0 active:scale-95 ${
+            className={`min-w-[33px] sm:min-w-[44px] px-1 sm:px-2 py-1 rounded-xl inline-flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer shadow-2xs border shrink-0 active:scale-95 ${
               currentTab === 'hot_news'
                 ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
                 : 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border-rose-500/25 hover:bg-rose-100 dark:hover:bg-rose-900/40'
             }`}
           >
             <Flame className="w-3.5 h-3.5 text-current shrink-0" />
-            <span className="text-[8px] sm:text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
+            <span className="text-[7.5px] sm:text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
               Hot News
             </span>
           </button>
@@ -234,14 +239,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}
             title="Donate to Sri Lanka Hospitals & Urgent Causes"
             aria-label="Donate Sri Lanka"
-            className={`min-w-[38px] sm:min-w-[44px] px-1.5 sm:px-2 py-1 rounded-xl inline-flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer shadow-2xs border shrink-0 active:scale-95 ${
+            className={`min-w-[33px] sm:min-w-[44px] px-1 sm:px-2 py-1 rounded-xl inline-flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer shadow-2xs border shrink-0 active:scale-95 ${
               currentTab === 'donate'
                 ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
                 : 'bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border-teal-500/25 hover:bg-teal-100 dark:hover:bg-teal-900/40'
             }`}
           >
             <HeartHandshake className="w-3.5 h-3.5 text-current shrink-0" />
-            <span className="text-[8px] sm:text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
+            <span className="text-[7.5px] sm:text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
               Donate
             </span>
           </button>
@@ -259,15 +264,40 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}
             title="Visit Sri Lanka — Travel & Tours"
             aria-label="Visit Sri Lanka"
-            className={`min-w-[38px] sm:min-w-[44px] px-1.5 sm:px-2 py-1 rounded-xl inline-flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer shadow-2xs border shrink-0 active:scale-95 ${
+            className={`min-w-[33px] sm:min-w-[44px] px-1 sm:px-2 py-1 rounded-xl inline-flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer shadow-2xs border shrink-0 active:scale-95 ${
               isVisitSriLankaActive
                 ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
                 : 'bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 border-sky-500/25 hover:bg-sky-100 dark:hover:bg-sky-900/40'
             }`}
           >
             <Compass className="w-3.5 h-3.5 text-current shrink-0" />
-            <span className="text-[8px] sm:text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
+            <span className="text-[7.5px] sm:text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
               Visit SL
+            </span>
+          </button>
+
+          <button
+            type="button"
+            id="nav-mobile-society-btn"
+            onClick={() => {
+              if (onOpenSociety) {
+                onOpenSociety();
+              } else {
+                onSelectTab('huta_in');
+              }
+              window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            }}
+            title="Society Help Hub — Medical & Education Aid"
+            aria-label="Society Help Hub"
+            className={`min-w-[33px] sm:min-w-[44px] px-1 sm:px-2 py-1 rounded-xl inline-flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer shadow-2xs border shrink-0 active:scale-95 ${
+              isSocietyActive
+                ? 'bg-violet-600 text-white border-violet-600 shadow-xs'
+                : 'bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border-violet-500/25 hover:bg-violet-100 dark:hover:bg-violet-900/40'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5 text-current shrink-0" />
+            <span className="text-[7.5px] sm:text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
+              Society
             </span>
           </button>
         </div>
@@ -463,6 +493,30 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Compass className="w-3.5 h-3.5 shrink-0" />
             <span className="text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
               Visit SL
+            </span>
+          </button>
+
+          <button
+            type="button"
+            id="nav-desktop-society-btn"
+            onClick={() => {
+              if (onOpenSociety) {
+                onOpenSociety();
+              } else {
+                onSelectTab('huta_in');
+              }
+            }}
+            title="Society Help Hub — Medical & Education Aid"
+            aria-label="Society Help Hub"
+            className={`min-w-[44px] px-2 py-1 rounded-xl transition-all inline-flex flex-col items-center justify-center gap-0.5 cursor-pointer shrink-0 border ${
+              isSocietyActive
+                ? 'bg-violet-600 text-white border-violet-600 shadow-xs'
+                : 'bg-violet-50/80 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/50 border-violet-500/25'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5 shrink-0" />
+            <span className="text-[9px] font-extrabold leading-none tracking-tight whitespace-nowrap">
+              Society
             </span>
           </button>
 

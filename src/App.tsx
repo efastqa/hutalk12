@@ -1439,6 +1439,11 @@ export default function App() {
             setCurrentTab('huta_in');
           }}
           isVisitSriLankaActive={currentTab === 'huta_in' && hutaInFocus === 'travel'}
+          onOpenSociety={() => {
+            setHutaInFocus('society');
+            setCurrentTab('huta_in');
+          }}
+          isSocietyActive={currentTab === 'huta_in' && hutaInFocus === 'society'}
           myAdsCount={myAdsCount}
         />
       )}
