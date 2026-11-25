@@ -9,6 +9,13 @@ import {
   Film,
   Volume2,
   VolumeX,
+  ShoppingBag,
+  Store,
+  Plane,
+  HeartHandshake,
+  Heart,
+  Compass,
+  Newspaper,
 } from 'lucide-react';
 import { HeroAd, HeroAdSettings } from '../types';
 import { DualToneHeading } from './DualToneHeading';
@@ -21,6 +28,8 @@ interface HeroAdBannerProps {
   onOpenEStore?: () => void;
   onOpenHutaIn?: (focus?: 'all' | 'travel' | 'society' | 'events') => void;
   onOpenBuyerRequests?: () => void;
+  onOpenDonate?: () => void;
+  onOpenHotNews?: () => void;
   isAdminLoggedIn?: boolean;
   onAdminManage?: () => void;
   isLivePreview?: boolean;
@@ -36,6 +45,8 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
   onOpenEStore,
   onOpenHutaIn,
   onOpenBuyerRequests,
+  onOpenDonate,
+  onOpenHotNews,
   isAdminLoggedIn,
   onAdminManage,
   isLivePreview = false,
@@ -275,9 +286,90 @@ export const HeroAdBanner: React.FC<HeroAdBannerProps> = ({
                 align="center"
                 id="hero-dual-tone-heading"
               />
-              <p className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed px-2">
-                Marketplace Deals · Online E-Stores · Sri Lanka Travel &amp; Tours · Community Society Relief
-              </p>
+              {/* Compact Small Icon-Only Strip for Core Sri Lanka Sections */}
+              <div
+                className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 pt-0.5"
+                role="navigation"
+                aria-label="HUTA.LK Ecosystem Quick Shortcuts"
+              >
+                {[
+                  {
+                    id: 'marketplace',
+                    label: 'Marketplace Deals',
+                    icon: ShoppingBag,
+                    colorClass: 'text-[#FF5A36] dark:text-[#FF7A59]',
+                    hoverBorder: 'hover:border-[#FF5A36]/50',
+                    onClick: () => {
+                      if (onSelectCategory) onSelectCategory('All');
+                      const el = document.getElementById('marketplace-listings');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    },
+                  },
+                  {
+                    id: 'estores',
+                    label: 'Online E-Stores',
+                    icon: Store,
+                    colorClass: 'text-emerald-600 dark:text-emerald-400',
+                    hoverBorder: 'hover:border-emerald-500/50',
+                    onClick: () => onOpenEStore?.(),
+                  },
+                  {
+                    id: 'travel',
+                    label: 'Sri Lanka Travel & Tours',
+                    icon: Plane,
+                    colorClass: 'text-sky-600 dark:text-sky-400',
+                    hoverBorder: 'hover:border-sky-500/50',
+                    onClick: () => onOpenHutaIn?.('travel'),
+                  },
+                  {
+                    id: 'society',
+                    label: 'Community Society Relief',
+                    icon: HeartHandshake,
+                    colorClass: 'text-violet-600 dark:text-violet-400',
+                    hoverBorder: 'hover:border-violet-500/50',
+                    onClick: () => onOpenHutaIn?.('society'),
+                  },
+                  {
+                    id: 'donate',
+                    label: 'Donate Sri Lanka',
+                    icon: Heart,
+                    colorClass: 'text-rose-600 dark:text-rose-400',
+                    hoverBorder: 'hover:border-rose-500/50',
+                    onClick: () => onOpenDonate?.(),
+                  },
+                  {
+                    id: 'visit',
+                    label: 'Visit Sri Lanka',
+                    icon: Compass,
+                    colorClass: 'text-teal-600 dark:text-teal-400',
+                    hoverBorder: 'hover:border-teal-500/50',
+                    onClick: () => onOpenHutaIn?.('all'),
+                  },
+                  {
+                    id: 'news',
+                    label: 'Hot News',
+                    icon: Newspaper,
+                    colorClass: 'text-amber-600 dark:text-amber-400',
+                    hoverBorder: 'hover:border-amber-500/50',
+                    onClick: () => onOpenHotNews?.(),
+                  },
+                ].map((item) => {
+                  const IconComp = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={item.onClick}
+                      title={item.label}
+                      aria-label={item.label}
+                      className={`w-9 h-9 rounded-xl bg-white/90 dark:bg-[#181B26]/90 hover:bg-white dark:hover:bg-[#222636] border border-gray-200/85 dark:border-white/15 ${item.hoverBorder} shadow-2xs flex items-center justify-center transition-all duration-150 hover:scale-110 active:scale-95 cursor-pointer shrink-0`}
+                    >
+                      <IconComp className={`w-4 h-4 ${item.colorClass}`} />
+                      <span className="sr-only">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </motion.div>
           ) : (
             /* CUSTOM ADMIN ANIMATED AD SLIDE */

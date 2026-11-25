@@ -1483,6 +1483,8 @@ export default function App() {
                 setHutaInFocus(focus || 'all');
                 setCurrentTab('huta_in');
               }}
+              onOpenDonate={() => setCurrentTab('donate')}
+              onOpenHotNews={() => setCurrentTab('hot_news')}
             />
 
             {/* Category Browser ("Explore Our Categories" + Live Sri Lanka Hot News Icon) */}

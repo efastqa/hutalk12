@@ -56,6 +56,8 @@ interface HeroSearchProps {
   openBuyerRequestsCount?: number;
   onOpenEStore?: () => void;
   onOpenHutaIn?: (focus?: 'all' | 'travel' | 'society' | 'events') => void;
+  onOpenDonate?: () => void;
+  onOpenHotNews?: () => void;
 }
 
 const DISTRICTS = [
@@ -177,6 +179,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   openBuyerRequestsCount = 0,
   onOpenEStore,
   onOpenHutaIn,
+  onOpenDonate,
+  onOpenHotNews,
 }) => {
   // 5 Changing Background Light Images state
   const [activeBgIndex, setActiveBgIndex] = useState<number>(0);
@@ -361,6 +365,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
             onOpenEStore={onOpenEStore}
             onOpenHutaIn={onOpenHutaIn}
             onOpenBuyerRequests={onOpenBuyerRequests}
+            onOpenDonate={onOpenDonate}
+            onOpenHotNews={onOpenHotNews}
             isAdminLoggedIn={isAdminLoggedIn}
             onAdminManage={onAdminManage}
           />
