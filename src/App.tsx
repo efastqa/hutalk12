@@ -113,6 +113,7 @@ export default function App() {
   const [donationLiveStatus, setDonationLiveStatus] = useState<'live' | 'reconnecting' | 'offline'>('reconnecting');
   const [openBuyerRequestPostModal, setOpenBuyerRequestPostModal] = useState<boolean>(false);
   const [targetEStoreForView, setTargetEStoreForView] = useState<EStore | null>(null);
+  const [hutaInFocus, setHutaInFocus] = useState<'all' | 'society' | 'travel' | 'events' | undefined>(undefined);
   const [promoSlides, setPromoSlides] = useState<PromoSlide[]>(() => {
     try {
       const cached = localStorage.getItem('huta_promo_slides_cache');
@@ -1284,7 +1285,12 @@ export default function App() {
       {currentTab !== 'admin_dashboard' && (
         <Navbar
           currentTab={currentTab}
-          onSelectTab={(tab) => setCurrentTab(tab)}
+          onSelectTab={(tab) => {
+            if (tab === 'huta_in') {
+              setHutaInFocus('all');
+            }
+            setCurrentTab(tab);
+          }}
           onSelectCategory={(category) => handleSelectCategory(category, undefined, true)}
           onOpenPostAd={handleOpenPostAd}
           onOpenUserAuth={() => setIsUserAuthOpen(true)}
@@ -1334,6 +1340,14 @@ export default function App() {
               onToggleVerifiedOnly={() => setVerifiedOnly((prev) => !prev)}
               onOpenBuyerRequests={() => setCurrentTab('buyer_requests')}
               openBuyerRequestsCount={buyerRequests.filter((r) => r.status === 'open').length}
+              onOpenEStore={() => {
+                setTargetEStoreForView(null);
+                setCurrentTab('estore');
+              }}
+              onOpenHutaIn={(focus) => {
+                setHutaInFocus(focus || 'all');
+                setCurrentTab('huta_in');
+              }}
             />
 
             {/* Category Browser ("Explore Our Categories" + Live Sri Lanka Hot News Icon) */}
@@ -1599,6 +1613,8 @@ export default function App() {
             events={events}
             currentUser={currentUser}
             isAdminLoggedIn={isAdminLoggedIn}
+            initialSectionFocus={hutaInFocus}
+            onConsumeInitialSectionFocus={() => setHutaInFocus(undefined)}
             onNavigateToAdminEvents={handleOpenAdminPortal}
             onOpenAdminTravelControl={() => {
               setInitialAdminTab('travel_bookings');

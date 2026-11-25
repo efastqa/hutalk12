@@ -424,6 +424,8 @@ interface HutaInPageProps {
   onNavigateToAdminEvents?: () => void;
   onOpenAdminTravelControl?: () => void;
   currentUser?: User | null;
+  initialSectionFocus?: 'all' | 'society' | 'travel' | 'events';
+  onConsumeInitialSectionFocus?: () => void;
 }
 
 export const HutaInPage: React.FC<HutaInPageProps> = ({
@@ -436,6 +438,8 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
   onNavigateToAdminEvents,
   onOpenAdminTravelControl,
   currentUser,
+  initialSectionFocus,
+  onConsumeInitialSectionFocus,
 }) => {
   const allEvents = events;
   const displaySpotlight = allEvents.filter((e) => e.isSpotlight);
@@ -446,8 +450,37 @@ export const HutaInPage: React.FC<HutaInPageProps> = ({
   const [rsvpIds, setRsvpIds] = useState<string[]>([]);
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [selectedEventModal, setSelectedEventModal] = useState<EventItem | null>(null);
-  const [activeSectionTab, setActiveSectionTab] = useState<'all' | 'society' | 'travel' | 'events'>('all');
+  const [activeSectionTab, setActiveSectionTab] = useState<'all' | 'society' | 'travel' | 'events'>(
+    initialSectionFocus || 'all'
+  );
   const [isSocietyModalOpen, setIsSocietyModalOpen] = useState(false);
+
+  // Sync deep-link focus from Marketplace Hero / Hero Ads
+  useEffect(() => {
+    if (!initialSectionFocus) return;
+    setActiveSectionTab(initialSectionFocus);
+    if (initialSectionFocus === 'society' || initialSectionFocus === 'travel' || initialSectionFocus === 'events') {
+      const targetId =
+        initialSectionFocus === 'society'
+          ? 'huta-in-society-section'
+          : initialSectionFocus === 'travel'
+          ? 'travel-booking-system-section'
+          : 'huta-in-tab-events';
+      const timer = window.setTimeout(() => {
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        if (onConsumeInitialSectionFocus) {
+          onConsumeInitialSectionFocus();
+        }
+      }, 90);
+      return () => window.clearTimeout(timer);
+    }
+    if (onConsumeInitialSectionFocus) {
+      onConsumeInitialSectionFocus();
+    }
+  }, [initialSectionFocus, onConsumeInitialSectionFocus]);
 
   // Multi-Changing Sri Lanka Hero Banner State
   const prefersReducedMotion = useReducedMotion();

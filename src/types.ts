@@ -239,7 +239,7 @@ export interface HeroAd {
   onlyVideoVisible?: boolean; // When true, displays ONLY the pure clean video without text overlays, badges, or dark scrims!
   videoAspectRatio?: '16:9' | '21:9' | 'auto'; // Aspect ratio for video banner display
   enableSound?: boolean; // Whether viewers can toggle audio on the video ad
-  gradientTheme?: 'orange' | 'blue' | 'emerald' | 'purple' | 'amber';
+  gradientTheme?: 'orange' | 'blue' | 'emerald' | 'purple' | 'amber' | 'light';
   animationType?: HeroAnimationType;
   isActive: boolean;
   createdAt: string;

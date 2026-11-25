@@ -1,82 +1,82 @@
 {
   "settings": {
-    "mode": "default",
-    "rotationIntervalSeconds": 6
+    "rotationIntervalSeconds": 6,
+    "mode": "default"
   },
   "ads": [
     {
-      "gradientTheme": "orange",
+      "enableSound": false,
       "ctaText": "Post Free Ad Now",
       "onlyVideoVisible": false,
-      "isActive": true,
-      "videoAspectRatio": "16:9",
-      "animationType": "pulse",
       "subtitle": "Direct WhatsApp inquiries from thousands of buyers across all 25 districts with zero broker fees.",
-      "createdAt": "2026-09-30T08:12:17.775Z",
-      "enableSound": false,
       "badge": "🌟 Special Promotion",
+      "isActive": true,
       "highlightText": "with HUTA Turbo Ad",
       "bgVideo": "/uploads/videos/anim-video-1790755911419-ef13ku.mp4",
-      "mediaType": "video",
+      "createdAt": "2026-09-30T08:12:17.775Z",
       "ctaAction": "post_ad",
-      "title": "Sell Your Vehicle or Property in 24 Hours",
-      "id": "hero-ad-1790755937775"
-    },
-    {
-      "animationType": "pulse",
-      "isActive": true,
-      "createdAt": "2026-09-23T08:27:02.301Z",
-      "bgVideo": "/uploads/videos/anim-video-1790151970607-mz6krp.mp4",
-      "title": "Sell Your Vehicle or Property in 24 Hours",
-      "badge": "Sponsored Promotion",
-      "ctaAction": "post_ad",
-      "ctaText": "Post Free Ad Now",
       "mediaType": "video",
-      "id": "hero-ad-1790152022301",
-      "subtitle": "huta.lk",
-      "gradientTheme": "purple"
-    },
-    {
-      "isActive": true,
-      "highlightText": "with HUTA IN",
-      "onlyVideoVisible": false,
       "videoAspectRatio": "16:9",
+      "gradientTheme": "orange",
+      "id": "hero-ad-1790755937775",
+      "title": "Sell Your Vehicle or Property in 24 Hours",
+      "animationType": "pulse"
+    },
+    {
+      "bgVideo": "/uploads/videos/anim-video-1790151970607-mz6krp.mp4",
+      "isActive": true,
+      "id": "hero-ad-1790152022301",
+      "animationType": "pulse",
+      "ctaText": "Post Free Ad Now",
+      "subtitle": "huta.lk",
+      "gradientTheme": "purple",
+      "badge": "Sponsored Promotion",
+      "createdAt": "2026-09-23T08:27:02.301Z",
+      "mediaType": "video",
       "ctaAction": "post_ad",
+      "title": "Sell Your Vehicle or Property in 24 Hours"
+    },
+    {
+      "onlyVideoVisible": false,
       "badge": "Sponsored Promotion",
       "id": "hero-ad-1789640542565",
-      "mediaType": "image",
+      "ctaText": "Post Free Ad Now",
+      "highlightText": "with HUTA IN",
+      "isActive": true,
+      "subtitle": "Direct WhatsApp inquiries from thousands of buyers across all 25 districts with zero broker fees.",
+      "videoAspectRatio": "16:9",
+      "createdAt": "2026-09-17T10:22:22.565Z",
       "gradientTheme": "emerald",
       "title": "All services in one Place",
-      "createdAt": "2026-09-17T10:22:22.565Z",
+      "mediaType": "image",
       "animationType": "slide",
-      "subtitle": "Direct WhatsApp inquiries from thousands of buyers across all 25 districts with zero broker fees.",
-      "ctaText": "Post Free Ad Now"
+      "ctaAction": "post_ad"
     },
     {
-      "ctaText": "Post Free Ad Now",
       "subtitle": "Direct WhatsApp inquiries from thousands of verified buyers across all 25 districts with zero broker fees.",
-      "ctaAction": "post_ad",
-      "gradientTheme": "orange",
-      "id": "hero-ad-1",
-      "isActive": true,
-      "title": "Sell Your Vehicle or Property in 24 Hours",
-      "animationType": "pulse",
       "badge": "🌟 Exclusive Promotion",
+      "ctaAction": "post_ad",
+      "createdAt": "2026-09-16T15:57:16.228Z",
+      "title": "Sell Your Vehicle or Property in 24 Hours",
+      "isActive": true,
+      "ctaText": "Post Free Ad Now",
+      "gradientTheme": "orange",
       "highlightText": "with HUTA Turbo Ad",
-      "createdAt": "2026-09-16T15:57:16.228Z"
+      "animationType": "pulse",
+      "id": "hero-ad-1"
     },
     {
-      "ctaAction": "Property",
       "ctaText": "Explore Properties",
       "gradientTheme": "blue",
-      "id": "hero-ad-2",
       "isActive": true,
       "badge": "🏢 Featured Developer",
-      "highlightText": "in Colombo, Galle & Kandy",
       "createdAt": "2026-09-16T15:57:16.228Z",
-      "subtitle": "Explore 1,200+ verified listings with clear deeds, video walkthroughs, and direct developer contacts.",
+      "id": "hero-ad-2",
       "animationType": "slide",
-      "title": "Discover Luxury Beachside Apartments & Land"
+      "highlightText": "in Colombo, Galle & Kandy",
+      "subtitle": "Explore 1,200+ verified listings with clear deeds, video walkthroughs, and direct developer contacts.",
+      "title": "Discover Luxury Beachside Apartments & Land",
+      "ctaAction": "Property"
     }
   ]
 }

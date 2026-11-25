@@ -54,6 +54,8 @@ interface HeroSearchProps {
   onToggleVerifiedOnly?: () => void;
   onOpenBuyerRequests?: () => void;
   openBuyerRequestsCount?: number;
+  onOpenEStore?: () => void;
+  onOpenHutaIn?: (focus?: 'all' | 'travel' | 'society' | 'events') => void;
 }
 
 const DISTRICTS = [
@@ -173,6 +175,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   onToggleVerifiedOnly,
   onOpenBuyerRequests,
   openBuyerRequestsCount = 0,
+  onOpenEStore,
+  onOpenHutaIn,
 }) => {
   // 5 Changing Background Light Images state
   const [activeBgIndex, setActiveBgIndex] = useState<number>(0);
@@ -354,6 +358,9 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
             heroSettings={heroSettings}
             onSelectCategory={onSelectCategory}
             onOpenPostAd={onOpenPostAd}
+            onOpenEStore={onOpenEStore}
+            onOpenHutaIn={onOpenHutaIn}
+            onOpenBuyerRequests={onOpenBuyerRequests}
             isAdminLoggedIn={isAdminLoggedIn}
             onAdminManage={onAdminManage}
           />

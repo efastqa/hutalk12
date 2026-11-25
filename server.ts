@@ -211,7 +211,7 @@ interface HeroAd {
   onlyVideoVisible?: boolean;
   videoAspectRatio?: '16:9' | '21:9' | 'auto';
   enableSound?: boolean;
-  gradientTheme?: 'orange' | 'blue' | 'emerald' | 'purple' | 'amber';
+  gradientTheme?: 'orange' | 'blue' | 'emerald' | 'purple' | 'amber' | 'light';
   animationType?: 'slide' | 'fade' | 'pulse' | 'glow';
   isActive: boolean;
   createdAt: string;

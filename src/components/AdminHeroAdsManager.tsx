@@ -25,6 +25,11 @@ import {
 import { HeroAd, HeroAdSettings, HeroAnimationType } from '../types';
 import { HeroAdBanner } from './HeroAdBanner';
 import { apiService } from '../services/api';
+import heroLightVehiclesImg from '../assets/images/hero_light_vehicles_1794777151964.jpg';
+import heroLightPropertyImg from '../assets/images/hero_light_property_1794777152485.jpg';
+import estoreShowcaseImg from '../assets/images/estore_category_showcase_1795443698141.jpg';
+import travelSigiriyaImg from '../assets/images/srilanka_heritage_sigiriya_1794991126174.jpg';
+import societyMedicalImg from '../assets/images/donate_hero_medical_bright_1795080157718.jpg';
 
 interface AdminHeroAdsManagerProps {
   heroAds?: HeroAd[];
@@ -75,17 +80,82 @@ const compressHeroImage = (file: File): Promise<string> => {
 
 const BG_PRESETS = [
   { label: 'None (Pure Gradient)', url: '' },
-  { label: '🚗 Luxury Vehicles', url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1200&auto=format&fit=crop&q=80' },
-  { label: '🏢 Modern Penthouse', url: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&auto=format&fit=crop&q=80' },
-  { label: '📱 Electronics & Tech', url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&auto=format&fit=crop&q=80' },
-  { label: '🌴 Tropical Land & Villa', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80' },
+  { label: 'Vehicles & Motors', url: heroLightVehiclesImg },
+  { label: 'Properties & Villas', url: heroLightPropertyImg },
+  { label: 'Sri Lanka E-Stores', url: estoreShowcaseImg },
+  { label: 'Travel & Visit Sri Lanka', url: travelSigiriyaImg },
+  { label: 'Society Help Hub', url: societyMedicalImg },
 ];
 
 const VIDEO_PRESETS = [
-  { label: '🎬 Dynamic Showcase', url: '/videos/motion-loop-3.mp4' },
-  { label: '🌸 Nature Walkthrough', url: '/videos/motion-loop-2.mp4' },
-  { label: '🌊 Aerial Drone Tour', url: 'https://vjs.zencdn.net/v/oceans.mp4' },
-  { label: '⚡ Cyber Tech Animation', url: '/videos/motion-loop-3.mp4' },
+  { label: 'Dynamic Showcase', url: '/videos/motion-loop-3.mp4' },
+  { label: 'Nature Walkthrough', url: '/videos/motion-loop-2.mp4' },
+  { label: 'Aerial Drone Tour', url: 'https://vjs.zencdn.net/v/oceans.mp4' },
+  { label: 'Tech Loop Animation', url: '/videos/motion-loop-3.mp4' },
+];
+
+interface PillarAdTemplate {
+  key: string;
+  label: string;
+  badge: string;
+  title: string;
+  highlightText: string;
+  subtitle: string;
+  ctaText: string;
+  ctaAction: string;
+  bgImage: string;
+  gradientTheme: 'orange' | 'blue' | 'emerald' | 'purple' | 'amber' | 'light';
+}
+
+const PILLAR_AD_TEMPLATES: PillarAdTemplate[] = [
+  {
+    key: 'marketplace',
+    label: '1. Marketplace & Classifieds',
+    badge: 'Marketplace Deals',
+    title: 'Buy & Sell Verified Listings',
+    highlightText: 'Across All 25 Districts',
+    subtitle: 'Direct WhatsApp & call inquiries for vehicles, property, electronics, and services with zero commission.',
+    ctaText: 'Post Free Ad',
+    ctaAction: 'post_ad',
+    bgImage: heroLightVehiclesImg,
+    gradientTheme: 'orange',
+  },
+  {
+    key: 'estore',
+    label: '2. Sri Lanka E-Stores',
+    badge: 'Official E-Stores',
+    title: 'Shop Verified Local Brands',
+    highlightText: 'with Multi-Store Cart',
+    subtitle: 'Browse Ceylon tea, spices, electronics, fashion & groceries directly from island-wide online merchants.',
+    ctaText: 'Explore E-Stores',
+    ctaAction: 'estore',
+    bgImage: estoreShowcaseImg,
+    gradientTheme: 'blue',
+  },
+  {
+    key: 'travel',
+    label: '3. HUTA IN Travel & Tours',
+    badge: 'Visit Sri Lanka',
+    title: 'Plan Custom Sri Lanka Tours',
+    highlightText: 'in LKR or USD',
+    subtitle: 'Book scenic hill country routes, wildlife safaris, beach escapes, and private chauffeur tours directly.',
+    ctaText: 'Book Travel & Tours',
+    ctaAction: 'travel_booking',
+    bgImage: travelSigiriyaImg,
+    gradientTheme: 'emerald',
+  },
+  {
+    key: 'society',
+    label: '4. HUTA IN Society Hub',
+    badge: 'Society Community Hub',
+    title: 'Support Verified Appeals',
+    highlightText: 'Medical & Education Aid',
+    subtitle: 'Help verified Sri Lankan families in urgent medical or education need with transparent proof documents.',
+    ctaText: 'View Society Appeals',
+    ctaAction: 'society',
+    bgImage: societyMedicalImg,
+    gradientTheme: 'light',
+  },
 ];
 
 export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
@@ -122,7 +192,7 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
   const [formMediaType, setFormMediaType] = useState<'image' | 'video'>('image');
   const [formOnlyVideoVisible, setFormOnlyVideoVisible] = useState<boolean>(false);
   const [formVideoAspectRatio, setFormVideoAspectRatio] = useState<'16:9' | '21:9' | 'auto'>('16:9');
-  const [formTheme, setFormTheme] = useState<'orange' | 'blue' | 'emerald' | 'purple' | 'amber'>('orange');
+  const [formTheme, setFormTheme] = useState<'orange' | 'blue' | 'emerald' | 'purple' | 'amber' | 'light'>('orange');
   const [formAnimation, setFormAnimation] = useState<HeroAnimationType>('pulse');
   const [formIsActive, setFormIsActive] = useState<boolean>(true);
 
@@ -225,6 +295,28 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
     setFormIsActive(ad.isActive);
     setFormError('');
     setIsModalOpen(true);
+  };
+
+  const applyPillarTemplate = (tpl: PillarAdTemplate, openModal: boolean = false) => {
+    if (openModal) {
+      setEditingAdId(null);
+      setIsModalOpen(true);
+    }
+    setFormBadge(tpl.badge);
+    setFormTitle(tpl.title);
+    setFormHighlight(tpl.highlightText);
+    setFormSubtitle(tpl.subtitle);
+    setFormCtaText(tpl.ctaText);
+    setFormCtaAction(tpl.ctaAction);
+    setFormBgImage(tpl.bgImage);
+    setFormBgVideo('');
+    setFormMediaType('image');
+    setFormOnlyVideoVisible(false);
+    setCustomMediaUrl(tpl.bgImage);
+    setFormTheme(tpl.gradientTheme);
+    setFormAnimation('slide');
+    setFormIsActive(true);
+    setFormError('');
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -562,6 +654,37 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
         />
       </div>
 
+      {/* 2.5 Quick 4-Pillar Ad Templates */}
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200 shadow-sm space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 className="text-sm sm:text-base font-black text-gray-900">
+              Quick Launch: 4-Pillar Hero Ad Templates
+            </h3>
+            <p className="text-xs text-gray-500">
+              Click any pillar below to pre-fill a ready-to-publish Hero Ad showcasing your new HUTA.LK features.
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          {PILLAR_AD_TEMPLATES.map((tpl) => (
+            <button
+              key={tpl.key}
+              type="button"
+              onClick={() => applyPillarTemplate(tpl, true)}
+              className="p-3 rounded-2xl border border-gray-200 hover:border-[#FF5A36] bg-gray-50/70 hover:bg-orange-50/40 text-left transition-all cursor-pointer space-y-1"
+            >
+              <div className="text-xs font-black text-gray-900">{tpl.label}</div>
+              <div className="text-[11px] text-gray-600 line-clamp-2">{tpl.title} {tpl.highlightText}</div>
+              <div className="text-[11px] font-bold text-[#FF5A36] pt-0.5 flex items-center gap-1">
+                <span>Use Template</span>
+                <ArrowRight className="w-3 h-3" />
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* 3. Hero Ads Table */}
       <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -754,6 +877,25 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Quick 4-Pillar Template Switcher inside Modal */}
+              <div className="bg-gray-50 rounded-2xl p-3 border border-gray-200/80 space-y-2">
+                <div className="text-[11px] font-bold text-gray-700">
+                  Quick Fill from 4-Pillar Presets:
+                </div>
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+                  {PILLAR_AD_TEMPLATES.map((tpl) => (
+                    <button
+                      key={tpl.key}
+                      type="button"
+                      onClick={() => applyPillarTemplate(tpl, false)}
+                      className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-orange-50 border border-gray-200 hover:border-[#FF5A36] text-[11px] font-bold text-gray-800 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                    >
+                      {tpl.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Badge Text */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
@@ -852,10 +994,15 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
                     className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-medium focus:border-[#FF5A36] outline-none bg-white"
                   >
                     <option value="post_ad">Open Post Ad Modal</option>
+                    <option value="estore">Open Sri Lanka E-Stores Page</option>
+                    <option value="travel_booking">Open HUTA IN → Travel &amp; Tours Booking</option>
+                    <option value="society">Open HUTA IN → Society Help Hub</option>
+                    <option value="huta_in">Open Full HUTA IN Hub</option>
+                    <option value="buyer_requests">Open Looking For · Buyer Requests</option>
                     <option value="Vehicles">Filter Vehicles</option>
                     <option value="Property">Filter Properties</option>
-                    <option value="Electronics">Filter Classifieds & Tech</option>
-                    <option value="Services">Filter Services & Trades</option>
+                    <option value="Electronics">Filter Classifieds &amp; Tech</option>
+                    <option value="Services">Filter Services &amp; Trades</option>
                     <option value="Jobs">Filter Jobs</option>
                   </select>
                 </div>
@@ -872,28 +1019,29 @@ export const AdminHeroAdsManager: React.FC<AdminHeroAdsManagerProps> = ({
                     onChange={(e) => setFormAnimation(e.target.value as HeroAnimationType)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-medium focus:border-[#FF5A36] outline-none bg-white"
                   >
-                    <option value="pulse">Pulse Glow & Shimmer (Eye-Catching)</option>
-                    <option value="slide">Smooth Slide & Elevate (Modern)</option>
+                    <option value="pulse">Pulse Glow &amp; Shimmer (Eye-Catching)</option>
+                    <option value="slide">Smooth Slide &amp; Elevate (Modern)</option>
                     <option value="glow">Radiant Neon Glow (Luxury)</option>
                     <option value="fade">Soft Crossfade (Minimal)</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Gradient Theme
+                    Card &amp; Color Theme
                   </label>
                   <select
                     value={formTheme}
                     onChange={(e) =>
-                      setFormTheme(e.target.value as 'orange' | 'blue' | 'emerald' | 'purple' | 'amber')
+                      setFormTheme(e.target.value as 'orange' | 'blue' | 'emerald' | 'purple' | 'amber' | 'light')
                     }
                     className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-medium focus:border-[#FF5A36] outline-none bg-white"
                   >
-                    <option value="orange">HUTA Flame (Orange)</option>
-                    <option value="blue">Sapphire Blue (Tech & Corporate)</option>
-                    <option value="emerald">Emerald Green (Eco & Land)</option>
-                    <option value="purple">Royal Purple (Luxury & VIP)</option>
-                    <option value="amber">Amber Gold (Premium & Motors)</option>
+                    <option value="orange">HUTA Flame (Dark Card · Orange)</option>
+                    <option value="light">Daylight Clean (Light Card · Coral)</option>
+                    <option value="blue">Sapphire Blue (E-Stores &amp; Tech)</option>
+                    <option value="emerald">Emerald Green (Travel &amp; Eco)</option>
+                    <option value="purple">Royal Purple (Luxury &amp; VIP)</option>
+                    <option value="amber">Amber Gold (Premium &amp; Motors)</option>
                   </select>
                 </div>
               </div>
