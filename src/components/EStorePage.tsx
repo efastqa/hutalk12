@@ -877,6 +877,10 @@ export const EStorePage: React.FC<EStorePageProps> = ({
 
   // Toggle merchant verification (Admin tool)
   const handleToggleVerifyMerchant = async (store: EStore) => {
+    if (!hasAdminPrivileges) {
+      onToast('Only admins can verify or review merchants', 'error');
+      return;
+    }
     try {
       const updated = await api.updateEStore(store.id, {
         isVerifiedMerchant: !store.isVerifiedMerchant,
@@ -1142,8 +1146,13 @@ export const EStorePage: React.FC<EStorePageProps> = ({
     }
   };
 
-  // Confirm delete product
+  // Confirm delete product (Admin only)
   const handleExecuteDeleteProduct = async () => {
+    if (!hasAdminPrivileges) {
+      onToast('Only admins can delete catalog items', 'error');
+      setProductToDelete(null);
+      return;
+    }
     if (!productToDelete) return;
     const { store, product } = productToDelete;
     try {
@@ -1162,8 +1171,12 @@ export const EStorePage: React.FC<EStorePageProps> = ({
     }
   };
 
-  // Open Edit Store Modal
+  // Open Edit Store Modal (Admin only)
   const handleOpenEditStore = (store: EStore) => {
+    if (!hasAdminPrivileges) {
+      onToast('Only admins can edit E-Stores', 'error');
+      return;
+    }
     setStoreToEdit(store);
     setEditForm({
       storeName: store.storeName,
@@ -1181,9 +1194,13 @@ export const EStorePage: React.FC<EStorePageProps> = ({
     setIsEditStoreModalOpen(true);
   };
 
-  // Save Edited Store
+  // Save Edited Store (Admin only)
   const handleSaveEditStore = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hasAdminPrivileges) {
+      onToast('Only admins can edit E-Stores', 'error');
+      return;
+    }
     if (!storeToEdit) return;
     if (!editForm.storeName.trim()) {
       onToast('Please enter the store name', 'error');
@@ -1232,8 +1249,13 @@ export const EStorePage: React.FC<EStorePageProps> = ({
     }
   };
 
-  // Confirm delete store
+  // Confirm delete store (Admin only)
   const handleExecuteDeleteStore = async () => {
+    if (!hasAdminPrivileges) {
+      onToast('Only admins can delete E-Stores', 'error');
+      setStoreToDelete(null);
+      return;
+    }
     if (!storeToDelete) return;
     try {
       await api.deleteEStore(storeToDelete.id);
@@ -1545,22 +1567,22 @@ export const EStorePage: React.FC<EStorePageProps> = ({
               </div>
             </div>
 
-            {/* Single Featured Quality Image for Explore Sri Lanka E-Stores by Category */}
-            <div className="mt-3 relative rounded-xl overflow-hidden border border-gray-200/80 dark:border-[#252836] bg-emerald-50 dark:bg-[#10141F] shadow-xs">
-              <div className="relative h-36 sm:h-48 md:h-52 w-full overflow-hidden">
+            {/* Compact Featured Image for Explore Sri Lanka E-Stores by Category */}
+            <div className="mt-2.5 relative rounded-xl overflow-hidden border border-gray-200/80 dark:border-[#252836] bg-emerald-50 dark:bg-[#10141F] shadow-xs">
+              <div className="relative h-20 sm:h-24 md:h-28 w-full overflow-hidden">
                 <img
                   src={estoreCategoryShowcaseImg}
                   alt="Explore Sri Lanka E-Stores by Category — Ceylon Tea, Organic Spices, Batik Fashion, Tech Gadgets, Ayurvedic Cosmetics & Handmade Crafts"
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover object-center brightness-[1.03] contrast-[1.02]"
                 />
-                <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/75 via-black/30 to-transparent pointer-events-none" />
-                <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/75 via-black/35 to-transparent pointer-events-none" />
+                <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-end justify-between gap-1.5">
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">
                       Islandwide E-Store Showcase
                     </p>
-                    <p className="text-xs sm:text-sm font-bold text-white drop-shadow-sm">
+                    <p className="text-[11px] sm:text-xs font-bold text-white drop-shadow-sm line-clamp-1">
                       {selectedCategory === 'All'
                         ? 'Ceylon Tea, Batik Fashion, Tech Gadgets, Ayurvedic Wellness & Artisanal Goods'
                         : `Filtered Category: ${selectedCategory}`}
@@ -1570,7 +1592,7 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                     <button
                       type="button"
                       onClick={() => setSelectedCategory('All')}
-                      className="self-start sm:self-auto px-3 py-1.5 rounded-lg bg-white/95 hover:bg-white text-gray-900 text-[11px] font-bold shadow-sm transition-colors cursor-pointer"
+                      className="self-start sm:self-auto px-2.5 py-1 rounded-lg bg-white/95 hover:bg-white text-gray-900 text-[10px] font-bold shadow-sm transition-colors cursor-pointer shrink-0"
                     >
                       Show All Categories
                     </button>
@@ -1579,10 +1601,10 @@ export const EStorePage: React.FC<EStorePageProps> = ({
               </div>
             </div>
 
-            {/* Boutique Pastel-Framed Square Category Cards (Matches clean 4-col photo format) */}
-            <div className="pt-3.5">
+            {/* Boutique Pastel-Framed Compact Category Cards (Small Thumbnails) */}
+            <div className="pt-3">
               {categoryDisplayMode === 'grid' ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-2.5">
                   {ESTORE_CATEGORY_METAS.map((catMeta) => {
                     const isActive = selectedCategory === catMeta.id;
                     const count = categoryCounts[catMeta.id] || { stores: 0, products: 0 };
@@ -1592,7 +1614,7 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                         key={catMeta.id}
                         type="button"
                         onClick={() => setSelectedCategory(catMeta.id)}
-                        className={`rounded-2xl border p-2.5 sm:p-3 text-center flex flex-col transition-all duration-200 group cursor-pointer hover:-translate-y-0.5 hover:shadow-md ${
+                        className={`rounded-xl border p-2 text-center flex flex-col items-center transition-all duration-200 group cursor-pointer hover:-translate-y-0.5 hover:shadow-md ${
                           catMeta.frameStyle
                         } ${
                           isActive
@@ -1600,8 +1622,12 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                             : 'shadow-2xs'
                         }`}
                       >
-                        {/* Clean Bright Photo Frame */}
-                        <div className="relative aspect-[4/3] sm:aspect-square w-full rounded-xl overflow-hidden bg-white dark:bg-[#1A1D29] shadow-2xs">
+                        <span className="mb-1.5 px-1.5 py-0.5 rounded-full bg-[#C81E3A] text-white text-[8px] font-extrabold uppercase tracking-wide shadow-2xs whitespace-nowrap pointer-events-none">
+                          {isActive ? 'ACTIVE' : catMeta.cornerTag}
+                        </span>
+
+                        {/* Small Compact Photo Frame */}
+                        <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-white dark:bg-[#1A1D29] shadow-2xs shrink-0">
                           <img
                             src={catMeta.image}
                             alt={catMeta.shortName}
@@ -1612,19 +1638,15 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                               (e.currentTarget as HTMLImageElement).style.opacity = '0';
                             }}
                           />
-                          {/* Single Top-Right Tag */}
-                          <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-[#C81E3A] text-white text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wide shadow-xs whitespace-nowrap pointer-events-none">
-                            {isActive ? 'ACTIVE' : catMeta.cornerTag}
-                          </span>
                         </div>
 
                         {/* Centered Title & Tabular Count Below Photo */}
-                        <div className="pt-2.5 pb-0.5 px-1">
-                          <h3 className="text-xs sm:text-[14px] font-extrabold text-gray-900 dark:text-white tracking-tight truncate">
+                        <div className="pt-1.5 pb-0.5 px-0.5 w-full min-w-0">
+                          <h3 className="text-[11px] sm:text-xs font-extrabold text-gray-900 dark:text-white tracking-tight truncate">
                             {catMeta.shortName}
                           </h3>
                           <p
-                            className={`text-[11px] sm:text-xs font-medium tabular-nums mt-0.5 truncate ${
+                            className={`text-[10px] font-medium tabular-nums mt-0.5 truncate ${
                               isActive
                                 ? 'text-emerald-700 dark:text-emerald-400 font-bold'
                                 : 'text-gray-500 dark:text-gray-400'
@@ -1639,10 +1661,10 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                   })}
                 </div>
               ) : (
-                /* Horizontal Slider View (Same Boutique Pastel-Framed Card Format) */
+                /* Horizontal Slider View (Compact Small Thumbnail Cards) */
                 <div
                   ref={categoryScrollRef}
-                  className="flex items-stretch gap-3 overflow-x-auto pb-2.5 pt-1 scroll-smooth scrollbar-thin"
+                  className="flex items-stretch gap-2.5 overflow-x-auto pb-2 pt-1 scroll-smooth scrollbar-thin"
                 >
                   {ESTORE_CATEGORY_METAS.map((catMeta) => {
                     const isActive = selectedCategory === catMeta.id;
@@ -1653,7 +1675,7 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                         key={catMeta.id}
                         type="button"
                         onClick={() => setSelectedCategory(catMeta.id)}
-                        className={`min-w-[168px] sm:min-w-[205px] max-w-[215px] shrink-0 rounded-2xl border p-2.5 text-center flex flex-col transition-all duration-200 group cursor-pointer hover:-translate-y-0.5 hover:shadow-md ${
+                        className={`min-w-[118px] sm:min-w-[132px] max-w-[140px] shrink-0 rounded-xl border p-2 text-center flex flex-col items-center transition-all duration-200 group cursor-pointer hover:-translate-y-0.5 hover:shadow-md ${
                           catMeta.frameStyle
                         } ${
                           isActive
@@ -1661,7 +1683,11 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                             : 'shadow-2xs'
                         }`}
                       >
-                        <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-white dark:bg-[#1A1D29] shadow-2xs">
+                        <span className="mb-1.5 px-1.5 py-0.5 rounded-full bg-[#C81E3A] text-white text-[8px] font-extrabold uppercase tracking-wide shadow-2xs whitespace-nowrap pointer-events-none">
+                          {isActive ? 'ACTIVE' : catMeta.cornerTag}
+                        </span>
+
+                        <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-white dark:bg-[#1A1D29] shadow-2xs shrink-0">
                           <img
                             src={catMeta.image}
                             alt={catMeta.shortName}
@@ -1672,17 +1698,14 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                               (e.currentTarget as HTMLImageElement).style.opacity = '0';
                             }}
                           />
-                          <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-[#C81E3A] text-white text-[9px] font-extrabold uppercase tracking-wide shadow-xs whitespace-nowrap pointer-events-none">
-                            {isActive ? 'ACTIVE' : catMeta.cornerTag}
-                          </span>
                         </div>
 
-                        <div className="pt-2.5 pb-0.5 px-1">
-                          <h3 className="text-xs sm:text-[14px] font-extrabold text-gray-900 dark:text-white tracking-tight truncate">
+                        <div className="pt-1.5 pb-0.5 px-0.5 w-full min-w-0">
+                          <h3 className="text-[11px] sm:text-xs font-extrabold text-gray-900 dark:text-white tracking-tight truncate">
                             {catMeta.shortName}
                           </h3>
                           <p
-                            className={`text-[11px] font-medium tabular-nums mt-0.5 truncate ${
+                            className={`text-[10px] font-medium tabular-nums mt-0.5 truncate ${
                               isActive
                                 ? 'text-emerald-700 dark:text-emerald-400 font-bold'
                                 : 'text-gray-500 dark:text-gray-400'
@@ -2091,19 +2114,27 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                     <div>
                       {hasAdminPrivileges && (
                         <div className="px-3 py-1.5 bg-amber-500/10 dark:bg-amber-950/30 border-t border-amber-200/50 dark:border-amber-800/40 flex items-center justify-between text-xs font-bold">
-                          <span className="text-[10px] text-amber-700 dark:text-amber-300 font-black">Admin Controls</span>
-                          <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleVerifyMerchant(store)}
+                            className="text-amber-700 dark:text-amber-300 hover:underline flex items-center gap-1 cursor-pointer text-[11px] font-black"
+                            title="Admin Review: Toggle Merchant Verification"
+                          >
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            <span>{store.isVerifiedMerchant ? 'Verified ✓' : 'Verify'}</span>
+                          </button>
+                          <div className="flex items-center gap-2.5">
                             <button
                               type="button"
                               onClick={() => handleOpenEditStore(store)}
-                              className="text-amber-800 dark:text-amber-200 hover:underline flex items-center gap-1"
+                              className="text-amber-800 dark:text-amber-200 hover:underline flex items-center gap-1 cursor-pointer"
                             >
                               <Pencil className="w-3 h-3" /> Edit
                             </button>
                             <button
                               type="button"
                               onClick={() => setStoreToDelete(store)}
-                              className="text-red-600 hover:underline flex items-center gap-1"
+                              className="text-red-600 hover:underline flex items-center gap-1 cursor-pointer"
                             >
                               <Trash2 className="w-3 h-3" /> Delete
                             </button>
@@ -2339,17 +2370,41 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                               {store.category}
                             </span>
                             {hasAdminPrivileges && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenEditStore(store);
-                                }}
-                                className="px-2 py-1 rounded-lg bg-black/75 hover:bg-amber-500 text-white backdrop-blur-md border border-white/20 transition-all text-[11px] font-bold flex items-center gap-1 cursor-pointer"
-                                title="Edit E-Store"
-                              >
-                                <Pencil className="w-3 h-3 text-amber-300" />
-                              </button>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleToggleVerifyMerchant(store);
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-black/75 hover:bg-emerald-600 text-white backdrop-blur-md border border-white/20 transition-all text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                                  title={store.isVerifiedMerchant ? 'Verified Merchant (Click to toggle)' : 'Verify Merchant'}
+                                >
+                                  <ShieldCheck className="w-3 h-3 text-emerald-300" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenEditStore(store);
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-black/75 hover:bg-amber-500 text-white backdrop-blur-md border border-white/20 transition-all text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                                  title="Edit E-Store"
+                                >
+                                  <Pencil className="w-3 h-3 text-amber-300" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setStoreToDelete(store);
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-black/75 hover:bg-red-600 text-white backdrop-blur-md border border-white/20 transition-all text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                                  title="Delete E-Store"
+                                >
+                                  <Trash2 className="w-3 h-3 text-red-300" />
+                                </button>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -2678,24 +2733,37 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
                 <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEditStore(selectedStore)}
-                    className="px-3 py-1.5 rounded-xl bg-black/70 hover:bg-amber-500 text-white flex items-center gap-1.5 text-xs font-bold cursor-pointer transition-all backdrop-blur-md border border-white/20 shadow-md"
-                    title="Edit Store Details"
-                  >
-                    <Pencil className="w-3.5 h-3.5 text-amber-300" />
-                    <span>Edit Store</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStoreToDelete(selectedStore)}
-                    className="px-3 py-1.5 rounded-xl bg-black/70 hover:bg-red-600 text-white flex items-center gap-1.5 text-xs font-bold cursor-pointer transition-all backdrop-blur-md border border-white/20 shadow-md"
-                    title="Delete Store"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-red-300" />
-                    <span>Delete</span>
-                  </button>
+                  {hasAdminPrivileges && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleVerifyMerchant(selectedStore)}
+                        className="px-3 py-1.5 rounded-xl bg-black/70 hover:bg-emerald-600 text-white flex items-center gap-1.5 text-xs font-bold cursor-pointer transition-all backdrop-blur-md border border-white/20 shadow-md"
+                        title="Admin Review: Toggle Verified Merchant Badge"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
+                        <span>{selectedStore.isVerifiedMerchant ? 'Verified ✓' : 'Verify Store'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditStore(selectedStore)}
+                        className="px-3 py-1.5 rounded-xl bg-black/70 hover:bg-amber-500 text-white flex items-center gap-1.5 text-xs font-bold cursor-pointer transition-all backdrop-blur-md border border-white/20 shadow-md"
+                        title="Edit Store Details"
+                      >
+                        <Pencil className="w-3.5 h-3.5 text-amber-300" />
+                        <span>Edit Store</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStoreToDelete(selectedStore)}
+                        className="px-3 py-1.5 rounded-xl bg-black/70 hover:bg-red-600 text-white flex items-center gap-1.5 text-xs font-bold cursor-pointer transition-all backdrop-blur-md border border-white/20 shadow-md"
+                        title="Delete Store"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-red-300" />
+                        <span>Delete</span>
+                      </button>
+                    </>
+                  )}
                   <button
                     type="button"
                     onClick={() => setSelectedStore(null)}
@@ -2893,14 +2961,16 @@ export const EStorePage: React.FC<EStorePageProps> = ({
                                 <span>Buy Now</span>
                               </button>
 
-                              <button
-                                type="button"
-                                onClick={() => setProductToDelete({ store: selectedStore, product })}
-                                className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer"
-                                title="Delete item"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              {hasAdminPrivileges && (
+                                <button
+                                  type="button"
+                                  onClick={() => setProductToDelete({ store: selectedStore, product })}
+                                  className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer"
+                                  title="Delete item"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -3312,7 +3382,7 @@ export const EStorePage: React.FC<EStorePageProps> = ({
       {/* MODAL 3: Edit E-Store Details Modal                            */}
       {/* ------------------------------------------------------------- */}
       <AnimatePresence>
-        {isEditStoreModalOpen && storeToEdit && (
+        {hasAdminPrivileges && isEditStoreModalOpen && storeToEdit && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-sm overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -3524,7 +3594,7 @@ export const EStorePage: React.FC<EStorePageProps> = ({
       {/* ------------------------------------------------------------- */}
       <AnimatePresence>
         {/* Delete E-Store Confirmation Modal */}
-        {storeToDelete && (
+        {hasAdminPrivileges && storeToDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -3562,7 +3632,7 @@ export const EStorePage: React.FC<EStorePageProps> = ({
         )}
 
         {/* Delete Product Confirmation Modal */}
-        {productToDelete && (
+        {hasAdminPrivileges && productToDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
