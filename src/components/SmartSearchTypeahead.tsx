@@ -26,6 +26,14 @@ const TRENDING_KEYWORDS = [
 
 const RECENT_SEARCHES_KEY = 'huta_recent_searches_v2';
 
+const TYPING_PHRASES = [
+  'What are you looking for...',
+  'What are you looking for? Cars, Vans & Bikes...',
+  'What are you looking for? Houses & Lands in Sri Lanka...',
+  'What are you looking for? iPhones, Laptops & Tech...',
+  'What are you looking for? Holiday Homes & Services...',
+];
+
 export const SmartSearchTypeahead: React.FC<SmartSearchTypeaheadProps> = ({
   searchTerm,
   onSearchChange,
@@ -40,6 +48,59 @@ export const SmartSearchTypeahead: React.FC<SmartSearchTypeaheadProps> = ({
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Smooth typing animation state for empty search bar
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [charIdx, setCharIdx] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [cursorVisible, setCursorVisible] = useState(true);
+
+  useEffect(() => {
+    const blink = setInterval(() => {
+      setCursorVisible((prev) => !prev);
+    }, 520);
+    return () => clearInterval(blink);
+  }, []);
+
+  useEffect(() => {
+    if (searchTerm) return;
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setCharIdx(TYPING_PHRASES[0].length);
+      return;
+    }
+
+    const currentPhrase = TYPING_PHRASES[phraseIdx];
+    const commonPrefix = 'What are you looking for';
+
+    let delay = isDeleting ? 28 : 55;
+    if (!isDeleting && charIdx === currentPhrase.length) {
+      delay = 1800; // Pause cleanly once full phrase is typed
+    } else if (isDeleting && charIdx === commonPrefix.length && phraseIdx !== TYPING_PHRASES.length - 1) {
+      delay = 180;
+    }
+
+    const timer = setTimeout(() => {
+      if (!isDeleting) {
+        if (charIdx < currentPhrase.length) {
+          setCharIdx((c) => c + 1);
+        } else {
+          setIsDeleting(true);
+        }
+      } else {
+        const minKeep = commonPrefix.length;
+        if (charIdx > minKeep) {
+          setCharIdx((c) => c - 1);
+        } else {
+          setIsDeleting(false);
+          setPhraseIdx((p) => (p + 1) % TYPING_PHRASES.length);
+        }
+      }
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [charIdx, isDeleting, phraseIdx, searchTerm]);
+
+  const animatedText = TYPING_PHRASES[phraseIdx].slice(0, charIdx);
 
   // Load recent searches from localStorage
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
@@ -171,20 +232,36 @@ export const SmartSearchTypeahead: React.FC<SmartSearchTypeaheadProps> = ({
       {/* Search Input Bar */}
       <div className="flex items-center gap-2.5 bg-gray-100/70 dark:bg-[#1E2230]/90 px-3.5 py-2.5 rounded-xl border border-gray-200/80 dark:border-white/5 focus-within:border-[#FF5A36] focus-within:ring-2 focus-within:ring-[#FF5A36]/20 transition-all">
         <Search className="w-5 h-5 text-gray-400 shrink-0" />
-        <input
-          ref={inputRef}
-          type="text"
-          value={searchTerm}
-          onChange={(e) => {
-            onSearchChange(e.target.value);
-            if (!isOpen) setIsOpen(true);
-          }}
-          onFocus={() => setIsOpen(true)}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          aria-label="Search listings, categories and locations"
-          className="bg-transparent border-none outline-none text-gray-900 dark:text-white text-sm w-full placeholder:text-gray-400 font-medium"
-        />
+        <div className="relative flex-1 min-w-0 flex items-center">
+          {!searchTerm && (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none select-none absolute inset-0 flex items-center text-sm text-gray-400 dark:text-gray-400 font-medium overflow-hidden whitespace-nowrap"
+            >
+              <span className="truncate">{animatedText}</span>
+              <span
+                className={`inline-block w-[2px] h-4 bg-[#FF5A36] ml-0.5 shrink-0 transition-opacity duration-75 ${
+                  cursorVisible ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            </div>
+          )}
+          <input
+            ref={inputRef}
+            type="text"
+            value={searchTerm}
+            onChange={(e) => {
+              onSearchChange(e.target.value);
+              if (!isOpen) setIsOpen(true);
+            }}
+            onFocus={() => setIsOpen(true)}
+            onKeyDown={handleKeyDown}
+            placeholder=""
+            title={placeholder}
+            aria-label="Search listings, categories and locations"
+            className="relative z-10 bg-transparent border-none outline-none text-gray-900 dark:text-white text-sm w-full font-medium"
+          />
+        </div>
 
         {searchTerm && (
           <button
@@ -315,7 +392,7 @@ export const SmartSearchTypeahead: React.FC<SmartSearchTypeaheadProps> = ({
                       const image =
                         listing.images && listing.images[0]
                           ? listing.images[0]
-                          : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=300&q=80';
+                          : listing.image || '/assets/hero_light_bg.jpg';
 
                       return (
                         <div
@@ -326,6 +403,14 @@ export const SmartSearchTypeahead: React.FC<SmartSearchTypeaheadProps> = ({
                           <img
                             src={image}
                             alt=""
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              if (!target.dataset.fallbackApplied) {
+                                target.dataset.fallbackApplied = '1';
+                                target.src = '/assets/hero_light_bg.jpg';
+                              }
+                            }}
                             className="w-12 h-12 rounded-lg object-cover bg-gray-100 shrink-0 border border-gray-200 dark:border-[#2D303E]"
                             loading="lazy"
                           />
