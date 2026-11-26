@@ -366,6 +366,197 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
     );
   };
 
+  const renderSellerContactCard = (includeDesktopPriceHeader: boolean) => (
+    <div className="bg-gray-50/80 dark:bg-[#181B26] border border-gray-200 dark:border-[#252836] rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
+      {includeDesktopPriceHeader && (
+        <div className="hidden lg:block pb-3.5 border-b border-gray-200/70 dark:border-[#252836]">
+          {renderPriceHeadline('text-2xl sm:text-3xl')}
+        </div>
+      )}
+
+      {isHolidayHome && (
+        <div className="p-3.5 rounded-xl bg-gradient-to-br from-emerald-50/90 via-teal-50/50 to-white dark:from-emerald-950/40 dark:via-[#1E2230] dark:to-[#1E2230] border border-emerald-200/80 dark:border-emerald-500/30 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-900 dark:text-white">
+                Stay Dates
+              </h4>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300">
+              Instant WhatsApp
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">
+                Check-In
+              </label>
+              <input
+                type="date"
+                min={todayStr}
+                value={checkInDate}
+                onChange={(e) => {
+                  const nextIn = e.target.value;
+                  setCheckInDate(nextIn);
+                  if (checkOutDate <= nextIn) {
+                    const d = new Date(nextIn);
+                    d.setDate(d.getDate() + 1);
+                    setCheckOutDate(d.toISOString().split('T')[0]);
+                  }
+                }}
+                className="w-full px-2.5 py-2 rounded-xl border border-gray-300 dark:border-[#2C3144] bg-white dark:bg-[#151822] text-xs font-semibold text-gray-900 dark:text-white outline-none focus:border-emerald-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">
+                Check-Out
+              </label>
+              <input
+                type="date"
+                min={checkInDate || todayStr}
+                value={checkOutDate}
+                onChange={(e) => setCheckOutDate(e.target.value)}
+                className="w-full px-2.5 py-2 rounded-xl border border-gray-300 dark:border-[#2C3144] bg-white dark:bg-[#151822] text-xs font-semibold text-gray-900 dark:text-white outline-none focus:border-emerald-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">
+              Guests (Max {maxGuestNum})
+            </label>
+            <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl border border-gray-300 dark:border-[#2C3144] bg-white dark:bg-[#151822]">
+              <button
+                type="button"
+                onClick={() => setStayGuests((g) => Math.max(1, g - 1))}
+                className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-[#282C3D] text-gray-800 dark:text-white font-black text-xs hover:bg-gray-200 dark:hover:bg-[#32374C] cursor-pointer"
+              >
+                -
+              </button>
+              <span className="text-xs font-extrabold text-gray-900 dark:text-white tabular-nums">
+                {stayGuests} Guest{stayGuests > 1 ? 's' : ''}
+              </span>
+              <button
+                type="button"
+                onClick={() => setStayGuests((g) => Math.min(maxGuestNum, g + 1))}
+                className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-[#282C3D] text-gray-800 dark:text-white font-black text-xs hover:bg-gray-200 dark:hover:bg-[#32374C] cursor-pointer"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-emerald-200/70 dark:border-emerald-500/20">
+            <div className="text-xs text-gray-700 dark:text-gray-300 tabular-nums">
+              {listing.price > 0 ? (
+                listing.pricingType === 'per_weekend' ? (
+                  <span>
+                    Weekend: <strong className="text-gray-900 dark:text-white">{formatLKR(listing.price)}</strong>
+                  </span>
+                ) : (
+                  <span>
+                    {stayNights} night{stayNights > 1 ? 's' : ''} ·{' '}
+                    <strong className="text-emerald-700 dark:text-emerald-400 font-black">
+                      {formatLKR(estimatedStayTotal)} est.
+                    </strong>
+                  </span>
+                )
+              ) : (
+                <span>Ask host for stay rates</span>
+              )}
+            </div>
+
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => onRecordAction?.('whatsapp')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>Check Dates</span>
+            </a>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-3">
+        <div className="text-center">
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+            {isHolidayHome
+              ? 'Holiday Home Host Contact'
+              : isService
+              ? 'Service Provider Contact'
+              : 'Verified Seller Contact'}
+          </p>
+          <div className="text-xl font-extrabold text-gray-900 dark:text-white mt-1 tracking-wide flex items-center justify-center gap-2 tabular-nums">
+            <Phone className="w-4 h-4 text-[#FF5A36]" />
+            <a
+              href={`tel:${listing.phone}`}
+              onClick={() => onRecordAction?.('phone')}
+              className="hover:underline text-gray-900 dark:text-white"
+            >
+              {listing.phone}
+            </a>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2.5">
+          <a
+            href={`tel:${listing.phone}`}
+            onClick={() => onRecordAction?.('phone')}
+            className="flex items-center justify-center gap-1.5 bg-[#181920] hover:bg-black text-white text-xs sm:text-sm font-bold py-3 px-3 rounded-xl shadow-xs transition-all cursor-pointer"
+          >
+            <Phone className="w-4 h-4" />
+            <span>{isService ? 'Call Provider' : 'Call Seller'}</span>
+          </a>
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => onRecordAction?.('whatsapp')}
+            className="flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1DA851] text-white text-xs sm:text-sm font-bold py-3 px-3 rounded-xl shadow-xs transition-all cursor-pointer"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>{isService ? 'Request Quote' : 'WhatsApp'}</span>
+          </a>
+        </div>
+
+        {onStartChat && (
+          <button
+            type="button"
+            onClick={() => onStartChat(listing)}
+            className="w-full flex items-center justify-center gap-2 bg-[#FF5A36] hover:bg-[#E04826] text-white text-xs sm:text-sm font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg hover:shadow-[#FF5A36]/20 transition-all cursor-pointer"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>Live Chat on HUTA</span>
+            <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded text-white font-medium">
+              Real-time
+            </span>
+          </button>
+        )}
+
+        {onToggleCompare && (
+          <button
+            type="button"
+            onClick={() => onToggleCompare(listing)}
+            className={`w-full flex items-center justify-center gap-2 text-xs font-bold py-2.5 px-4 rounded-xl border transition-all cursor-pointer ${
+              isCompared
+                ? 'bg-[#FF5A36]/10 text-[#FF5A36] border-[#FF5A36]/40 hover:bg-[#FF5A36]/20'
+                : 'bg-white dark:bg-[#1E2230] text-gray-700 dark:text-gray-200 border-gray-200 dark:border-[#282C3D] hover:bg-gray-100 dark:hover:bg-[#282C3D]'
+            }`}
+          >
+            <ArrowLeftRight className="w-3.5 h-3.5" />
+            <span>{isCompared ? 'Remove from Comparison' : 'Add to Compare (Side-by-Side)'}</span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
   const renderDesktopCollage = () => {
     const count = gallery.length;
 
@@ -843,6 +1034,9 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                 </div>
               </div>
 
+              {/* Mobile-Only Verified Seller Contact directly below price & metadata */}
+              <div className="lg:hidden">{renderSellerContactCard(false)}</div>
+
               {/* Key Specifications & Highlights */}
               {hasSpecs && (
                 <div className="p-4 bg-gray-50/90 dark:bg-[#181B26] rounded-2xl border border-gray-200/80 dark:border-[#252836] space-y-3">
@@ -1067,11 +1261,6 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                 </p>
               </div>
 
-              {/* Smart Location & Interactive Distance Map */}
-              <div>
-                <AdLocationMapCard listing={listing} />
-              </div>
-
               {/* Seller Reputation & Reviews */}
               <div className="pt-4 border-t border-gray-100 dark:border-[#252836] space-y-3">
                 <div className="flex items-center justify-between">
@@ -1105,200 +1294,17 @@ export const AdDetailModal: React.FC<AdDetailModalProps> = ({
                   }}
                 />
               </div>
+
+              {/* Smart Location & Interactive Distance Map (Positioned below details & reviews) */}
+              <div className="pt-2 border-t border-gray-100 dark:border-[#252836]">
+                <AdLocationMapCard listing={listing} />
+              </div>
             </div>
 
             {/* Right Sticky Price & Seller Contact Column */}
             <div className="lg:col-span-5 lg:sticky lg:top-4 space-y-4">
-              {/* Price + Contact Card */}
-              <div className="bg-gray-50/80 dark:bg-[#181B26] border border-gray-200 dark:border-[#252836] rounded-2xl p-5 shadow-xs space-y-4">
-                {/* Desktop Price Headline */}
-                <div className="hidden lg:block pb-3.5 border-b border-gray-200/70 dark:border-[#252836]">
-                  {renderPriceHeadline('text-2xl sm:text-3xl')}
-                </div>
-
-                {/* Holiday Home Check-In / Check-Out Inquiry Picker */}
-                {isHolidayHome && (
-                  <div className="p-3.5 rounded-xl bg-gradient-to-br from-emerald-50/90 via-teal-50/50 to-white dark:from-emerald-950/40 dark:via-[#1E2230] dark:to-[#1E2230] border border-emerald-200/80 dark:border-emerald-500/30 space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-900 dark:text-white">
-                          Stay Dates
-                        </h4>
-                      </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300">
-                        Instant WhatsApp
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">
-                          Check-In
-                        </label>
-                        <input
-                          type="date"
-                          min={todayStr}
-                          value={checkInDate}
-                          onChange={(e) => {
-                            const nextIn = e.target.value;
-                            setCheckInDate(nextIn);
-                            if (checkOutDate <= nextIn) {
-                              const d = new Date(nextIn);
-                              d.setDate(d.getDate() + 1);
-                              setCheckOutDate(d.toISOString().split('T')[0]);
-                            }
-                          }}
-                          className="w-full px-2.5 py-2 rounded-xl border border-gray-300 dark:border-[#2C3144] bg-white dark:bg-[#151822] text-xs font-semibold text-gray-900 dark:text-white outline-none focus:border-emerald-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">
-                          Check-Out
-                        </label>
-                        <input
-                          type="date"
-                          min={checkInDate || todayStr}
-                          value={checkOutDate}
-                          onChange={(e) => setCheckOutDate(e.target.value)}
-                          className="w-full px-2.5 py-2 rounded-xl border border-gray-300 dark:border-[#2C3144] bg-white dark:bg-[#151822] text-xs font-semibold text-gray-900 dark:text-white outline-none focus:border-emerald-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">
-                        Guests (Max {maxGuestNum})
-                      </label>
-                      <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl border border-gray-300 dark:border-[#2C3144] bg-white dark:bg-[#151822]">
-                        <button
-                          type="button"
-                          onClick={() => setStayGuests((g) => Math.max(1, g - 1))}
-                          className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-[#282C3D] text-gray-800 dark:text-white font-black text-xs hover:bg-gray-200 dark:hover:bg-[#32374C] cursor-pointer"
-                        >
-                          -
-                        </button>
-                        <span className="text-xs font-extrabold text-gray-900 dark:text-white tabular-nums">
-                          {stayGuests} Guest{stayGuests > 1 ? 's' : ''}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setStayGuests((g) => Math.min(maxGuestNum, g + 1))}
-                          className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-[#282C3D] text-gray-800 dark:text-white font-black text-xs hover:bg-gray-200 dark:hover:bg-[#32374C] cursor-pointer"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-emerald-200/70 dark:border-emerald-500/20">
-                      <div className="text-xs text-gray-700 dark:text-gray-300 tabular-nums">
-                        {listing.price > 0 ? (
-                          listing.pricingType === 'per_weekend' ? (
-                            <span>
-                              Weekend: <strong className="text-gray-900 dark:text-white">{formatLKR(listing.price)}</strong>
-                            </span>
-                          ) : (
-                            <span>
-                              {stayNights} night{stayNights > 1 ? 's' : ''} ·{' '}
-                              <strong className="text-emerald-700 dark:text-emerald-400 font-black">
-                                {formatLKR(estimatedStayTotal)} est.
-                              </strong>
-                            </span>
-                          )
-                        ) : (
-                          <span>Ask host for stay rates</span>
-                        )}
-                      </div>
-
-                      <a
-                        href={whatsappUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => onRecordAction?.('whatsapp')}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        <span>Check Dates</span>
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                {/* Seller Phone & Direct Contact Actions */}
-                <div className="space-y-3">
-                  <div className="text-center">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                      {isHolidayHome
-                        ? 'Holiday Home Host Contact'
-                        : isService
-                        ? 'Service Provider Contact'
-                        : 'Verified Seller Contact'}
-                    </p>
-                    <div className="text-xl font-extrabold text-gray-900 dark:text-white mt-1 tracking-wide flex items-center justify-center gap-2 tabular-nums">
-                      <Phone className="w-4 h-4 text-[#FF5A36]" />
-                      <a
-                        href={`tel:${listing.phone}`}
-                        onClick={() => onRecordAction?.('phone')}
-                        className="hover:underline text-gray-900 dark:text-white"
-                      >
-                        {listing.phone}
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <a
-                      href={`tel:${listing.phone}`}
-                      onClick={() => onRecordAction?.('phone')}
-                      className="flex items-center justify-center gap-1.5 bg-[#181920] hover:bg-black text-white text-xs sm:text-sm font-bold py-3 px-3 rounded-xl shadow-xs transition-all cursor-pointer"
-                    >
-                      <Phone className="w-4 h-4" />
-                      <span>{isService ? 'Call Provider' : 'Call Seller'}</span>
-                    </a>
-                    <a
-                      href={whatsappUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => onRecordAction?.('whatsapp')}
-                      className="flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1DA851] text-white text-xs sm:text-sm font-bold py-3 px-3 rounded-xl shadow-xs transition-all cursor-pointer"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      <span>{isService ? 'Request Quote' : 'WhatsApp'}</span>
-                    </a>
-                  </div>
-
-                  {onStartChat && (
-                    <button
-                      type="button"
-                      onClick={() => onStartChat(listing)}
-                      className="w-full flex items-center justify-center gap-2 bg-[#FF5A36] hover:bg-[#E04826] text-white text-xs sm:text-sm font-bold py-3 px-4 rounded-xl shadow-md hover:shadow-lg hover:shadow-[#FF5A36]/20 transition-all cursor-pointer"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      <span>Live Chat on HUTA</span>
-                      <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded text-white font-medium">
-                        Real-time
-                      </span>
-                    </button>
-                  )}
-
-                  {onToggleCompare && (
-                    <button
-                      type="button"
-                      onClick={() => onToggleCompare(listing)}
-                      className={`w-full flex items-center justify-center gap-2 text-xs font-bold py-2.5 px-4 rounded-xl border transition-all cursor-pointer ${
-                        isCompared
-                          ? 'bg-[#FF5A36]/10 text-[#FF5A36] border-[#FF5A36]/40 hover:bg-[#FF5A36]/20'
-                          : 'bg-white dark:bg-[#1E2230] text-gray-700 dark:text-gray-200 border-gray-200 dark:border-[#282C3D] hover:bg-gray-100 dark:hover:bg-[#282C3D]'
-                      }`}
-                    >
-                      <ArrowLeftRight className="w-3.5 h-3.5" />
-                      <span>{isCompared ? 'Remove from Comparison' : 'Add to Compare (Side-by-Side)'}</span>
-                    </button>
-                  )}
-                </div>
-              </div>
+              {/* Desktop Price + Contact Card (shown right below price on mobile above) */}
+              <div className="hidden lg:block">{renderSellerContactCard(true)}</div>
 
               {/* Pending Admin Moderation Notice */}
               {listing.status === 'pending' && (
