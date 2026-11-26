@@ -6321,6 +6321,9 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
       })
     );
     app.get('*', (req, res) => {
+      if (!isHtmlNavigationRequest(req)) {
+        return res.status(404).end();
+      }
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
       const indexPath = path.join(distPath, 'index.html');
       try {

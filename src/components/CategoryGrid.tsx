@@ -1,27 +1,54 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { RotateCcw, ArrowRight, Flame } from 'lucide-react';
+import {
+  RotateCcw,
+  ArrowRight,
+  Flame,
+  Car,
+  Home,
+  KeyRound,
+  Palmtree,
+  Smartphone,
+  Wrench,
+  Briefcase,
+  Laptop,
+  ShoppingBag,
+  Shirt,
+  Sparkles,
+  Cog,
+  BedDouble,
+  Sprout,
+  Heart,
+  GraduationCap,
+  PawPrint,
+  Gem,
+  Tag,
+} from 'lucide-react';
 import { Listing, HotNewsArticle } from '../types';
 import { DualToneHeading } from './DualToneHeading';
-import catVehicles3dImg from '../assets/images/cat_vehicles_3d_1794907415689.jpg';
-import catProperty3dImg from '../assets/images/cat_property_3d_1794907416481.jpg';
-import carsForRentImg from '../assets/images/cars_for_rent_category_1794683403631.jpg';
-import holidayHomesImg from '../assets/images/holiday_homes_category_1794527575851.jpg';
-import catPhones3dImg from '../assets/images/cat_phones_3d_1794907416738.jpg';
-import catServices3dImg from '../assets/images/cat_services_3d_1794907415367.jpg';
-import catJobs3dImg from '../assets/images/cat_jobs_3d_1794907417386.jpg';
-import catComputers3dImg from '../assets/images/cat_computers_3d_1794907417216.jpg';
-import catWomens3dImg from '../assets/images/cat_womens_3d_1794907418654.jpg';
-import catMens3dImg from '../assets/images/cat_mens_3d_1794907419777.jpg';
-import catBeauty3dImg from '../assets/images/cat_beauty_3d_1794907420014.jpg';
-import catAutoPartsImg from '../assets/images/cat_auto_parts_1794777622668.jpg';
-import catBoardingsImg from '../assets/images/cat_boardings_1794777622750.jpg';
-import catAgricultureImg from '../assets/images/cat_agriculture_1794777623729.jpg';
-import catWeddingsImg from '../assets/images/cat_weddings_1794777623764.jpg';
-import catEducationImg from '../assets/images/cat_education_1794777624140.jpg';
-import catPetsImg from '../assets/images/cat_pets_1794777624936.jpg';
-import catLuxury3dImg from '../assets/images/cat_luxury_3d_1794907420791.jpg';
-import hotNewsIconImg from '../assets/images/hot_news_sri_lanka_icon_1794684230454.jpg';
+
+const HOT_NEWS_ICON_SRC = '/assets/categories/hot_news_sri_lanka.jpg';
+
+const CATEGORY_FALLBACK_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  Vehicles: Car,
+  Property: Home,
+  'Cars for Rent': KeyRound,
+  'Holiday Homes': Palmtree,
+  Phones: Smartphone,
+  Services: Wrench,
+  Jobs: Briefcase,
+  Computers: Laptop,
+  "Women's": ShoppingBag,
+  "Men's": Shirt,
+  Beauty: Sparkles,
+  'Auto Parts': Cog,
+  'Boardings & Annexes': BedDouble,
+  'Agriculture & Farming': Sprout,
+  'Weddings & Events': Heart,
+  'Education & Tuition': GraduationCap,
+  'Pets & Animals': PawPrint,
+  Luxury: Gem,
+};
 
 export interface CategoryGridProps {
   currentCategory: string;
@@ -37,132 +64,147 @@ export interface CategoryItem {
   key: string;
   label: string;
   image: string;
+  fallbackImage?: string;
   searchQuery?: string;
   targetCategory?: string;
   isNew?: boolean;
 }
 
-// Unified modern 3D studio icon categories — uniform size & crisp framing across light and dark themes
+// Unified modern 3D studio icon categories — served from permanent unhashed paths for reliable mobile/PWA caching
 export const CATEGORIES_ITEMS: CategoryItem[] = [
   {
     key: 'Vehicles',
     label: 'Vehicles',
-    image: catVehicles3dImg,
+    image: '/assets/categories/cat_vehicles_3d.jpg',
+    fallbackImage: '/assets/categories/vehicles.png',
     targetCategory: 'Vehicles',
   },
   {
     key: 'Property',
     label: 'Property',
-    image: catProperty3dImg,
+    image: '/assets/categories/cat_property_3d.jpg',
+    fallbackImage: '/assets/categories/property.png',
     targetCategory: 'Property',
   },
   {
     key: 'Cars for Rent',
     label: 'Cars for Rent',
-    image: carsForRentImg,
+    image: '/assets/categories/cars_for_rent.jpg',
+    fallbackImage: '/assets/categories/vehicles.png',
     targetCategory: 'Cars for Rent',
     isNew: true,
   },
   {
     key: 'Holiday Homes',
     label: 'Holiday Homes',
-    image: holidayHomesImg,
+    image: '/assets/categories/holiday_homes.jpg',
+    fallbackImage: '/assets/categories/property.png',
     targetCategory: 'Holiday Homes',
     isNew: true,
   },
   {
     key: 'Phones',
     label: 'Phones',
-    image: catPhones3dImg,
+    image: '/assets/categories/cat_phones_3d.jpg',
+    fallbackImage: '/assets/categories/phones.png',
     targetCategory: 'Phones',
     searchQuery: 'phone',
   },
   {
     key: 'Services',
     label: 'Services',
-    image: catServices3dImg,
+    image: '/assets/categories/cat_services_3d.jpg',
+    fallbackImage: '/assets/categories/services.png',
     targetCategory: 'Services',
   },
   {
     key: 'Jobs',
     label: 'Jobs',
-    image: catJobs3dImg,
+    image: '/assets/categories/cat_jobs_3d.jpg',
+    fallbackImage: '/assets/categories/jobs.png',
     targetCategory: 'Jobs',
   },
   {
     key: 'Computers',
     label: 'Computers',
-    image: catComputers3dImg,
+    image: '/assets/categories/cat_computers_3d.jpg',
+    fallbackImage: '/assets/categories/computers.png',
     targetCategory: 'Computers',
     searchQuery: 'computer',
   },
   {
     key: "Women's",
     label: "Women's",
-    image: catWomens3dImg,
+    image: '/assets/categories/cat_womens_3d.jpg',
+    fallbackImage: '/assets/categories/womens.png',
     targetCategory: "Women's",
     searchQuery: 'women',
   },
   {
     key: "Men's",
     label: "Men's",
-    image: catMens3dImg,
+    image: '/assets/categories/cat_mens_3d.jpg',
+    fallbackImage: '/assets/categories/mens.png',
     targetCategory: "Men's",
     searchQuery: 'men',
   },
   {
     key: 'Beauty',
     label: 'Beauty',
-    image: catBeauty3dImg,
+    image: '/assets/categories/cat_beauty_3d.jpg',
+    fallbackImage: '/assets/categories/beauty.png',
     targetCategory: 'Beauty',
     searchQuery: 'beauty',
   },
   {
     key: 'Auto Parts',
     label: 'Auto Parts',
-    image: catAutoPartsImg,
+    image: '/assets/categories/cat_auto_parts.jpg',
+    fallbackImage: '/assets/categories/vehicles.png',
     targetCategory: 'Auto Parts',
     isNew: true,
   },
   {
     key: 'Boardings & Annexes',
     label: 'Boardings & Annexes',
-    image: catBoardingsImg,
+    image: '/assets/categories/cat_boardings.jpg',
+    fallbackImage: '/assets/categories/property.png',
     targetCategory: 'Boardings & Annexes',
     isNew: true,
   },
   {
     key: 'Agriculture & Farming',
     label: 'Agriculture',
-    image: catAgricultureImg,
+    image: '/assets/categories/cat_agriculture.jpg',
     targetCategory: 'Agriculture & Farming',
     isNew: true,
   },
   {
     key: 'Weddings & Events',
     label: 'Weddings',
-    image: catWeddingsImg,
+    image: '/assets/categories/cat_weddings.jpg',
     targetCategory: 'Weddings & Events',
     isNew: true,
   },
   {
     key: 'Education & Tuition',
     label: 'Education',
-    image: catEducationImg,
+    image: '/assets/categories/cat_education.jpg',
     targetCategory: 'Education & Tuition',
     isNew: true,
   },
   {
     key: 'Pets & Animals',
     label: 'Pets & Aquarium',
-    image: catPetsImg,
+    image: '/assets/categories/cat_pets.jpg',
     targetCategory: 'Pets & Animals',
     isNew: true,
   },
   {
     key: 'Luxury',
     label: 'Luxury',
-    image: catLuxury3dImg,
+    image: '/assets/categories/cat_luxury_3d.jpg',
+    fallbackImage: '/assets/categories/luxury.png',
     targetCategory: 'Luxury',
     searchQuery: 'gem',
   },
@@ -178,6 +220,9 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
   onOpenHotNews,
 }) => {
   const [liveNewsIndex, setLiveNewsIndex] = useState(0);
+  const [imageOverrides, setImageOverrides] = useState<Record<string, string>>({});
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+  const [hotNewsFailed, setHotNewsFailed] = useState(false);
   const liveSlides = useMemo(() => hotNewsArticles.slice(0, 8), [hotNewsArticles]);
 
   useEffect(() => {
@@ -463,18 +508,41 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
               >
                 {/* Uniform Modern 3D Studio Squircle Frame (Seamless Dark-Mode Studio Halo + Crisp Light Studio) */}
                 <div
-                  className={`relative w-14 h-14 sm:w-[72px] sm:h-[72px] md:w-20 md:h-20 rounded-2xl sm:rounded-[22px] bg-white dark:bg-[#191E2C] dark:bg-[radial-gradient(circle_at_center,rgba(216,223,235,0.92)_0%,rgba(122,135,156,0.58)_58%,rgba(25,30,44,0.98)_100%)] border overflow-hidden mb-1.5 transition-all duration-200 ${
+                  className={`relative w-14 h-14 sm:w-[72px] sm:h-[72px] md:w-20 md:h-20 rounded-2xl sm:rounded-[22px] bg-white dark:bg-[#191E2C] dark:bg-[radial-gradient(circle_at_center,rgba(216,223,235,0.92)_0%,rgba(122,135,156,0.58)_58%,rgba(25,30,44,0.98)_100%)] border overflow-hidden mb-1.5 transition-all duration-200 flex items-center justify-center ${
                     isActive
                       ? 'border-[#FF5A36] ring-2 ring-[#FF5A36] ring-offset-2 ring-offset-white dark:ring-offset-[#12141D] shadow-lg shadow-[#FF5A36]/20 scale-[1.03]'
                       : 'border-gray-200/80 dark:border-white/10 shadow-[0_6px_16px_rgba(15,23,42,0.06)] dark:shadow-[0_10px_22px_rgba(0,0,0,0.45)] group-hover:shadow-lg group-hover:border-[#FF5A36]/40 dark:group-hover:border-[#FF5A36]/50'
                   }`}
                 >
-                  <img
-                    src={cat.image}
-                    alt={cat.label}
-                    className="w-full h-full object-cover dark:mix-blend-multiply dark:contrast-[1.06] dark:brightness-[1.05] group-hover:scale-110 transition-transform duration-300 ease-out select-none pointer-events-none"
-                    loading="lazy"
-                  />
+                  {failedImages[cat.key] ? (
+                    (() => {
+                      const FallbackIcon = CATEGORY_FALLBACK_ICONS[cat.key] || Tag;
+                      return (
+                        <FallbackIcon className="w-7 h-7 sm:w-8 sm:h-8 text-[#FF5A36]" />
+                      );
+                    })()
+                  ) : (
+                    <img
+                      src={imageOverrides[cat.key] || cat.image}
+                      alt={cat.label}
+                      className="w-full h-full object-cover dark:mix-blend-multiply dark:contrast-[1.06] dark:brightness-[1.05] group-hover:scale-110 transition-transform duration-300 ease-out select-none pointer-events-none"
+                      loading="eager"
+                      decoding="async"
+                      onError={() => {
+                        if (cat.fallbackImage && imageOverrides[cat.key] !== cat.fallbackImage) {
+                          setImageOverrides((prev) => ({
+                            ...prev,
+                            [cat.key]: cat.fallbackImage!,
+                          }));
+                        } else {
+                          setFailedImages((prev) => ({
+                            ...prev,
+                            [cat.key]: true,
+                          }));
+                        }
+                      }}
+                    />
+                  )}
                 </div>
 
                 {/* Category Label */}
@@ -519,13 +587,19 @@ export const CategoryGrid: React.FC<CategoryGridProps> = ({
               title="Open Sri Lanka Live Hot News"
             >
               {/* Same Uniform 3D Studio Squircle Frame */}
-              <div className="relative w-14 h-14 sm:w-[72px] sm:h-[72px] md:w-20 md:h-20 rounded-2xl sm:rounded-[22px] bg-white dark:bg-[#191E2C] dark:bg-[radial-gradient(circle_at_center,rgba(216,223,235,0.92)_0%,rgba(122,135,156,0.58)_58%,rgba(25,30,44,0.98)_100%)] border border-rose-200/80 dark:border-white/10 overflow-hidden mb-1.5 shadow-[0_6px_16px_rgba(244,63,94,0.08)] dark:shadow-[0_10px_22px_rgba(0,0,0,0.45)] group-hover:shadow-lg group-hover:border-rose-400/50 transition-all duration-200">
-                <img
-                  src={hotNewsIconImg}
-                  alt="Sri Lanka Hot News"
-                  className="w-full h-full object-cover dark:mix-blend-multiply dark:contrast-[1.06] dark:brightness-[1.05] group-hover:scale-110 transition-transform duration-300 ease-out select-none pointer-events-none"
-                  loading="lazy"
-                />
+              <div className="relative w-14 h-14 sm:w-[72px] sm:h-[72px] md:w-20 md:h-20 rounded-2xl sm:rounded-[22px] bg-white dark:bg-[#191E2C] dark:bg-[radial-gradient(circle_at_center,rgba(216,223,235,0.92)_0%,rgba(122,135,156,0.58)_58%,rgba(25,30,44,0.98)_100%)] border border-rose-200/80 dark:border-white/10 overflow-hidden mb-1.5 shadow-[0_6px_16px_rgba(244,63,94,0.08)] dark:shadow-[0_10px_22px_rgba(0,0,0,0.45)] group-hover:shadow-lg group-hover:border-rose-400/50 transition-all duration-200 flex items-center justify-center">
+                {hotNewsFailed ? (
+                  <Flame className="w-7 h-7 sm:w-8 sm:h-8 text-rose-500" />
+                ) : (
+                  <img
+                    src={HOT_NEWS_ICON_SRC}
+                    alt="Sri Lanka Hot News"
+                    className="w-full h-full object-cover dark:mix-blend-multiply dark:contrast-[1.06] dark:brightness-[1.05] group-hover:scale-110 transition-transform duration-300 ease-out select-none pointer-events-none"
+                    loading="eager"
+                    decoding="async"
+                    onError={() => setHotNewsFailed(true)}
+                  />
+                )}
               </div>
 
               {/* Label */}
