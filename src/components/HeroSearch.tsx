@@ -182,15 +182,19 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   onOpenDonate,
   onOpenHotNews,
 }) => {
-  // 5 Changing Background Light Images state
+  // Changing Background Light Images state (only mount active + previous for instant first paint)
   const [activeBgIndex, setActiveBgIndex] = useState<number>(0);
+  const [prevBgIndex, setPrevBgIndex] = useState<number | null>(null);
   const [isAutoRotatePaused, setIsAutoRotatePaused] = useState<boolean>(false);
 
   // Auto-rotate backgrounds every 7 seconds
   useEffect(() => {
     if (isAutoRotatePaused) return;
     const interval = setInterval(() => {
-      setActiveBgIndex((prev) => (prev + 1) % DEFAULT_LIGHT_BACKGROUNDS.length);
+      setActiveBgIndex((prev) => {
+        setPrevBgIndex(prev);
+        return (prev + 1) % DEFAULT_LIGHT_BACKGROUNDS.length;
+      });
     }, 7000);
     return () => clearInterval(interval);
   }, [isAutoRotatePaused]);
@@ -238,6 +242,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
       {/* Changing Hero Background Images with Smooth Cross-Fade Transitions */}
       {DEFAULT_LIGHT_BACKGROUNDS.map((bg, index) => {
         const isCurrent = index === activeBgIndex;
+        const isPrev = index === prevBgIndex;
+        if (!isCurrent && !isPrev) return null;
         const isScenic = Boolean(bg.isPanoramic);
         return (
           <div
@@ -254,6 +260,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                   <img
                     src={bg.imageUrl}
                     alt={bg.name}
+                    decoding="async"
+                    fetchPriority={index === 0 ? 'high' : 'auto'}
                     className="w-full h-full object-cover object-center filter brightness-[1.07] contrast-[1.05] saturate-[1.15] opacity-100 dark:opacity-75"
                   />
                   {/* Balanced light/dark readability scrim fading cleanly into the search card */}
@@ -305,6 +313,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
               <img
                 src={bg.imageUrl}
                 alt={bg.name}
+                decoding="async"
+                fetchPriority={index === 0 ? 'high' : 'auto'}
                 className="w-full h-full object-cover object-center filter brightness-[1.06] contrast-[1.05] saturate-[1.14] dark:brightness-[0.96] dark:contrast-[1.06]"
               />
               {/* Light, measured center scrim so bright photography shines while center headline & search bar stay crisp */}
@@ -327,32 +337,9 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
         );
       })}
 
-      {/* Ambient background glows for luxurious depth */}
-      <motion.div
-        animate={{
-          scale: [1, 1.15, 1],
-          opacity: [0.1, 0.18, 0.1],
-        }}
-        transition={{
-          duration: 9,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-        className="absolute top-1/2 -left-28 w-96 h-96 bg-[#FF5A36] rounded-full blur-[110px] pointer-events-none -translate-y-1/2 transform-gpu will-change-transform"
-      />
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.08, 0.15, 0.08],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: 'easeInOut',
-          delay: 1.5,
-        }}
-        className="absolute -top-12 -right-16 w-[420px] h-[420px] bg-[#FF7A59] rounded-full blur-[120px] pointer-events-none transform-gpu will-change-transform"
-      />
+      {/* Ambient background glows for subtle depth (desktop only to keep mobile GPU fast) */}
+      <div className="hidden md:block absolute top-1/2 -left-28 w-96 h-96 bg-[#FF5A36]/15 rounded-full blur-[110px] pointer-events-none -translate-y-1/2" />
+      <div className="hidden md:block absolute -top-12 -right-16 w-[420px] h-[420px] bg-[#FF7A59]/12 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="relative max-w-5xl mx-auto space-y-6 text-center">
         {/* Hero Title & Admin Animated Ads Slot */}

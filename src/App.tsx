@@ -1,40 +1,24 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { MotionConfig, AnimatePresence, motion } from 'motion/react';
 import { Listing, User, ViewTab, EventItem, HeroAd, HeroAdSettings, PromoSlide, PromoSlidesSettings, VideoReelItem, EStore, HotNewsArticle, BuyerRequest, DonationCause } from './types';
 import { api } from './services/api';
 
-// Components
+// Core Eager Shell & Marketplace Components
 import { Navbar } from './components/Navbar';
 import { HeroSearch } from './components/HeroSearch';
-import { HotNewsPage } from './components/HotNewsPage';
-import { DonateSriLankaPage } from './components/DonateSriLankaPage';
 import { BuyerRequestsBoard, BuyerRequestsHomeStrip } from './components/BuyerRequestsBoard';
 import { CategoryGrid } from './components/CategoryGrid';
 import { PromoAdSlider } from './components/PromoAdSlider';
 import { ListingsSection } from './components/ListingsSection';
 import { ExploreMoreEStoresBanner } from './components/ExploreMoreEStoresBanner';
-import { EStorePage } from './components/EStorePage';
-import { AdDetailModal } from './components/AdDetailModal';
-import { PostAdModal } from './components/PostAdModal';
-import { QuickCreateMenu } from './components/QuickCreateMenu';
-import { AddStoryModal } from './components/AddStoryModal';
-import { DedicatedAdminPortal } from './components/DedicatedAdminPortal';
-import { UserDashboard } from './components/UserDashboard';
-import { AuthModals } from './components/AuthModals';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { Footer } from './components/Footer';
-import { ChatDrawer } from './components/ChatDrawer';
 import { BottomNav } from './components/BottomNav';
-import { AllCategoriesPage } from './components/AllCategoriesPage';
-import { HutaInPage } from './components/HutaInPage';
-import { MorePage } from './components/MorePage';
-import { CompareModal } from './components/CompareModal';
 import { CompareFloatingBar } from './components/CompareFloatingBar';
-import { AppStoreModal } from './components/AppStoreModal';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { VideoReelsSection } from './components/VideoReelsSection';
-import { LegalPoliciesModal, PolicyTab } from './components/LegalPoliciesModal';
-import { DistrictCategoryDirectory, DistrictCategorySeoBanner } from './components/DistrictCategoryDirectory';
+import { DistrictCategorySeoBanner } from './components/DistrictCategoryDirectory';
+import type { PolicyTab } from './components/LegalPoliciesModal';
 import { testConnection } from './firebase';
 import {
   parseSeoRoute,
@@ -45,7 +29,33 @@ import {
   applyClientSeoMeta,
   ParsedSeoRoute,
 } from './utils/seo';
-import { MapPin, Sparkles, PlusCircle, Calendar, ArrowRight, Star, Compass, MessageSquarePlus } from 'lucide-react';
+import { MapPin, Sparkles, PlusCircle, Calendar, ArrowRight, MessageSquarePlus } from 'lucide-react';
+
+// Lazy-loaded Secondary Pages & Heavy Modals for Fast First Paint
+const EStorePage = lazy(() => import('./components/EStorePage').then((m) => ({ default: m.EStorePage })));
+const HutaInPage = lazy(() => import('./components/HutaInPage').then((m) => ({ default: m.HutaInPage })));
+const HotNewsPage = lazy(() => import('./components/HotNewsPage').then((m) => ({ default: m.HotNewsPage })));
+const DonateSriLankaPage = lazy(() => import('./components/DonateSriLankaPage').then((m) => ({ default: m.DonateSriLankaPage })));
+const AllCategoriesPage = lazy(() => import('./components/AllCategoriesPage').then((m) => ({ default: m.AllCategoriesPage })));
+const DistrictCategoryDirectory = lazy(() => import('./components/DistrictCategoryDirectory').then((m) => ({ default: m.DistrictCategoryDirectory })));
+const MorePage = lazy(() => import('./components/MorePage').then((m) => ({ default: m.MorePage })));
+const UserDashboard = lazy(() => import('./components/UserDashboard').then((m) => ({ default: m.UserDashboard })));
+const DedicatedAdminPortal = lazy(() => import('./components/DedicatedAdminPortal').then((m) => ({ default: m.DedicatedAdminPortal })));
+const AdDetailModal = lazy(() => import('./components/AdDetailModal').then((m) => ({ default: m.AdDetailModal })));
+const PostAdModal = lazy(() => import('./components/PostAdModal').then((m) => ({ default: m.PostAdModal })));
+const QuickCreateMenu = lazy(() => import('./components/QuickCreateMenu').then((m) => ({ default: m.QuickCreateMenu })));
+const AddStoryModal = lazy(() => import('./components/AddStoryModal').then((m) => ({ default: m.AddStoryModal })));
+const AuthModals = lazy(() => import('./components/AuthModals').then((m) => ({ default: m.AuthModals })));
+const ChatDrawer = lazy(() => import('./components/ChatDrawer').then((m) => ({ default: m.ChatDrawer })));
+const CompareModal = lazy(() => import('./components/CompareModal').then((m) => ({ default: m.CompareModal })));
+const AppStoreModal = lazy(() => import('./components/AppStoreModal').then((m) => ({ default: m.AppStoreModal })));
+const LegalPoliciesModal = lazy(() => import('./components/LegalPoliciesModal').then((m) => ({ default: m.LegalPoliciesModal })));
+
+const PageLoaderFallback = () => (
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div className="h-44 rounded-3xl bg-gray-100 dark:bg-[#151822] animate-pulse border border-gray-200/70 dark:border-white/5" />
+  </div>
+);
 
 function getInitialParsedRoute(): ParsedSeoRoute {
   try {
@@ -1601,13 +1611,8 @@ export default function App() {
               onToggleVerifiedOnly={() => setVerifiedOnly((prev) => !prev)}
             />
 
-            {/* Admin-Managed Promo Ad Image Slides Carousel (Below Listings for faster ad discovery) */}
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 'some' }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            >
+            {/* Admin-Managed Promo Ad Image Slides Carousel (Zero-latency immediate render) */}
+            <div>
               <PromoAdSlider
                 slides={promoSlides}
                 settings={promoSlidesSettings}
@@ -1623,16 +1628,10 @@ export default function App() {
                   setCurrentTab('admin_dashboard');
                 }}
               />
-            </motion.div>
+            </div>
 
-            {/* Video Stories / Short Walk-through Reels Bar (Moved Page Down) */}
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 'some' }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="py-2"
-            >
+            {/* Video Stories / Short Walk-through Reels Bar */}
+            <div className="py-1.5">
               <VideoReelsSection
                 listings={listings}
                 reels={videoReels}
@@ -1642,15 +1641,10 @@ export default function App() {
                 currentUser={currentUser}
                 onToast={showToast}
               />
-            </motion.div>
+            </div>
 
             {/* Explore More Listings: Sri Lanka E-Stores & Online Merchants Showcase Banner */}
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 'some' }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            >
+            <div>
               <ExploreMoreEStoresBanner
                 stores={eStores}
                 onExploreEStores={() => {
@@ -1669,18 +1663,12 @@ export default function App() {
                   window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
                 }}
               />
-            </motion.div>
+            </div>
 
             {/* HUTA IN Community & Events Hub Teaser Banner */}
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 'some' }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-8"
-            >
-              <div className="bg-[#111217] border border-[#2D2F39] rounded-3xl p-6 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden">
-                <div className="absolute -right-16 -top-16 w-56 h-56 bg-[#FF5A36]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-6 sm:my-8">
+              <div className="bg-[#111217] border border-[#2D2F39] rounded-3xl p-5 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-5 sm:gap-6 shadow-xl relative overflow-hidden">
+                <div className="hidden md:block absolute -right-16 -top-16 w-56 h-56 bg-[#FF5A36]/10 rounded-full blur-3xl pointer-events-none" />
                 <div className="space-y-2 text-center md:text-left z-10">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF5A36]/15 text-[#FF5A36] text-xs font-bold border border-[#FF5A36]/30">
                     <Sparkles className="w-3.5 h-3.5" />
@@ -1705,7 +1693,7 @@ export default function App() {
                   <ArrowRight className="w-4 h-4" />
                 </motion.button>
               </div>
-            </motion.div>
+            </div>
 
             {/* Create Ad & Looking For Buyer Requests Placement */}
             {buyerRequests.some((r) => r.status === 'open') && (
@@ -1719,14 +1707,8 @@ export default function App() {
               />
             )}
 
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 'some' }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12"
-            >
-              <div className="bg-white dark:bg-[#151822] border border-gray-200 dark:border-[#252836] rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6 transition-colors">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 sm:mb-10">
+              <div className="bg-white dark:bg-[#151822] border border-gray-200 dark:border-[#252836] rounded-3xl p-5 sm:p-8 shadow-xs flex flex-col md:flex-row items-center justify-between gap-5 sm:gap-6 transition-colors">
                 <div className="space-y-2 text-center md:text-left">
                   <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#FF5A36] uppercase tracking-wider">
                     <span>Direct Buyer-Seller Connection</span>
@@ -1761,10 +1743,11 @@ export default function App() {
                   </motion.button>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         )}
 
+        <Suspense fallback={<PageLoaderFallback />}>
         {currentTab === 'estore' && (
           <EStorePage
             stores={eStores}
@@ -1995,36 +1978,40 @@ export default function App() {
             }}
           />
         )}
+        </Suspense>
         </motion.div>
         </AnimatePresence>
       </main>
 
-      {/* Modals */}
-      <AdDetailModal
-        listing={selectedListing}
-        onClose={() => setSelectedListing(null)}
-        currentUser={currentUser}
-        isAdminLoggedIn={isAdminLoggedIn}
-        isFavorite={Boolean(selectedListing && favorites.includes(selectedListing.id))}
-        onToggleFavorite={handleToggleFavorite}
-        onEditListing={handleEditListing}
-        onDeleteListing={handleDeleteListing}
-        onCopyShareLink={handleCopyShareLink}
-        isCompared={Boolean(selectedListing && compareIds.includes(selectedListing.id))}
-        onToggleCompare={handleToggleCompare}
-        onApproveListing={handleApproveListing}
-        onRequestOwnerEdit={(listing) => {
-          setSelectedListing(null);
-          setTargetListingForEdit(listing);
-          setIsUserAuthOpen(true);
-        }}
-        onStartChat={(listing) => {
-          setSelectedListing(null);
-          setChatTargetListing(listing);
-          setIsChatOpen(true);
-        }}
-        onRecordAction={handleRecordListingAction}
-      />
+      {/* On-Demand Lazy Modals (Only downloaded & mounted when opened) */}
+      <Suspense fallback={null}>
+      {selectedListing && (
+        <AdDetailModal
+          listing={selectedListing}
+          onClose={() => setSelectedListing(null)}
+          currentUser={currentUser}
+          isAdminLoggedIn={isAdminLoggedIn}
+          isFavorite={Boolean(selectedListing && favorites.includes(selectedListing.id))}
+          onToggleFavorite={handleToggleFavorite}
+          onEditListing={handleEditListing}
+          onDeleteListing={handleDeleteListing}
+          onCopyShareLink={handleCopyShareLink}
+          isCompared={Boolean(selectedListing && compareIds.includes(selectedListing.id))}
+          onToggleCompare={handleToggleCompare}
+          onApproveListing={handleApproveListing}
+          onRequestOwnerEdit={(listing) => {
+            setSelectedListing(null);
+            setTargetListingForEdit(listing);
+            setIsUserAuthOpen(true);
+          }}
+          onStartChat={(listing) => {
+            setSelectedListing(null);
+            setChatTargetListing(listing);
+            setIsChatOpen(true);
+          }}
+          onRecordAction={handleRecordListingAction}
+        />
+      )}
 
       {/* Compare Floating Bottom Action Bar */}
       <CompareFloatingBar
@@ -2035,103 +2022,116 @@ export default function App() {
       />
 
       {/* Side-by-Side Compare Modal */}
-      <CompareModal
-        isOpen={isCompareModalOpen}
-        onClose={() => setIsCompareModalOpen(false)}
-        compareListings={compareListings}
-        onRemoveFromCompare={handleRemoveFromCompare}
-        onClearCompare={handleClearCompare}
-        onSelectListing={(listing) => {
-          setSelectedListing(listing);
-          setIsCompareModalOpen(false);
-        }}
-      />
+      {isCompareModalOpen && (
+        <CompareModal
+          isOpen={isCompareModalOpen}
+          onClose={() => setIsCompareModalOpen(false)}
+          compareListings={compareListings}
+          onRemoveFromCompare={handleRemoveFromCompare}
+          onClearCompare={handleClearCompare}
+          onSelectListing={(listing) => {
+            setSelectedListing(listing);
+            setIsCompareModalOpen(false);
+          }}
+        />
+      )}
 
       {/* Real-time Firebase Chat Drawer */}
-      <ChatDrawer
-        isOpen={isChatOpen}
-        onClose={() => {
-          setIsChatOpen(false);
-          setChatTargetListing(null);
-        }}
-        targetListing={chatTargetListing}
-        onSelectListing={(listingId) => {
-          const found = listings.find((l) => l.id === listingId);
-          if (found) {
-            setSelectedListing(found);
+      {isChatOpen && (
+        <ChatDrawer
+          isOpen={isChatOpen}
+          onClose={() => {
             setIsChatOpen(false);
+            setChatTargetListing(null);
+          }}
+          targetListing={chatTargetListing}
+          onSelectListing={(listingId) => {
+            const found = listings.find((l) => l.id === listingId);
+            if (found) {
+              setSelectedListing(found);
+              setIsChatOpen(false);
+            }
+          }}
+        />
+      )}
+
+      {isQuickCreateOpen && (
+        <QuickCreateMenu
+          isOpen={isQuickCreateOpen}
+          onClose={() => setIsQuickCreateOpen(false)}
+          onSelectCategory={handleQuickCreateSelectCategory}
+          onSelectVideoReel={handleQuickCreateStory}
+          onSelectEStore={handleQuickCreateEStore}
+          onSelectBuyerRequest={handleQuickCreateBuyerRequest}
+        />
+      )}
+
+      {isQuickStoryOpen && (
+        <AddStoryModal
+          isOpen={isQuickStoryOpen}
+          onClose={() => setIsQuickStoryOpen(false)}
+          onStoryCreated={(newReel) => {
+            setVideoReels((prev) => [newReel, ...prev]);
+            setIsQuickStoryOpen(false);
+            showToast('Video Story Reel published live!', 'success');
+          }}
+          currentUser={currentUser}
+          onToast={showToast}
+        />
+      )}
+
+      {isPostAdOpen && (
+        <PostAdModal
+          isOpen={isPostAdOpen}
+          onClose={() => {
+            setIsPostAdOpen(false);
+            setEditingListing(null);
+            setQuickCreateCategory(undefined);
+          }}
+          onSubmitAd={handleSubmitAd}
+          editingListing={editingListing}
+          currentUser={currentUser}
+          isAdminLoggedIn={isAdminLoggedIn}
+          onToast={showToast}
+          onSelectListing={(listing) => {
+            setSelectedListing(listing);
+            setIsPostAdOpen(false);
+            setEditingListing(null);
+            setQuickCreateCategory(undefined);
+          }}
+          onOpenMyAds={() => setCurrentTab('user_dashboard')}
+          onSwitchToBuyerRequest={handleQuickCreateBuyerRequest}
+          initialCategory={
+            quickCreateCategory || (selectedCategory !== 'All' ? selectedCategory : undefined)
           }
-        }}
-      />
+          initialDistrict={selectedLocation !== 'All Sri Lanka' ? selectedLocation : undefined}
+        />
+      )}
 
-      <QuickCreateMenu
-        isOpen={isQuickCreateOpen}
-        onClose={() => setIsQuickCreateOpen(false)}
-        onSelectCategory={handleQuickCreateSelectCategory}
-        onSelectVideoReel={handleQuickCreateStory}
-        onSelectEStore={handleQuickCreateEStore}
-        onSelectBuyerRequest={handleQuickCreateBuyerRequest}
-      />
-
-      <AddStoryModal
-        isOpen={isQuickStoryOpen}
-        onClose={() => setIsQuickStoryOpen(false)}
-        onStoryCreated={(newReel) => {
-          setVideoReels((prev) => [newReel, ...prev]);
-          setIsQuickStoryOpen(false);
-          showToast('Video Story Reel published live!', 'success');
-        }}
-        currentUser={currentUser}
-        onToast={showToast}
-      />
-
-      <PostAdModal
-        isOpen={isPostAdOpen}
-        onClose={() => {
-          setIsPostAdOpen(false);
-          setEditingListing(null);
-          setQuickCreateCategory(undefined);
-        }}
-        onSubmitAd={handleSubmitAd}
-        editingListing={editingListing}
-        currentUser={currentUser}
-        isAdminLoggedIn={isAdminLoggedIn}
-        onToast={showToast}
-        onSelectListing={(listing) => {
-          setSelectedListing(listing);
-          setIsPostAdOpen(false);
-          setEditingListing(null);
-          setQuickCreateCategory(undefined);
-        }}
-        onOpenMyAds={() => setCurrentTab('user_dashboard')}
-        onSwitchToBuyerRequest={handleQuickCreateBuyerRequest}
-        initialCategory={
-          quickCreateCategory || (selectedCategory !== 'All' ? selectedCategory : undefined)
-        }
-        initialDistrict={selectedLocation !== 'All Sri Lanka' ? selectedLocation : undefined}
-      />
-
-      <AuthModals
-        isAdminLoginOpen={isAdminLoginOpen}
-        onCloseAdminLogin={() => setIsAdminLoginOpen(false)}
-        onAdminLoginSuccess={handleAdminLoginSuccess}
-        isUserAuthOpen={isUserAuthOpen}
-        onCloseUserAuth={() => {
-          setIsUserAuthOpen(false);
-          setTargetListingForEdit(null);
-        }}
-        onUserAuthSuccess={handleUserAuthSuccess}
-        onOpenUserAuth={(mode) => {
-          if (mode) setUserAuthInitialMode(mode);
-          setIsUserAuthOpen(true);
-        }}
-        initialMode={userAuthInitialMode}
-        isChangePasswordOpen={isChangePasswordOpen}
-        onCloseChangePassword={() => setIsChangePasswordOpen(false)}
-        currentUser={currentUser}
-        targetListingForEdit={targetListingForEdit}
-        onToast={showToast}
-      />
+      {(isAdminLoginOpen || isUserAuthOpen || isChangePasswordOpen) && (
+        <AuthModals
+          isAdminLoginOpen={isAdminLoginOpen}
+          onCloseAdminLogin={() => setIsAdminLoginOpen(false)}
+          onAdminLoginSuccess={handleAdminLoginSuccess}
+          isUserAuthOpen={isUserAuthOpen}
+          onCloseUserAuth={() => {
+            setIsUserAuthOpen(false);
+            setTargetListingForEdit(null);
+          }}
+          onUserAuthSuccess={handleUserAuthSuccess}
+          onOpenUserAuth={(mode) => {
+            if (mode) setUserAuthInitialMode(mode);
+            setIsUserAuthOpen(true);
+          }}
+          initialMode={userAuthInitialMode}
+          isChangePasswordOpen={isChangePasswordOpen}
+          onCloseChangePassword={() => setIsChangePasswordOpen(false)}
+          currentUser={currentUser}
+          targetListingForEdit={targetListingForEdit}
+          onToast={showToast}
+        />
+      )}
+      </Suspense>
 
       {/* Footer (Only on consumer marketplace views, hidden in isolated Admin Portal) */}
       {currentTab !== 'admin_dashboard' && (
@@ -2152,19 +2152,24 @@ export default function App() {
         />
       )}
 
-      {/* Legal Policies Modal (Terms & Conditions, Privacy Policy, Cookie Policy) */}
-      <LegalPoliciesModal
-        isOpen={policyModalOpen}
-        initialTab={initialPolicyTab}
-        onClose={() => setPolicyModalOpen(false)}
-      />
+      {/* Legal Policies Modal & App Store Modal */}
+      <Suspense fallback={null}>
+      {policyModalOpen && (
+        <LegalPoliciesModal
+          isOpen={policyModalOpen}
+          initialTab={initialPolicyTab}
+          onClose={() => setPolicyModalOpen(false)}
+        />
+      )}
 
-      {/* Google Play & App Store Modal */}
-      <AppStoreModal
-        isOpen={isAppStoreOpen}
-        onClose={() => setIsAppStoreOpen(false)}
-        onToast={showToast}
-      />
+      {isAppStoreOpen && (
+        <AppStoreModal
+          isOpen={isAppStoreOpen}
+          onClose={() => setIsAppStoreOpen(false)}
+          onToast={showToast}
+        />
+      )}
+      </Suspense>
 
       {/* Floating Install Prompt Banner for Mobile / PWA */}
       {currentTab !== 'admin_dashboard' && (

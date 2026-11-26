@@ -1,9 +1,12 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Listing } from '../types';
 import { DualToneHeading } from './DualToneHeading';
-import { InteractiveMapDiscovery } from './InteractiveMapDiscovery';
 import { ActiveFiltersBar } from './ActiveFiltersBar';
+
+const InteractiveMapDiscovery = lazy(() =>
+  import('./InteractiveMapDiscovery').then((m) => ({ default: m.InteractiveMapDiscovery }))
+);
 import {
   Star,
   Zap,
@@ -81,20 +84,19 @@ const listContainerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.06,
+      duration: 0.16,
     },
   },
 };
 
 const cardItemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 8 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      type: 'spring',
-      stiffness: 280,
-      damping: 24,
+      duration: 0.16,
+      ease: 'easeOut' as const,
     },
   },
 };
@@ -1271,7 +1273,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
             </button>
           )}
 
-          <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">
+          <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium tabular-nums">
             Showing <strong className="text-gray-900 dark:text-white">{displayListings.length}</strong> ad(s)
           </span>
 
@@ -1295,12 +1297,20 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
 
       {/* Conditional: Interactive Map View vs Standard Grid */}
       {currentViewMode === 'map' ? (
-        <InteractiveMapDiscovery
-          listings={displayListings}
-          onSelectListing={onSelectListing}
-          initialCategory={currentCategory}
-          initialDistrict={selectedDistrict}
-        />
+        <Suspense
+          fallback={
+            <div className="w-full h-[420px] rounded-3xl bg-gray-100 dark:bg-[#151822] border border-gray-200 dark:border-[#252836] flex items-center justify-center text-sm font-semibold text-gray-500 dark:text-gray-400">
+              Loading Sri Lanka Interactive Map...
+            </div>
+          }
+        >
+          <InteractiveMapDiscovery
+            listings={displayListings}
+            onSelectListing={onSelectListing}
+            initialCategory={currentCategory}
+            initialDistrict={selectedDistrict}
+          />
+        </Suspense>
       ) : isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-2.5 md:gap-3.5">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
@@ -1429,49 +1439,77 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                 onClick={() => onSelectListing(item)}
                 className={`group bg-white dark:bg-[#151822] rounded-xl sm:rounded-2xl border border-gray-200/90 dark:border-white/10 hover:border-[#FF5A36] dark:hover:border-[#FF5A36] overflow-hidden shadow-2xs hover:shadow-xl dark:hover:shadow-[0_12px_28px_rgba(0,0,0,0.6)] transition-all duration-300 cursor-pointer flex flex-col relative`}
               >
-                {/* Badges on Top Left */}
-                <div className={`absolute z-10 flex flex-col gap-1 items-start ${gridDensity === 'compact' ? 'top-2 left-2' : 'top-2.5 left-2.5'}`}>
-                  {item.availabilityStatus === 'sold' && (
-                    <span className="inline-flex items-center gap-1 bg-rose-600 text-white text-[9px] sm:text-[10px] font-black uppercase px-1.5 sm:px-2 py-0.5 rounded-full shadow-md">
-                      Sold
-                    </span>
-                  )}
-                  {item.availabilityStatus === 'reserved' && (
-                    <span className="inline-flex items-center gap-1 bg-amber-500 text-white text-[9px] sm:text-[10px] font-black uppercase px-1.5 sm:px-2 py-0.5 rounded-full shadow-md">
-                      Reserved
-                    </span>
-                  )}
-                  {item.videoUrl && (
-                    <span className="inline-flex items-center gap-1 bg-purple-700/90 text-white text-[9px] sm:text-[10px] font-black uppercase px-1.5 sm:px-2 py-0.5 rounded-full shadow-md backdrop-blur-xs">
-                      <Film className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-200" />
-                      <span className="hidden sm:inline">Video Ad</span>
-                      <span className="sm:hidden">Video</span>
-                    </span>
-                  )}
-                  {item.isFeatured && (
-                    <span className="inline-flex items-center gap-1 bg-[#FF5A36] text-white text-[9px] sm:text-[10px] font-extrabold uppercase px-1.5 sm:px-2 py-0.5 rounded-full shadow-md animate-pulse">
-                      <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current" />
-                      <span>Featured</span>
-                    </span>
-                  )}
-                  {item.isVerifiedPro && (
-                    <span className="inline-flex items-center gap-1 bg-emerald-600 text-white text-[9px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm">
-                      <ShieldCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                      <span>Verified</span>
-                    </span>
-                  )}
-                  {item.isEmergency247 && (
-                    <span className="inline-flex items-center gap-0.5 bg-amber-500 text-white text-[9px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm">
-                      ⚡ 24/7
-                    </span>
-                  )}
-                  {isNew && !item.isVerifiedPro && !item.isEmergency247 && (
-                    <span className="inline-flex items-center gap-1 bg-blue-600 text-white text-[9px] sm:text-[10px] font-extrabold uppercase px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm">
-                      <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current" />
-                      <span>New</span>
-                    </span>
-                  )}
-                </div>
+                {/* Single Primary Status Tag on Top Left (Priority Order, No Clutter) */}
+                {(() => {
+                  if (item.availabilityStatus === 'sold') {
+                    return (
+                      <div className="absolute top-2 left-2 z-10">
+                        <span className="inline-flex items-center bg-rose-600 text-white text-[9px] sm:text-[10px] font-black uppercase px-2 py-0.5 rounded-md shadow-sm">
+                          Sold
+                        </span>
+                      </div>
+                    );
+                  }
+                  if (item.availabilityStatus === 'reserved') {
+                    return (
+                      <div className="absolute top-2 left-2 z-10">
+                        <span className="inline-flex items-center bg-amber-500 text-white text-[9px] sm:text-[10px] font-black uppercase px-2 py-0.5 rounded-md shadow-sm">
+                          Reserved
+                        </span>
+                      </div>
+                    );
+                  }
+                  if (item.isFeatured) {
+                    return (
+                      <div className="absolute top-2 left-2 z-10">
+                        <span className="inline-flex items-center gap-1 bg-[#FF5A36] text-white text-[9px] sm:text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md shadow-sm">
+                          <Star className="w-2.5 h-2.5 fill-current" />
+                          <span>Featured</span>
+                        </span>
+                      </div>
+                    );
+                  }
+                  if (item.isVerifiedPro) {
+                    return (
+                      <div className="absolute top-2 left-2 z-10">
+                        <span className="inline-flex items-center gap-1 bg-emerald-600 text-white text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-sm">
+                          <ShieldCheck className="w-2.5 h-2.5" />
+                          <span>Verified</span>
+                        </span>
+                      </div>
+                    );
+                  }
+                  if (item.videoUrl) {
+                    return (
+                      <div className="absolute top-2 left-2 z-10">
+                        <span className="inline-flex items-center gap-1 bg-purple-700/90 text-white text-[9px] sm:text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md shadow-sm backdrop-blur-xs">
+                          <Film className="w-2.5 h-2.5 text-purple-200" />
+                          <span>Video</span>
+                        </span>
+                      </div>
+                    );
+                  }
+                  if (item.isEmergency247) {
+                    return (
+                      <div className="absolute top-2 left-2 z-10">
+                        <span className="inline-flex items-center bg-amber-500 text-white text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-sm">
+                          24/7
+                        </span>
+                      </div>
+                    );
+                  }
+                  if (isNew) {
+                    return (
+                      <div className="absolute top-2 left-2 z-10">
+                        <span className="inline-flex items-center gap-1 bg-blue-600 text-white text-[9px] sm:text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md shadow-sm">
+                          <Zap className="w-2.5 h-2.5 fill-current" />
+                          <span>New</span>
+                        </span>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
 
                 {/* Top Action Buttons (Compare & Favorite) */}
                 <div className={`absolute z-10 flex items-center gap-1 sm:gap-1.5 ${gridDensity === 'compact' ? 'top-2 right-2' : 'top-2.5 right-2.5'}`}>
@@ -1520,7 +1558,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
 
                 {/* Card Media (Video or Image) */}
                 <div
-                  className={`w-full overflow-hidden bg-gray-950 relative ${
+                  className={`w-full overflow-hidden bg-gray-100 dark:bg-[#101218] relative ${
                     gridDensity === 'compact' ? 'h-32 sm:h-36 md:h-40' : 'h-44 sm:h-48'
                   }`}
                 >
@@ -1532,6 +1570,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                         playsInline
                         loop
                         autoPlay
+                        preload="metadata"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
@@ -1542,18 +1581,23 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                     </div>
                   ) : (
                     <img
-                      src={item.image || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80'}
+                      src={item.image || '/assets/hero_light_bg.jpg'}
                       alt={item.title}
                       loading="lazy"
+                      decoding="async"
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80';
+                        const target = e.target as HTMLImageElement;
+                        if (!target.dataset.fallbackApplied) {
+                          target.dataset.fallbackApplied = '1';
+                          target.src = '/assets/hero_light_bg.jpg';
+                        }
                       }}
                     />
                   )}
                   {item.images && item.images.length > 1 && !item.videoUrl && (
-                    <div className="absolute bottom-2 right-2 bg-black/65 backdrop-blur-xs text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-xs pointer-events-none">
+                    <div className="absolute bottom-2 right-2 bg-black/65 backdrop-blur-xs text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 shadow-xs pointer-events-none tabular-nums">
                       <Images className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                       <span>{item.images.length}</span>
                     </div>
@@ -1574,58 +1618,33 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       {item.title}
                     </h3>
 
-                    {/* Category Specific Specification Quick Highlights */}
-                    {(item.vehicleYear || item.fuelType || item.transmission || item.vehicleMileage || item.rentalDriverOption || item.propertyType || item.bedrooms || item.maxGuests || (item.amenities && item.amenities.length > 0) || item.propertySize || item.electronicsSubcategory || item.storageCapacity || item.itemCondition || item.jobType || item.serviceMode || item.serviceExperience) && (
-                      <div className="flex flex-wrap items-center gap-1 mt-1 text-[9px] sm:text-[10px] font-medium text-gray-500 dark:text-gray-400 line-clamp-1 overflow-hidden">
-                        {item.serviceExperience && (
-                          <span className="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-500/30 px-1.5 py-0.2 rounded font-bold">{item.serviceExperience}</span>
-                        )}
-                        {item.serviceMode && (
-                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.2 rounded text-gray-700 dark:text-gray-300 font-semibold">{item.serviceMode.split('/')[0].trim()}</span>
-                        )}
-                        {item.rentalDriverOption && (
-                          <span className="bg-orange-50 dark:bg-orange-950/40 text-[#FF5A36] border border-orange-200/60 dark:border-orange-500/30 px-1.5 py-0.2 rounded font-bold">{item.rentalDriverOption}</span>
-                        )}
-                        {item.vehicleYear && (
-                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.2 rounded text-gray-700 dark:text-gray-300 font-semibold">{item.vehicleYear}</span>
-                        )}
-                        {item.fuelType && (
-                          <span className="bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-500/30 px-1.5 py-0.2 rounded font-bold">{item.fuelType}</span>
-                        )}
-                        {item.propertyType && (
-                          <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-500/30 px-1.5 py-0.2 rounded font-bold">{item.propertyType.split(' ')[0]}</span>
-                        )}
-                        {item.maxGuests !== undefined && item.maxGuests !== '' && (
-                          <span className="inline-flex items-center gap-0.5 bg-cyan-50 dark:bg-cyan-950/40 text-cyan-800 dark:text-cyan-300 border border-cyan-200/60 dark:border-cyan-500/30 px-1.5 py-0.2 rounded font-bold">
-                            <Users className="w-2.5 h-2.5" />
-                            <span>{item.maxGuests} Guests</span>
-                          </span>
-                        )}
-                        {item.bedrooms !== undefined && item.bedrooms !== '' && (
-                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.2 rounded text-gray-700 dark:text-gray-300 font-semibold">{item.bedrooms} Beds</span>
-                        )}
-                        {Array.isArray(item.amenities) && item.amenities.slice(0, 2).map((am) => (
-                          <span
-                            key={am}
-                            className="inline-flex items-center gap-0.5 bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 border border-teal-200/60 dark:border-teal-500/30 px-1.5 py-0.2 rounded font-semibold"
-                          >
-                            {am === 'Pool' && <Waves className="w-2.5 h-2.5" />}
-                            {am === 'Wi-Fi' && <Wifi className="w-2.5 h-2.5" />}
-                            {am === 'Beachfront' && <Sun className="w-2.5 h-2.5" />}
-                            <span>{am}</span>
-                          </span>
-                        ))}
-                        {item.electronicsSubcategory && (
-                          <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-500/30 px-1.5 py-0.2 rounded font-bold">{item.electronicsSubcategory.split(' ')[0]}</span>
-                        )}
-                        {item.itemCondition && (
-                          <span className="bg-gray-100 dark:bg-[#1E2230] px-1.5 py-0.2 rounded text-gray-600 dark:text-gray-400">{item.itemCondition}</span>
-                        )}
-                      </div>
-                    )}
+                    {/* Clean Unboxed Typographic Specification Highlights */}
+                    {(() => {
+                      const specs: string[] = [];
+                      if (item.serviceExperience) specs.push(item.serviceExperience);
+                      if (item.serviceMode) specs.push(item.serviceMode.split('/')[0].trim());
+                      if (item.rentalDriverOption) specs.push(item.rentalDriverOption);
+                      if (item.vehicleYear) specs.push(String(item.vehicleYear));
+                      if (item.fuelType) specs.push(item.fuelType);
+                      if (item.propertyType) specs.push(item.propertyType.split(' ')[0]);
+                      if (item.maxGuests !== undefined && item.maxGuests !== '') specs.push(`${item.maxGuests} Guests`);
+                      if (item.bedrooms !== undefined && item.bedrooms !== '') specs.push(`${item.bedrooms} Beds`);
+                      if (Array.isArray(item.amenities) && item.amenities.length > 0) {
+                        specs.push(...item.amenities.slice(0, 2));
+                      }
+                      if (item.electronicsSubcategory) specs.push(item.electronicsSubcategory.split(' ')[0]);
+                      if (item.itemCondition) specs.push(item.itemCondition);
+                      const visibleSpecs = specs.filter(Boolean).slice(0, 3);
+                      if (visibleSpecs.length === 0) return null;
+                      return (
+                        <p className="mt-1 text-[10px] sm:text-[11px] font-medium text-gray-500 dark:text-gray-400 truncate tabular-nums">
+                          {visibleSpecs.join(' · ')}
+                        </p>
+                      );
+                    })()}
                     <div
-                      className={`font-black text-[#111217] dark:text-white ${
-                        gridDensity === 'compact' ? 'text-xs sm:text-sm md:text-base mt-1' : 'text-base sm:text-lg font-extrabold mt-1.5'
+                      className={`font-black text-[#111217] dark:text-white tabular-nums ${
+                        gridDensity === 'compact' ? 'text-xs sm:text-sm md:text-base mt-1.5' : 'text-base sm:text-lg font-extrabold mt-2'
                       }`}
                     >
                       {item.category === 'Services' && item.pricingType === 'quote' ? (
@@ -1676,7 +1695,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-gray-400 dark:text-gray-500">
+                    <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-gray-400 dark:text-gray-500 tabular-nums">
                       <span className="inline-flex items-center gap-1">
                         <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                         <span>{item.views || 0} views</span>
