@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ShieldCheck, MapPin, PhoneCall, HelpCircle, Heart, Smartphone, Mail } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { PolicyTab } from './LegalPoliciesModal';
 import { buildDistrictCategorySeoPath } from '../utils/seo';
+import footerSriLankaBg from '../assets/images/footer_srilanka_light_bg_1795672460467.jpg';
 
 interface FooterProps {
   onSelectCategory: (cat: string) => void;
@@ -26,10 +27,30 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenPolicy,
 }) => {
   const isEStore = currentTab === 'estore';
+  const [bgFailed, setBgFailed] = useState(false);
 
   return (
-    <footer className="bg-white dark:bg-[#111217] text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-[#2D2F39]/60 mt-10 sm:mt-12 pt-8 sm:pt-9 pb-6 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer className="relative overflow-hidden bg-gradient-to-b from-white via-[#F8FAFC] to-white dark:from-[#111217] dark:via-[#111217] dark:to-[#0B0C10] text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-[#2D2F39]/60 mt-10 sm:mt-12 pt-8 sm:pt-9 pb-6 transition-colors duration-200">
+      {/* Light All-Sri-Lanka Scenic Background Image Layer */}
+      {!bgFailed && (
+        <div
+          className="absolute inset-0 pointer-events-none select-none overflow-hidden z-0"
+          aria-hidden="true"
+        >
+          <img
+            src={footerSriLankaBg}
+            alt="Panoramic Sri Lanka landscape featuring Colombo Lotus Tower, Nine Arch Bridge, Sigiriya, and Galle Coast"
+            referrerPolicy="no-referrer"
+            onError={() => setBgFailed(true)}
+            className="w-full h-full object-cover object-[center_58%] filter brightness-[1.06] contrast-[1.03] saturate-[1.08] opacity-55 sm:opacity-60 dark:opacity-20 dark:brightness-[0.8]"
+          />
+          {/* Light & Dark readability scrim matching HeroSearch */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/68 to-white/78 dark:from-[#111217]/92 dark:via-[#111217]/84 dark:to-[#111217]/92" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.45)_0%,rgba(255,255,255,0.1)_75%)] dark:bg-[radial-gradient(ellipse_at_center,rgba(17,18,23,0.4)_0%,rgba(17,18,23,0.15)_75%)]" />
+        </div>
+      )}
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
           className={`grid grid-cols-1 md:grid-cols-2 ${
             isEStore ? 'lg:grid-cols-3' : 'lg:grid-cols-5'
@@ -58,16 +79,16 @@ export const Footer: React.FC<FooterProps> = ({
               </div>
             </div>
 
-            <p className="text-xs text-gray-600 dark:text-gray-400 max-w-sm leading-relaxed">
+            <p className="text-xs text-gray-700 dark:text-gray-300 max-w-sm leading-relaxed font-medium">
               HUTA.LK is Sri Lanka's trusted trading platform. Buy, sell, and find anything from vehicles and smartphones to houses and local services across all 25 districts.
             </p>
 
-            <div className="flex items-center gap-2 text-[11px] text-gray-600 dark:text-gray-400 pt-1">
-              <span className="flex items-center gap-1.5 bg-gray-50 dark:bg-white/5 px-2.5 py-1 rounded-md border border-gray-200 dark:border-white/10">
+            <div className="flex items-center gap-2 text-[11px] text-gray-700 dark:text-gray-300 pt-1">
+              <span className="flex items-center gap-1.5 bg-white/85 dark:bg-white/5 backdrop-blur-xs px-2.5 py-1 rounded-md border border-gray-200/90 dark:border-white/10">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#FF5A36]" />
                 Verified Listings
               </span>
-              <span className="flex items-center gap-1.5 bg-gray-50 dark:bg-white/5 px-2.5 py-1 rounded-md border border-gray-200 dark:border-white/10">
+              <span className="flex items-center gap-1.5 bg-white/85 dark:bg-white/5 backdrop-blur-xs px-2.5 py-1 rounded-md border border-gray-200/90 dark:border-white/10">
                 <MapPin className="w-3.5 h-3.5 text-[#FF5A36]" />
                 All 25 Districts
               </span>
@@ -78,7 +99,7 @@ export const Footer: React.FC<FooterProps> = ({
                 <button
                   type="button"
                   onClick={onOpenAppStore}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-[#FF5A36] hover:text-white dark:bg-white/10 dark:hover:bg-[#FF5A36] text-gray-800 dark:text-white text-xs font-bold transition-all border border-gray-200 dark:border-white/10 cursor-pointer group"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/90 hover:bg-[#FF5A36] hover:text-white dark:bg-white/10 dark:hover:bg-[#FF5A36] backdrop-blur-xs text-gray-800 dark:text-white text-xs font-bold transition-all border border-gray-200/90 dark:border-white/10 cursor-pointer group shadow-xs"
                 >
                   <Smartphone className="w-3.5 h-3.5 text-[#FF5A36] group-hover:text-white transition-colors" />
                   <span>Get App (Play Store & App Store)</span>
@@ -93,7 +114,7 @@ export const Footer: React.FC<FooterProps> = ({
               <h4 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2.5">
                 Top Categories
               </h4>
-              <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
+              <ul className="space-y-1.5 text-xs text-gray-700 dark:text-gray-300 font-medium">
                 {['Vehicles', 'Auto Parts', 'Cars for Rent', 'Property', 'Boardings & Annexes', 'Holiday Homes', 'Agriculture & Farming', 'Weddings & Events'].map((cat) => (
                   <li key={cat}>
                     <a
@@ -119,7 +140,7 @@ export const Footer: React.FC<FooterProps> = ({
               <h4 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2.5">
                 Key Locations
               </h4>
-              <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
+              <ul className="space-y-1.5 text-xs text-gray-700 dark:text-gray-300 font-medium">
                 {['Colombo', 'Gampaha', 'Kandy', 'Galle', 'Kurunegala'].map((loc) => (
                   <li key={loc}>
                     <a
@@ -245,13 +266,13 @@ export const Footer: React.FC<FooterProps> = ({
         {/* 'Are you Following Us ?' Social Channels Section */}
         <div className="py-6 sm:py-7 border-t border-gray-200/80 dark:border-[#2D2F39]/60 flex flex-col md:flex-row items-center justify-between gap-5">
           <div className="text-center md:text-left">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FF5A36]/10 text-[#FF5A36] text-[11px] font-bold tracking-wide uppercase mb-1.5">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FF5A36]/12 backdrop-blur-xs text-[#FF5A36] text-[11px] font-bold tracking-wide uppercase mb-1.5">
               <span>Connect & Follow</span>
             </div>
             <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
               Are you Following Us ?
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 max-w-md">
+            <p className="text-xs text-gray-700 dark:text-gray-300 mt-0.5 max-w-md font-medium">
               Follow our official channels for the latest classifieds, verified e-store deals & daily flash drops across Sri Lanka.
             </p>
           </div>
@@ -263,7 +284,7 @@ export const Footer: React.FC<FooterProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Follow HUTA.LK on Facebook"
-              className="group flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-[#2D2F39] bg-white dark:bg-[#1A1C23] hover:border-[#1877F2] hover:bg-[#1877F2]/5 dark:hover:border-[#1877F2] text-gray-800 dark:text-gray-200 transition-all cursor-pointer shadow-xs active:scale-95"
+              className="group flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-gray-200/90 dark:border-[#2D2F39] bg-white/90 dark:bg-[#1A1C23]/90 backdrop-blur-xs hover:border-[#1877F2] hover:bg-white dark:hover:border-[#1877F2] text-gray-800 dark:text-gray-200 transition-all cursor-pointer shadow-xs active:scale-95"
             >
               <div className="w-8 h-8 rounded-lg bg-[#1877F2] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
                 <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
@@ -282,7 +303,7 @@ export const Footer: React.FC<FooterProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Connect with HUTA.LK on WhatsApp"
-              className="group flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-[#2D2F39] bg-white dark:bg-[#1A1C23] hover:border-[#25D366] hover:bg-[#25D366]/5 dark:hover:border-[#25D366] text-gray-800 dark:text-gray-200 transition-all cursor-pointer shadow-xs active:scale-95"
+              className="group flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-gray-200/90 dark:border-[#2D2F39] bg-white/90 dark:bg-[#1A1C23]/90 backdrop-blur-xs hover:border-[#25D366] hover:bg-white dark:hover:border-[#25D366] text-gray-800 dark:text-gray-200 transition-all cursor-pointer shadow-xs active:scale-95"
             >
               <div className="w-8 h-8 rounded-lg bg-[#25D366] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
                 <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
@@ -301,7 +322,7 @@ export const Footer: React.FC<FooterProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Follow HUTA.LK on Instagram"
-              className="group flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-[#2D2F39] bg-white dark:bg-[#1A1C23] hover:border-[#E1306C] hover:bg-[#E1306C]/5 dark:hover:border-[#E1306C] text-gray-800 dark:text-gray-200 transition-all cursor-pointer shadow-xs active:scale-95"
+              className="group flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-gray-200/90 dark:border-[#2D2F39] bg-white/90 dark:bg-[#1A1C23]/90 backdrop-blur-xs hover:border-[#E1306C] hover:bg-white dark:hover:border-[#E1306C] text-gray-800 dark:text-gray-200 transition-all cursor-pointer shadow-xs active:scale-95"
             >
               <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
                 <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
@@ -320,7 +341,7 @@ export const Footer: React.FC<FooterProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Follow HUTA.LK on TikTok"
-              className="group flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-[#2D2F39] bg-white dark:bg-[#1A1C23] hover:border-black dark:hover:border-white hover:bg-black/5 dark:hover:bg-white/10 text-gray-800 dark:text-gray-200 transition-all cursor-pointer shadow-xs active:scale-95"
+              className="group flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-gray-200/90 dark:border-[#2D2F39] bg-white/90 dark:bg-[#1A1C23]/90 backdrop-blur-xs hover:border-black dark:hover:border-white hover:bg-white dark:hover:bg-white/10 text-gray-800 dark:text-gray-200 transition-all cursor-pointer shadow-xs active:scale-95"
             >
               <div className="w-8 h-8 rounded-lg bg-black text-white flex items-center justify-center shrink-0 shadow-xs border border-gray-800 group-hover:scale-105 transition-transform">
                 <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
@@ -336,8 +357,8 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         {/* Policy Links Row matching user screenshot (Terms & Conditions, Privacy Policy, Cookie Policy) */}
-        <div className="pt-4 sm:pt-5 border-t border-gray-100 dark:border-[#2D2F39]/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-3 sm:gap-5 text-gray-500 dark:text-gray-400 font-medium flex-wrap justify-center sm:justify-start">
+        <div className="pt-4 sm:pt-5 border-t border-gray-200/80 dark:border-[#2D2F39]/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3 sm:gap-5 text-gray-700 dark:text-gray-300 font-medium flex-wrap justify-center sm:justify-start">
             <button
               type="button"
               onClick={() => onOpenPolicy?.('terms')}
@@ -359,18 +380,18 @@ export const Footer: React.FC<FooterProps> = ({
             >
               Cookie Policy
             </button>
-            <span className="hidden md:inline text-gray-300 dark:text-gray-600">•</span>
+            <span className="hidden md:inline text-gray-400 dark:text-gray-600">•</span>
             <button
               type="button"
               onClick={() => onOpenPolicy?.('compliance')}
-              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer text-xs sm:text-sm flex items-center gap-1"
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer text-xs sm:text-sm flex items-center gap-1 font-medium"
             >
               <span>🇱🇰 Sri Lankan Acts & Compliance</span>
             </button>
             <button
               type="button"
               onClick={() => onOpenPolicy?.('prohibited')}
-              className="hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer text-xs sm:text-sm"
+              className="hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer text-xs sm:text-sm font-medium"
             >
               Prohibited Items & Safety
             </button>
@@ -382,12 +403,12 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         {/* Copyright notice */}
-        <div className="pt-3 text-center sm:text-left text-[11px] text-gray-400 dark:text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="pt-3 text-center sm:text-left text-[11px] text-gray-600 dark:text-gray-400 font-medium flex flex-col sm:flex-row items-center justify-between gap-2">
           <p>© {new Date().getFullYear()} HUTA.LK — Sri Lanka. All prices in Sri Lankan Rupees (LKR).</p>
           <p className="flex items-center gap-1.5">
-            <Mail className="w-3 h-3 text-emerald-500" />
+            <Mail className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
             <span>Support:</span>
-            <a href="mailto:support@huta.lk" className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">
+            <a href="mailto:support@huta.lk" className="text-emerald-700 dark:text-emerald-400 font-bold hover:underline">
               support@huta.lk
             </a>
           </p>
