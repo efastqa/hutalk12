@@ -43,6 +43,7 @@ export interface Listing {
 
   // Custom Category Fields
   // Vehicles, Motorcycles & Cars for Rent
+  vehicleListingType?: 'For Sale' | 'For Hire' | string;
   vehicleType?: string;
   vehicleYear?: number | string;
   vehicleMileage?: number | string;

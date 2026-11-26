@@ -806,6 +806,7 @@ export const api = {
     if (data.bathrooms !== undefined && data.bathrooms !== '') rawListing.bathrooms = data.bathrooms;
     if (data.maxGuests !== undefined && data.maxGuests !== '') rawListing.maxGuests = data.maxGuests;
     if (Array.isArray(data.amenities) && data.amenities.length > 0) rawListing.amenities = data.amenities;
+    if (data.vehicleListingType) rawListing.vehicleListingType = data.vehicleListingType;
     if (data.vehicleType) rawListing.vehicleType = data.vehicleType;
     if (data.vehicleYear !== undefined && data.vehicleYear !== '') rawListing.vehicleYear = data.vehicleYear;
     if (data.vehicleMileage !== undefined && data.vehicleMileage !== '') rawListing.vehicleMileage = data.vehicleMileage;

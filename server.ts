@@ -131,6 +131,7 @@ interface Listing {
   itemCondition?: string;
   brand?: string;
   model?: string;
+  vehicleListingType?: string;
   vehicleType?: string;
   vehicleYear?: number | string;
   vehicleMileage?: number | string;
@@ -2310,6 +2311,7 @@ async function startServer() {
       ...(req.body.brand ? { brand: String(req.body.brand).trim() } : {}),
       ...(req.body.model ? { model: String(req.body.model).trim() } : {}),
       ...(req.body.itemCondition ? { itemCondition: String(req.body.itemCondition).trim() } : {}),
+      ...(req.body.vehicleListingType ? { vehicleListingType: String(req.body.vehicleListingType).trim() } : {}),
       ...(req.body.vehicleType ? { vehicleType: String(req.body.vehicleType).trim() } : {}),
       ...(req.body.vehicleYear !== undefined ? { vehicleYear: req.body.vehicleYear } : {}),
       ...(req.body.vehicleMileage !== undefined ? { vehicleMileage: req.body.vehicleMileage } : {}),
@@ -2447,6 +2449,7 @@ async function startServer() {
       brand: req.body.brand !== undefined ? (req.body.brand ? String(req.body.brand).trim() : undefined) : current.brand,
       model: req.body.model !== undefined ? (req.body.model ? String(req.body.model).trim() : undefined) : current.model,
       itemCondition: req.body.itemCondition !== undefined ? (req.body.itemCondition ? String(req.body.itemCondition).trim() : undefined) : current.itemCondition,
+      vehicleListingType: req.body.vehicleListingType !== undefined ? (req.body.vehicleListingType ? String(req.body.vehicleListingType).trim() : undefined) : current.vehicleListingType,
       vehicleType: req.body.vehicleType !== undefined ? (req.body.vehicleType ? String(req.body.vehicleType).trim() : undefined) : current.vehicleType,
       vehicleYear: req.body.vehicleYear !== undefined ? req.body.vehicleYear : current.vehicleYear,
       vehicleMileage: req.body.vehicleMileage !== undefined ? req.body.vehicleMileage : current.vehicleMileage,

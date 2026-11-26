@@ -45,6 +45,7 @@ import {
   GraduationCap,
   PawPrint,
   HeartHandshake,
+  Truck,
 } from 'lucide-react';
 
 interface ListingsSectionProps {
@@ -138,6 +139,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
   const [fuelFilter, setFuelFilter] = useState<string>('all');
   const [transmissionFilter, setTransmissionFilter] = useState<string>('all');
   const [vehicleTypeFilter, setVehicleTypeFilter] = useState<string>('all');
+  const [vehiclePurposeFilter, setVehiclePurposeFilter] = useState<string>('all');
   const [driverOptionFilter, setDriverOptionFilter] = useState<string>('all');
 
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>('all');
@@ -171,6 +173,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     setFuelFilter('all');
     setTransmissionFilter('all');
     setVehicleTypeFilter('all');
+    setVehiclePurposeFilter('all');
     setDriverOptionFilter('all');
     setPropertyTypeFilter('all');
     setBedroomsFilter('all');
@@ -203,6 +206,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
       fuelFilter !== 'all' ||
       transmissionFilter !== 'all' ||
       vehicleTypeFilter !== 'all' ||
+      vehiclePurposeFilter !== 'all' ||
       driverOptionFilter !== 'all' ||
       propertyTypeFilter !== 'all' ||
       bedroomsFilter !== 'all' ||
@@ -227,6 +231,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     fuelFilter,
     transmissionFilter,
     vehicleTypeFilter,
+    vehiclePurposeFilter,
     driverOptionFilter,
     propertyTypeFilter,
     bedroomsFilter,
@@ -252,6 +257,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     setFuelFilter('all');
     setTransmissionFilter('all');
     setVehicleTypeFilter('all');
+    setVehiclePurposeFilter('all');
     setDriverOptionFilter('all');
     setPropertyTypeFilter('all');
     setBedroomsFilter('all');
@@ -284,6 +290,12 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
       }
       if (vehicleTypeFilter !== 'all' && item.vehicleType && !item.vehicleType.toLowerCase().includes(vehicleTypeFilter.toLowerCase())) {
         return false;
+      }
+      if (vehiclePurposeFilter !== 'all') {
+        const effectivePurpose = item.vehicleListingType || (item.category === 'Cars for Rent' ? 'For Hire' : 'For Sale');
+        if (effectivePurpose.toLowerCase() !== vehiclePurposeFilter.toLowerCase()) {
+          return false;
+        }
       }
       if (driverOptionFilter !== 'all') {
         const driverHay = `${item.rentalDriverOption || ''} ${item.title || ''} ${item.description || ''}`.toLowerCase();
@@ -421,6 +433,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
     fuelFilter,
     transmissionFilter,
     vehicleTypeFilter,
+    vehiclePurposeFilter,
     driverOptionFilter,
     propertyTypeFilter,
     bedroomsFilter,
@@ -573,6 +586,36 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
             {/* Vehicles / Motorcycles / Cars for Rent filters */}
             {(currentCategory === 'Vehicles' || currentCategory === 'Motorcycles' || currentCategory === 'Cars for Rent') && (
               <>
+                {/* Listing Purpose Filter (For Sale / For Hire) */}
+                <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
+                  <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
+                    <Tag className="w-3 h-3 text-[#16803C]" />
+                    <span>Option:</span>
+                  </span>
+                  {[
+                    { id: 'all', label: 'All' },
+                    { id: 'For Sale', label: 'For Sale' },
+                    { id: 'For Hire', label: 'For Hire' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setVehiclePurposeFilter(opt.id)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                        vehiclePurposeFilter === opt.id
+                          ? opt.id === 'For Sale'
+                            ? 'bg-[#16803C] text-white font-bold shadow-2xs'
+                            : opt.id === 'For Hire'
+                            ? 'bg-[#9A4D1E] text-white font-bold shadow-2xs'
+                            : 'bg-[#181920] dark:bg-[#FF5A36] text-white font-bold shadow-2xs'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#1E2230]'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+
                 {/* Fuel Filter */}
                 <div className="flex items-center gap-1 bg-white dark:bg-[#151822] p-1 rounded-xl border border-gray-200 dark:border-[#252836]">
                   <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 flex items-center gap-1">
@@ -1459,6 +1502,32 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                       </div>
                     );
                   }
+                  if (
+                    item.category === 'Vehicles' ||
+                    item.category === 'Motorcycles' ||
+                    item.category === 'Cars for Rent'
+                  ) {
+                    const vehiclePurpose =
+                      item.vehicleListingType ||
+                      (item.category === 'Cars for Rent' ? 'For Hire' : 'For Sale');
+                    const isHire = vehiclePurpose === 'For Hire';
+                    return (
+                      <div className="absolute top-2 left-2 z-10">
+                        <span
+                          className={`inline-flex items-center gap-1.5 text-white text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md ${
+                            isHire ? 'bg-[#9A4D1E]' : 'bg-[#16803C]'
+                          }`}
+                        >
+                          {isHire ? (
+                            <Truck className="w-3 h-3 shrink-0" />
+                          ) : (
+                            <Tag className="w-3 h-3 shrink-0" />
+                          )}
+                          <span>{isHire ? 'For Hire' : 'For Sale'}</span>
+                        </span>
+                      </div>
+                    );
+                  }
                   if (item.isFeatured) {
                     return (
                       <div className="absolute top-2 left-2 z-10">
@@ -1668,7 +1737,7 @@ export const ListingsSection: React.FC<ListingsSectionProps> = ({
                           {formatLKR(item.price)}
                           <span className="text-[10px] sm:text-xs font-semibold text-[#FF5A36] ml-1">/ month</span>
                         </span>
-                      ) : item.pricingType === 'daily' || item.category === 'Cars for Rent' ? (
+                      ) : item.pricingType === 'daily' || (item.category === 'Cars for Rent' && item.pricingType !== 'fixed' && item.pricingType !== 'monthly') ? (
                         <span>
                           {formatLKR(item.price)}
                           <span className="text-[10px] sm:text-xs font-semibold text-[#FF5A36] ml-1">/ day</span>
