@@ -6277,9 +6277,61 @@ Price: Rs ${price ? Number(price).toLocaleString('en-LK') : 'Negotiable'}. Price
   };
 
   // -------------------------------------------------------------
+  // Self-cleaning Service Worker endpoints (prevents stale Safari SW traps)
+  // -------------------------------------------------------------
+  const sendSelfDestructingSw = (res: express.Response) => {
+    res
+      .status(200)
+      .set({
+        'Content-Type': 'application/javascript; charset=utf-8',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Service-Worker-Allowed': '/',
+      })
+      .send(`
+self.addEventListener('install', function() {
+  self.skipWaiting();
+});
+self.addEventListener('activate', function(event) {
+  event.waitUntil(
+    caches.keys().then(function(names) {
+      return Promise.all(names.map(function(name) { return caches.delete(name); }));
+    }).then(function() {
+      return self.registration.unregister();
+    }).then(function() {
+      return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    }).then(function(clients) {
+      clients.forEach(function(client) {
+        if (client && client.navigate) {
+          client.navigate(client.url).catch(function() {});
+        }
+      });
+    })
+  );
+});
+`);
+  };
+
+  app.get('/dev-sw.js', (_req, res) => {
+    sendSelfDestructingSw(res);
+  });
+
+  // -------------------------------------------------------------
   // Vite Dev Server / Production Static Serving
   // -------------------------------------------------------------
   if (process.env.NODE_ENV !== 'production') {
+    app.get('/sw.js', (_req, res) => {
+      sendSelfDestructingSw(res);
+    });
+    app.get('/registerSW.js', (_req, res) => {
+      res
+        .status(200)
+        .set({
+          'Content-Type': 'application/javascript; charset=utf-8',
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        })
+        .send(`if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(function(rs) { rs.forEach(function(r) { r.unregister(); }); }); }`);
+    });
+
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: {

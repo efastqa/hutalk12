@@ -56,6 +56,33 @@
             return true;
           }
         }, true);
+
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            var hasDevSw = regs.some(function(r) {
+              var scriptUrl = (r.active && r.active.scriptURL) || (r.waiting && r.waiting.scriptURL) || (r.installing && r.installing.scriptURL) || '';
+              return scriptUrl.indexOf('dev-sw.js') !== -1;
+            });
+            if (hasDevSw || window.location.hostname.indexOf('ais-dev-') === 0) {
+              if (regs.length > 0) {
+                Promise.all(regs.map(function(r) { return r.unregister(); })).then(function() {
+                  if (window.caches && caches.keys) {
+                    return caches.keys().then(function(keys) {
+                      return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+                    });
+                  }
+                }).then(function() {
+                  try {
+                    if (!sessionStorage.getItem('huta_dev_sw_reset')) {
+                      sessionStorage.setItem('huta_dev_sw_reset', '1');
+                      window.location.reload();
+                    }
+                  } catch(_) {}
+                });
+              }
+            }
+          }).catch(function() {});
+        }
       })();
     </script>
     <title>HUTA Marketplace — Sri Lanka's Premier Classifieds | HUTA.LK</title>

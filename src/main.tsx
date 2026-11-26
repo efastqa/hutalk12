@@ -109,12 +109,15 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       window.location.reload();
     });
 
-    window.addEventListener('load', () => {
+    const checkSwUpdates = () => {
       navigator.serviceWorker.getRegistrations().then((regs) => {
         regs.forEach((reg) => {
           reg.update().catch(() => {});
         });
       }).catch(() => {});
-    });
+    };
+
+    checkSwUpdates();
+    window.addEventListener('load', checkSwUpdates);
   }
 }
